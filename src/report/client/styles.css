@@ -580,6 +580,23 @@ button.tw:hover {
   top: 0;
   bottom: 0;
 }
+.row.task .bar {
+  top: calc(50% - 4px);
+  height: 8px;
+  opacity: 0.85;
+}
+.row.task .bar.unstarted {
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0 6px,
+    var(--surface) 6px 7px
+  ) !important;
+}
+.row.task .kind {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-2);
+}
 .gapl {
   position: absolute;
   top: 5px;

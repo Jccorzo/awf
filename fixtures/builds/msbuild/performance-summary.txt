@@ -1,0 +1,30 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  App -> /Users/user/demo/App/bin/Debug/net9.0/App.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Project Evaluation Performance Summary:
+       58 ms  /Users/user/demo/App/App.csproj   1 calls
+
+Project Performance Summary:
+     2214 ms  /Users/user/demo/App/App.csproj   1 calls
+               2214 ms  Build                                      1 calls
+
+Target Performance Summary:
+        0 ms  _CheckForInvalidConfigurationAndPlatform   1 calls
+        3 ms  GenerateTargetFrameworkMonikerAttribute    1 calls
+       41 ms  ResolvePackageAssets                       1 calls
+      118 ms  ResolveAssemblyReferences                  1 calls
+      232 ms  _CopyFilesMarkedCopyLocal                  1 calls
+     1490 ms  CoreCompile                                1 calls
+
+Task Performance Summary:
+        1 ms  Message                                    4 calls
+       39 ms  ResolvePackageAssets                       1 calls
+      116 ms  ResolveAssemblyReference                   1 calls
+     1482 ms  Csc                                        1 calls
+
+Time Elapsed 00:00:02.41

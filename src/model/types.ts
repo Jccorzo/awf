@@ -52,6 +52,18 @@ export interface StepDetail {
   output?: string;
 }
 
+/** A build's slowest tasks, from the build tool's own timing output (see docs/build-drilldown.md). */
+export interface BuildTimings {
+  /** cargo, xcodebuild, gradle, bazel, msbuild */
+  tool: string;
+  /** The report file read, or "output" when the step's own output had it. */
+  source: string;
+  /** Slowest first. Start times only when the tool records them. */
+  tasks: Array<{ name: string; ms: number; startMs?: number; count?: number; result?: string }>;
+  /** Tasks found, before keeping the slowest. */
+  total: number;
+}
+
 export interface Step {
   id: string;
   parentId: string | null;
@@ -81,6 +93,8 @@ export interface Step {
   model?: string;
   tokens?: TokenUsage;
   detail?: StepDetail;
+  /** Build steps run with timing output on: the build's slowest tasks. Report only. */
+  build?: BuildTimings;
 }
 
 export interface Session {

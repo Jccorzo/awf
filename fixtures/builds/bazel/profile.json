@@ -1,0 +1,135 @@
+{
+ "otherData": {
+  "build_id": "00000000-0000-0000-0000-000000000000",
+  "output_base": "/Users/user/.cache/bazel/_bazel_user/0000",
+  "date": "Tue Oct 28 14:03:20 UTC 2026"
+ },
+ "traceEvents": [
+  {
+   "name": "process_name",
+   "ph": "M",
+   "pid": 1,
+   "args": {
+    "name": "/Users/user/demo"
+   }
+  },
+  {
+   "name": "thread_name",
+   "ph": "M",
+   "pid": 1,
+   "tid": 0,
+   "args": {
+    "name": "Critical Path"
+   }
+  },
+  {
+   "cat": "build phase marker",
+   "name": "Launch Blaze",
+   "ph": "X",
+   "ts": 0,
+   "dur": 412000,
+   "pid": 1,
+   "tid": 1
+  },
+  {
+   "cat": "build phase marker",
+   "name": "Initialize command",
+   "ph": "i",
+   "ts": 412000,
+   "pid": 1,
+   "tid": 1
+  },
+  {
+   "cat": "general information",
+   "name": "Analyzing //app:main",
+   "ph": "X",
+   "ts": 450000,
+   "dur": 1800000,
+   "pid": 1,
+   "tid": 2
+  },
+  {
+   "cat": "action processing",
+   "name": "Compiling app/src/main.cc",
+   "ph": "X",
+   "ts": 2400000,
+   "dur": 6100000,
+   "pid": 1,
+   "tid": 12,
+   "args": {
+    "target": "//app:main",
+    "mnemonic": "CppCompile"
+   }
+  },
+  {
+   "cat": "action processing",
+   "name": "Compiling lib/src/stats.cc",
+   "ph": "X",
+   "ts": 2420000,
+   "dur": 4300000,
+   "pid": 1,
+   "tid": 13,
+   "args": {
+    "target": "//lib:stats",
+    "mnemonic": "CppCompile"
+   }
+  },
+  {
+   "cat": "action processing",
+   "name": "Compiling lib/src/report.cc",
+   "ph": "X",
+   "ts": 2430000,
+   "dur": 3900000,
+   "pid": 1,
+   "tid": 14,
+   "args": {
+    "target": "//lib:report",
+    "mnemonic": "CppCompile"
+   }
+  },
+  {
+   "cat": "action processing",
+   "name": "Linking lib/libstats.a",
+   "ph": "X",
+   "ts": 6750000,
+   "dur": 310000,
+   "pid": 1,
+   "tid": 13,
+   "args": {
+    "target": "//lib:stats",
+    "mnemonic": "CppArchive"
+   }
+  },
+  {
+   "cat": "action processing",
+   "name": "Linking app/main",
+   "ph": "X",
+   "ts": 8520000,
+   "dur": 1250000,
+   "pid": 1,
+   "tid": 12,
+   "args": {
+    "target": "//app:main",
+    "mnemonic": "CppLink"
+   }
+  },
+  {
+   "cat": "remote action cache check",
+   "name": "Checking cache for app/src/main.cc",
+   "ph": "X",
+   "ts": 2390000,
+   "dur": 9000,
+   "pid": 1,
+   "tid": 12
+  },
+  {
+   "cat": "critical path component",
+   "name": "action 'Compiling app/src/main.cc'",
+   "ph": "X",
+   "ts": 2400000,
+   "dur": 6100000,
+   "pid": 1,
+   "tid": 0
+  }
+ ]
+}
