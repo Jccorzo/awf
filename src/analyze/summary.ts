@@ -119,7 +119,7 @@ export function summarize(classified: ClassifiedSession): Analysis {
     id: session.id,
     sources: session.sources,
     startMs: session.startMs,
-    endMs: session.endMs,
+    endMs: session.startMs + totals.totalMs,
     totalMs: totals.totalMs,
     activeMs: Math.max(0, totals.totalMs - idleMs),
     phases,

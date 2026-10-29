@@ -74,6 +74,41 @@ describe('timeline', () => {
     expect(totals.byPhase).toMatchObject({ exploring: 40, planning: 10 });
   });
 
+  it("doesn't let an unclassified background process take idle time or stretch the session", () => {
+    const steps = [
+      step({ id: 'm', kind: 'model', startMs: 0, endMs: 10, phase: 'planning' }),
+      step({ id: 'idle', kind: 'idle', startMs: 10, endMs: 100, phase: 'waiting' }),
+      step({ id: 'm2', kind: 'model', startMs: 100, endMs: 110, phase: 'planning' }),
+      // `pnpm dev` left running for days
+      step({
+        id: 'dev',
+        kind: 'background',
+        startMs: 5,
+        endMs: 10_000,
+        phase: 'unclassified',
+        flags: ['background'],
+      }),
+    ];
+    const totals = phaseTotals(session(steps, 0, 10_000));
+    expect(totals.totalMs).toBe(110);
+    expect(totals.byPhase).toMatchObject({ planning: 20, waiting: 90, unclassified: 0 });
+    // A build left running while you're away still counts as Build.
+    const build = phaseTotals(
+      session([
+        ...steps.slice(0, 3),
+        step({
+          id: 'b',
+          kind: 'background',
+          startMs: 10,
+          endMs: 60,
+          phase: 'build',
+          flags: ['background'],
+        }),
+      ]),
+    );
+    expect(build.byPhase).toMatchObject({ build: 50, waiting: 40 });
+  });
+
   it('splits an approval wait from the run, and counts uncovered time as unclassified', () => {
     const totals = phaseTotals(
       session(
