@@ -3,6 +3,8 @@ import { VERSION } from '../version';
 import { classifyCommand } from './commands/classify';
 import { doctorCommand } from './commands/doctor';
 import { importCommand } from './commands/import';
+import { purgeCommand } from './commands/purge';
+import { reportCommand } from './commands/report';
 import { accuracyCommand, sampleCommand } from './commands/sample';
 import { sessionsCommand } from './commands/sessions';
 import { statsCommand } from './commands/stats';
@@ -39,10 +41,12 @@ export const COMMANDS: Record<string, Command> = {
   import: importCommand,
   classify: classifyCommand,
   summary: summaryCommand,
+  report: reportCommand,
   stats: statsCommand,
   sample: sampleCommand,
   accuracy: accuracyCommand,
   doctor: doctorCommand,
+  purge: purgeCommand,
 };
 
 function usage(): string {

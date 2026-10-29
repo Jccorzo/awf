@@ -69,9 +69,19 @@ export function intervals(session: ClassifiedSession): Interval[] {
 
 const PHASE_INDEX = new Map(PHASES.map((p, i) => [p.id, i]));
 
-/** Sweeps the session's timeline, giving each instant to the best interval running then. */
-export function phaseTotals(session: ClassifiedSession): PhaseTotals {
-  const byPhase = Object.fromEntries(PHASES.map((p) => [p.id, 0])) as Record<PhaseId, number>;
+/** A stretch of the session with one phase. Uncovered stretches (no step running) are Unclassified. */
+export interface Segment {
+  start: number;
+  end: number;
+  phase: PhaseId;
+  covered: boolean;
+}
+
+/**
+ * Sweeps the session's timeline, giving each instant to the best interval running then. Returns
+ * the stretches in order, adjacent ones with the same phase merged; together they cover the session.
+ */
+export function phaseSegments(session: ClassifiedSession): Segment[] {
   const start = session.startMs;
   const end = Math.max(session.endMs, start);
   const events: Array<{ t: number; key: number; delta: number }> = [];
@@ -84,8 +94,8 @@ export function phaseTotals(session: ClassifiedSession): PhaseTotals {
   }
   events.sort((x, y) => x.t - y.t || x.delta - y.delta);
   const active = new Map<number, number>();
+  const segments: Segment[] = [];
   let cursor = start;
-  let uncoveredMs = 0;
   const best = (): PhaseId | undefined => {
     let chosen: { tier: number; phase: PhaseId } | undefined;
     for (const [key, count] of active) {
@@ -105,10 +115,17 @@ export function phaseTotals(session: ClassifiedSession): PhaseTotals {
   const credit = (until: number) => {
     if (until <= cursor) return;
     const phase = best();
-    if (phase) byPhase[phase] += until - cursor;
-    else {
-      byPhase.unclassified += until - cursor;
-      uncoveredMs += until - cursor;
+    const covered = phase !== undefined;
+    const last = segments.at(-1);
+    if (
+      last &&
+      last.end === cursor &&
+      last.phase === (phase ?? 'unclassified') &&
+      last.covered === covered
+    ) {
+      last.end = until;
+    } else {
+      segments.push({ start: cursor, end: until, phase: phase ?? 'unclassified', covered });
     }
     cursor = until;
   };
@@ -117,5 +134,17 @@ export function phaseTotals(session: ClassifiedSession): PhaseTotals {
     active.set(event.key, (active.get(event.key) ?? 0) + event.delta);
   }
   credit(end);
-  return { totalMs: end - start, byPhase, uncoveredMs };
+  return segments;
+}
+
+/** Phase times that add up to the session's total. */
+export function phaseTotals(session: ClassifiedSession): PhaseTotals {
+  const byPhase = Object.fromEntries(PHASES.map((p) => [p.id, 0])) as Record<PhaseId, number>;
+  let uncoveredMs = 0;
+  for (const segment of phaseSegments(session)) {
+    byPhase[segment.phase] += segment.end - segment.start;
+    if (!segment.covered) uncoveredMs += segment.end - segment.start;
+  }
+  const start = session.startMs;
+  return { totalMs: Math.max(session.endMs, start) - start, byPhase, uncoveredMs };
 }
