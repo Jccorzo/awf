@@ -406,7 +406,11 @@ function resolveBun(args: string[], cwd: string, files: Files): Resolution | und
   const i = firstPositional(args, ['--cwd']);
   if (i < 0) return undefined;
   const sub = args[i] as string;
-  const name = sub === 'run' ? args[i + 1] : sub;
+  // `bun run --cwd web test`, `bun run --filter web test`, `bun run --bun test`.
+  const after =
+    sub === 'run' ? firstPositional(args.slice(i + 1), ['--cwd', '--filter', '-F']) : -1;
+  const nameAt = sub === 'run' ? (after < 0 ? -1 : i + 1 + after) : i;
+  const name = nameAt >= 0 ? args[nameAt] : undefined;
   if (!name || (sub !== 'run' && BUN_BUILTINS.has(sub))) return undefined;
   if (/\.(m?[jt]sx?|cjs|cts)$/.test(name)) return undefined; // running a file
   const pkg = packageScripts(cwd, files);
@@ -420,7 +424,7 @@ function resolveBun(args: string[], cwd: string, files: Files): Resolution | und
     };
   }
   return sub === 'run'
-    ? { kind: 'script-name', runner: 'bun', name, rest: args.slice(i + 2) }
+    ? { kind: 'script-name', runner: 'bun', name, rest: args.slice(nameAt + 1) }
     : undefined;
 }
 
@@ -543,6 +547,10 @@ function resolveMake(args: string[], cwd: string, files: Files): Resolution | un
         '--question',
         '-p',
         '--print-data-base',
+        '-v',
+        '--version',
+        '-h',
+        '--help',
       ].includes(a),
     )
   ) {
@@ -616,6 +624,11 @@ const GRADLE_VALUE_OPTIONS = [
   '-P',
   '--priority',
   '--include-build',
+  '--configuration',
+  '--dependency',
+  '--task',
+  '--tests',
+  '--args',
 ];
 const MAVEN_VALUE_OPTIONS = [
   '-pl',
@@ -638,7 +651,6 @@ const MAVEN_VALUE_OPTIONS = [
   '-b',
   '--builder',
   '-D',
-  '-e',
 ];
 
 function positionals(args: string[], valueOptions: string[]): string[] {
@@ -657,8 +669,16 @@ function positionals(args: string[], valueOptions: string[]): string[] {
 function resolveTasks(program: string, args: string[]): Resolution | undefined {
   let tasks: string[] = [];
   if (program === 'gradle') tasks = positionals(args, GRADLE_VALUE_OPTIONS);
-  else if (program === 'mvn') tasks = positionals(args, MAVEN_VALUE_OPTIONS);
-  else if (program === 'sbt') tasks = positionals(args, []).map((t) => t.replace(/^[^/]+\//, ''));
+  else if (program === 'mvn') {
+    tasks = positionals(args, MAVEN_VALUE_OPTIONS);
+    // With tests skipped, verify only builds.
+    if (args.some((a) => /^-D(skipTests|maven\.test\.skip)(=true)?$/.test(a)))
+      tasks = tasks.map((t) => (t === 'verify' ? 'package' : t));
+  } else if (program === 'lerna') {
+    const all = positionals(args, ['--scope', '--ignore', '--concurrency', '--since']);
+    if (all[0] !== 'run' || !all[1]) return undefined;
+    tasks = [all[1]];
+  } else if (program === 'sbt') tasks = positionals(args, []).map((t) => t.replace(/^[^/]+\//, ''));
   else if (program === 'turbo') {
     const all = positionals(args, [
       '--filter',
@@ -799,6 +819,7 @@ export function resolve(argv: string[], cwd: string, files: Files): Resolution |
     case 'sbt':
     case 'turbo':
     case 'nx':
+    case 'lerna':
       return resolveTasks(program, args);
     case 'git':
       return resolveGitCommit(args, cwd, files);
@@ -807,7 +828,16 @@ export function resolve(argv: string[], cwd: string, files: Files): Resolution |
   if (file) {
     const full = resolvePath(cwd, file);
     const text = files.read(full);
-    if (text !== undefined) return { kind: 'file', file, commands: [text], cwd };
+    // Only shell scripts are read as commands: a Python or Node file isn't shell.
+    if (text !== undefined && isShellScript(file, text))
+      return { kind: 'file', file, commands: [text], cwd };
   }
   return undefined;
+}
+
+const SHELL_SHEBANG = /^#!\s*\S*\/(env\s+)?(sh|bash|zsh|dash|ksh)\b/;
+
+function isShellScript(file: string, text: string): boolean {
+  if (text.startsWith('#!')) return SHELL_SHEBANG.test(text);
+  return /\.(sh|bash|zsh)$/.test(file);
 }

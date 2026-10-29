@@ -34,7 +34,16 @@ export interface ClassifiedStep extends Step {
   rule?: string;
   /** Set by the rework detector: the check this edit reworks. */
   reworkFor?: string;
+  /** Whether the exit code belongs to the checks (see exitTrust). */
+  exit?: ExitTrust;
 }
+
+/**
+ * Whether a command's exit code tells if its checks passed. `full`: the last check ends the
+ * command. `pass`: only commands chained with && follow, so a pass means the checks passed but a
+ * failure may be a later command's. `none`: a pipe, `;`, `||` or `&` after the check hides it.
+ */
+export type ExitTrust = 'full' | 'pass' | 'none';
 
 export interface ClassifiedSession extends Omit<Session, 'steps'> {
   steps: ClassifiedStep[];
@@ -45,6 +54,7 @@ export interface CommandInfo {
   tags: string[];
   checks: Check[];
   rule: string;
+  exit?: ExitTrust;
 }
 
 interface Part {
@@ -57,6 +67,8 @@ interface Part {
   piped: boolean;
   /** Part of a command that waits: a sleep in a loop, or a long sleep. */
   polling?: boolean;
+  /** The top-level simple command it came from. */
+  index?: number;
 }
 
 const MAX_DEPTH = 4;
@@ -84,6 +96,181 @@ function sleepSeconds(arg: string | undefined): number {
 }
 
 const BACKGROUND_TOOLS = new Set(['TaskOutput', 'BashOutput', 'KillShell', 'KillBash', 'TaskStop']);
+
+const DOCKER_OPTIONS = [
+  '-H',
+  '--host',
+  '--context',
+  '-c',
+  '--config',
+  '-l',
+  '--log-level',
+  '-f',
+  '--file',
+  '-p',
+  '--project-name',
+  '--profile',
+  '--env-file',
+  '--project-directory',
+];
+/** Options that take a value, by program: `kubectl -n prod get pods` runs `get`. */
+const VALUE_OPTIONS: Record<string, string[]> = {
+  kubectl: [
+    '-n',
+    '--namespace',
+    '--context',
+    '--kubeconfig',
+    '--cluster',
+    '--user',
+    '-s',
+    '--server',
+  ],
+  gh: ['-R', '--repo'],
+  docker: DOCKER_OPTIONS,
+  podman: DOCKER_OPTIONS,
+  'docker-compose': DOCKER_OPTIONS,
+  bun: ['--cwd'],
+  cargo: ['--color', '--config', '-Z', '-C'],
+  cross: ['--color', '--config', '-Z'],
+  ninja: ['-C', '-f', '-j', '-k', '-l', '-d', '-t', '-w'],
+  meson: ['-C'],
+  swift: ['--package-path', '--scratch-path', '-c', '--configuration'],
+  terraform: ['-chdir'],
+  dotnet: ['--project', '-p'],
+  xcodebuild: [
+    '-scheme',
+    '-project',
+    '-workspace',
+    '-configuration',
+    '-destination',
+    '-sdk',
+    '-target',
+    '-derivedDataPath',
+    '-resultBundlePath',
+    '-testPlan',
+    '-xcconfig',
+    '-arch',
+    '-toolchain',
+    '-archivePath',
+    '-exportPath',
+    '-exportOptionsPlist',
+    '-parallel-testing-worker-count',
+  ],
+  tox: ['-e', '-c', '--conf'],
+  nox: ['-s', '--session', '-f', '--noxfile'],
+};
+
+/** Arguments that aren't options or an option's value. */
+function positionalArgs(program: string, args: string[]): string[] {
+  const valued = VALUE_OPTIONS[program] ?? [];
+  const out: string[] = [];
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i] as string;
+    if (valued.includes(arg)) i++;
+    else if (!arg.startsWith('-') && !arg.startsWith('+')) out.push(arg);
+  }
+  return out;
+}
+
+/** Task runners that run a named task: `just test`, `task lint`, `mise run build`, `rake spec`. */
+const TASK_RUNNERS: Record<string, { sub?: string[]; valueOptions?: string[] }> = {
+  just: { valueOptions: ['-f', '--justfile', '-d', '--working-directory', '--set'] },
+  task: { valueOptions: ['-t', '--taskfile', '-d', '--dir'] },
+  mise: { sub: ['run', 'r'] },
+  poe: {},
+  devbox: { sub: ['run'] },
+  composer: { valueOptions: ['-d', '--working-dir'] },
+  rake: { valueOptions: ['-f', '--rakefile'] },
+  invoke: {},
+  inv: {},
+};
+
+const COMPOSER_COMMANDS = new Set([
+  'install',
+  'i',
+  'update',
+  'u',
+  'upgrade',
+  'require',
+  'r',
+  'remove',
+  'rm',
+  'dump-autoload',
+  'dumpautoload',
+  'show',
+  'info',
+  'outdated',
+  'validate',
+  'diagnose',
+  'config',
+  'create-project',
+  'init',
+  'search',
+  'depends',
+  'why',
+  'prohibits',
+  'why-not',
+  'audit',
+  'global',
+  'exec',
+  'archive',
+  'licenses',
+  'status',
+  'self-update',
+  'clear-cache',
+  'check-platform-reqs',
+  'fund',
+  'bump',
+  'reinstall',
+  'list',
+  'help',
+]);
+
+/** Run several package scripts: `run-s lint test`, `npm-run-all -p a b`, `concurrently "npm:x"`. */
+const SCRIPT_RUNNERS = new Set([
+  'run-s',
+  'run-p',
+  'npm-run-all',
+  'npm-run-all2',
+  'concurrently',
+  'start-server-and-test',
+  'server-test',
+  'start-test',
+]);
+
+/** `sed -i`, `perl -pi`, `yq -i`, `gawk -i inplace`, `sort -o f`: an in-place edit, and its files. */
+function inPlaceEdit(program: string, args: string[]): string[] | undefined {
+  const positional = args.filter((a) => !a.startsWith('-'));
+  if (program === 'sed' || program === 'gsed') {
+    const inPlace = args.some((a) => /^-[a-zA-Z]*i/.test(a) || a.startsWith('--in-place'));
+    if (!inPlace) return undefined;
+    const script = args.some((a) => a === '-e' || a === '-f' || a === '--expression') ? 0 : 1;
+    return positional.slice(script);
+  }
+  if (program === 'perl') {
+    const inPlace = args.some((a) => {
+      if (!/^-[^-]/.test(a)) return false;
+      for (const letter of a.slice(1)) {
+        if (letter === 'i') return true;
+        if ('MmIdDxeEFlC0'.includes(letter)) return false; // takes a value: the rest is it
+      }
+      return false;
+    });
+    return inPlace ? positional.slice(1) : undefined;
+  }
+  if (program === 'yq') {
+    return args.some((a) => a === '-i' || a === '--inplace') ? positional.slice(1) : undefined;
+  }
+  if (program === 'gawk' || program === 'awk') {
+    const i = args.indexOf('-i');
+    return i >= 0 && args[i + 1] === 'inplace' ? positional.slice(2) : undefined;
+  }
+  if (program === 'sort') {
+    const i = args.indexOf('-o');
+    return i >= 0 && args[i + 1] ? [args[i + 1] as string] : undefined;
+  }
+  return undefined;
+}
 const WRITERS = new Set([
   'mkdir',
   'touch',
@@ -112,7 +299,10 @@ export class Classifier {
 
   /** Classifies one Bash command run in `cwd`. */
   command(text: string, cwd: string): CommandInfo {
-    return this.combine(this.parts(text, cwd, 0), cwd);
+    const parts = this.parts(text, cwd, 0);
+    const info = this.combine(parts, cwd);
+    if (info.checks.length > 0) info.exit = exitTrust(splitCommand(text), parts);
+    return info;
   }
 
   isTestFile(file: string): boolean {
@@ -122,11 +312,13 @@ export class Classifier {
   private parts(text: string, cwd: string, depth: number): Part[] {
     const parts: Part[] = [];
     const simples = splitCommand(text);
-    for (const simple of simples) {
-      if (simple.argv[0] === 'cd') continue;
+    simples.forEach((simple, index) => {
+      if (simple.argv[0] === 'cd') return;
       const where = simple.cd.reduce((dir, target) => resolvePath(dir, target), cwd);
-      parts.push(...this.simple(simple, where, depth));
-    }
+      const made = this.simple(simple, where, depth);
+      if (depth === 0) for (const part of made) part.index = index;
+      parts.push(...made);
+    });
     // Waiting for something: `sleep` inside a loop, or a sleep of 5 seconds or more.
     const sleeps = simples
       .map((s) => unwrap(s.argv).argv)
@@ -163,11 +355,117 @@ export class Classifier {
       ];
     }
     if (depth < MAX_DEPTH) {
+      const expanded = this.expanded(argv, program, cwd, depth, simple.piped);
+      if (expanded) return [...out, ...expanded];
       const resolved = this.resolved(argv, cwd, depth, simple.piped);
       if (resolved) return [...out, ...resolved];
     }
     out.push(this.byRule(argv, program, simple.piped, []));
     return out;
+  }
+
+  /** The phase a script, target or task name suggests: its first word decides (build:test is a build). */
+  byName(name: string): (typeof this.rules.scripts)[number] | undefined {
+    const first = name.split(/[:_-]/)[0] ?? name;
+    return (
+      this.rules.scripts.find((r) => r.match.test(first)) ??
+      this.rules.scripts.find((r) => r.match.test(name))
+    );
+  }
+
+  private named(runner: string, name: string, piped: boolean, tag: string): Part {
+    const rule = this.byName(name);
+    if (!rule) return { ...this.unmatched(runner, piped), tags: [tag] };
+    return this.part(rule.phase, runner, rule.id, piped, ['by-name', tag], `${runner} ${name}`);
+  }
+
+  /** Commands that run other commands awf can name: find -exec, task runners, script runners. */
+  private expanded(
+    argv: string[],
+    program: string,
+    cwd: string,
+    depth: number,
+    piped: boolean,
+  ): Part[] | undefined {
+    const args = argv.slice(1);
+    if (program === 'find' || program === 'fd' || program === 'fdfind') {
+      const at = args.findIndex((a) =>
+        ['-exec', '-execdir', '-ok', '-okdir', '-x', '--exec', '-X', '--exec-batch'].includes(a),
+      );
+      const parts: Part[] = [];
+      if (args.includes('-delete'))
+        parts.push({ ...this.part('writing', program, 'find-delete', piped, [], program) });
+      if (at >= 0) {
+        const rest = args.slice(at + 1);
+        const stop = rest.findIndex((a) => a === ';' || a === '+');
+        const inner = stop >= 0 ? rest.slice(0, stop) : rest;
+        if (inner.length > 0)
+          parts.push(...this.simple({ argv: inner, writes: [], cd: [], piped }, cwd, depth + 1));
+      }
+      if (parts.length === 0) return undefined;
+      return [
+        this.byRule(
+          [argv[0] as string, ...args.slice(0, at >= 0 ? at : args.length)],
+          program,
+          piped,
+          [],
+        ),
+        ...parts,
+      ];
+    }
+    const runner = TASK_RUNNERS[program];
+    if (runner) {
+      let rest = args;
+      if (runner.sub) {
+        const at = rest.findIndex((a) => !a.startsWith('-'));
+        if (at < 0 || !runner.sub.includes(rest[at] as string)) return undefined;
+        rest = rest.slice(at + 1);
+      }
+      const names = positionals(rest, runner.valueOptions ?? []).filter((n) => !n.includes('='));
+      if (program === 'composer') {
+        // composer runs scripts as `composer run x` or `composer x`; its own commands go to the rules.
+        if (['run', 'run-script'].includes(names[0] ?? '')) names.shift();
+        else if (COMPOSER_COMMANDS.has(names[0] ?? '')) return undefined;
+      }
+      const name = names[0];
+      if (!name) return undefined;
+      return [this.named(program, name, piped, `task:${name}`)];
+    }
+    if (SCRIPT_RUNNERS.has(program)) {
+      const valueOptions =
+        program === 'concurrently'
+          ? [
+              '-n',
+              '--names',
+              '-c',
+              '--prefix-colors',
+              '-p',
+              '--prefix',
+              '-m',
+              '--max-processes',
+              '--success',
+              '-t',
+              '--timestamp-format',
+              '--restart-tries',
+              '--restart-after',
+            ]
+          : ['--max-parallel', '--npm-path'];
+      let names = positionals(args, valueOptions);
+      if (program.includes('server') || program.endsWith('start-test')) names = names.slice(-1); // start, url, then the test script
+      if (names.length === 0) return undefined;
+      const parts = names.flatMap((name) => {
+        const shorthand = /^(npm|pnpm|yarn|bun):(.+)$/.exec(name);
+        const command =
+          program === 'concurrently' && !shorthand ? name : `npm run ${shorthand?.[2] ?? name}`;
+        return this.parts(command, cwd, depth + 1);
+      });
+      return parts.map((p) => ({
+        ...p,
+        piped: p.piped || piped,
+        tags: unique([...p.tags, `via:${program}`]),
+      }));
+    }
+    return undefined;
   }
 
   /** Scripts, make targets, task runners, hooks and script files, classified by what they run. */
@@ -203,7 +501,7 @@ export class Classifier {
         return tagged(parts, `via:${program}`);
       }
       case 'script-name': {
-        const rule = this.rules.scripts.find((r) => r.match.test(res.name));
+        const rule = this.byName(res.name);
         if (rule)
           return [
             this.part(
@@ -223,7 +521,7 @@ export class Classifier {
       case 'make-name': {
         if (!res.target)
           return [this.part('build', 'make', 'make:default', piped, ['by-default'], 'make')];
-        const rule = this.rules.scripts.find((r) => r.match.test(res.target as string));
+        const rule = this.byName(res.target);
         if (rule)
           return [
             this.part(
@@ -239,6 +537,14 @@ export class Classifier {
       }
       case 'tasks': {
         return res.tasks.map((task) => {
+          // turbo, nx and lerna run package scripts by name; Gradle names a task by its path.
+          if (['turbo', 'nx', 'lerna'].includes(res.runner))
+            return this.named(
+              res.runner,
+              task.replace(/^[^:]+:(?=[^:]+:)/, ''),
+              piped,
+              `task:${task}`,
+            );
           const last = task.split(':').pop() ?? task;
           const rule = this.rules.tasks.find((r) => r.match.test(task) || r.match.test(last));
           if (!rule) return { ...this.unmatched(res.runner, piped), tags: [`task:${task}`] };
@@ -267,15 +573,26 @@ export class Classifier {
   }
 
   private byRule(argv: string[], program: string, piped: boolean, tags: string[]): Part {
-    const rule = this.rules.commands.find((r) => ruleMatches(r, program, argv));
+    const edited = inPlaceEdit(program, argv.slice(1));
+    if (edited)
+      return {
+        ...this.part('writing', program, 'in-place-edit', piped, tags, program),
+        files: edited,
+      };
+    // `script/test` and `bin/test` are scripts, not the shell's test builtin.
+    const byPath = (argv[0] ?? '').includes('/');
+    const rule = this.rules.commands.find(
+      (r) => !(byPath && r.phase === 'neutral') && ruleMatches(r, program, argv),
+    );
     if (!rule) return { ...this.unmatched(program, piped), tags };
+    const sub = positionalArgs(program, argv.slice(1))[0] ?? '';
     const part = this.part(
       rule.phase,
       program,
       rule.id,
       piped,
       rule.tag ? [rule.tag, ...tags] : tags,
-      rule.tool ?? program,
+      rule.tool?.replace('{1}', sub) ?? program,
     );
     if (rule.phase === 'writing' && WRITERS.has(program)) {
       part.files = argv.slice(1).filter((a) => !a.startsWith('-') && /[/.]/.test(a));
@@ -370,6 +687,7 @@ export class Classifier {
           checks: info.checks,
           rule: info.rule,
         });
+        if (info.exit) step.exit = info.exit;
         if (step.kind === 'tool') shellCwd.set(ctx, nextCwd(step.command, cwd, home));
         this.markFailures(step);
       } else {
@@ -439,22 +757,40 @@ export class Classifier {
     }
   }
 
-  /** Rule 4: exit code or failure event, else output patterns; a tool's own pattern names the check. */
+  /**
+   * Rule 4: the exit code decides when it belongs to the checks. Output patterns decide when a pipe,
+   * `;` or `|| true` hid it, or when a command chained after the checks may have failed instead.
+   * A tool's own pattern names the check that failed.
+   */
   private markFailures(step: ClassifiedStep): void {
     if (step.checks.length === 0) return;
+    const exit = step.exit ?? 'full';
     const stopped = step.flags.includes('interrupted') || step.flags.includes('denied');
+    const known = step.ok !== undefined && !stopped;
+    const passed = known && step.ok === true && exit !== 'none';
     const output = step.detail?.output;
     const byTool = (tool: string) => this.rules.failurePatterns.filter((p) => p.tool === tool);
     const named = output
       ? step.checks.filter((c) => byTool(c.tool).some((p) => p.pattern.test(output)))
       : [];
     const generic = output ? byTool('*').some((p) => p.pattern.test(output)) : false;
-    if (named.length > 0) {
-      for (const check of named) check.failed = true;
-    } else if ((step.ok === false && !stopped) || generic) {
-      const top = [...step.checks].sort((a, b) => RANK[b.phase] - RANK[a.phase])[0] as Check;
-      top.failed = true;
-      if (step.checks.length > 1) step.tags = unique([...step.tags, 'failure-unattributed']);
+    const top = () => [...step.checks].sort((a, b) => RANK[b.phase] - RANK[a.phase])[0] as Check;
+    const blame = (checks: Check[], sure: boolean) => {
+      for (const check of checks) check.failed = true;
+      if (!sure) step.tags = unique([...step.tags, 'failure-unattributed']);
+    };
+    if (passed) {
+      // Exit 0 from the checks themselves: a pattern in passing output (a test named "...FAILED")
+      // doesn't make it a failure.
+    } else if (named.length > 0) {
+      blame(named, true);
+    } else if (known && step.ok === false) {
+      if (exit === 'full') blame([top()], step.checks.length === 1);
+      // Something failed, maybe after the checks passed: without output, or with a generic
+      // failure line in it, blame the check, unsure; output with neither clears it.
+      else if (!output || generic) blame([top()], false);
+    } else if (generic) {
+      blame([top()], step.checks.length === 1);
     }
     step.failed = step.checks.some((c) => c.failed);
   }
@@ -471,6 +807,37 @@ export class Classifier {
     }
     return topPhase(phases) ?? 'planning';
   }
+}
+
+/** See ExitTrust. */
+function exitTrust(simples: SimpleCommand[], parts: Part[]): ExitTrust {
+  const withChecks = parts.filter((p) => p.checks.length > 0 && p.index !== undefined);
+  if (withChecks.length === 0) return 'full';
+  const last = Math.max(...withChecks.map((p) => p.index as number));
+  if (simples[last]?.substituted) return 'none';
+  // A pipe inside what the check ran: a script's `vitest | tee out`, `bash -c "pytest | tail"`.
+  const own = parts.filter((p) => p.index === last);
+  const lastCheck = own.findLastIndex((p) => p.checks.length > 0);
+  if (own.slice(lastCheck + 1).some((p) => p.piped)) return 'none';
+  let trust: ExitTrust = 'full';
+  for (let k = last; k < simples.length; k++) {
+    const op = simples[k]?.next;
+    if (op === undefined) break;
+    if (op === '(' || op === ')') continue;
+    if (op === '|' || op === '|&') {
+      if (k === last) return 'none';
+      trust = 'pass';
+      continue;
+    }
+    if (op === '&') return 'none';
+    if (k === simples.length - 1) break; // a trailing ; or newline
+    if (op === '&&') {
+      trust = 'pass';
+      continue;
+    }
+    return 'none'; // ;, newline, ||: what follows sets the exit code
+  }
+  return trust;
 }
 
 /** `git -C dir -c k=v --no-pager status` is `git status` to the rules. */
@@ -513,7 +880,9 @@ function isShellTool(tool: string | undefined): boolean {
 function nextCwd(command: string, cwd: string, home: string): string {
   let dir = cwd;
   for (const simple of splitCommand(command)) {
-    if (simple.argv[0] === 'cd' && !simple.piped)
+    // A cd in a subshell or a substitution ends with it.
+    if (simple.subshell || simple.substituted) continue;
+    if ((simple.argv[0] === 'cd' || simple.argv[0] === 'pushd') && !simple.piped)
       dir = resolvePath(
         simple.cd.reduce((d, t) => resolvePath(d, t), cwd),
         simple.argv[1] ?? '~',
@@ -527,7 +896,7 @@ function ruleMatches(rule: CommandRule, program: string, argv: string[]): boolea
   const args = argv.slice(1);
   if (rule.match && !rule.match.test(argv.join(' '))) return false;
   if (rule.args) {
-    const positional = args.filter((a) => !a.startsWith('-') && !a.startsWith('+'));
+    const positional = positionalArgs(program, args);
     let at = 0;
     for (let i = 0; i < rule.args.length; i++) {
       const options = rule.args[i] as string[];
@@ -550,6 +919,17 @@ function ruleMatches(rule: CommandRule, program: string, argv: string[]): boolea
   if (rule.without && rule.without.some(has)) return false;
   if (rule.only && !args.every((a) => rule.only?.has(a))) return false;
   return true;
+}
+
+function positionals(args: string[], valueOptions: string[]): string[] {
+  const out: string[] = [];
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i] as string;
+    if (arg === '--') break;
+    if (valueOptions.includes(arg)) i++;
+    else if (!arg.startsWith('-')) out.push(arg);
+  }
+  return out;
 }
 
 function unique<T>(items: T[]): T[] {

@@ -118,6 +118,89 @@ describe('failure detection', () => {
   });
 });
 
+describe('failure detection: whose exit code is it', () => {
+  const bash = (command: string, ok: boolean | undefined, output?: string) =>
+    step({
+      kind: 'tool',
+      tool: 'Bash',
+      command,
+      ...(ok !== undefined ? { ok } : {}),
+      ...(output ? { detail: { output } } : {}),
+    });
+
+  it("reads the exit code as the checks' own only when nothing after them can change it", () => {
+    const c = new Classifier(defaultRules(), files);
+    expect(c.command('pnpm test', '/repo').exit).toBe('full');
+    expect(c.command('cd web && pnpm test', '/repo').exit).toBe('full');
+    expect(c.command('pnpm lint && pnpm test', '/repo').exit).toBe('full');
+    expect(c.command('pnpm test && git add -A && git commit -m x', '/repo').exit).toBe('pass');
+    expect(c.command('pnpm test 2>&1 | tail -20', '/repo').exit).toBe('none');
+    expect(c.command('pnpm test || true', '/repo').exit).toBe('none');
+    expect(c.command('pnpm test; echo done', '/repo').exit).toBe('none');
+    expect(c.command('pnpm test &', '/repo').exit).toBe('none');
+    expect(c.command('(cd web && pnpm test) && git status', '/repo').exit).toBe('pass');
+    expect(c.command('bash -c "pytest | tail -5"', '/repo').exit).toBe('none');
+    expect(c.command('OUT=$(pnpm test 2>&1); echo "$OUT" | tail', '/repo').exit).toBe('none');
+    expect(c.command('ls src', '/repo').exit).toBeUndefined();
+  });
+
+  it("doesn't let a pattern in passing output override exit 0", () => {
+    const steps = classify(
+      session([
+        bash('npx eslint src', true, '✖ 1 problem (0 errors, 1 warning)'),
+        bash(
+          'pnpm test',
+          true,
+          ' ✓ marks job as FAILED when retries run out\n Tests  3 passed (3)',
+        ),
+      ]),
+    ).steps;
+    expect(steps.map((s) => s.failed)).toEqual([false, false]);
+  });
+
+  it('clears a check when a command after it failed and its output shows no failure', () => {
+    const output =
+      ' Test Files  4 passed (4)\n      Tests  21 passed (21)\nnothing to commit, working tree clean';
+    const [withOutput, without] = classify(
+      session([
+        bash('pnpm test && git add -A && git commit -m x', false, output),
+        bash('pnpm test && git add -A && git commit -m x', false),
+      ]),
+    ).steps;
+    expect(withOutput?.failed).toBe(false);
+    // Without output it may have been the tests: blamed, and marked unsure.
+    expect(without?.failed).toBe(true);
+    expect(without?.tags).toContain('failure-unattributed');
+  });
+
+  it('uses failure patterns that only match real failures', () => {
+    const steps = classify(
+      session([
+        bash('ruff check --fix . | tail -3', true, 'Found 3 errors (3 fixed, 0 remaining).'),
+        bash(
+          'npx playwright test | tail',
+          true,
+          '  2 passed (3.1s)\n  1 failed\n    [chromium] › a.spec.ts:3:1 › x',
+        ),
+        bash(
+          'cargo build 2>&1 | tail',
+          true,
+          'warning: unused\n3 |     let error: Option<String> = None;\n',
+        ),
+        bash('make test | tail', true, 'make: *** [Makefile:4: test] Error 1'),
+      ]),
+    ).steps;
+    expect(steps.map((s) => s.failed)).toEqual([false, true, false, true]);
+  });
+
+  it('reads a failure that `|| true` hid from the output', () => {
+    const [run] = classify(
+      session([bash('pnpm test || true', true, ' Tests  1 failed | 20 passed (21)')]),
+    ).steps;
+    expect(run?.failed).toBe(true);
+  });
+});
+
 describe('model time and other steps', () => {
   it('gives model time the phase of the call it produced, the top one for a batch', () => {
     const edit = step({ id: 'e', kind: 'tool', tool: 'Edit', files: ['/repo/src/a.ts'] });
