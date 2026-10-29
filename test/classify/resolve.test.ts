@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { Classifier } from '../../src/classify/classify';
 import { memoryFiles, parseMakefile } from '../../src/classify/resolve';
 import { defaultRules } from '../../src/classify/rules';
+import type { Session } from '../../src/model/types';
 
 function classifier(entries: Record<string, string>) {
   return new Classifier(defaultRules(), memoryFiles(entries));
@@ -146,7 +147,7 @@ describe('script files', () => {
     });
     expect(c.command('./scripts/test.sh', '/s')).toMatchObject({
       phase: 'tests',
-      tags: ['file:./scripts/test.sh'],
+      tags: expect.arrayContaining(['file:./scripts/test.sh']),
     });
     expect(c.command('bash scripts/test.sh', '/s').phase).toBe('tests');
     expect(c.command('./scripts/missing.sh', '/s').phase).toBe('unclassified');
@@ -168,5 +169,82 @@ describe('task runners', () => {
     expect(c.command('nx affected -t lint test', '/r').phase).toBe('tests');
     expect(c.command('nx run web:build', '/r').phase).toBe('build');
     expect(c.command('nx test web', '/r').phase).toBe('tests');
+  });
+});
+
+describe('review fixes', () => {
+  const c = classifier({
+    '/repo/package.json': JSON.stringify({ scripts: { test: 'vitest run' } }),
+    '/repo/web/package.json': JSON.stringify({ scripts: { test: 'jest', build: 'next build' } }),
+    '/repo/script/test': '#!/usr/bin/env bash\nset -e\npytest -q\n',
+    '/repo/scripts/release.py': '#!/usr/bin/env python3\n"""\nmake build\n"""\nimport os\n',
+  });
+
+  it("keeps a subshell's cd inside it", () => {
+    const info = c.command('(cd web && pnpm build) && pnpm test', '/repo');
+    expect(info.checks.map((k) => k.key)).toEqual(['build:next', 'tests:vitest']);
+    expect(c.command('pushd web && pnpm test', '/repo').checks[0]?.key).toBe('tests:jest');
+  });
+
+  it("doesn't carry a subshell's cd to the next call", () => {
+    const session: Session = {
+      id: 's',
+      agent: 'claude-code',
+      sources: ['transcript'],
+      cwd: '/repo',
+      startMs: 0,
+      endMs: 100,
+      steps: [
+        {
+          id: 'a',
+          parentId: null,
+          kind: 'tool',
+          tool: 'Bash',
+          command: '(cd web && pnpm build)',
+          startMs: 0,
+          endMs: 10,
+          flags: [],
+        },
+        {
+          id: 'b',
+          parentId: null,
+          kind: 'tool',
+          tool: 'Bash',
+          command: 'pnpm test',
+          startMs: 20,
+          endMs: 30,
+          flags: [],
+        },
+      ],
+    };
+    expect(c.session(session).steps[1]?.checks[0]?.key).toBe('tests:vitest');
+  });
+
+  it('gives each cargo and go subcommand its own check, so rework waits for the same one', () => {
+    expect(c.command('cargo fmt --check', '/repo').checks[0]?.key).toBe('lint:cargo fmt');
+    expect(c.command('cargo clippy -- -D warnings', '/repo').checks[0]?.key).toBe(
+      'lint:cargo clippy',
+    );
+    expect(c.command('cargo check', '/repo').checks[0]?.key).toBe('lint:cargo check');
+    expect(c.command('cargo doc', '/repo').checks[0]?.key).toBe('build:cargo doc');
+    expect(c.command('go generate ./...', '/repo').checks[0]?.key).toBe('build:go generate');
+  });
+
+  it('reads scripts called by path when they are shell scripts, and only then', () => {
+    expect(c.command('script/test', '/repo')).toMatchObject({ phase: 'tests' });
+    expect(c.command('./scripts/release.py', '/repo').phase).toBe('unclassified');
+  });
+
+  it('counts the right files as test files', () => {
+    for (const file of [
+      '/r/app/tests.py',
+      '/r/pkg/x/testdata/golden.json',
+      '/r/src/Button.cy.tsx',
+      '/r/src/__snapshots__/a.test.ts.snap',
+      '/r/spec/models/user_spec.rb',
+    ])
+      expect(c.isTestFile(file), file).toBe(true);
+    for (const file of ['/r/spec/openapi.yaml', '/r/docs/spec/api.json'])
+      expect(c.isTestFile(file), file).toBe(false);
   });
 });

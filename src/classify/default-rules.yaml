@@ -22,19 +22,19 @@ version: 1
 #   tag       an extra tag on the step, like install
 #   tool      the check's name, when it isn't the program (go test is "go test")
 commands:
-  # --version, --help and friends only read.
-  - { phase: exploring, match: '^\S+\s+(--version|-v|-V|--help|-h|version|help|-version|--usage)$' }
+  # --version, --help and friends only read. For these programs -v and -V mean verbose.
+  - { phase: exploring, match: '^(?!(pytest|py\.test|unittest|tox|nox|ctest|ninja|mypy|flake8|black|isort|pylint|behave|ansible-lint)\s)\S+\s+(--version|-v|-V|--help|-h|version|help|-version|--usage)$' }
 
   # Lint and format
   - { phase: exploring, program: eslint, with: [--print-config] }
   - phase: lint
-    program: [eslint, prettier, oxlint, standard, xo, stylelint, markdownlint, markdownlint-cli2, htmlhint, jsonlint, yamllint, hadolint, shellcheck, shfmt, actionlint, editorconfig-checker, eclint, lint-staged, commitlint, knip, depcheck, sort-package-json, syncpack, cspell]
+    program: [eslint, prettier, oxlint, standard, xo, stylelint, markdownlint, markdownlint-cli2, htmlhint, jsonlint, yamllint, hadolint, shellcheck, shfmt, actionlint, editorconfig-checker, eclint, lint-staged, commitlint, knip, depcheck, sort-package-json, syncpack, cspell, swift-format]
   - { phase: lint, program: biome, args: ['check|lint|format|ci'] }
   - { phase: lint, program: ruff, args: ['check|format'] }
   - { phase: lint, program: [black, isort, flake8, pylint, mypy, pyright, basedpyright, pyflakes, pycodestyle, pydocstyle, bandit, autopep8, yapf, pyre, pytype, vulture] }
   - { phase: lint, program: [golangci-lint, gofmt, goimports, gofumpt, staticcheck, revive, errcheck, govulncheck] }
-  - { phase: lint, program: go, args: ['vet|fmt'], tool: go vet }
-  - { phase: lint, program: cargo, args: ['clippy|fmt|check|audit|deny|udeps'], tool: cargo clippy }
+  - { phase: lint, program: go, args: ['vet|fmt'], tool: 'go {1}' }
+  - { phase: lint, program: [cargo, cross], args: ['clippy|fmt|check|audit|deny|udeps|machete|semver-checks|hack'], tool: 'cargo {1}' }
   - { phase: lint, program: [rustfmt, clippy-driver] }
   - { phase: lint, program: [ktlint, detekt, ktfmt, swiftlint, swiftformat, clang-format, clang-tidy, cpplint, cppcheck] }
   - { phase: lint, program: swift, args: ['format'], tool: swift format }
@@ -50,11 +50,21 @@ commands:
   - { phase: lint, program: [flutter, dart], args: ['analyze|format'] }
   - { phase: lint, program: mix, args: ['format|credo|dialyzer'] }
   - { phase: lint, program: pre-commit, args: ['run'] }
-  - { phase: lint, program: xcrun, args: ['swift-format|swiftlint'] }
+  - { phase: lint, program: [ty, pyrefly], args: ['check'] }
+  - { phase: lint, program: [next, ng, vue-cli-service, expo], args: ['lint'] }
+  - { phase: lint, program: [nuxi, nuxt], args: ['typecheck'] }
+  - { phase: lint, program: xcodebuild, with: [analyze], tool: xcodebuild analyze }
+  - { phase: lint, match: '^(python\S*\s+)?(\./)?manage\.py\s+check(\s|$)', tool: django check }
+  - { phase: lint, match: '^(tox|nox)\s(.*\s)?(-e|-s|--session)\s+\S*(lint|mypy|typecheck|types|format|fmt|style|ruff|flake8|pylint|pre-commit)', tool: tox lint }
 
   # Running tests (before Build, so a few build-like commands with test flags land here)
   - { phase: exploring, program: [jest, vitest], with: [--listTests] }
   - { phase: exploring, program: [pytest, py.test], with: [--collect-only] }
+  - { phase: exploring, program: [pytest, py.test], with: [--co] }
+  - { phase: exploring, program: go, args: [test], with: [-list] }
+  - { phase: exploring, program: cargo, args: ['nextest', 'list'] }
+  - { phase: exploring, program: cargo, args: [test], with: [--list] }
+  - { phase: exploring, program: [swift, dotnet], args: [test], with: [--list-tests] }
   - { phase: build, program: go, args: [test], with: [-c], tool: go test -c }
   - { phase: build, program: cargo, args: ['test|nextest'], with: [--no-run] }
   - { phase: tests, program: [jest, vitest, mocha, ava, tap, jasmine, karma, uvu, cucumber-js, wdio, testcafe, nightwatch] }
@@ -64,17 +74,27 @@ commands:
   - { phase: tests, program: [bun, deno], args: ['test'] }
   - { phase: tests, program: [pytest, py.test, tox, nox, nose2, ward, behave] }
   - { phase: tests, program: unittest }
+  - { phase: tests, match: '^(python\S*\s+)?(\./)?manage\.py\s+test(\s|$)', tool: django test }
+  - { phase: tests, match: '^ruby\s+(-I\s*\S+\s+)*\S*_test\.rb', tool: minitest }
+  - { phase: tests, program: php, args: ['artisan', 'test'], tool: artisan test }
+  - { phase: tests, program: [ng, react-scripts, craco, vue-cli-service], args: ['test|test:*|e2e'] }
+  - { phase: tests, program: [hatch, rye, tuist], args: ['test'] }
+  - { phase: tests, program: fastlane, args: ['scan|test|tests'] }
   - { phase: tests, program: go, args: [test], tool: go test }
   - { phase: tests, program: [gotestsum, ginkgo] }
-  - { phase: tests, program: cargo, args: ['test|nextest|bench|miri'], tool: cargo test }
+  - { phase: tests, program: [cargo, cross], args: ['test|nextest|bench|miri|llvm-cov|tarpaulin|insta|mutants'], tool: cargo test }
+  - { phase: tests, program: cargo, args: ['xtask|make', 'test|tests|ci'], tool: cargo test }
   - { phase: tests, program: dotnet, args: ['test|vstest'], tool: dotnet test }
+  - { phase: tests, program: dotnet, args: ['watch', 'test'], tool: dotnet test }
   - { phase: tests, program: xcodebuild, with: [test], tool: xcodebuild test }
   - { phase: tests, program: xcodebuild, with: [test-without-building], tool: xcodebuild test }
   - { phase: tests, program: swift, args: [test], tool: swift test }
   - { phase: tests, program: [bazel, bazelisk], args: [test], tool: bazel test }
   - { phase: tests, program: [rspec, phpunit, pest, ctest, busted, prove] }
-  - { phase: tests, program: rails, args: ['test|spec'] }
-  - { phase: tests, program: rake, args: ['test|spec|test:*|spec:*'] }
+  - { phase: tests, program: rails, args: ['test|test:*|spec|spec:*'] }
+  - { phase: tests, program: meson, args: [test] }
+  - { phase: tests, program: ninja, args: ['test|check'] }
+  - { phase: tests, match: '^cmake\s.*--target\s+(test|check|RUN_TESTS)(\s|$)', tool: ctest }
   - { phase: tests, program: mix, args: ['test'] }
   - { phase: tests, program: [flutter, dart], args: ['test'] }
   - { phase: tests, program: [k6, artillery], args: ['run'] }
@@ -83,44 +103,71 @@ commands:
   - { phase: tests, program: gh, args: ['pr', 'checks'], with: [--watch], tool: ci }
 
   # Build
-  - { phase: build, program: [tsc, vue-tsc, tsup, unbuild, swc, babel, rollup, webpack, esbuild, parcel, rspack, rolldown, microbundle, ncc, pkg] }
-  - { phase: build, program: [vite, next, nuxt, astro, remix, svelte-kit, react-router, gatsby, ng, react-scripts, vue-cli-service, electron-builder, expo], args: [build] }
+  - { phase: build, program: [tsc, vue-tsc, tsup, unbuild, swc, babel, rollup, webpack, esbuild, parcel, rspack, rolldown, microbundle, ncc, pkg, electron-builder] }
+  - { phase: build, program: [vite, next, nuxt, astro, remix, svelte-kit, react-router, gatsby, ng, react-scripts, vue-cli-service, expo, storybook, craco], args: [build] }
+  - { phase: build, program: remix, args: ['vite:build'] }
+  - { phase: build, program: expo, args: ['export|prebuild'] }
+  - { phase: build, program: [gcc, g++, cc, c++, clang, clang++, rustc, javac, kotlinc, swiftc, scalac, zig, tinygo] }
+  - { phase: build, program: build, tool: python -m build }
+  - { phase: build, program: [uv, poetry, hatch, pdm, rye], args: [build] }
+  - { phase: build, program: maturin, args: ['build|develop'] }
   - { phase: build, program: vite, args: ['optimize'] }
-  - { phase: build, program: go, args: ['build|install|generate'], tool: go build }
-  - { phase: build, program: cargo, args: ['build|install|doc'], tool: cargo build }
-  - { phase: build, program: dotnet, args: ['build|publish|pack|msbuild'], tool: dotnet build }
-  - { phase: build, program: [msbuild, xbuild] }
-  - { phase: build, program: xcodebuild, without: [-list, -showsdks, -version, -showBuildSettings], tool: xcodebuild build }
+  - { phase: build, program: go, args: ['build|install|generate'], tool: 'go {1}' }
+  - { phase: build, program: [cargo, cross], args: ['build|install|doc'], tool: 'cargo {1}' }
+  - { phase: build, program: dotnet, args: ['build|publish|pack|msbuild'], tool: 'dotnet {1}' }
+  - { phase: build, program: [msbuild, MSBuild, xbuild] }
+  - { phase: build, program: xcodebuild, with: [-resolvePackageDependencies], tag: install, tool: install }
+  - { phase: build, program: xcodebuild, without: [-list, -showsdks, -version, -showBuildSettings, -showdestinations, -showTestPlans, -showBuildSettingsForIndex, -showComponent, -help, -usage, -license, -checkFirstLaunchStatus], tool: xcodebuild build }
   - { phase: exploring, program: xcodebuild }
   - { phase: build, program: swift, args: ['build'], tool: swift build }
   - { phase: build, program: [bazel, bazelisk, buck, buck2, pants], args: ['build'], tool: bazel build }
   - { phase: build, program: [cmake, ninja, meson, scons, xmake, premake5, autoreconf, configure] }
   - { phase: build, program: [docker, podman], args: ['build'], tool: docker build }
   - { phase: build, program: [docker, podman], args: ['buildx|compose|image', 'build'], tool: docker build }
+  - { phase: build, program: docker-compose, args: ['build'], tool: docker build }
+  - { phase: build, match: '^(docker\s+compose|docker-compose)\s(.*\s)?up\s(.*\s)?--build', tool: docker build }
   - { phase: build, program: [protoc, flatc, thrift, graphql-codegen, openapi-generator, openapi-generator-cli, sqlc, wire, mockgen, stringer] }
   - { phase: build, program: buf, args: ['generate'] }
   - { phase: build, program: prisma, args: ['generate'] }
+  - { phase: build, program: [dart, flutter], args: ['run|pub', 'build_runner'] }
   - { phase: build, program: flutter, args: ['build|pub'] }
+  - { phase: build, program: dart, args: ['pub', 'get|upgrade|add|remove|downgrade'], tag: install, tool: install }
   - { phase: build, program: mix, args: ['compile|deps.get|release'] }
   - { phase: build, program: [pod, carthage], args: ['install|update|bootstrap'], tag: install }
   - { phase: build, program: [tuist, xcodegen], args: ['generate|install|fetch|build'] }
+  - { phase: build, program: xcodegen, only: [] }
+  - { phase: build, program: fastlane, args: ['gym|build|build_app'] }
   - { phase: build, program: deno, args: ['compile'] }
   - { phase: build, program: bun, args: ['build'] }
 
   # Installing dependencies counts as Build, tagged install
   - { phase: build, program: [npm, pnpm, bun], args: ['install|i|ci|add|remove|rm|uninstall|update|up|upgrade|link|rebuild|prune|dedupe'], tag: install, tool: install }
-  - { phase: build, program: yarn, only: [], tag: install, tool: install }
+  - { phase: build, match: '^yarn(\s+--?[a-z][a-z-]*)*$', tag: install, tool: install }
   - { phase: build, program: yarn, args: ['install|add|remove|upgrade|up|dedupe'], tag: install, tool: install }
   - { phase: build, program: [pip, pip3, pipx, uv, poetry, pipenv, pdm, conda, mamba, micromamba], args: ['install|sync|add|lock|update|uninstall|remove|venv|create'], tag: install, tool: install }
   - { phase: build, program: uv, args: ['pip', 'install|sync|compile'], tag: install, tool: install }
+  - { phase: build, program: uv, args: ['tool', 'install|upgrade'], tag: install, tool: install }
+  - { phase: build, program: [conda, mamba, micromamba], args: ['env', 'create|update'], tag: install, tool: install }
   - { phase: build, program: [bundle, gem, composer], args: ['install|update|add|require'], tag: install, tool: install }
-  - { phase: build, program: go, args: ['mod|get'], tag: install, tool: install }
+  - { phase: build, match: '^bundle(\s+(--?[a-z][a-z-]*|\d+))*$', tag: install, tool: install }
+  - { phase: build, program: swift, args: ['package', 'resolve|update'], tag: install, tool: install }
+  - { phase: exploring, program: go, args: ['mod', 'why|graph|verify'] }
+  - { phase: writing, program: go, args: ['mod', 'edit|init'] }
+  - { phase: build, program: go, args: ['mod', 'tidy|download|vendor'], tag: install, tool: install }
+  - { phase: build, program: go, args: ['get'], tag: install, tool: install }
   - { phase: build, program: cargo, args: ['fetch|update|add|vendor'], tag: install, tool: install }
+  - { phase: writing, program: dotnet, args: ['add|remove', 'reference'] }
   - { phase: build, program: dotnet, args: ['restore|add|tool'], tag: install, tool: install }
   - { phase: build, program: [brew, apt, apt-get, dnf, yum, apk, port], args: ['install|upgrade|reinstall'], tag: install, tool: install }
   - { phase: build, program: playwright, args: ['install'], tag: install, tool: install }
   - { phase: build, program: [docker, podman], args: ['pull'], tag: install, tool: install }
-  - { phase: build, program: [rustup, nvm, fnm, volta, pyenv, rbenv, asdf, mise, sdk], args: ['install|add|use|toolchain|target|component'], tag: install, tool: install }
+  - { phase: build, program: [docker, podman], args: ['compose', 'pull'], tag: install, tool: install }
+  - { phase: build, program: docker-compose, args: ['pull'], tag: install, tool: install }
+  - { phase: exploring, program: rustup, args: ['show|which|doc|check'] }
+  - { phase: exploring, match: '^rustup\s+\S+\s+list(\s|$)' }
+  - { phase: exploring, program: [nvm, fnm, pyenv, rbenv, asdf, mise, sdk, volta], args: ['ls|list|ls-remote|current|which|version|versions|list-remote'] }
+  - { phase: neutral, program: [nvm, fnm, pyenv, rbenv, asdf, mise, sdk], args: ['use|shell|local|global|deactivate'] }
+  - { phase: build, program: [rustup, nvm, fnm, volta, pyenv, rbenv, asdf, mise, sdk], args: ['install|add|toolchain|target|component'], tag: install, tool: install }
 
   # Shell commands that only read
   - phase: exploring
@@ -129,28 +176,33 @@ commands:
   - { phase: exploring, program: command, with: [-v] }
   - { phase: exploring, program: [make, gmake], with: [-n] }
   - { phase: exploring, match: '^(gcloud|aws|az|doctl|flyctl|heroku|vercel|netlify)\s(\S+\s)*(list|describe|read|get|show|status|logs|print-access-token|print-identity-token|info|get-[a-z-]+|describe-[a-z-]+|list-[a-z-]+)(\s|$)' }
-  - { phase: writing, match: '^(sed|gsed)(\s.*)?\s(-i\S*|--in-place\S*)(\s|$)' }
-  - { phase: writing, match: '^perl(\s.*)?\s-[a-zA-Z]*i' }
   - { phase: exploring, program: [sed, gsed, awk, gawk, nawk, mawk, perl] }
   - phase: exploring
     program: git
     args: ['status|log|diff|show|blame|annotate|rev-parse|ls-files|ls-tree|ls-remote|grep|describe|shortlog|reflog|cat-file|whatchanged|range-diff|merge-base|name-rev|rev-list|count-objects|check-ignore|show-ref|for-each-ref|var|help|version|fetch']
   - { phase: exploring, program: git, args: ['stash|worktree|submodule|notes', 'list|show|status'] }
-  - { phase: exploring, program: git, args: ['config'], with: [--get] }
-  - { phase: exploring, program: git, args: ['config'], with: [--list] }
+  - { phase: exploring, match: '^git config\s(.*\s)?(--get(-all|-regexp|-urlmatch|-color|colorbool)?|--list|-l)(\s|$)' }
+  - { phase: exploring, match: '^git config(\s+--(global|local|system|worktree|show-origin|show-scope|includes|null|name-only))*\s+[A-Za-z][\w-]*\.[\w.-]+$' }
   - { phase: exploring, program: git, args: ['tag'], with: [-l] }
   - { phase: exploring, match: '^git (branch|tag|remote)( -[a-zA-Z-]+)*$' }
+  - { phase: exploring, match: '^git (branch|tag)\s(.*\s)?--(list|contains|no-contains|merged|no-merged|sort|points-at|show-current|format)(\s|=|$)' }
+  - { phase: exploring, program: git, args: ['remote', 'get-url|show'] }
   - { phase: exploring, program: gh, args: ['pr|issue|run|repo|release|workflow|search|api|gist|label|cache', 'view|list|diff|checks|status|watch|search|download'] }
   - { phase: exploring, program: gh, args: ['api'] }
   - { phase: exploring, program: gh, args: ['auth', 'status|token'] }
   - { phase: exploring, program: [npm, pnpm, yarn, bun], args: ['ls|list|why|view|info|show|outdated|audit|explain|query|search|config|bin|root|prefix|pkg|licenses|doctor'] }
+  - { phase: exploring, program: uv, args: ['pip', 'list|show|freeze|tree|check'] }
   - { phase: exploring, program: [pip, pip3, uv, poetry, conda], args: ['list|show|freeze|check|tree|info|search|env'] }
+  - { phase: exploring, program: swift, args: ['package', 'describe|dump-package|show-dependencies|show-executables|tools-version'] }
   - { phase: exploring, program: go, args: ['list|env|doc|version|tool'] }
   - { phase: exploring, program: cargo, args: ['tree|metadata|search|locate-project|pkgid|info'] }
   - { phase: exploring, program: [docker, podman], args: ['ps|images|logs|inspect|stats|top|port|history|version|info|context'] }
   - { phase: exploring, program: [docker, podman], args: ['compose', 'ps|logs|config|images|ls'] }
+  - { phase: exploring, program: docker-compose, args: ['ps|logs|config|images|ls|top|version'] }
   - { phase: exploring, program: kubectl, args: ['get|describe|logs|top|explain|version|api-resources|config|auth|events'] }
-  - { phase: exploring, program: xcrun, args: ['simctl', 'list'] }
+  - { phase: exploring, program: simctl, args: ['list'] }
+  - { phase: exploring, program: xcresulttool, args: ['get|export|metadata|graph|formatDescription'] }
+  - { phase: exploring, program: xcrun }
   - { phase: exploring, program: [terraform, tofu], args: ['show|output|state|providers|version|graph'] }
   - { phase: exploring, program: coverage, args: ['report|html|xml|json'] }
   - { phase: exploring, match: '^tar\s+-?[a-zA-Z]*t' }
@@ -172,14 +224,14 @@ commands:
 tasks:
   - { phase: exploring, match: '^(tasks|help|dependencies|dependencyInsight|properties|projects|buildEnvironment|outgoingVariants|resolvableConfigurations|javaToolchains|model|dependency:tree|dependency:list|help:effective-pom|versions:display-dependency-updates)$' }
   - { phase: lint, match: '^(lint[A-Za-z]*|ktlint[A-Za-z]*|detekt[A-Za-z]*|spotless[A-Za-z]*|spotless:(check|apply)|checkstyle[A-Za-z]*|checkstyle:check|pmd[A-Za-z]*|pmd:check|spotbugs[A-Za-z]*|spotbugs:check|ktfmt[A-Za-z]*|format[A-Za-z]*|typecheck|type-check|tsc|check-types|checkTypes|prettier|eslint|fmt)$' }
-  - { phase: build, match: '^(build[A-Za-z]*|assemble[A-Za-z]*|bundle[A-Za-z]*|compile[A-Za-z]*|jar|bootJar|shadowJar|war|ear|dist[A-Za-z]*|install[A-Za-z]*|publish[A-Za-z]*|package|deploy|generate[A-Za-z]*|kapt[A-Za-z]*|ksp[A-Za-z]*|nativeCompile|clean|prepare|test-compile|process-resources|codegen)$' }
-  - { phase: tests, match: '^(test|tests|check|verify|connectedCheck|integration-test|e2e|spec|coverage|test[A-Z][A-Za-z]*|test:.*|[a-z][A-Za-z]*Test|[a-z][A-Za-z]*Tests|connected[A-Za-z]*Test|jacoco[A-Za-z]*|kover[A-Za-z]*|surefire:test|failsafe:integration-test|failsafe:verify)$' }
+  - { phase: build, match: '^(build[A-Za-z]*|assemble[A-Za-z]*|bundle[A-Za-z]*|compile[A-Za-z]*|jar|bootJar|shadowJar|war|ear|dist[A-Za-z]*|install[A-Za-z]*|publish[A-Za-z]*|package|deploy|generate[A-Za-z]*|kapt[A-Za-z]*|ksp[A-Za-z]*|nativeCompile|clean|prepare|test-compile|process-resources|codegen|[a-z][A-Za-z]*Classes)$' }
+  - { phase: tests, match: '^(test|tests|check|verify|connectedCheck|integration-test|e2e|spec|coverage|test[A-Z][A-Za-z0-9]*|test:.*|[a-z][A-Za-z0-9]*Tests?|connected[A-Za-z]*Test|(verify|record|validate)(Paparazzi|Roborazzi)[A-Za-z0-9]*|jacoco[A-Za-z]*|kover[A-Za-z]*|surefire:test|failsafe:integration-test|failsafe:verify)$' }
 
 # Names of npm/pnpm/yarn/bun scripts and make targets, used only when the file that defines them
 # can't be read. Steps decided this way are tagged by-name.
 scripts:
-  - { phase: lint, match: '^(lint|lint:.*|.*:lint|format|format:.*|fmt|prettier|eslint|typecheck|type-check|types|tsc|check-types|check:types|stylelint|biome)$' }
-  - { phase: tests, match: '^(test|tests|test:.*|.*:test|spec|e2e|e2e:.*|unit|integration|coverage|cy:run|vitest|jest)$' }
+  - { phase: lint, match: '^(lint|lint:.*|.*:lint|format|format:.*|fmt|prettier|eslint|typecheck|type-check|types|tsc|check-types|check:types|stylelint|biome|rubocop|ruff|black|mypy|pylint|flake8|clippy|style)$' }
+  - { phase: tests, match: '^(test|tests|test:.*|.*:test|spec|specs|e2e|e2e:.*|unit|integration|coverage|cy:run|vitest|jest|pytest|check|verify|validate|ci)$' }
   - { phase: build, match: '^(build|build:.*|.*:build|compile|bundle|dist|prepare|prepack|package|generate|codegen|install|deps|all)$' }
 
 # Tool calls other than Bash, by name: exact names, or a regex in match.
@@ -215,7 +267,11 @@ testFiles:
   - '**/*_test.rb'
   - '**/test/**'
   - '**/tests/**'
-  - '**/spec/**'
+  - '**/spec/**/*.{rb,js,jsx,ts,tsx,mjs,cjs,py,ex,exs,php}'
+  - '**/tests.py'
+  - '**/testdata/**'
+  - '**/*.cy.{js,jsx,ts,tsx}'
+  - '**/__snapshots__/**'
   - '**/e2e/**'
   - '**/*_test.{c,cc,cpp,rs,exs,dart}'
   - '**/*.test.{c,cc,cpp}'
@@ -226,24 +282,38 @@ failurePatterns:
   - { tool: vitest, pattern: '(Test Files|Tests)\s+(\d+ failed|.*\b\d+ failed)' }
   - { tool: jest, pattern: 'Tests:\s+\d+ failed' }
   - { tool: mocha, pattern: '\b\d+ failing\b' }
-  - { tool: node, pattern: '(?m)^# fail [1-9]' }
-  - { tool: pytest, pattern: '(?m)^(=+ .*\b\d+ (failed|error)|FAILED |ERROR )' }
+  - { tool: node, pattern: '(?m)^(# fail [1-9]|ℹ fail [1-9])' }
+  - { tool: bun, pattern: '(?m)^\s*[1-9]\d* fail\b' }
+  - { tool: playwright, pattern: '(?m)^\s+[1-9]\d* failed' }
+  - { tool: pytest, pattern: '(?m)^(=+ .*\b\d+ (failed|error)|FAILED |ERROR \S+(::|\.py))' }
+  - { tool: tox, pattern: '(?m)evaluation failed|^ERROR:\s+\S+: (commands failed|exit \d+)' }
+  - { tool: rspec, pattern: '\d+ examples?, [1-9]\d* failures?' }
+  - { tool: rails, pattern: '\d+ runs, \d+ assertions, ([1-9]\d* failures|\d+ failures, [1-9]\d* errors)' }
+  - { tool: minitest, pattern: '\d+ runs, \d+ assertions, ([1-9]\d* failures|\d+ failures, [1-9]\d* errors)' }
+  - { tool: phpunit, pattern: '(?m)^(FAILURES!|ERRORS!)' }
+  - { tool: ctest, pattern: 'tests failed out of' }
   - { tool: go test, pattern: '(?m)^(FAIL|--- FAIL)\b' }
+  - { tool: go build, pattern: '(?m)^\S+\.go:\d+:\d+: ' }
+  - { tool: go vet, pattern: '(?m)^\S+\.go:\d+:\d+: ' }
   - { tool: cargo test, pattern: 'test result: FAILED' }
-  - { tool: cargo build, pattern: 'error(\[E\d{4}\])?: ' }
+  - { tool: cargo build, pattern: '(?m)^error(\[E\d{4}\])?: ' }
+  - { tool: cargo check, pattern: '(?m)^error(\[E\d{4}\])?: ' }
   - { tool: cargo clippy, pattern: '(?m)^error(\[|:)' }
   - { tool: tsc, pattern: 'error TS\d+' }
   - { tool: tsc --noEmit, pattern: 'error TS\d+' }
-  - { tool: eslint, pattern: '\d+ problems? \(\d+ errors?' }
+  - { tool: eslint, pattern: '\d+ problems? \([1-9]\d* errors?' }
   - { tool: prettier, pattern: 'Code style issues found|\[error\]' }
-  - { tool: ruff, pattern: 'Found \d+ errors?|Would reformat' }
+  - { tool: ruff, pattern: 'Found \d+ errors?\b(?! \(\d+ fixed, 0 remaining\))|Would reformat' }
   - { tool: mypy, pattern: 'Found \d+ errors?' }
+  - { tool: pyright, pattern: '(?m)^\s*[1-9]\d* errors?, ' }
+  - { tool: golangci-lint, pattern: '(?m)^\d+ issues?:' }
+  - { tool: rubocop, pattern: '[1-9]\d* offenses? detected' }
   - { tool: gradle, pattern: 'BUILD FAILED|FAILURE: Build failed' }
   - { tool: mvn, pattern: 'BUILD FAILURE' }
   - { tool: xcodebuild test, pattern: '\*\* TEST FAILED \*\*|Testing failed' }
   - { tool: xcodebuild build, pattern: '\*\* BUILD FAILED \*\*' }
   - { tool: dotnet build, pattern: 'Build FAILED|error [A-Z]{2,}\d+' }
   - { tool: dotnet test, pattern: 'Failed!\s+-\s+Failed:\s+[1-9]' }
-  - { tool: swift test, pattern: 'error: |Test Suite .* failed' }
+  - { tool: swift test, pattern: '(?m)^(\S+:\d+:\d+: )?error: |Test Suite .\S+. failed|✘ Test run with .* failed' }
   - { tool: ci, pattern: 'completed with .failure.|X .* failed|run failed' }
-  - { tool: '*', pattern: 'ELIFECYCLE\s+(Command|Test) failed|npm ERR! (code|Test failed)|\bFAILED\b|BUILD FAILED|error\[' }
+  - { tool: '*', pattern: '(?m)ELIFECYCLE\s+(Command|Test) failed|npm ERR! (code|Test failed)|npm error (code \d|Lifecycle script)|error Command failed with exit code|ERR_PNPM_\w+|^\s*ERROR\s+run failed|make(\[\d+\])?: \*\*\* \[.*\] Error \d+|^FAILED\b|BUILD FAILED|^error\[' }

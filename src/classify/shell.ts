@@ -10,10 +10,16 @@ export interface SimpleCommand {
   cd: string[];
   /** Downstream of a pipe: a filter like `| tail`, which only decides the phase if it's a check. */
   piped: boolean;
+  /** The operator after it (`&&`, `||`, `;`, `|`, `&`, a newline), undefined at the end. */
+  next?: string;
+  /** Inside parentheses: its `cd` doesn't outlive the subshell. */
+  subshell?: boolean;
+  /** From a `$(...)`, backtick or `<(...)` substitution inside another command. */
+  substituted?: boolean;
 }
 
 type Token =
-  | { kind: 'word'; value: string; quoted: boolean }
+  | { kind: 'word'; value: string; quoted: boolean; subs?: string[] }
   | { kind: 'op'; value: string }
   | { kind: 'redirect'; value: string };
 
@@ -21,23 +27,97 @@ const OPERATORS = ['&&', '||', '|&', ';;', ';', '|', '&', '\n', '(', ')'];
 const REDIRECT_OP = /^(>>|>\||>&|>|<<<|<<-|<<|<>|<&|<)/;
 const TEMP = /^(\/tmp\/|\/private\/tmp\/|\/var\/folders\/|\$TMPDIR|\$\{TMPDIR\})/;
 
+/** Heredoc tags opened on one line, given the quoting carried in from earlier lines (updated). */
+function heredocTags(line: string, stack: string[]): string[] {
+  const tags: string[] = [];
+  const top = () => stack[stack.length - 1] ?? 'top';
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i] as string;
+    const context = top();
+    if (context === 'sq') {
+      if (c === "'") stack.pop();
+      continue;
+    }
+    if (c === '\\') {
+      i++;
+      continue;
+    }
+    if (context === 'dq') {
+      if (c === '"') stack.pop();
+      else if (c === '$' && line[i + 1] === '(') {
+        stack.push(line[i + 2] === '(' ? 'arith' : 'cmd');
+        i += line[i + 2] === '(' ? 2 : 1;
+      }
+      continue;
+    }
+    if (context === 'arith') {
+      if (c === ')' && line[i + 1] === ')') {
+        stack.pop();
+        i++;
+      }
+      continue;
+    }
+    // top, cmd or a subshell: quotes, substitutions and heredocs are live here.
+    if (c === "'") stack.push('sq');
+    else if (c === '"') stack.push('dq');
+    else if (c === '$' && line[i + 1] === '(') {
+      stack.push(line[i + 2] === '(' ? 'arith' : 'cmd');
+      i += line[i + 2] === '(' ? 2 : 1;
+    } else if (c === '(') stack.push('paren');
+    else if (c === ')' && (context === 'cmd' || context === 'paren')) stack.pop();
+    else if (c === '<' && line[i + 1] === '<') {
+      if (line[i + 2] === '<') {
+        i += 2; // a here-string, not a heredoc
+        continue;
+      }
+      const match = /^<<-?\s*(?:'([^']+)'|"([^"]+)"|\\?([A-Za-z_][A-Za-z0-9_]*))/.exec(
+        line.slice(i),
+      );
+      const tag = match?.[1] ?? match?.[2] ?? match?.[3];
+      if (match && tag) {
+        tags.push(tag);
+        i += match[0].length - 1;
+      } else i++;
+    }
+  }
+  return tags;
+}
+
 /** Removes heredoc bodies and their terminator lines, keeping the line that opens them. */
 export function stripHeredocs(text: string): string {
   if (!text.includes('<<')) return text;
   const lines = text.split('\n');
   const out: string[] = [];
+  const stack: string[] = [];
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i] ?? '';
     out.push(line);
-    const tags = [...line.matchAll(/<<-?\s*(?:'([^']+)'|"([^"]+)"|\\?([A-Za-z_][A-Za-z0-9_]*))/g)]
-      .map((m) => m[1] ?? m[2] ?? m[3])
-      .filter((tag): tag is string => Boolean(tag));
-    for (const tag of tags) {
+    for (const tag of heredocTags(line, stack)) {
       while (i + 1 < lines.length && (lines[i + 1] ?? '').trim() !== tag) i++;
       if (i + 1 < lines.length) i++;
     }
   }
   return out.join('\n');
+}
+
+/** The commands inside `$(...)` and backticks in a double-quoted string's text. */
+function substitutionsIn(text: string): string[] {
+  const subs: string[] = [];
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (c === '\\') i++;
+    else if (c === '$' && text[i + 1] === '(' && text[i + 2] !== '(') {
+      const end = closingParen(text, i + 1);
+      subs.push(text.slice(i + 2, end));
+      i = end;
+    } else if (c === '`') {
+      const end = text.indexOf('`', i + 1);
+      const stop = end === -1 ? text.length : end;
+      subs.push(text.slice(i + 1, stop));
+      i = stop;
+    }
+  }
+  return subs;
 }
 
 /** Splits text into words, operators and redirections, honouring quotes, escapes and $(...). */
@@ -46,11 +126,14 @@ export function tokenize(text: string): Token[] {
   let word = '';
   let quoted = false;
   let inWord = false;
+  let subs: string[] = [];
   const flush = () => {
-    if (inWord) tokens.push({ kind: 'word', value: word, quoted });
+    if (inWord)
+      tokens.push({ kind: 'word', value: word, quoted, ...(subs.length ? { subs } : {}) });
     word = '';
     quoted = false;
     inWord = false;
+    subs = [];
   };
   for (let i = 0; i < text.length; i++) {
     const c = text[i] as string;
@@ -72,7 +155,9 @@ export function tokenize(text: string): Token[] {
     }
     if (c === '"') {
       const j = closingQuote(text, i);
-      word += text.slice(i + 1, j).replace(/\\(["\\$`])/g, '$1');
+      const inside = text.slice(i + 1, j);
+      word += inside.replace(/\\(["\\$`])/g, '$1');
+      subs.push(...substitutionsIn(inside));
       quoted = inWord = true;
       i = j;
       continue;
@@ -80,6 +165,7 @@ export function tokenize(text: string): Token[] {
     if (c === '$' && text[i + 1] === '(') {
       const end = closingParen(text, i + 1);
       word += text.slice(i, end + 1);
+      if (text[i + 2] !== '(') subs.push(text.slice(i + 2, end));
       inWord = true;
       i = end;
       continue;
@@ -88,8 +174,18 @@ export function tokenize(text: string): Token[] {
       const end = text.indexOf('`', i + 1);
       const stop = end === -1 ? text.length : end;
       word += text.slice(i, stop + 1);
+      subs.push(text.slice(i + 1, stop));
       inWord = true;
       i = stop;
+      continue;
+    }
+    if ((c === '<' || c === '>') && text[i + 1] === '(') {
+      // Process substitution, <(cmd) or >(cmd): one word, and a command of its own.
+      const end = closingParen(text, i + 1);
+      word += text.slice(i, end + 1);
+      subs.push(text.slice(i + 2, end));
+      inWord = true;
+      i = end;
       continue;
     }
     if (c === '#' && !inWord) {
@@ -186,28 +282,61 @@ const ASSIGNMENT = /^[A-Za-z_][A-Za-z0-9_]*(\[[^\]]*\])?\+?=/;
  * Splits a command line into simple commands, in order. `case` patterns are skipped, and calls of
  * functions defined in the same line are dropped: their bodies are counted where they are defined.
  */
-export function splitCommand(text: string): SimpleCommand[] {
+export function splitCommand(text: string, depth = 0): SimpleCommand[] {
   const commands: SimpleCommand[] = [];
-  let words: Array<{ value: string; quoted: boolean }> = [];
+  let words: Array<{ value: string; quoted: boolean; subs?: string[] }> = [];
   let writes: string[] = [];
   let piped = false;
   let redirect: string | null = null;
   const cd: string[] = [];
+  /** cd's length at each open parenthesis: a subshell's cd ends with it. */
+  const scopes: number[] = [];
   const functions = new Set<string>();
   let caseDepth = 0;
   let inPattern = false;
 
   const end = (operator: string | null) => {
+    // `function name { body`: the body's first command shares the line with the definition.
+    if (words[0]?.value === 'function' && words[1] && words[2]?.value === '{') {
+      functions.add(words[1].value.replace(/\(\)$/, ''));
+      words = words.slice(3);
+    }
     const argv = clean(words);
     if (words[0]?.value === 'function' && words[1])
       functions.add(words[1].value.replace(/\(\)$/, ''));
+    // Substitutions run first, as commands of their own.
+    if (depth < 4) {
+      for (const sub of words.flatMap((w) => w.subs ?? [])) {
+        for (const inner of splitCommand(sub, depth + 1)) {
+          commands.push({
+            ...inner,
+            cd: [...cd, ...inner.cd],
+            substituted: true,
+            piped: inner.piped,
+          });
+        }
+      }
+    }
     if (argv.length > 0 && !functions.has(argv[0] as string)) {
-      commands.push({ argv, writes, cd: [...cd], piped });
-      if (argv[0] === 'cd' && !piped) cd.push(argv[1] ?? '~');
+      const command: SimpleCommand = { argv, writes, cd: [...cd], piped };
+      if (operator !== null) command.next = operator;
+      if (scopes.length > 0) command.subshell = true;
+      commands.push(command);
+      if ((argv[0] === 'cd' || argv[0] === 'pushd') && !piped) cd.push(argv[1] ?? '~');
+      else if (argv[0] === 'popd' && cd.length > (scopes.at(-1) ?? 0)) cd.pop();
+    } else if (operator !== '(' && operator !== ')') {
+      // After `)`, the subshell's last command is followed by what follows the subshell.
+      const last = commands.at(-1);
+      if (last?.next === ')') {
+        if (operator === null) delete last.next;
+        else last.next = operator;
+      }
     }
     words = [];
     writes = [];
     piped = operator === '|' || operator === '|&';
+    if (operator === '(') scopes.push(cd.length);
+    else if (operator === ')' && scopes.length > 0) cd.length = scopes.pop() as number;
   };
 
   const tokens = tokenize(stripHeredocs(text));
@@ -277,7 +406,11 @@ export function splitCommand(text: string): SimpleCommand[] {
       if (token.value === ';;' && caseDepth > 0) inPattern = true;
       continue;
     }
-    words.push({ value: token.value, quoted: token.quoted });
+    words.push({
+      value: token.value,
+      quoted: token.quoted,
+      ...(token.subs ? { subs: token.subs } : {}),
+    });
   }
   end(null);
   return commands;
@@ -358,6 +491,7 @@ const WRAPPERS: Record<
   },
   chronic: {},
   corepack: {},
+  xcrun: { valueOptions: ['--sdk', '-sdk', '--toolchain', '-toolchain'] },
 };
 
 /** Two-word wrappers: `pnpm exec x`, `uv run x`, `bundle exec x`, ...: options of theirs that take a value. */
@@ -386,6 +520,7 @@ const WRAPPER_PAIRS: Record<string, Record<string, string[]>> = {
   },
   poetry: { run: [] },
   pipenv: { run: [] },
+  pipx: { run: ['--spec', '--python', '--pip-args'] },
   pdm: { run: [] },
   rye: { run: [] },
   hatch: { run: [] },
@@ -417,14 +552,72 @@ const GLOBAL_VALUE_OPTIONS: Record<string, string[]> = {
 const PYTHON = /^(python|python[23](\.\d+)?|py|pypy3?)$/;
 const SHELLS = new Set(['sh', 'bash', 'zsh', 'dash', 'ksh']);
 
-/** Program name without its path or extension; wrapper scripts normalised (gradlew is gradle). */
+/** Scoped packages whose binary has another name. */
+const SCOPED: Record<string, string> = {
+  '@playwright/test': 'playwright',
+  '@angular/cli': 'ng',
+  '@biomejs/biome': 'biome',
+  '@tailwindcss/cli': 'tailwindcss',
+  '@vue/cli-service': 'vue-cli-service',
+  '@nestjs/cli': 'nest',
+  '@redocly/cli': 'redocly',
+  '@stoplight/spectral-cli': 'spectral',
+};
+
+/**
+ * Program name without its path, extension or pinned version (`prettier@3`, `black==24.8.0`,
+ * `@biomejs/biome@latest`); wrapper scripts normalised (gradlew is gradle).
+ */
 export function programName(word: string): string {
+  const scoped = /^(@[\w.-]+\/[\w.-]+)(@[^\s/]+)?$/.exec(word);
+  if (scoped?.[1]) return SCOPED[scoped[1]] ?? scoped[1].split('/')[1] ?? scoped[1];
   let name = word.replace(/\\/g, '/').split('/').pop() ?? word;
   name = name.replace(/\.(exe|cmd|bat)$/i, '');
+  if (word.includes('/') && /@v?\d[\w.-]*$/.test(name)) name = name.replace(/@v?\d[\w.-]*$/, '');
+  name = name.replace(/^([\w.-]+)(@[\w.^~<>=*-]+|==[\w.]+|\[[\w,-]+\])$/, '$1');
   if (name === 'gradlew') return 'gradle';
   if (name === 'mvnw') return 'mvn';
   return name;
 }
+
+const PYTHON_FLAGS = new Set([
+  '-u',
+  '-B',
+  '-I',
+  '-E',
+  '-O',
+  '-OO',
+  '-s',
+  '-S',
+  '-q',
+  '-b',
+  '-bb',
+  '-d',
+  '-R',
+  '-P',
+  '-v',
+]);
+const GO_TOOLS = new Set([
+  'addr2line',
+  'asm',
+  'buildid',
+  'cgo',
+  'compile',
+  'covdata',
+  'cover',
+  'dist',
+  'doc',
+  'fix',
+  'link',
+  'nm',
+  'objdump',
+  'pack',
+  'pprof',
+  'preprofile',
+  'test2json',
+  'trace',
+  'vet',
+]);
 
 export interface Unwrapped {
   argv: string[];
@@ -450,20 +643,65 @@ export function unwrap(input: string[]): Unwrapped {
       argv = after;
       continue;
     }
-    if (PYTHON.test(program) && rest[0] === '-m' && rest[1]) {
-      wrappers.push(`${program} -m`);
+    if (PYTHON.test(program)) {
+      // python -u -W error -X dev -m pytest
+      let i = 0;
+      while (i < rest.length) {
+        const flag = rest[i] as string;
+        if (PYTHON_FLAGS.has(flag)) i++;
+        else if (flag === '-W' || flag === '-X') i += 2;
+        else break;
+      }
+      if (rest[i] === '-m' && rest[i + 1]) {
+        wrappers.push(`${program} -m`);
+        argv = rest.slice(i + 1);
+        continue;
+      }
+    }
+    if (program === 'coverage' && rest[0] === 'run') {
+      const valueOptions = [
+        '--rcfile',
+        '--source',
+        '--omit',
+        '--include',
+        '--concurrency',
+        '--data-file',
+        '--context',
+      ];
+      let i = 1;
+      while (i < rest.length && (rest[i] as string).startsWith('-') && rest[i] !== '-m')
+        i += valueOptions.includes(rest[i] as string) ? 2 : 1;
+      const after = rest[i] === '-m' ? rest.slice(i + 1) : rest.slice(i);
+      if (after.length === 0) break;
+      wrappers.push('coverage run');
+      argv = rest[i] === '-m' ? after : ['python', ...after];
+      continue;
+    }
+    if (
+      program === 'xcrun' &&
+      rest.some((a) => /^-(-?find|f|-show-.*|-sdk-.*|-version|v|h|-help)$/.test(a))
+    )
+      break; // a query: xcrun --show-sdk-path, xcrun --find clang
+    if ((program === 'uv' || program === 'dotnet') && rest[0] === 'tool' && rest[1] === 'run') {
+      const after = skipOptions(rest.slice(2), ['--from', '--with', '--python', '-p'], false);
+      if (after.length === 0) break;
+      wrappers.push(`${program} tool run`);
+      argv = after;
+      continue;
+    }
+    if (program === 'php' && /(^|\/)(vendor\/)?bin\/[\w.-]+$/.test(rest[0] ?? '')) {
+      wrappers.push('php');
+      argv = rest;
+      continue;
+    }
+    if (program === 'go' && rest[0] === 'tool' && rest[1] && !GO_TOOLS.has(rest[1])) {
+      wrappers.push('go tool');
       argv = rest.slice(1);
       continue;
     }
-    if (program === 'coverage' && rest[0] === 'run') {
-      const after = skipOptions(
-        rest.slice(1),
-        ['--rcfile', '--source', '--omit', '--include', '--concurrency'],
-        false,
-      );
-      if (after.length === 0) break;
-      wrappers.push('coverage run');
-      argv = after[0] === '-m' ? after.slice(1) : ['python', ...after];
+    if (program === 'go' && rest[0] === 'run' && /^[\w.-]+\.[a-z]+\/\S+@\S+$/.test(rest[1] ?? '')) {
+      wrappers.push('go run');
+      argv = rest.slice(1);
       continue;
     }
     if (SHELLS.has(program)) break;
@@ -535,7 +773,11 @@ export function shellString(argv: string[]): string | undefined {
   for (let i = 1; i < argv.length; i++) {
     const arg = argv[i] as string;
     if (/^-[a-z]*c[a-z]*$/.test(arg)) return argv[i + 1];
-    if (!arg.startsWith('-')) return undefined;
+    if (/^[-+][a-zA-Z]*[oO]$/.test(arg)) {
+      i++; // -o pipefail, -euo pipefail, +O extglob
+      continue;
+    }
+    if (!arg.startsWith('-') && !arg.startsWith('+')) return undefined;
   }
   return undefined;
 }
@@ -547,7 +789,10 @@ export function scriptFile(argv: string[]): string | undefined {
     const file = argv.slice(1).find((a) => !a.startsWith('-'));
     return file && !shellString(argv) ? file : undefined;
   }
-  return /^(\.{0,2}\/|[\w.-]+\/)[^\s]*\.(sh|bash)$/.test(first) || /^\.\/[\w./-]+$/.test(first)
+  // ./x, scripts/x.sh, script/test, bin/setup: a file the resolver reads, if it's a shell script.
+  return /^(\.{0,2}\/|[\w.-]+\/)[^\s]*\.(sh|bash|zsh)$/.test(first) ||
+    /^\.\/[\w./-]+$/.test(first) ||
+    /^(script|scripts|bin|tools|ci|\.github)\/[\w./-]+$/.test(first)
     ? first
     : undefined;
 }
