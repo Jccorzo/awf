@@ -497,7 +497,7 @@ var require_anchors = __commonJS({
 var require_applyReviver = __commonJS({
   "node_modules/.pnpm/yaml@2.9.1/node_modules/yaml/dist/doc/applyReviver.js"(exports) {
     "use strict";
-    function applyReviver(reviver, obj3, key, val) {
+    function applyReviver(reviver, obj4, key, val) {
       if (val && typeof val === "object") {
         if (Array.isArray(val)) {
           for (let i = 0, len = val.length; i < len; ++i) {
@@ -537,7 +537,7 @@ var require_applyReviver = __commonJS({
           }
         }
       }
-      return reviver.call(obj3, key, val);
+      return reviver.call(obj4, key, val);
     }
     exports.applyReviver = applyReviver;
   }
@@ -984,13 +984,13 @@ var require_Collection = __commonJS({
 var require_stringifyComment = __commonJS({
   "node_modules/.pnpm/yaml@2.9.1/node_modules/yaml/dist/stringify/stringifyComment.js"(exports) {
     "use strict";
-    var stringifyComment = (str3) => str3.replace(/^(?!$)(?: $)?/gm, "#");
+    var stringifyComment = (str4) => str4.replace(/^(?!$)(?: $)?/gm, "#");
     function indentComment(comment, indent) {
       if (/^\n+$/.test(comment))
         return comment.substring(1);
       return indent ? comment.replace(/^(?! *$)/gm, indent) : comment;
     }
-    var lineComment = (str3, indent, comment) => str3.endsWith("\n") ? indentComment(comment, indent) : comment.includes("\n") ? "\n" + indentComment(comment, indent) : (str3.endsWith(" ") ? "" : " ") + comment;
+    var lineComment = (str4, indent, comment) => str4.endsWith("\n") ? indentComment(comment, indent) : comment.includes("\n") ? "\n" + indentComment(comment, indent) : (str4.endsWith(" ") ? "" : " ") + comment;
     exports.indentComment = indentComment;
     exports.lineComment = lineComment;
     exports.stringifyComment = stringifyComment;
@@ -1144,16 +1144,16 @@ var require_stringifyString = __commonJS({
       lineWidth: ctx.options.lineWidth,
       minContentWidth: ctx.options.minContentWidth
     });
-    var containsDocumentMarker = (str3) => /^(%|---|\.\.\.)/m.test(str3);
-    function lineLengthOverLimit(str3, lineWidth, indentLength) {
+    var containsDocumentMarker = (str4) => /^(%|---|\.\.\.)/m.test(str4);
+    function lineLengthOverLimit(str4, lineWidth, indentLength) {
       if (!lineWidth || lineWidth < 0)
         return false;
       const limit = lineWidth - indentLength;
-      const strLen = str3.length;
+      const strLen = str4.length;
       if (strLen <= limit)
         return false;
       for (let i = 0, start = 0; i < strLen; ++i) {
-        if (str3[i] === "\n") {
+        if (str4[i] === "\n") {
           if (i - start > limit)
             return true;
           start = i + 1;
@@ -1170,11 +1170,11 @@ var require_stringifyString = __commonJS({
       const { implicitKey } = ctx;
       const minMultiLineLength = ctx.options.doubleQuotedMinMultiLineLength;
       const indent = ctx.indent || (containsDocumentMarker(value) ? "  " : "");
-      let str3 = "";
+      let str4 = "";
       let start = 0;
       for (let i = 0, ch = json[i]; ch; ch = json[++i]) {
         if (ch === " " && json[i + 1] === "\\" && json[i + 2] === "n") {
-          str3 += json.slice(start, i) + "\\ ";
+          str4 += json.slice(start, i) + "\\ ";
           i += 1;
           start = i;
           ch = "\\";
@@ -1183,38 +1183,38 @@ var require_stringifyString = __commonJS({
           switch (json[i + 1]) {
             case "u":
               {
-                str3 += json.slice(start, i);
+                str4 += json.slice(start, i);
                 const code = json.substr(i + 2, 4);
                 switch (code) {
                   case "0000":
-                    str3 += "\\0";
+                    str4 += "\\0";
                     break;
                   case "0007":
-                    str3 += "\\a";
+                    str4 += "\\a";
                     break;
                   case "000b":
-                    str3 += "\\v";
+                    str4 += "\\v";
                     break;
                   case "001b":
-                    str3 += "\\e";
+                    str4 += "\\e";
                     break;
                   case "0085":
-                    str3 += "\\N";
+                    str4 += "\\N";
                     break;
                   case "00a0":
-                    str3 += "\\_";
+                    str4 += "\\_";
                     break;
                   case "2028":
-                    str3 += "\\L";
+                    str4 += "\\L";
                     break;
                   case "2029":
-                    str3 += "\\P";
+                    str4 += "\\P";
                     break;
                   default:
                     if (code.substr(0, 2) === "00")
-                      str3 += "\\x" + code.substr(2);
+                      str4 += "\\x" + code.substr(2);
                     else
-                      str3 += json.substr(i, 6);
+                      str4 += json.substr(i, 6);
                 }
                 i += 5;
                 start = i + 1;
@@ -1224,14 +1224,14 @@ var require_stringifyString = __commonJS({
               if (implicitKey || json[i + 2] === '"' || json.length < minMultiLineLength) {
                 i += 1;
               } else {
-                str3 += json.slice(start, i) + "\n\n";
+                str4 += json.slice(start, i) + "\n\n";
                 while (json[i + 2] === "\\" && json[i + 3] === "n" && json[i + 4] !== '"') {
-                  str3 += "\n";
+                  str4 += "\n";
                   i += 2;
                 }
-                str3 += indent;
+                str4 += indent;
                 if (json[i + 2] === " ")
-                  str3 += "\\";
+                  str4 += "\\";
                 i += 1;
                 start = i + 1;
               }
@@ -1240,8 +1240,8 @@ var require_stringifyString = __commonJS({
               i += 1;
           }
       }
-      str3 = start ? str3 + json.slice(start) : json;
-      return implicitKey ? str3 : foldFlowLines.foldFlowLines(str3, indent, foldFlowLines.FOLD_QUOTED, getFoldOptions(ctx, false));
+      str4 = start ? str4 + json.slice(start) : json;
+      return implicitKey ? str4 : foldFlowLines.foldFlowLines(str4, indent, foldFlowLines.FOLD_QUOTED, getFoldOptions(ctx, false));
     }
     function singleQuotedString(value, ctx) {
       if (ctx.options.singleQuote === false || ctx.implicitKey && value.includes("\n") || /[ \t]\n|\n[ \t]/.test(value))
@@ -1369,15 +1369,15 @@ ${indent}${start}${value}${end}`;
           return quotedString(value, ctx);
         }
       }
-      const str3 = value.replace(/\n+/g, `$&
+      const str4 = value.replace(/\n+/g, `$&
 ${indent}`);
       if (actualString) {
-        const test = (tag) => tag.default && tag.tag !== "tag:yaml.org,2002:str" && tag.test?.test(str3);
+        const test = (tag) => tag.default && tag.tag !== "tag:yaml.org,2002:str" && tag.test?.test(str4);
         const { compat, tags } = ctx.doc.schema;
         if (tags.some(test) || compat?.some(test))
           return quotedString(value, ctx);
       }
-      return implicitKey ? str3 : foldFlowLines.foldFlowLines(str3, indent, foldFlowLines.FOLD_FLOW, getFoldOptions(ctx, false));
+      return implicitKey ? str4 : foldFlowLines.foldFlowLines(str4, indent, foldFlowLines.FOLD_FLOW, getFoldOptions(ctx, false));
     }
     function stringifyString(item, ctx, onComment, onChompKeep) {
       const { implicitKey, inFlow } = ctx;
@@ -1473,10 +1473,10 @@ var require_stringify = __commonJS({
           return match.find((t) => t.format === item.format) ?? match[0];
       }
       let tagObj = void 0;
-      let obj3;
+      let obj4;
       if (identity.isScalar(item)) {
-        obj3 = item.value;
-        let match = tags.filter((t) => t.identify?.(obj3));
+        obj4 = item.value;
+        let match = tags.filter((t) => t.identify?.(obj4));
         if (match.length > 1) {
           const testMatch = match.filter((t) => t.test);
           if (testMatch.length > 0)
@@ -1484,11 +1484,11 @@ var require_stringify = __commonJS({
         }
         tagObj = match.find((t) => t.format === item.format) ?? match.find((t) => !t.format);
       } else {
-        obj3 = item;
-        tagObj = tags.find((t) => t.nodeClass && obj3 instanceof t.nodeClass);
+        obj4 = item;
+        tagObj = tags.find((t) => t.nodeClass && obj4 instanceof t.nodeClass);
       }
       if (!tagObj) {
-        const name = obj3?.constructor?.name ?? (obj3 === null ? "null" : typeof obj3);
+        const name = obj4?.constructor?.name ?? (obj4 === null ? "null" : typeof obj4);
         throw new Error(`Tag not resolved for ${name} value`);
       }
       return tagObj;
@@ -1529,11 +1529,11 @@ var require_stringify = __commonJS({
       const props = stringifyProps(node, tagObj, ctx);
       if (props.length > 0)
         ctx.indentAtStart = (ctx.indentAtStart ?? 0) + props.length + 1;
-      const str3 = typeof tagObj.stringify === "function" ? tagObj.stringify(node, ctx, onComment, onChompKeep) : identity.isScalar(node) ? stringifyString.stringifyString(node, ctx, onComment, onChompKeep) : node.toString(ctx, onComment, onChompKeep);
+      const str4 = typeof tagObj.stringify === "function" ? tagObj.stringify(node, ctx, onComment, onChompKeep) : identity.isScalar(node) ? stringifyString.stringifyString(node, ctx, onComment, onChompKeep) : node.toString(ctx, onComment, onChompKeep);
       if (!props)
-        return str3;
-      return identity.isScalar(node) || str3[0] === "{" || str3[0] === "[" ? `${props} ${str3}` : `${props}
-${ctx.indent}${str3}`;
+        return str4;
+      return identity.isScalar(node) || str4[0] === "{" || str4[0] === "[" ? `${props} ${str4}` : `${props}
+${ctx.indent}${str4}`;
     }
     exports.createStringifyContext = createStringifyContext;
     exports.stringify = stringify;
@@ -1568,8 +1568,8 @@ var require_stringifyPair = __commonJS({
       });
       let keyCommentDone = false;
       let chompKeep = false;
-      let str3 = stringify.stringify(key, ctx, () => keyCommentDone = true, () => chompKeep = true);
-      if (!explicitKey && !ctx.inFlow && str3.length > 1024) {
+      let str4 = stringify.stringify(key, ctx, () => keyCommentDone = true, () => chompKeep = true);
+      if (!explicitKey && !ctx.inFlow && str4.length > 1024) {
         if (simpleKeys)
           throw new Error("With simple keys, single line scalar must not span more than 1024 characters");
         explicitKey = true;
@@ -1578,27 +1578,27 @@ var require_stringifyPair = __commonJS({
         if (allNullValues || value == null) {
           if (keyCommentDone && onComment)
             onComment();
-          return str3 === "" ? "?" : explicitKey ? `? ${str3}` : str3;
+          return str4 === "" ? "?" : explicitKey ? `? ${str4}` : str4;
         }
       } else if (allNullValues && !simpleKeys || value == null && explicitKey) {
-        str3 = `? ${str3}`;
+        str4 = `? ${str4}`;
         if (keyComment && !keyCommentDone) {
-          str3 += stringifyComment.lineComment(str3, ctx.indent, commentString(keyComment));
+          str4 += stringifyComment.lineComment(str4, ctx.indent, commentString(keyComment));
         } else if (chompKeep && onChompKeep)
           onChompKeep();
-        return str3;
+        return str4;
       }
       if (keyCommentDone)
         keyComment = null;
       if (explicitKey) {
         if (keyComment)
-          str3 += stringifyComment.lineComment(str3, ctx.indent, commentString(keyComment));
-        str3 = `? ${str3}
+          str4 += stringifyComment.lineComment(str4, ctx.indent, commentString(keyComment));
+        str4 = `? ${str4}
 ${indent}:`;
       } else {
-        str3 = `${str3}:`;
+        str4 = `${str4}:`;
         if (keyComment)
-          str3 += stringifyComment.lineComment(str3, ctx.indent, commentString(keyComment));
+          str4 += stringifyComment.lineComment(str4, ctx.indent, commentString(keyComment));
       }
       let vsb, vcb, valueComment;
       if (identity.isNode(value)) {
@@ -1614,7 +1614,7 @@ ${indent}:`;
       }
       ctx.implicitKey = false;
       if (!explicitKey && !keyComment && identity.isScalar(value))
-        ctx.indentAtStart = str3.length + 1;
+        ctx.indentAtStart = str4.length + 1;
       chompKeep = false;
       if (!indentSeq && indentStep.length >= 2 && !ctx.inFlow && !explicitKey && identity.isSeq(value) && !value.flow && !value.tag && !value.anchor) {
         ctx.indent = ctx.indent.substring(2);
@@ -1658,16 +1658,16 @@ ${ctx.indent}`;
       } else if (valueStr === "" || valueStr[0] === "\n") {
         ws = "";
       }
-      str3 += ws + valueStr;
+      str4 += ws + valueStr;
       if (ctx.inFlow) {
         if (valueCommentDone && onComment)
           onComment();
       } else if (valueComment && !valueCommentDone) {
-        str3 += stringifyComment.lineComment(str3, ctx.indent, commentString(valueComment));
+        str4 += stringifyComment.lineComment(str4, ctx.indent, commentString(valueComment));
       } else if (chompKeep && onChompKeep) {
         onChompKeep();
       }
-      return str3;
+      return str4;
     }
     exports.stringifyPair = stringifyPair;
   }
@@ -1894,31 +1894,31 @@ var require_stringifyCollection = __commonJS({
           }
         }
         chompKeep = false;
-        let str4 = stringify.stringify(item, itemCtx, () => comment2 = null, () => chompKeep = true);
+        let str5 = stringify.stringify(item, itemCtx, () => comment2 = null, () => chompKeep = true);
         if (comment2)
-          str4 += stringifyComment.lineComment(str4, itemIndent, commentString(comment2));
+          str5 += stringifyComment.lineComment(str5, itemIndent, commentString(comment2));
         if (chompKeep && comment2)
           chompKeep = false;
-        lines.push(blockItemPrefix + str4);
+        lines.push(blockItemPrefix + str5);
       }
-      let str3;
+      let str4;
       if (lines.length === 0) {
-        str3 = flowChars.start + flowChars.end;
+        str4 = flowChars.start + flowChars.end;
       } else {
-        str3 = lines[0];
+        str4 = lines[0];
         for (let i = 1; i < lines.length; ++i) {
           const line = lines[i];
-          str3 += line ? `
+          str4 += line ? `
 ${indent}${line}` : "\n";
         }
       }
       if (comment) {
-        str3 += "\n" + stringifyComment.indentComment(commentString(comment), indent);
+        str4 += "\n" + stringifyComment.indentComment(commentString(comment), indent);
         if (onComment)
           onComment();
       } else if (chompKeep && onChompKeep)
         onChompKeep();
-      return str3;
+      return str4;
     }
     function stringifyFlowCollection({ items }, ctx, { flowChars, itemIndent }) {
       const { indent, indentStep, flowCollectionPadding: fcPadding, options: { commentString } } = ctx;
@@ -1961,21 +1961,21 @@ ${indent}${line}` : "\n";
         }
         if (comment)
           reqNewline = true;
-        let str3 = stringify.stringify(item, itemCtx, () => comment = null);
-        reqNewline || (reqNewline = lines.length > linesAtValue || str3.includes("\n"));
+        let str4 = stringify.stringify(item, itemCtx, () => comment = null);
+        reqNewline || (reqNewline = lines.length > linesAtValue || str4.includes("\n"));
         if (i < items.length - 1) {
-          str3 += ",";
+          str4 += ",";
         } else if (ctx.options.trailingComma) {
           if (ctx.options.lineWidth > 0) {
-            reqNewline || (reqNewline = lines.reduce((sum, line) => sum + line.length + 2, 2) + (str3.length + 2) > ctx.options.lineWidth);
+            reqNewline || (reqNewline = lines.reduce((sum, line) => sum + line.length + 2, 2) + (str4.length + 2) > ctx.options.lineWidth);
           }
           if (reqNewline) {
-            str3 += ",";
+            str4 += ",";
           }
         }
         if (comment)
-          str3 += stringifyComment.lineComment(str3, itemIndent, commentString(comment));
-        lines.push(str3);
+          str4 += stringifyComment.lineComment(str4, itemIndent, commentString(comment));
+        lines.push(str4);
         linesAtValue = lines.length;
       }
       const { start, end } = flowChars;
@@ -1987,11 +1987,11 @@ ${indent}${line}` : "\n";
           reqNewline = ctx.options.lineWidth > 0 && len > ctx.options.lineWidth;
         }
         if (reqNewline) {
-          let str3 = start;
+          let str4 = start;
           for (const line of lines)
-            str3 += line ? `
+            str4 += line ? `
 ${indentStep}${indent}${line}` : "\n";
-          return `${str3}
+          return `${str4}
 ${indent}${end}`;
         } else {
           return `${start}${fcPadding}${lines.join(" ")}${fcPadding}${end}`;
@@ -2044,23 +2044,23 @@ var require_YAMLMap = __commonJS({
        * A generic collection parsing method that can be extended
        * to other node classes that inherit from YAMLMap
        */
-      static from(schema, obj3, ctx) {
+      static from(schema, obj4, ctx) {
         const { keepUndefined, replacer } = ctx;
         const map = new this(schema);
         const add = (key, value) => {
           if (typeof replacer === "function")
-            value = replacer.call(obj3, key, value);
+            value = replacer.call(obj4, key, value);
           else if (Array.isArray(replacer) && !replacer.includes(key))
             return;
           if (value !== void 0 || keepUndefined)
             map.items.push(Pair.createPair(key, value, ctx));
         };
-        if (obj3 instanceof Map) {
-          for (const [key, value] of obj3)
+        if (obj4 instanceof Map) {
+          for (const [key, value] of obj4)
             add(key, value);
-        } else if (obj3 && typeof obj3 === "object") {
-          for (const key of Object.keys(obj3))
-            add(key, obj3[key]);
+        } else if (obj4 && typeof obj4 === "object") {
+          for (const key of Object.keys(obj4))
+            add(key, obj4[key]);
         }
         if (typeof schema.sortMapEntries === "function") {
           map.items.sort(schema.sortMapEntries);
@@ -2170,7 +2170,7 @@ var require_map = __commonJS({
           onError("Expected a mapping for this tag");
         return map2;
       },
-      createNode: (schema, obj3, ctx) => YAMLMap.YAMLMap.from(schema, obj3, ctx)
+      createNode: (schema, obj4, ctx) => YAMLMap.YAMLMap.from(schema, obj4, ctx)
     };
     exports.map = map;
   }
@@ -2266,15 +2266,15 @@ var require_YAMLSeq = __commonJS({
           onComment
         });
       }
-      static from(schema, obj3, ctx) {
+      static from(schema, obj4, ctx) {
         const { replacer } = ctx;
         const seq = new this(schema);
-        if (obj3 && Symbol.iterator in Object(obj3)) {
+        if (obj4 && Symbol.iterator in Object(obj4)) {
           let i = 0;
-          for (let it of obj3) {
+          for (let it of obj4) {
             if (typeof replacer === "function") {
-              const key = obj3 instanceof Set ? it : String(i++);
-              it = replacer.call(obj3, key, it);
+              const key = obj4 instanceof Set ? it : String(i++);
+              it = replacer.call(obj4, key, it);
             }
             seq.items.push(createNode.createNode(it, void 0, ctx));
           }
@@ -2308,7 +2308,7 @@ var require_seq = __commonJS({
           onError("Expected a sequence for this tag");
         return seq2;
       },
-      createNode: (schema, obj3, ctx) => YAMLSeq.YAMLSeq.from(schema, obj3, ctx)
+      createNode: (schema, obj4, ctx) => YAMLSeq.YAMLSeq.from(schema, obj4, ctx)
     };
     exports.seq = seq;
   }
@@ -2323,7 +2323,7 @@ var require_string = __commonJS({
       identify: (value) => typeof value === "string",
       default: true,
       tag: "tag:yaml.org,2002:str",
-      resolve: (str3) => str3,
+      resolve: (str4) => str4,
       stringify(item, ctx, onComment, onChompKeep) {
         ctx = Object.assign({ actualString: true }, ctx);
         return stringifyString.stringifyString(item, ctx, onComment, onChompKeep);
@@ -2361,7 +2361,7 @@ var require_bool = __commonJS({
       default: true,
       tag: "tag:yaml.org,2002:bool",
       test: /^(?:[Tt]rue|TRUE|[Ff]alse|FALSE)$/,
-      resolve: (str3) => new Scalar.Scalar(str3[0] === "t" || str3[0] === "T"),
+      resolve: (str4) => new Scalar.Scalar(str4[0] === "t" || str4[0] === "T"),
       stringify({ source, value }, ctx) {
         if (source && boolTag.test.test(source)) {
           const sv = source[0] === "t" || source[0] === "T";
@@ -2413,7 +2413,7 @@ var require_float = __commonJS({
       default: true,
       tag: "tag:yaml.org,2002:float",
       test: /^(?:[-+]?\.(?:inf|Inf|INF)|\.nan|\.NaN|\.NAN)$/,
-      resolve: (str3) => str3.slice(-3).toLowerCase() === "nan" ? NaN : str3[0] === "-" ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY,
+      resolve: (str4) => str4.slice(-3).toLowerCase() === "nan" ? NaN : str4[0] === "-" ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY,
       stringify: stringifyNumber.stringifyNumber
     };
     var floatExp = {
@@ -2422,7 +2422,7 @@ var require_float = __commonJS({
       tag: "tag:yaml.org,2002:float",
       format: "EXP",
       test: /^[-+]?(?:\.[0-9]+|[0-9]+(?:\.[0-9]*)?)[eE][-+]?[0-9]+$/,
-      resolve: (str3) => parseFloat(str3),
+      resolve: (str4) => parseFloat(str4),
       stringify(node) {
         const num2 = Number(node.value);
         return isFinite(num2) ? num2.toExponential() : stringifyNumber.stringifyNumber(node);
@@ -2433,11 +2433,11 @@ var require_float = __commonJS({
       default: true,
       tag: "tag:yaml.org,2002:float",
       test: /^[-+]?(?:\.[0-9]+|[0-9]+\.[0-9]*)$/,
-      resolve(str3) {
-        const node = new Scalar.Scalar(parseFloat(str3));
-        const dot = str3.indexOf(".");
-        if (dot !== -1 && str3[str3.length - 1] === "0")
-          node.minFractionDigits = str3.length - dot - 1;
+      resolve(str4) {
+        const node = new Scalar.Scalar(parseFloat(str4));
+        const dot = str4.indexOf(".");
+        if (dot !== -1 && str4[str4.length - 1] === "0")
+          node.minFractionDigits = str4.length - dot - 1;
         return node;
       },
       stringify: stringifyNumber.stringifyNumber
@@ -2454,7 +2454,7 @@ var require_int = __commonJS({
     "use strict";
     var stringifyNumber = require_stringifyNumber();
     var intIdentify = (value) => typeof value === "bigint" || Number.isInteger(value);
-    var intResolve = (str3, offset2, radix, { intAsBigInt }) => intAsBigInt ? BigInt(str3) : parseInt(str3.substring(offset2), radix);
+    var intResolve = (str4, offset2, radix, { intAsBigInt }) => intAsBigInt ? BigInt(str4) : parseInt(str4.substring(offset2), radix);
     function intStringify(node, radix, prefix) {
       const { value } = node;
       if (intIdentify(value) && value >= 0)
@@ -2467,7 +2467,7 @@ var require_int = __commonJS({
       tag: "tag:yaml.org,2002:int",
       format: "OCT",
       test: /^0o[0-7]+$/,
-      resolve: (str3, _onError, opt) => intResolve(str3, 2, 8, opt),
+      resolve: (str4, _onError, opt) => intResolve(str4, 2, 8, opt),
       stringify: (node) => intStringify(node, 8, "0o")
     };
     var int = {
@@ -2475,7 +2475,7 @@ var require_int = __commonJS({
       default: true,
       tag: "tag:yaml.org,2002:int",
       test: /^[-+]?[0-9]+$/,
-      resolve: (str3, _onError, opt) => intResolve(str3, 0, 10, opt),
+      resolve: (str4, _onError, opt) => intResolve(str4, 0, 10, opt),
       stringify: stringifyNumber.stringifyNumber
     };
     var intHex = {
@@ -2484,7 +2484,7 @@ var require_int = __commonJS({
       tag: "tag:yaml.org,2002:int",
       format: "HEX",
       test: /^0x[0-9a-fA-F]+$/,
-      resolve: (str3, _onError, opt) => intResolve(str3, 2, 16, opt),
+      resolve: (str4, _onError, opt) => intResolve(str4, 2, 16, opt),
       stringify: (node) => intStringify(node, 16, "0x")
     };
     exports.int = int;
@@ -2537,7 +2537,7 @@ var require_schema2 = __commonJS({
         identify: (value) => typeof value === "string",
         default: true,
         tag: "tag:yaml.org,2002:str",
-        resolve: (str3) => str3,
+        resolve: (str4) => str4,
         stringify: stringifyJSON
       },
       {
@@ -2554,7 +2554,7 @@ var require_schema2 = __commonJS({
         default: true,
         tag: "tag:yaml.org,2002:bool",
         test: /^true$|^false$/,
-        resolve: (str3) => str3 === "true",
+        resolve: (str4) => str4 === "true",
         stringify: stringifyJSON
       },
       {
@@ -2562,7 +2562,7 @@ var require_schema2 = __commonJS({
         default: true,
         tag: "tag:yaml.org,2002:int",
         test: /^-?(?:0|[1-9][0-9]*)$/,
-        resolve: (str3, _onError, { intAsBigInt }) => intAsBigInt ? BigInt(str3) : parseInt(str3, 10),
+        resolve: (str4, _onError, { intAsBigInt }) => intAsBigInt ? BigInt(str4) : parseInt(str4, 10),
         stringify: ({ value }) => intIdentify(value) ? value.toString() : JSON.stringify(value)
       },
       {
@@ -2570,7 +2570,7 @@ var require_schema2 = __commonJS({
         default: true,
         tag: "tag:yaml.org,2002:float",
         test: /^-?(?:0|[1-9][0-9]*)(?:\.[0-9]*)?(?:[eE][-+]?[0-9]+)?$/,
-        resolve: (str3) => parseFloat(str3),
+        resolve: (str4) => parseFloat(str4),
         stringify: stringifyJSON
       }
     ];
@@ -2578,9 +2578,9 @@ var require_schema2 = __commonJS({
       default: true,
       tag: "",
       test: /^/,
-      resolve(str3, onError) {
-        onError(`Unresolved plain scalar ${JSON.stringify(str3)}`);
-        return str3;
+      resolve(str4, onError) {
+        onError(`Unresolved plain scalar ${JSON.stringify(str4)}`);
+        return str4;
       }
     };
     var schema = [map.map, seq.seq].concat(jsonScalars, jsonError);
@@ -2612,10 +2612,10 @@ var require_binary = __commonJS({
         if (typeof node_buffer.Buffer === "function") {
           return node_buffer.Buffer.from(src, "base64");
         } else if (typeof atob === "function") {
-          const str3 = atob(src.replace(/[\n\r]/g, ""));
-          const buffer = new Uint8Array(str3.length);
-          for (let i = 0; i < str3.length; ++i)
-            buffer[i] = str3.charCodeAt(i);
+          const str4 = atob(src.replace(/[\n\r]/g, ""));
+          const buffer = new Uint8Array(str4.length);
+          for (let i = 0; i < str4.length; ++i)
+            buffer[i] = str4.charCodeAt(i);
           return buffer;
         } else {
           onError("This environment does not support reading binary tags; either Buffer or atob is required");
@@ -2626,28 +2626,28 @@ var require_binary = __commonJS({
         if (!value)
           return "";
         const buf = value;
-        let str3;
+        let str4;
         if (typeof node_buffer.Buffer === "function") {
-          str3 = buf instanceof node_buffer.Buffer ? buf.toString("base64") : node_buffer.Buffer.from(buf.buffer).toString("base64");
+          str4 = buf instanceof node_buffer.Buffer ? buf.toString("base64") : node_buffer.Buffer.from(buf.buffer).toString("base64");
         } else if (typeof btoa === "function") {
           let s = "";
           for (let i = 0; i < buf.length; ++i)
             s += String.fromCharCode(buf[i]);
-          str3 = btoa(s);
+          str4 = btoa(s);
         } else {
           throw new Error("This environment does not support writing binary tags; either Buffer or btoa is required");
         }
         type ?? (type = Scalar.Scalar.BLOCK_LITERAL);
         if (type !== Scalar.Scalar.QUOTE_DOUBLE) {
           const lineWidth = Math.max(ctx.options.lineWidth - ctx.indent.length, ctx.options.minContentWidth);
-          const n = Math.ceil(str3.length / lineWidth);
+          const n = Math.ceil(str4.length / lineWidth);
           const lines = new Array(n);
           for (let i = 0, o = 0; i < n; ++i, o += lineWidth) {
-            lines[i] = str3.substr(o, lineWidth);
+            lines[i] = str4.substr(o, lineWidth);
           }
-          str3 = lines.join(type === Scalar.Scalar.BLOCK_LITERAL ? "\n" : " ");
+          str4 = lines.join(type === Scalar.Scalar.BLOCK_LITERAL ? "\n" : " ");
         }
-        return stringifyString.stringifyString({ comment, type, value: str3 }, ctx, onComment, onChompKeep);
+        return stringifyString.stringifyString({ comment, type, value: str4 }, ctx, onComment, onChompKeep);
       }
     };
     exports.binary = binary;
@@ -2853,7 +2853,7 @@ var require_float2 = __commonJS({
       default: true,
       tag: "tag:yaml.org,2002:float",
       test: /^(?:[-+]?\.(?:inf|Inf|INF)|\.nan|\.NaN|\.NAN)$/,
-      resolve: (str3) => str3.slice(-3).toLowerCase() === "nan" ? NaN : str3[0] === "-" ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY,
+      resolve: (str4) => str4.slice(-3).toLowerCase() === "nan" ? NaN : str4[0] === "-" ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY,
       stringify: stringifyNumber.stringifyNumber
     };
     var floatExp = {
@@ -2862,7 +2862,7 @@ var require_float2 = __commonJS({
       tag: "tag:yaml.org,2002:float",
       format: "EXP",
       test: /^[-+]?(?:[0-9][0-9_]*)?(?:\.[0-9_]*)?[eE][-+]?[0-9]+$/,
-      resolve: (str3) => parseFloat(str3.replace(/_/g, "")),
+      resolve: (str4) => parseFloat(str4.replace(/_/g, "")),
       stringify(node) {
         const num2 = Number(node.value);
         return isFinite(num2) ? num2.toExponential() : stringifyNumber.stringifyNumber(node);
@@ -2873,11 +2873,11 @@ var require_float2 = __commonJS({
       default: true,
       tag: "tag:yaml.org,2002:float",
       test: /^[-+]?(?:[0-9][0-9_]*)?\.[0-9_]*$/,
-      resolve(str3) {
-        const node = new Scalar.Scalar(parseFloat(str3.replace(/_/g, "")));
-        const dot = str3.indexOf(".");
+      resolve(str4) {
+        const node = new Scalar.Scalar(parseFloat(str4.replace(/_/g, "")));
+        const dot = str4.indexOf(".");
         if (dot !== -1) {
-          const f = str3.substring(dot + 1).replace(/_/g, "");
+          const f = str4.substring(dot + 1).replace(/_/g, "");
           if (f[f.length - 1] === "0")
             node.minFractionDigits = f.length;
         }
@@ -2897,34 +2897,34 @@ var require_int2 = __commonJS({
     "use strict";
     var stringifyNumber = require_stringifyNumber();
     var intIdentify = (value) => typeof value === "bigint" || Number.isInteger(value);
-    function intResolve(str3, offset2, radix, { intAsBigInt }) {
-      const sign = str3[0];
+    function intResolve(str4, offset2, radix, { intAsBigInt }) {
+      const sign = str4[0];
       if (sign === "-" || sign === "+")
         offset2 += 1;
-      str3 = str3.substring(offset2).replace(/_/g, "");
+      str4 = str4.substring(offset2).replace(/_/g, "");
       if (intAsBigInt) {
         switch (radix) {
           case 2:
-            str3 = `0b${str3}`;
+            str4 = `0b${str4}`;
             break;
           case 8:
-            str3 = `0o${str3}`;
+            str4 = `0o${str4}`;
             break;
           case 16:
-            str3 = `0x${str3}`;
+            str4 = `0x${str4}`;
             break;
         }
-        const n2 = BigInt(str3);
+        const n2 = BigInt(str4);
         return sign === "-" ? BigInt(-1) * n2 : n2;
       }
-      const n = parseInt(str3, radix);
+      const n = parseInt(str4, radix);
       return sign === "-" ? -1 * n : n;
     }
     function intStringify(node, radix, prefix) {
       const { value } = node;
       if (intIdentify(value)) {
-        const str3 = value.toString(radix);
-        return value < 0 ? "-" + prefix + str3.substr(1) : prefix + str3;
+        const str4 = value.toString(radix);
+        return value < 0 ? "-" + prefix + str4.substr(1) : prefix + str4;
       }
       return stringifyNumber.stringifyNumber(node);
     }
@@ -2934,7 +2934,7 @@ var require_int2 = __commonJS({
       tag: "tag:yaml.org,2002:int",
       format: "BIN",
       test: /^[-+]?0b[0-1_]+$/,
-      resolve: (str3, _onError, opt) => intResolve(str3, 2, 2, opt),
+      resolve: (str4, _onError, opt) => intResolve(str4, 2, 2, opt),
       stringify: (node) => intStringify(node, 2, "0b")
     };
     var intOct = {
@@ -2943,7 +2943,7 @@ var require_int2 = __commonJS({
       tag: "tag:yaml.org,2002:int",
       format: "OCT",
       test: /^[-+]?0[0-7_]+$/,
-      resolve: (str3, _onError, opt) => intResolve(str3, 1, 8, opt),
+      resolve: (str4, _onError, opt) => intResolve(str4, 1, 8, opt),
       stringify: (node) => intStringify(node, 8, "0")
     };
     var int = {
@@ -2951,7 +2951,7 @@ var require_int2 = __commonJS({
       default: true,
       tag: "tag:yaml.org,2002:int",
       test: /^[-+]?[0-9][0-9_]*$/,
-      resolve: (str3, _onError, opt) => intResolve(str3, 0, 10, opt),
+      resolve: (str4, _onError, opt) => intResolve(str4, 0, 10, opt),
       stringify: stringifyNumber.stringifyNumber
     };
     var intHex = {
@@ -2960,7 +2960,7 @@ var require_int2 = __commonJS({
       tag: "tag:yaml.org,2002:int",
       format: "HEX",
       test: /^[-+]?0x[0-9a-fA-F_]+$/,
-      resolve: (str3, _onError, opt) => intResolve(str3, 2, 16, opt),
+      resolve: (str4, _onError, opt) => intResolve(str4, 2, 16, opt),
       stringify: (node) => intStringify(node, 16, "0x")
     };
     exports.int = int;
@@ -3064,9 +3064,9 @@ var require_timestamp = __commonJS({
   "node_modules/.pnpm/yaml@2.9.1/node_modules/yaml/dist/schema/yaml-1.1/timestamp.js"(exports) {
     "use strict";
     var stringifyNumber = require_stringifyNumber();
-    function parseSexagesimal(str3, asBigInt) {
-      const sign = str3[0];
-      const parts = sign === "-" || sign === "+" ? str3.substring(1) : str3;
+    function parseSexagesimal(str4, asBigInt) {
+      const sign = str4[0];
+      const parts = sign === "-" || sign === "+" ? str4.substring(1) : str4;
       const num2 = (n) => asBigInt ? BigInt(n) : Number(n);
       const res = parts.replace(/_/g, "").split(":").reduce((res2, p) => res2 * num2(60) + num2(p), num2(0));
       return sign === "-" ? num2(-1) * res : res;
@@ -3103,7 +3103,7 @@ var require_timestamp = __commonJS({
       tag: "tag:yaml.org,2002:int",
       format: "TIME",
       test: /^[-+]?[0-9][0-9_]*(?::[0-5]?[0-9])+$/,
-      resolve: (str3, _onError, { intAsBigInt }) => parseSexagesimal(str3, intAsBigInt),
+      resolve: (str4, _onError, { intAsBigInt }) => parseSexagesimal(str4, intAsBigInt),
       stringify: stringifySexagesimal
     };
     var floatTime = {
@@ -3112,7 +3112,7 @@ var require_timestamp = __commonJS({
       tag: "tag:yaml.org,2002:float",
       format: "TIME",
       test: /^[-+]?[0-9][0-9_]*(?::[0-5]?[0-9])+\.[0-9_]*$/,
-      resolve: (str3) => parseSexagesimal(str3, false),
+      resolve: (str4) => parseSexagesimal(str4, false),
       stringify: stringifySexagesimal
     };
     var timestamp = {
@@ -3123,8 +3123,8 @@ var require_timestamp = __commonJS({
       // may be omitted altogether, resulting in a date format. In such a case, the time part is
       // assumed to be 00:00:00Z (start of day, UTC).
       test: RegExp("^([0-9]{4})-([0-9]{1,2})-([0-9]{1,2})(?:(?:t|T|[ \\t]+)([0-9]{1,2}):([0-9]{1,2}):([0-9]{1,2}(\\.[0-9]+)?)(?:[ \\t]*(Z|[-+][012]?[0-9](?::[0-9]{2})?))?)?$"),
-      resolve(str3) {
-        const match = str3.match(timestamp.test);
+      resolve(str4) {
+        const match = str4.match(timestamp.test);
         if (!match)
           throw new Error("!!timestamp expects a date, starting with yyyy-mm-dd");
         const [, year, month, day, hour, minute, second] = match.map(Number);
@@ -7684,6 +7684,7 @@ var Builder = class {
     if (e.cmd) step.command = e.cmd;
     if (e.files) step.files = e.files;
     if (e.sub) step.agentType = e.sub;
+    if (e.act) step.actions = e.act;
     if (e.bgid) step.backgroundId = e.bgid;
     if (ctx.agentId) step.agentId = ctx.agentId;
     for (const producer of producers) (producer.produces ??= []).push(step.id);
@@ -9309,7 +9310,374 @@ var import_yaml2 = __toESM(require_dist(), 1);
 import path2 from "node:path";
 
 // raw:src/classify/default-rules.yaml
-var default_rules_default = "# awf phase rules. See docs/phases.md.\n#\n# A repo extends these in .awf/rules.yaml, in the same format. Its rules are tried first, so it can\n# also override these. Within a section the first matching rule wins: specific rules go first.\n#\n# Phases: lint, tests, build, exploring, writing (Writing code or Writing tests, by file), running\n# (Running scripts), planning, waiting, neutral (changes nothing and doesn't count, like cd or echo).\n\nversion: 1\n\n# Bash commands. A compound command (&&, ||, ;, |, newlines, subshells, sh -c) is split into simple\n# commands. Each one is matched after wrappers (env FOO=1, sudo, time, timeout, npx, pnpm exec,\n# uv run, poetry run, bundle exec, python -m, ...) are removed, and after npm/pnpm/yarn/bun scripts,\n# make targets, Gradle tasks, Maven goals and git commit hooks are resolved to what they run.\n#\n#   program   the command's name, without its path (string or list)\n#   args      leading arguments that must follow, in order, options skipped (\"a|b\" for either)\n#   with      arguments that must all appear anywhere (--flag also matches --flag=value)\n#   without   arguments that must not appear\n#   only      every argument must be one of these\n#   match     instead of program: a regex tested on the simple command\n#   tag       an extra tag on the step, like install\n#   tool      the check's name, when it isn't the program (go test is \"go test\")\ncommands:\n  # --version, --help and friends only read. For these programs -v and -V mean verbose.\n  - { phase: exploring, match: '^(?!(pytest|py\\.test|unittest|tox|nox|ctest|ninja|mypy|flake8|black|isort|pylint|behave|ansible-lint)\\s)\\S+\\s+(--version|-v|-V|--help|-h|version|help|-version|--usage)$' }\n\n  # Lint and format\n  - { phase: exploring, program: eslint, with: [--print-config] }\n  - phase: lint\n    program: [eslint, prettier, oxlint, standard, xo, stylelint, markdownlint, markdownlint-cli2, htmlhint, jsonlint, yamllint, hadolint, shellcheck, shfmt, actionlint, editorconfig-checker, eclint, lint-staged, commitlint, knip, depcheck, sort-package-json, syncpack, cspell, swift-format]\n  - { phase: lint, program: biome, args: ['check|lint|format|ci'] }\n  - { phase: lint, program: ruff, args: ['check|format'] }\n  - { phase: lint, program: [black, isort, flake8, pylint, mypy, pyright, basedpyright, pyflakes, pycodestyle, pydocstyle, bandit, autopep8, yapf, pyre, pytype, vulture] }\n  - { phase: lint, program: [golangci-lint, gofmt, goimports, gofumpt, staticcheck, revive, errcheck, govulncheck] }\n  - { phase: lint, program: go, args: ['vet|fmt'], tool: 'go {1}' }\n  - { phase: lint, program: [cargo, cross], args: ['clippy|fmt|check|audit|deny|udeps|machete|semver-checks|hack'], tool: 'cargo {1}' }\n  - { phase: lint, program: [rustfmt, clippy-driver] }\n  - { phase: lint, program: [ktlint, detekt, ktfmt, swiftlint, swiftformat, clang-format, clang-tidy, cpplint, cppcheck] }\n  - { phase: lint, program: swift, args: ['format'], tool: swift format }\n  - { phase: lint, program: dotnet, args: ['format'], tool: dotnet format }\n  - { phase: lint, program: [rubocop, standardrb, erb_lint, reek, brakeman] }\n  - { phase: lint, program: [phpcs, phpcbf, phpstan, psalm, php-cs-fixer, pint] }\n  - { phase: lint, program: [tsc, vue-tsc], with: [--noEmit], tool: tsc --noEmit }\n  - { phase: lint, program: [svelte-check, tflint, sqlfluff, checkov, ansible-lint, credo] }\n  - { phase: lint, program: buf, args: ['lint|format|breaking'] }\n  - { phase: lint, program: astro, args: ['check'] }\n  - { phase: lint, program: terraform, args: ['fmt|validate'] }\n  - { phase: lint, program: deno, args: ['lint|fmt|check'] }\n  - { phase: lint, program: [flutter, dart], args: ['analyze|format'] }\n  - { phase: lint, program: mix, args: ['format|credo|dialyzer'] }\n  - { phase: lint, program: pre-commit, args: ['run'] }\n  - { phase: lint, program: [ty, pyrefly], args: ['check'] }\n  - { phase: lint, program: [next, ng, vue-cli-service, expo], args: ['lint'] }\n  - { phase: lint, program: [nuxi, nuxt], args: ['typecheck'] }\n  - { phase: lint, program: xcodebuild, with: [analyze], tool: xcodebuild analyze }\n  - { phase: lint, match: '^(python\\S*\\s+)?(\\./)?manage\\.py\\s+check(\\s|$)', tool: django check }\n  - { phase: lint, match: '^(tox|nox)\\s(.*\\s)?(-e|-s|--session)\\s+\\S*(lint|mypy|typecheck|types|format|fmt|style|ruff|flake8|pylint|pre-commit)', tool: tox lint }\n\n  # Running tests (before Build, so a few build-like commands with test flags land here)\n  - { phase: exploring, program: [jest, vitest], with: [--listTests] }\n  - { phase: exploring, program: [pytest, py.test], with: [--collect-only] }\n  - { phase: exploring, program: [pytest, py.test], with: [--co] }\n  - { phase: exploring, program: go, args: [test], with: [-list] }\n  - { phase: exploring, program: cargo, args: ['nextest', 'list'] }\n  - { phase: exploring, program: cargo, args: [test], with: [--list] }\n  - { phase: exploring, program: [swift, dotnet], args: [test], with: [--list-tests] }\n  - { phase: build, program: go, args: [test], with: [-c], tool: go test -c }\n  - { phase: build, program: cargo, args: ['test|nextest'], with: [--no-run] }\n  - { phase: tests, program: [jest, vitest, mocha, ava, tap, jasmine, karma, uvu, cucumber-js, wdio, testcafe, nightwatch] }\n  - { phase: tests, program: playwright, args: ['test'] }\n  - { phase: tests, program: cypress, args: ['run'] }\n  - { phase: tests, program: [node, tsx], with: [--test] }\n  - { phase: tests, program: [bun, deno], args: ['test'] }\n  - { phase: tests, program: [pytest, py.test, tox, nox, nose2, ward, behave] }\n  - { phase: tests, program: unittest }\n  - { phase: tests, match: '^(python\\S*\\s+)?(\\./)?manage\\.py\\s+test(\\s|$)', tool: django test }\n  - { phase: tests, match: '^ruby\\s+(-I\\s*\\S+\\s+)*\\S*_test\\.rb', tool: minitest }\n  - { phase: tests, program: php, args: ['artisan', 'test'], tool: artisan test }\n  - { phase: tests, program: [ng, react-scripts, craco, vue-cli-service], args: ['test|test:*|e2e'] }\n  - { phase: tests, program: [hatch, rye, tuist], args: ['test'] }\n  - { phase: tests, program: fastlane, args: ['scan|test|tests'] }\n  - { phase: tests, program: go, args: [test], tool: go test }\n  - { phase: tests, program: [gotestsum, ginkgo] }\n  - { phase: tests, program: [cargo, cross], args: ['test|nextest|bench|miri|llvm-cov|tarpaulin|insta|mutants'], tool: cargo test }\n  - { phase: tests, program: cargo, args: ['xtask|make', 'test|tests|ci'], tool: cargo test }\n  - { phase: tests, program: dotnet, args: ['test|vstest'], tool: dotnet test }\n  - { phase: tests, program: dotnet, args: ['watch', 'test'], tool: dotnet test }\n  - { phase: tests, program: xcodebuild, with: [test], tool: xcodebuild test }\n  - { phase: tests, program: xcodebuild, with: [test-without-building], tool: xcodebuild test }\n  - { phase: tests, program: swift, args: [test], tool: swift test }\n  - { phase: tests, program: [bazel, bazelisk], args: [test], tool: bazel test }\n  - { phase: tests, program: [rspec, phpunit, pest, ctest, busted, prove] }\n  - { phase: tests, program: rails, args: ['test|test:*|spec|spec:*'] }\n  - { phase: tests, program: meson, args: [test] }\n  - { phase: tests, program: ninja, args: ['test|check'] }\n  - { phase: tests, match: '^cmake\\s.*--target\\s+(test|check|RUN_TESTS)(\\s|$)', tool: ctest }\n  - { phase: tests, program: mix, args: ['test'] }\n  - { phase: tests, program: [flutter, dart], args: ['test'] }\n  - { phase: tests, program: [k6, artillery], args: ['run'] }\n  # Waiting on CI: the remote run of the same checks\n  - { phase: tests, program: gh, args: ['run', 'watch'], tool: ci }\n  - { phase: tests, program: gh, args: ['pr', 'checks'], with: [--watch], tool: ci }\n\n  # Build\n  - { phase: running, program: [webpack, rspack], args: ['serve|dev|watch'] }\n  - { phase: build, program: [tsc, vue-tsc, tsup, unbuild, swc, babel, rollup, webpack, esbuild, parcel, rspack, rolldown, microbundle, ncc, pkg, electron-builder] }\n  - { phase: build, program: [vite, next, nuxt, astro, remix, svelte-kit, react-router, gatsby, ng, react-scripts, vue-cli-service, expo, storybook, craco], args: [build] }\n  - { phase: build, program: remix, args: ['vite:build'] }\n  - { phase: build, program: expo, args: ['export|prebuild'] }\n  - { phase: build, program: [gcc, g++, cc, c++, clang, clang++, rustc, javac, kotlinc, swiftc, scalac, zig, tinygo] }\n  - { phase: build, program: build, tool: python -m build }\n  - { phase: build, program: [uv, poetry, hatch, pdm, rye], args: [build] }\n  - { phase: build, program: maturin, args: ['build|develop'] }\n  - { phase: build, program: vite, args: ['optimize'] }\n  - { phase: build, program: go, args: ['build|install|generate'], tool: 'go {1}' }\n  - { phase: build, program: [cargo, cross], args: ['build|install|doc'], tool: 'cargo {1}' }\n  - { phase: build, program: dotnet, args: ['build|publish|pack|msbuild'], tool: 'dotnet {1}' }\n  - { phase: build, program: [msbuild, MSBuild, xbuild] }\n  - { phase: build, program: xcodebuild, with: [-resolvePackageDependencies], tag: install, tool: install }\n  - { phase: build, program: xcodebuild, without: [-list, -showsdks, -version, -showBuildSettings, -showdestinations, -showTestPlans, -showBuildSettingsForIndex, -showComponent, -help, -usage, -license, -checkFirstLaunchStatus], tool: xcodebuild build }\n  - { phase: exploring, program: xcodebuild }\n  - { phase: build, program: swift, args: ['build'], tool: swift build }\n  - { phase: build, program: [bazel, bazelisk, buck, buck2, pants], args: ['build'], tool: bazel build }\n  - { phase: build, program: [cmake, ninja, meson, scons, xmake, premake5, autoreconf, configure] }\n  - { phase: build, program: [docker, podman], args: ['build'], tool: docker build }\n  - { phase: build, program: [docker, podman], args: ['buildx|compose|image', 'build'], tool: docker build }\n  - { phase: build, program: docker-compose, args: ['build'], tool: docker build }\n  - { phase: build, match: '^(docker\\s+compose|docker-compose)\\s(.*\\s)?up\\s(.*\\s)?--build', tool: docker build }\n  - { phase: build, program: [protoc, flatc, thrift, graphql-codegen, openapi-generator, openapi-generator-cli, sqlc, wire, mockgen, stringer] }\n  - { phase: build, program: buf, args: ['generate'] }\n  - { phase: build, program: prisma, args: ['generate'] }\n  - { phase: build, program: [dart, flutter], args: ['run|pub', 'build_runner'] }\n  - { phase: build, program: flutter, args: ['build|pub'] }\n  - { phase: build, program: dart, args: ['pub', 'get|upgrade|add|remove|downgrade'], tag: install, tool: install }\n  - { phase: build, program: mix, args: ['compile|deps.get|release'] }\n  - { phase: build, program: [pod, carthage], args: ['install|update|bootstrap'], tag: install }\n  - { phase: build, program: [tuist, xcodegen], args: ['generate|install|fetch|build'] }\n  - { phase: build, program: xcodegen, only: [] }\n  - { phase: build, program: fastlane, args: ['gym|build|build_app'] }\n  - { phase: build, program: deno, args: ['compile'] }\n  - { phase: build, program: bun, args: ['build'] }\n\n  # Installing dependencies counts as Build, tagged install\n  - { phase: build, program: [npm, pnpm, bun], args: ['install|i|ci|add|remove|rm|uninstall|update|up|upgrade|link|rebuild|prune|dedupe'], tag: install, tool: install }\n  - { phase: build, match: '^yarn(\\s+--?[a-z][a-z-]*)*$', tag: install, tool: install }\n  - { phase: build, program: yarn, args: ['install|add|remove|upgrade|up|dedupe'], tag: install, tool: install }\n  - { phase: build, program: [pip, pip3, pipx, uv, poetry, pipenv, pdm, conda, mamba, micromamba], args: ['install|sync|add|lock|update|uninstall|remove|venv|create'], tag: install, tool: install }\n  - { phase: build, program: uv, args: ['pip', 'install|sync|compile'], tag: install, tool: install }\n  - { phase: build, program: uv, args: ['tool', 'install|upgrade'], tag: install, tool: install }\n  - { phase: build, program: [conda, mamba, micromamba], args: ['env', 'create|update'], tag: install, tool: install }\n  - { phase: build, program: [bundle, gem, composer], args: ['install|update|add|require'], tag: install, tool: install }\n  - { phase: build, match: '^bundle(\\s+(--?[a-z][a-z-]*|\\d+))*$', tag: install, tool: install }\n  - { phase: build, program: swift, args: ['package', 'resolve|update'], tag: install, tool: install }\n  - { phase: exploring, program: go, args: ['mod', 'why|graph|verify'] }\n  - { phase: writing, program: go, args: ['mod', 'edit|init'] }\n  - { phase: build, program: go, args: ['mod', 'tidy|download|vendor'], tag: install, tool: install }\n  - { phase: build, program: go, args: ['get'], tag: install, tool: install }\n  - { phase: build, program: cargo, args: ['fetch|update|add|vendor'], tag: install, tool: install }\n  - { phase: writing, program: dotnet, args: ['add|remove', 'reference'] }\n  - { phase: build, program: dotnet, args: ['restore|add|tool'], tag: install, tool: install }\n  - { phase: build, program: [brew, apt, apt-get, dnf, yum, apk, port], args: ['install|upgrade|reinstall'], tag: install, tool: install }\n  - { phase: build, program: playwright, args: ['install'], tag: install, tool: install }\n  - { phase: build, program: [docker, podman], args: ['pull'], tag: install, tool: install }\n  - { phase: build, program: [docker, podman], args: ['compose', 'pull'], tag: install, tool: install }\n  - { phase: build, program: docker-compose, args: ['pull'], tag: install, tool: install }\n  - { phase: exploring, program: rustup, args: ['show|which|doc|check'] }\n  - { phase: exploring, match: '^rustup\\s+\\S+\\s+list(\\s|$)' }\n  - { phase: exploring, program: [nvm, fnm, pyenv, rbenv, asdf, mise, sdk, volta], args: ['ls|list|ls-remote|current|which|version|versions|list-remote'] }\n  - { phase: neutral, program: [nvm, fnm, pyenv, rbenv, asdf, mise, sdk], args: ['use|shell|local|global|deactivate|env|init'] }\n  - { phase: build, program: [rustup, nvm, fnm, volta, pyenv, rbenv, asdf, mise, sdk], args: ['install|add|toolchain|target|component'], tag: install, tool: install }\n\n  # Shell commands that only read\n  - phase: exploring\n    program: [ls, ll, la, lsd, eza, exa, tree, cat, bat, batcat, head, tail, less, more, grep, egrep, fgrep, rg, ag, ack, find, fd, fzf, wc, file, stat, du, df, which, whereis, type, pwd, realpath, readlink, basename, dirname, diff, colordiff, cmp, comm, jq, yq, gron, sort, uniq, cut, column, strings, xxd, hexdump, od, nl, tac, md5, md5sum, shasum, sha1sum, sha256sum, cksum, lsof, ps, pgrep, env, printenv, uname, sw_vers, whoami, id, hostname, date, man, tldr, history, tokei, cloc, scc, ldd, otool, nm, objdump, plutil, defaults, mdfind, xmllint, pdftotext, identify, exiftool, codesign, security, ioreg, system_profiler, vm_stat, sysctl, netstat, ifconfig, lsblk, free, top, htop, uptime, w, last, journalctl, dmesg, tput]\n  - { phase: exploring, program: [tr, base64, fold, paste, rev, iconv, expand, unexpand, fmt, seq, tsort, numfmt, look, uuidgen] }\n  - { phase: exploring, program: command, with: [-v] }\n  - { phase: exploring, program: [make, gmake], with: [-n] }\n  - { phase: exploring, match: '^(gcloud|aws|az|doctl|flyctl|heroku|vercel|netlify)\\s(\\S+\\s)*(list|describe|read|get|show|status|logs|print-access-token|print-identity-token|info|get-[a-z-]+|describe-[a-z-]+|list-[a-z-]+)(\\s|$)' }\n  - { phase: exploring, program: [sed, gsed, awk, gawk, nawk, mawk, perl] }\n  - phase: exploring\n    program: git\n    args: ['status|log|diff|show|blame|annotate|rev-parse|ls-files|ls-tree|ls-remote|grep|describe|shortlog|reflog|cat-file|whatchanged|range-diff|merge-base|name-rev|rev-list|count-objects|check-ignore|show-ref|for-each-ref|var|help|version|fetch|clone']\n  - { phase: exploring, program: git, args: ['stash|worktree|submodule|notes', 'list|show|status'] }\n  - { phase: exploring, match: '^git config\\s(.*\\s)?(--get(-all|-regexp|-urlmatch|-color|colorbool)?|--list|-l)(\\s|$)' }\n  - { phase: exploring, match: '^git config(\\s+--(global|local|system|worktree|show-origin|show-scope|includes|null|name-only))*\\s+[A-Za-z][\\w-]*\\.[\\w.-]+$' }\n  - { phase: exploring, program: git, args: ['tag'], with: [-l] }\n  - { phase: exploring, match: '^git (branch|tag|remote)( -[a-zA-Z-]+)*$' }\n  - { phase: exploring, match: '^git (branch|tag)\\s(.*\\s)?--(list|contains|no-contains|merged|no-merged|sort|points-at|show-current|format)(\\s|=|$)' }\n  - { phase: exploring, program: git, args: ['remote', 'get-url|show'] }\n  - { phase: running, match: '^\\S*(gh|glab)\\s+api\\s(.*\\s)?(-X|--method)[\\s=]*(POST|PUT|PATCH|DELETE)\\b' }\n  - { phase: exploring, program: [gh, glab], args: ['pr|mr|issue|run|ci|pipeline|job|repo|release|workflow|search|api|gist|label|cache|variable', 'view|list|ls|diff|checks|status|watch|search|download|trace|get'] }\n  - { phase: exploring, program: [gh, glab], args: ['api'] }\n  - { phase: exploring, program: [gh, glab], args: ['auth', 'status|token'] }\n  - { phase: neutral, program: [gh, glab], args: ['auth', 'switch|login|logout|setup-git|refresh'] }\n  - { phase: exploring, program: [npm, pnpm, yarn, bun], args: ['ls|list|why|view|info|show|outdated|audit|explain|query|search|config|bin|root|prefix|pkg|licenses|doctor'] }\n  - { phase: exploring, program: uv, args: ['pip', 'list|show|freeze|tree|check'] }\n  - { phase: exploring, program: [pip, pip3, uv, poetry, conda], args: ['list|show|freeze|check|tree|info|search|env'] }\n  - { phase: exploring, program: swift, args: ['package', 'describe|dump-package|show-dependencies|show-executables|tools-version'] }\n  - { phase: exploring, program: go, args: ['list|env|doc|version|tool'] }\n  - { phase: exploring, program: cargo, args: ['tree|metadata|search|locate-project|pkgid|info'] }\n  - { phase: exploring, program: [docker, podman], args: ['ps|images|logs|inspect|stats|top|port|history|version|info|context'] }\n  - { phase: exploring, program: [docker, podman], args: ['compose', 'ps|logs|config|images|ls'] }\n  - { phase: exploring, program: docker-compose, args: ['ps|logs|config|images|ls|top|version'] }\n  - { phase: exploring, program: kubectl, args: ['get|describe|logs|top|explain|version|api-resources|config|auth|events'] }\n  - { phase: exploring, program: [simctl, devicectl], args: ['list'] }\n  - { phase: exploring, program: xcresulttool, args: ['get|export|metadata|graph|formatDescription'] }\n  - { phase: exploring, program: xcrun }\n  - { phase: exploring, program: [terraform, tofu], args: ['show|output|state|providers|version|graph'] }\n  - { phase: exploring, program: coverage, args: ['report|html|xml|json'] }\n  - { phase: exploring, match: '^tar\\s+-?[a-zA-Z]*t' }\n\n  # Shell commands that change files\n  - { phase: writing, program: [mkdir, touch, cp, mv, rm, rmdir, ln, chmod, chown, chgrp, truncate, tee, patch, install, rsync, scp, unzip, ditto] }\n  - { phase: writing, program: tar }\n  - phase: writing\n    program: git\n    args: ['add|commit|checkout|switch|restore|reset|stash|merge|rebase|cherry-pick|revert|mv|rm|tag|apply|am|init|clean|branch|worktree|submodule|notes|config|remote|pull']\n    tool: git\n\n  # Running scripts: running something that isn't a check, an edit or a read. Scripts and programs,\n  # the app and its servers, HTTP calls, databases, containers and clusters, deploys, publishing,\n  # pushes and CI actions. These come after the rules above, so `gh pr view` still explores and\n  # `docker build` still builds. Waiting in a loop counts here too (polling, decided in code).\n  - { phase: running, match: '^(\\S*/)?(python[23]?(\\.\\d+)?|pypy3?|py)(\\s|$)' }\n  - { phase: running, program: [node, nodejs, tsx, ts-node, ts-node-esm, vite-node, esno, bun, deno, ruby, php, java, kotlin, groovy, scala, jshell, swift, dotnet, Rscript, julia, lua, luajit, elixir, escript, electron] }\n  - { phase: running, program: [bash, sh, zsh, dash, ksh, fish, pwsh, powershell] }\n  - { phase: running, program: [go, cargo, mix], args: ['run|watch|phx.server|ecto.*'] }\n  - { phase: running, program: [vite, next, nuxt, nuxi, astro, remix, gatsby, react-scripts, vue-cli-service, ng, expo, storybook, react-native, flutter, tauri, wrangler], args: ['dev|develop|start|serve|preview|run|run-ios|run-android|run:ios|run:android|attach'] }\n  - { phase: running, program: vite }\n  - { phase: running, program: [nodemon, pm2, forever, serve, http-server, live-server, json-server, browser-sync, wait-on, http.server, uvicorn, gunicorn, hypercorn, daphne, flask, fastapi, streamlit, gradio, jupyter, ipython, celery, puma, rackup, foreman, overmind, air, ngrok, cloudflared, caddy] }\n  - { phase: running, program: rails, args: ['server|s|console|c|runner|r|dbconsole|db|db:*'] }\n  - { phase: running, program: [curl, wget, http, https, xh, curlie, grpcurl, websocat, wscat, nc, ncat, netcat, telnet, ssh, mosh, ping, traceroute, mtr, dig, nslookup, host, whois, openssl] }\n  - { phase: running, program: [psql, pg_ctl, pg_dump, pg_dumpall, pg_restore, pg_isready, createdb, dropdb, createuser, dropuser, initdb, postgres, mysql, mysqldump, mysqladmin, mariadb, sqlite3, duckdb, redis-cli, redis-server, mongosh, mongo, mongod, mongodump, mongorestore, clickhouse, sqlcmd, cqlsh, alembic, flyway, liquibase, dbmate, goose, atlas] }\n  - { phase: running, program: [prisma, drizzle-kit], args: ['migrate|db|studio|push|up|seed'] }\n  - { phase: running, program: [docker, podman, docker-compose, nerdctl, colima, minikube, kind, k3d, kubectl, helm, skaffold, tilt, terraform, tofu, pulumi, ansible, ansible-playbook] }\n  - { phase: running, program: [gcloud, gsutil, bq, aws, az, doctl, flyctl, fly, heroku, vercel, netlify, firebase, wrangler, railway, supabase, eas, fastlane] }\n  - { phase: running, program: [simctl, devicectl, adb, emulator, ios-deploy, idb] }\n  - { phase: running, program: [npm, pnpm, yarn, bun], args: ['publish|unpublish|deprecate|dist-tag|login|logout|adduser'] }\n  - { phase: running, program: [cargo, poetry, uv, pdm, hatch, flit, gem], args: ['publish|push|yank|login|owner'] }\n  - { phase: running, program: twine }\n  - { phase: running, program: git, args: ['push'] }\n  - { phase: running, program: [gh, glab] }\n  - { phase: running, program: [playwright, lighthouse, ffmpeg, magick, sips, screencapture] }\n  # A script file, or a program run by its path (./run, bin/dev, .build/release/app): the project's\n  # own scripts and binaries.\n  - { phase: running, match: '^\\S*\\.(sh|bash|zsh|py|js|mjs|cjs|ts|mts|cts|rb|pl|php|lua|swift|kts|exs|ps1|command)(\\s|$)' }\n  - { phase: running, match: '^\\S*/' }\n\n  # Changes nothing on its own, or takes no time worth a phase\n  - phase: neutral\n    program: [cd, pushd, popd, echo, printf, print, export, unset, set, source, '.', 'true', 'false', ':', sleep, wait, exit, return, read, alias, unalias, trap, shift, local, declare, typeset, readonly, ulimit, umask, '[', '[[', test, clear, reset, hash, shopt, setopt, bindkey, eval, let, break, continue, osascript, say, afplay, notify-send, terminal-notifier, open, xdg-open, kill, pkill, killall, disown, jobs, fg, bg]\n\n# Gradle tasks, Maven goals, and task names given to turbo, nx, sbt and similar runners.\n# Tested against each task name, and against its last part for qualified names like :app:testDebug.\ntasks:\n  - { phase: exploring, match: '^(tasks|help|dependencies|dependencyInsight|properties|projects|buildEnvironment|outgoingVariants|resolvableConfigurations|javaToolchains|model|dependency:tree|dependency:list|help:effective-pom|versions:display-dependency-updates)$' }\n  - { phase: lint, match: '^(lint[A-Za-z]*|ktlint[A-Za-z]*|detekt[A-Za-z]*|spotless[A-Za-z]*|spotless:(check|apply)|checkstyle[A-Za-z]*|checkstyle:check|pmd[A-Za-z]*|pmd:check|spotbugs[A-Za-z]*|spotbugs:check|ktfmt[A-Za-z]*|format[A-Za-z]*|typecheck|type-check|tsc|check-types|checkTypes|prettier|eslint|fmt)$' }\n  - { phase: build, match: '^(build[A-Za-z]*|assemble[A-Za-z]*|bundle[A-Za-z]*|compile[A-Za-z]*|jar|bootJar|shadowJar|war|ear|dist[A-Za-z]*|install[A-Za-z]*|publish[A-Za-z]*|package|deploy|generate[A-Za-z]*|kapt[A-Za-z]*|ksp[A-Za-z]*|nativeCompile|clean|prepare|test-compile|process-resources|codegen|[a-z][A-Za-z]*Classes)$' }\n  - { phase: running, match: '^(run|bootRun|appRun|jettyRun|tomcatRun|runIde|quarkusDev|spring-boot:run|exec:java|exec:exec|jetty:run|quarkus:dev|liberty:dev)$' }\n  - { phase: tests, match: '^(test|tests|check|verify|connectedCheck|integration-test|e2e|spec|coverage|test[A-Z][A-Za-z0-9]*|test:.*|[a-z][A-Za-z0-9]*Tests?|connected[A-Za-z]*Test|(verify|record|validate)(Paparazzi|Roborazzi)[A-Za-z0-9]*|jacoco[A-Za-z]*|kover[A-Za-z]*|surefire:test|failsafe:integration-test|failsafe:verify)$' }\n\n# Names of npm/pnpm/yarn/bun scripts and make targets, used only when the file that defines them\n# can't be read. Steps decided this way are tagged by-name.\nscripts:\n  - { phase: lint, match: '^(lint|lint:.*|.*:lint|format|format:.*|fmt|prettier|eslint|typecheck|type-check|types|tsc|check-types|check:types|stylelint|biome|rubocop|ruff|black|mypy|pylint|flake8|clippy|style)$' }\n  - { phase: tests, match: '^(test|tests|test:.*|.*:test|spec|specs|e2e|e2e:.*|unit|integration|coverage|cy:run|vitest|jest|pytest|check|verify|validate|ci)$' }\n  - { phase: build, match: '^(build|build:.*|.*:build|compile|bundle|dist|prepare|prepack|package|generate|codegen|install|deps|all)$' }\n  - { phase: running, match: '^(dev|develop|start|serve|server|preview|watch|storybook|seed|migrate|db|deploy|release|publish|up|down|ios|android|web|tauri|electron)$' }\n\n# Tool calls other than Bash, by name: exact names, or a regex in match.\ntools:\n  - { phase: exploring, name: [Read, Grep, Glob, LS, WebSearch, WebFetch, NotebookRead, LSP, ToolSearch, Skill, ListMcpResourcesTool, ReadMcpResourceTool, ListAgents] }\n  - { phase: writing, name: [Edit, Write, MultiEdit, NotebookEdit] }\n  - { phase: planning, name: [TodoWrite, TodoRead, TaskCreate, TaskUpdate, TaskList, TaskGet, EnterPlanMode, ExitPlanMode, StructuredOutput, SubagentHandback, SendMessage, SendUserMessage, SendUserFile, Workflow] }\n  - { phase: planning, match: '^mcp__ccd_turn__' }\n  - { phase: waiting, name: [AskUserQuestion] }\n  - { phase: running, name: [Monitor] }\n  - { phase: lint, name: [mcp__ide__getDiagnostics] }\n\n# Files whose edits count as Writing tests rather than Writing code.\ntestFiles:\n  - '**/*_test.go'\n  - '**/*.{test,spec}.{ts,tsx,mts,cts,js,jsx,mjs,cjs}'\n  - '**/*.{test,spec}-d.ts'\n  - '**/__tests__/**'\n  - '**/__mocks__/**'\n  - '**/test_*.py'\n  - '**/*_test.py'\n  - '**/conftest.py'\n  - '**/src/test/**'\n  - '**/src/androidTest/**'\n  - '**/src/*Test/**'\n  - '**/*{Test,Tests,IT,Spec}.{java,kt,scala,groovy}'\n  - '**/Tests/**'\n  - '**/*Tests/**'\n  - '**/*{Test,Tests}.swift'\n  - '**/*.Tests/**'\n  - '**/*.UnitTests/**'\n  - '**/*{Test,Tests}.cs'\n  - '**/*_spec.rb'\n  - '**/*_test.rb'\n  - '**/test/**'\n  - '**/tests/**'\n  - '**/spec/**/*.{rb,js,jsx,ts,tsx,mjs,cjs,py,ex,exs,php}'\n  - '**/tests.py'\n  - '**/testdata/**'\n  - '**/*.cy.{js,jsx,ts,tsx}'\n  - '**/__snapshots__/**'\n  - '**/e2e/**'\n  - '**/*_test.{c,cc,cpp,rs,exs,dart}'\n  - '**/*.test.{c,cc,cpp}'\n\n# Failure patterns, matched against a check's output when the transcript has it, to catch failures\n# a pipe hid (pnpm test | tail). tool names a check (program or rule tool); * applies to every check.\nfailurePatterns:\n  - { tool: vitest, pattern: '(Test Files|Tests)\\s+(\\d+ failed|.*\\b\\d+ failed)' }\n  - { tool: jest, pattern: 'Tests:\\s+\\d+ failed' }\n  - { tool: mocha, pattern: '\\b\\d+ failing\\b' }\n  - { tool: node, pattern: '(?m)^(# fail [1-9]|\u2139 fail [1-9])' }\n  - { tool: bun, pattern: '(?m)^\\s*[1-9]\\d* fail\\b' }\n  - { tool: playwright, pattern: '(?m)^\\s+[1-9]\\d* failed' }\n  - { tool: pytest, pattern: '(?m)^(=+ .*\\b\\d+ (failed|error)|FAILED |ERROR \\S+(::|\\.py))' }\n  - { tool: tox, pattern: '(?m)evaluation failed|^ERROR:\\s+\\S+: (commands failed|exit \\d+)' }\n  - { tool: rspec, pattern: '\\d+ examples?, [1-9]\\d* failures?' }\n  - { tool: rails, pattern: '\\d+ runs, \\d+ assertions, ([1-9]\\d* failures|\\d+ failures, [1-9]\\d* errors)' }\n  - { tool: minitest, pattern: '\\d+ runs, \\d+ assertions, ([1-9]\\d* failures|\\d+ failures, [1-9]\\d* errors)' }\n  - { tool: phpunit, pattern: '(?m)^(FAILURES!|ERRORS!)' }\n  - { tool: ctest, pattern: 'tests failed out of' }\n  - { tool: go test, pattern: '(?m)^(FAIL|--- FAIL)\\b' }\n  - { tool: go build, pattern: '(?m)^\\S+\\.go:\\d+:\\d+: ' }\n  - { tool: go vet, pattern: '(?m)^\\S+\\.go:\\d+:\\d+: ' }\n  - { tool: cargo test, pattern: 'test result: FAILED' }\n  - { tool: cargo build, pattern: '(?m)^error(\\[E\\d{4}\\])?: ' }\n  - { tool: cargo check, pattern: '(?m)^error(\\[E\\d{4}\\])?: ' }\n  - { tool: cargo clippy, pattern: '(?m)^error(\\[|:)' }\n  - { tool: tsc, pattern: 'error TS\\d+' }\n  - { tool: tsc --noEmit, pattern: 'error TS\\d+' }\n  - { tool: eslint, pattern: '\\d+ problems? \\([1-9]\\d* errors?' }\n  - { tool: prettier, pattern: 'Code style issues found|\\[error\\]' }\n  - { tool: ruff, pattern: 'Found \\d+ errors?\\b(?! \\(\\d+ fixed, 0 remaining\\))|Would reformat' }\n  - { tool: mypy, pattern: 'Found \\d+ errors?' }\n  - { tool: pyright, pattern: '(?m)^\\s*[1-9]\\d* errors?, ' }\n  - { tool: golangci-lint, pattern: '(?m)^\\d+ issues?:' }\n  - { tool: rubocop, pattern: '[1-9]\\d* offenses? detected' }\n  - { tool: gradle, pattern: 'BUILD FAILED|FAILURE: Build failed' }\n  - { tool: mvn, pattern: 'BUILD FAILURE' }\n  - { tool: xcodebuild test, pattern: '\\*\\* TEST FAILED \\*\\*|Testing failed' }\n  - { tool: xcodebuild build, pattern: '\\*\\* BUILD FAILED \\*\\*' }\n  - { tool: dotnet build, pattern: 'Build FAILED|error [A-Z]{2,}\\d+' }\n  - { tool: dotnet test, pattern: 'Failed!\\s+-\\s+Failed:\\s+[1-9]' }\n  - { tool: swift test, pattern: '(?m)^(\\S+:\\d+:\\d+: )?error: |Test Suite .\\S+. failed|\u2718 Test run with .* failed' }\n  - { tool: ci, pattern: 'completed with .failure.|X .* failed|run failed' }\n  - { tool: '*', pattern: '(?m)ELIFECYCLE\\s+(Command|Test) failed|npm ERR! (code|Test failed)|npm error (code \\d|Lifecycle script)|error Command failed with exit code|ERR_PNPM_\\w+|^\\s*ERROR\\s+run failed|make(\\[\\d+\\])?: \\*\\*\\* \\[.*\\] Error \\d+|^FAILED\\b|BUILD FAILED|^error\\[' }\n";
+var default_rules_default = `# awf phase rules. See docs/phases.md.
+#
+# A repo extends these in .awf/rules.yaml, in the same format. Its rules are tried first, so it can
+# also override these. Within a section the first matching rule wins: specific rules go first.
+#
+# Phases: lint, tests, build, exploring, writing (Writing code or Writing tests, by file), running
+# (Running scripts), planning, waiting, neutral (changes nothing and doesn't count, like cd or echo).
+
+version: 1
+
+# Bash commands. A compound command (&&, ||, ;, |, newlines, subshells, sh -c) is split into simple
+# commands. Each one is matched after wrappers (env FOO=1, sudo, time, timeout, npx, pnpm exec,
+# uv run, poetry run, bundle exec, python -m, ...) are removed, and after npm/pnpm/yarn/bun scripts,
+# make targets, Gradle tasks, Maven goals and git commit hooks are resolved to what they run.
+#
+#   program   the command's name, without its path (string or list)
+#   args      leading arguments that must follow, in order, options skipped ("a|b" for either)
+#   with      arguments that must all appear anywhere (--flag also matches --flag=value)
+#   without   arguments that must not appear
+#   only      every argument must be one of these
+#   match     instead of program: a regex tested on the simple command
+#   tag       an extra tag on the step, like install
+#   tool      the check's name, when it isn't the program (go test is "go test")
+commands:
+  # --version, --help and friends only read. For these programs -v and -V mean verbose.
+  - { phase: exploring, match: '^(?!(pytest|py\\.test|unittest|tox|nox|ctest|ninja|mypy|flake8|black|isort|pylint|behave|ansible-lint)\\s)\\S+\\s+(--version|-v|-V|--help|-h|version|help|-version|--usage)$' }
+
+  # Lint and format
+  - { phase: exploring, program: eslint, with: [--print-config] }
+  - phase: lint
+    program: [eslint, prettier, oxlint, standard, xo, stylelint, markdownlint, markdownlint-cli2, htmlhint, jsonlint, yamllint, hadolint, shellcheck, shfmt, actionlint, editorconfig-checker, eclint, lint-staged, commitlint, knip, depcheck, sort-package-json, syncpack, cspell, swift-format]
+  - { phase: lint, program: biome, args: ['check|lint|format|ci'] }
+  - { phase: lint, program: ruff, args: ['check|format'] }
+  - { phase: lint, program: [black, isort, flake8, pylint, mypy, pyright, basedpyright, pyflakes, pycodestyle, pydocstyle, bandit, autopep8, yapf, pyre, pytype, vulture] }
+  - { phase: lint, program: [golangci-lint, gofmt, goimports, gofumpt, staticcheck, revive, errcheck, govulncheck] }
+  - { phase: lint, program: go, args: ['vet|fmt'], tool: 'go {1}' }
+  - { phase: lint, program: [cargo, cross], args: ['clippy|fmt|check|audit|deny|udeps|machete|semver-checks|hack'], tool: 'cargo {1}' }
+  - { phase: lint, program: [rustfmt, clippy-driver] }
+  - { phase: lint, program: [ktlint, detekt, ktfmt, swiftlint, swiftformat, clang-format, clang-tidy, cpplint, cppcheck] }
+  - { phase: lint, program: swift, args: ['format'], tool: swift format }
+  - { phase: lint, program: dotnet, args: ['format'], tool: dotnet format }
+  - { phase: lint, program: [rubocop, standardrb, erb_lint, reek, brakeman] }
+  - { phase: lint, program: [phpcs, phpcbf, phpstan, psalm, php-cs-fixer, pint] }
+  - { phase: lint, program: [tsc, vue-tsc], with: [--noEmit], tool: tsc --noEmit }
+  - { phase: lint, program: [svelte-check, tflint, sqlfluff, checkov, ansible-lint, credo] }
+  - { phase: lint, program: buf, args: ['lint|format|breaking'] }
+  - { phase: lint, program: astro, args: ['check'] }
+  - { phase: lint, program: terraform, args: ['fmt|validate'] }
+  - { phase: lint, program: deno, args: ['lint|fmt|check'] }
+  - { phase: lint, program: [flutter, dart], args: ['analyze|format'] }
+  - { phase: lint, program: mix, args: ['format|credo|dialyzer'] }
+  - { phase: lint, program: pre-commit, args: ['run'] }
+  - { phase: lint, program: [ty, pyrefly], args: ['check'] }
+  - { phase: lint, program: [next, ng, vue-cli-service, expo], args: ['lint'] }
+  - { phase: lint, program: [nuxi, nuxt], args: ['typecheck'] }
+  - { phase: lint, program: xcodebuild, with: [analyze], tool: xcodebuild analyze }
+  - { phase: lint, match: '^(python\\S*\\s+)?(\\./)?manage\\.py\\s+check(\\s|$)', tool: django check }
+  - { phase: lint, match: '^(tox|nox)\\s(.*\\s)?(-e|-s|--session)\\s+\\S*(lint|mypy|typecheck|types|format|fmt|style|ruff|flake8|pylint|pre-commit)', tool: tox lint }
+
+  # Running tests (before Build, so a few build-like commands with test flags land here)
+  - { phase: exploring, program: [jest, vitest], with: [--listTests] }
+  - { phase: exploring, program: [pytest, py.test], with: [--collect-only] }
+  - { phase: exploring, program: [pytest, py.test], with: [--co] }
+  - { phase: exploring, program: go, args: [test], with: [-list] }
+  - { phase: exploring, program: cargo, args: ['nextest', 'list'] }
+  - { phase: exploring, program: cargo, args: [test], with: [--list] }
+  - { phase: exploring, program: [swift, dotnet], args: [test], with: [--list-tests] }
+  - { phase: build, program: go, args: [test], with: [-c], tool: go test -c }
+  - { phase: build, program: cargo, args: ['test|nextest'], with: [--no-run] }
+  - { phase: tests, program: [jest, vitest, mocha, ava, tap, jasmine, karma, uvu, cucumber-js, wdio, testcafe, nightwatch] }
+  - { phase: tests, program: playwright, args: ['test'] }
+  - { phase: tests, program: cypress, args: ['run'] }
+  - { phase: tests, program: [node, tsx], with: [--test] }
+  - { phase: tests, program: [bun, deno], args: ['test'] }
+  - { phase: tests, program: [pytest, py.test, tox, nox, nose2, ward, behave] }
+  - { phase: tests, program: unittest }
+  - { phase: tests, match: '^(python\\S*\\s+)?(\\./)?manage\\.py\\s+test(\\s|$)', tool: django test }
+  - { phase: tests, match: '^ruby\\s+(-I\\s*\\S+\\s+)*\\S*_test\\.rb', tool: minitest }
+  - { phase: tests, program: php, args: ['artisan', 'test'], tool: artisan test }
+  - { phase: tests, program: [ng, react-scripts, craco, vue-cli-service], args: ['test|test:*|e2e'] }
+  - { phase: tests, program: [hatch, rye, tuist], args: ['test'] }
+  - { phase: tests, program: fastlane, args: ['scan|test|tests'] }
+  - { phase: tests, program: go, args: [test], tool: go test }
+  - { phase: tests, program: [gotestsum, ginkgo] }
+  - { phase: tests, program: [cargo, cross], args: ['test|nextest|bench|miri|llvm-cov|tarpaulin|insta|mutants'], tool: cargo test }
+  - { phase: tests, program: cargo, args: ['xtask|make', 'test|tests|ci'], tool: cargo test }
+  - { phase: tests, program: dotnet, args: ['test|vstest'], tool: dotnet test }
+  - { phase: tests, program: dotnet, args: ['watch', 'test'], tool: dotnet test }
+  - { phase: tests, program: xcodebuild, with: [test], tool: xcodebuild test }
+  - { phase: tests, program: xcodebuild, with: [test-without-building], tool: xcodebuild test }
+  - { phase: tests, program: swift, args: [test], tool: swift test }
+  - { phase: tests, program: [bazel, bazelisk], args: [test], tool: bazel test }
+  - { phase: tests, program: [rspec, phpunit, pest, ctest, busted, prove] }
+  - { phase: tests, program: rails, args: ['test|test:*|spec|spec:*'] }
+  - { phase: tests, program: meson, args: [test] }
+  - { phase: tests, program: ninja, args: ['test|check'] }
+  - { phase: tests, match: '^cmake\\s.*--target\\s+(test|check|RUN_TESTS)(\\s|$)', tool: ctest }
+  - { phase: tests, program: mix, args: ['test'] }
+  - { phase: tests, program: [flutter, dart], args: ['test'] }
+  - { phase: tests, program: [k6, artillery], args: ['run'] }
+  # Waiting on CI: the remote run of the same checks
+  - { phase: tests, program: gh, args: ['run', 'watch'], tool: ci }
+  - { phase: tests, program: gh, args: ['pr', 'checks'], with: [--watch], tool: ci }
+
+  # Build
+  - { phase: running, program: [webpack, rspack], args: ['serve|dev|watch'] }
+  - { phase: build, program: [tsc, vue-tsc, tsup, unbuild, swc, babel, rollup, webpack, esbuild, parcel, rspack, rolldown, microbundle, ncc, pkg, electron-builder] }
+  - { phase: build, program: [vite, next, nuxt, astro, remix, svelte-kit, react-router, gatsby, ng, react-scripts, vue-cli-service, expo, storybook, craco], args: [build] }
+  - { phase: build, program: remix, args: ['vite:build'] }
+  - { phase: build, program: expo, args: ['export|prebuild'] }
+  - { phase: build, program: [gcc, g++, cc, c++, clang, clang++, rustc, javac, kotlinc, swiftc, scalac, zig, tinygo] }
+  - { phase: build, program: build, tool: python -m build }
+  - { phase: build, program: [uv, poetry, hatch, pdm, rye], args: [build] }
+  - { phase: build, program: maturin, args: ['build|develop'] }
+  - { phase: build, program: vite, args: ['optimize'] }
+  - { phase: build, program: go, args: ['build|install|generate'], tool: 'go {1}' }
+  - { phase: build, program: [cargo, cross], args: ['build|install|doc'], tool: 'cargo {1}' }
+  - { phase: build, program: dotnet, args: ['build|publish|pack|msbuild'], tool: 'dotnet {1}' }
+  - { phase: build, program: [msbuild, MSBuild, xbuild] }
+  - { phase: build, program: xcodebuild, with: [-resolvePackageDependencies], tag: install, tool: install }
+  - { phase: build, program: xcodebuild, without: [-list, -showsdks, -version, -showBuildSettings, -showdestinations, -showTestPlans, -showBuildSettingsForIndex, -showComponent, -help, -usage, -license, -checkFirstLaunchStatus], tool: xcodebuild build }
+  - { phase: exploring, program: xcodebuild }
+  - { phase: build, program: swift, args: ['build'], tool: swift build }
+  - { phase: build, program: [bazel, bazelisk, buck, buck2, pants], args: ['build'], tool: bazel build }
+  - { phase: build, program: [cmake, ninja, meson, scons, xmake, premake5, autoreconf, configure] }
+  - { phase: build, program: [docker, podman], args: ['build'], tool: docker build }
+  - { phase: build, program: [docker, podman], args: ['buildx|compose|image', 'build'], tool: docker build }
+  - { phase: build, program: docker-compose, args: ['build'], tool: docker build }
+  - { phase: build, match: '^(docker\\s+compose|docker-compose)\\s(.*\\s)?up\\s(.*\\s)?--build', tool: docker build }
+  - { phase: build, program: [protoc, flatc, thrift, graphql-codegen, openapi-generator, openapi-generator-cli, sqlc, wire, mockgen, stringer] }
+  - { phase: build, program: buf, args: ['generate'] }
+  - { phase: build, program: prisma, args: ['generate'] }
+  - { phase: build, program: [dart, flutter], args: ['run|pub', 'build_runner'] }
+  - { phase: build, program: flutter, args: ['build|pub'] }
+  - { phase: build, program: dart, args: ['pub', 'get|upgrade|add|remove|downgrade'], tag: install, tool: install }
+  - { phase: build, program: mix, args: ['compile|deps.get|release'] }
+  - { phase: build, program: [pod, carthage], args: ['install|update|bootstrap'], tag: install }
+  - { phase: build, program: [tuist, xcodegen], args: ['generate|install|fetch|build'] }
+  - { phase: build, program: xcodegen, only: [] }
+  - { phase: build, program: fastlane, args: ['gym|build|build_app'] }
+  - { phase: build, program: deno, args: ['compile'] }
+  - { phase: build, program: bun, args: ['build'] }
+
+  # Installing dependencies counts as Build, tagged install
+  - { phase: build, program: [npm, pnpm, bun], args: ['install|i|ci|add|remove|rm|uninstall|update|up|upgrade|link|rebuild|prune|dedupe'], tag: install, tool: install }
+  - { phase: build, match: '^yarn(\\s+--?[a-z][a-z-]*)*$', tag: install, tool: install }
+  - { phase: build, program: yarn, args: ['install|add|remove|upgrade|up|dedupe'], tag: install, tool: install }
+  - { phase: build, program: [pip, pip3, pipx, uv, poetry, pipenv, pdm, conda, mamba, micromamba], args: ['install|sync|add|lock|update|uninstall|remove|venv|create'], tag: install, tool: install }
+  - { phase: build, program: uv, args: ['pip', 'install|sync|compile'], tag: install, tool: install }
+  - { phase: build, program: uv, args: ['tool', 'install|upgrade'], tag: install, tool: install }
+  - { phase: build, program: [conda, mamba, micromamba], args: ['env', 'create|update'], tag: install, tool: install }
+  - { phase: build, program: [bundle, gem, composer], args: ['install|update|add|require'], tag: install, tool: install }
+  - { phase: build, match: '^bundle(\\s+(--?[a-z][a-z-]*|\\d+))*$', tag: install, tool: install }
+  - { phase: build, program: swift, args: ['package', 'resolve|update'], tag: install, tool: install }
+  - { phase: exploring, program: go, args: ['mod', 'why|graph|verify'] }
+  - { phase: writing, program: go, args: ['mod', 'edit|init'] }
+  - { phase: build, program: go, args: ['mod', 'tidy|download|vendor'], tag: install, tool: install }
+  - { phase: build, program: go, args: ['get'], tag: install, tool: install }
+  - { phase: build, program: cargo, args: ['fetch|update|add|vendor'], tag: install, tool: install }
+  - { phase: writing, program: dotnet, args: ['add|remove', 'reference'] }
+  - { phase: build, program: dotnet, args: ['restore|add|tool'], tag: install, tool: install }
+  - { phase: build, program: [brew, apt, apt-get, dnf, yum, apk, port], args: ['install|upgrade|reinstall'], tag: install, tool: install }
+  - { phase: build, program: playwright, args: ['install'], tag: install, tool: install }
+  - { phase: build, program: [docker, podman], args: ['pull'], tag: install, tool: install }
+  - { phase: build, program: [docker, podman], args: ['compose', 'pull'], tag: install, tool: install }
+  - { phase: build, program: docker-compose, args: ['pull'], tag: install, tool: install }
+  - { phase: exploring, program: rustup, args: ['show|which|doc|check'] }
+  - { phase: exploring, match: '^rustup\\s+\\S+\\s+list(\\s|$)' }
+  - { phase: exploring, program: [nvm, fnm, pyenv, rbenv, asdf, mise, sdk, volta], args: ['ls|list|ls-remote|current|which|version|versions|list-remote'] }
+  - { phase: neutral, program: [nvm, fnm, pyenv, rbenv, asdf, mise, sdk], args: ['use|shell|local|global|deactivate|env|init'] }
+  - { phase: build, program: [rustup, nvm, fnm, volta, pyenv, rbenv, asdf, mise, sdk], args: ['install|add|toolchain|target|component'], tag: install, tool: install }
+
+  # Shell commands that only read
+  - phase: exploring
+    program: [ls, ll, la, lsd, eza, exa, tree, cat, bat, batcat, head, tail, less, more, grep, egrep, fgrep, rg, ag, ack, find, fd, fzf, wc, file, stat, du, df, which, whereis, type, pwd, realpath, readlink, basename, dirname, diff, colordiff, cmp, comm, jq, yq, gron, sort, uniq, cut, column, strings, xxd, hexdump, od, nl, tac, md5, md5sum, shasum, sha1sum, sha256sum, cksum, lsof, ps, pgrep, env, printenv, uname, sw_vers, whoami, id, hostname, date, man, tldr, history, tokei, cloc, scc, ldd, otool, nm, objdump, plutil, defaults, mdfind, xmllint, pdftotext, identify, exiftool, codesign, security, ioreg, system_profiler, vm_stat, sysctl, netstat, ifconfig, lsblk, free, top, htop, uptime, w, last, journalctl, dmesg, tput]
+  - { phase: exploring, program: [tr, base64, fold, paste, rev, iconv, expand, unexpand, fmt, seq, tsort, numfmt, look, uuidgen] }
+  - { phase: exploring, program: command, with: [-v] }
+  - { phase: exploring, program: [make, gmake], with: [-n] }
+  - { phase: exploring, match: '^(gcloud|aws|az|doctl|flyctl|heroku|vercel|netlify)\\s(\\S+\\s)*(list|describe|read|get|show|status|logs|print-access-token|print-identity-token|info|get-[a-z-]+|describe-[a-z-]+|list-[a-z-]+)(\\s|$)' }
+  - { phase: exploring, program: [sed, gsed, awk, gawk, nawk, mawk, perl] }
+  - phase: exploring
+    program: git
+    args: ['status|log|diff|show|blame|annotate|rev-parse|ls-files|ls-tree|ls-remote|grep|describe|shortlog|reflog|cat-file|whatchanged|range-diff|merge-base|name-rev|rev-list|count-objects|check-ignore|show-ref|for-each-ref|var|help|version|fetch|clone']
+  - { phase: exploring, program: git, args: ['stash|worktree|submodule|notes', 'list|show|status'] }
+  - { phase: exploring, match: '^git config\\s(.*\\s)?(--get(-all|-regexp|-urlmatch|-color|colorbool)?|--list|-l)(\\s|$)' }
+  - { phase: exploring, match: '^git config(\\s+--(global|local|system|worktree|show-origin|show-scope|includes|null|name-only))*\\s+[A-Za-z][\\w-]*\\.[\\w.-]+$' }
+  - { phase: exploring, program: git, args: ['tag'], with: [-l] }
+  - { phase: exploring, match: '^git (branch|tag|remote)( -[a-zA-Z-]+)*$' }
+  - { phase: exploring, match: '^git (branch|tag)\\s(.*\\s)?--(list|contains|no-contains|merged|no-merged|sort|points-at|show-current|format)(\\s|=|$)' }
+  - { phase: exploring, program: git, args: ['remote', 'get-url|show'] }
+  - { phase: running, match: '^\\S*(gh|glab)\\s+api\\s(.*\\s)?(-X|--method)[\\s=]*(POST|PUT|PATCH|DELETE)\\b' }
+  - { phase: exploring, program: [gh, glab], args: ['pr|mr|issue|run|ci|pipeline|job|repo|release|workflow|search|api|gist|label|cache|variable', 'view|list|ls|diff|checks|status|watch|search|download|trace|get'] }
+  - { phase: exploring, program: [gh, glab], args: ['api'] }
+  - { phase: exploring, program: [gh, glab], args: ['auth', 'status|token'] }
+  - { phase: neutral, program: [gh, glab], args: ['auth', 'switch|login|logout|setup-git|refresh'] }
+  - { phase: exploring, program: [npm, pnpm, yarn, bun], args: ['ls|list|why|view|info|show|outdated|audit|explain|query|search|config|bin|root|prefix|pkg|licenses|doctor'] }
+  - { phase: exploring, program: uv, args: ['pip', 'list|show|freeze|tree|check'] }
+  - { phase: exploring, program: [pip, pip3, uv, poetry, conda], args: ['list|show|freeze|check|tree|info|search|env'] }
+  - { phase: exploring, program: swift, args: ['package', 'describe|dump-package|show-dependencies|show-executables|tools-version'] }
+  - { phase: exploring, program: go, args: ['list|env|doc|version|tool'] }
+  - { phase: exploring, program: cargo, args: ['tree|metadata|search|locate-project|pkgid|info'] }
+  - { phase: exploring, program: [docker, podman], args: ['ps|images|logs|inspect|stats|top|port|history|version|info|context'] }
+  - { phase: exploring, program: [docker, podman], args: ['compose', 'ps|logs|config|images|ls'] }
+  - { phase: exploring, program: docker-compose, args: ['ps|logs|config|images|ls|top|version'] }
+  - { phase: exploring, program: kubectl, args: ['get|describe|logs|top|explain|version|api-resources|config|auth|events'] }
+  - { phase: exploring, program: [simctl, devicectl], args: ['list'] }
+  - { phase: exploring, program: xcresulttool, args: ['get|export|metadata|graph|formatDescription'] }
+  - { phase: exploring, program: xcrun }
+  - { phase: exploring, program: [terraform, tofu], args: ['show|output|state|providers|version|graph'] }
+  - { phase: exploring, program: coverage, args: ['report|html|xml|json'] }
+  - { phase: exploring, match: '^tar\\s+-?[a-zA-Z]*t' }
+
+  # Shell commands that change files
+  - { phase: writing, program: [mkdir, touch, cp, mv, rm, rmdir, ln, chmod, chown, chgrp, truncate, tee, patch, install, rsync, scp, unzip, ditto] }
+  - { phase: writing, program: tar }
+  - phase: writing
+    program: git
+    args: ['add|commit|checkout|switch|restore|reset|stash|merge|rebase|cherry-pick|revert|mv|rm|tag|apply|am|init|clean|branch|worktree|submodule|notes|config|remote|pull']
+    tool: git
+
+  # Running scripts: running something that isn't a check, an edit or a read. Scripts and programs,
+  # the app and its servers, HTTP calls, databases, containers and clusters, deploys, publishing,
+  # pushes and CI actions. These come after the rules above, so \`gh pr view\` still explores and
+  # \`docker build\` still builds. Waiting in a loop counts here too (polling, decided in code).
+  - { phase: running, match: '^(\\S*/)?(python[23]?(\\.\\d+)?|pypy3?|py)(\\s|$)' }
+  - { phase: running, program: [node, nodejs, tsx, ts-node, ts-node-esm, vite-node, esno, bun, deno, ruby, php, java, kotlin, groovy, scala, jshell, swift, dotnet, Rscript, julia, lua, luajit, elixir, escript, electron] }
+  - { phase: running, program: [bash, sh, zsh, dash, ksh, fish, pwsh, powershell] }
+  - { phase: running, program: [go, cargo, mix], args: ['run|watch|phx.server|ecto.*'] }
+  - { phase: running, program: [vite, next, nuxt, nuxi, astro, remix, gatsby, react-scripts, vue-cli-service, ng, expo, storybook, react-native, flutter, tauri, wrangler], args: ['dev|develop|start|serve|preview|run|run-ios|run-android|run:ios|run:android|attach'] }
+  - { phase: running, program: vite }
+  - { phase: running, program: [nodemon, pm2, forever, serve, http-server, live-server, json-server, browser-sync, wait-on, http.server, uvicorn, gunicorn, hypercorn, daphne, flask, fastapi, streamlit, gradio, jupyter, ipython, celery, puma, rackup, foreman, overmind, air, ngrok, cloudflared, caddy] }
+  - { phase: running, program: rails, args: ['server|s|console|c|runner|r|dbconsole|db|db:*'] }
+  - { phase: running, program: [curl, wget, http, https, xh, curlie, grpcurl, websocat, wscat, nc, ncat, netcat, telnet, ssh, mosh, ping, traceroute, mtr, dig, nslookup, host, whois, openssl] }
+  - { phase: running, program: [psql, pg_ctl, pg_dump, pg_dumpall, pg_restore, pg_isready, createdb, dropdb, createuser, dropuser, initdb, postgres, mysql, mysqldump, mysqladmin, mariadb, sqlite3, duckdb, redis-cli, redis-server, mongosh, mongo, mongod, mongodump, mongorestore, clickhouse, sqlcmd, cqlsh, alembic, flyway, liquibase, dbmate, goose, atlas] }
+  - { phase: running, program: [prisma, drizzle-kit], args: ['migrate|db|studio|push|up|seed'] }
+  - { phase: running, program: [docker, podman, docker-compose, nerdctl, colima, minikube, kind, k3d, kubectl, helm, skaffold, tilt, terraform, tofu, pulumi, ansible, ansible-playbook] }
+  - { phase: running, program: [gcloud, gsutil, bq, aws, az, doctl, flyctl, fly, heroku, vercel, netlify, firebase, wrangler, railway, supabase, eas, fastlane] }
+  - { phase: running, program: [simctl, devicectl, adb, emulator, ios-deploy, idb] }
+  - { phase: running, program: [npm, pnpm, yarn, bun], args: ['publish|unpublish|deprecate|dist-tag|login|logout|adduser'] }
+  - { phase: running, program: [cargo, poetry, uv, pdm, hatch, flit, gem], args: ['publish|push|yank|login|owner'] }
+  - { phase: running, program: twine }
+  - { phase: running, program: git, args: ['push'] }
+  - { phase: running, program: [gh, glab] }
+  - { phase: running, program: [playwright, lighthouse, ffmpeg, magick, sips, screencapture] }
+  # A script file, or a program run by its path (./run, bin/dev, .build/release/app): the project's
+  # own scripts and binaries.
+  - { phase: running, match: '^\\S*\\.(sh|bash|zsh|py|js|mjs|cjs|ts|mts|cts|rb|pl|php|lua|swift|kts|exs|ps1|command)(\\s|$)' }
+  - { phase: running, match: '^\\S*/' }
+
+  # Changes nothing on its own, or takes no time worth a phase
+  - phase: neutral
+    program: [cd, pushd, popd, echo, printf, print, export, unset, set, source, '.', 'true', 'false', ':', sleep, wait, exit, return, read, alias, unalias, trap, shift, local, declare, typeset, readonly, ulimit, umask, '[', '[[', test, clear, reset, hash, shopt, setopt, bindkey, eval, let, break, continue, osascript, say, afplay, notify-send, terminal-notifier, open, xdg-open, kill, pkill, killall, disown, jobs, fg, bg]
+
+# Gradle tasks, Maven goals, and task names given to turbo, nx, sbt and similar runners.
+# Tested against each task name, and against its last part for qualified names like :app:testDebug.
+tasks:
+  - { phase: exploring, match: '^(tasks|help|dependencies|dependencyInsight|properties|projects|buildEnvironment|outgoingVariants|resolvableConfigurations|javaToolchains|model|dependency:tree|dependency:list|help:effective-pom|versions:display-dependency-updates)$' }
+  - { phase: lint, match: '^(lint[A-Za-z]*|ktlint[A-Za-z]*|detekt[A-Za-z]*|spotless[A-Za-z]*|spotless:(check|apply)|checkstyle[A-Za-z]*|checkstyle:check|pmd[A-Za-z]*|pmd:check|spotbugs[A-Za-z]*|spotbugs:check|ktfmt[A-Za-z]*|format[A-Za-z]*|typecheck|type-check|tsc|check-types|checkTypes|prettier|eslint|fmt)$' }
+  - { phase: build, match: '^(build[A-Za-z]*|assemble[A-Za-z]*|bundle[A-Za-z]*|compile[A-Za-z]*|jar|bootJar|shadowJar|war|ear|dist[A-Za-z]*|install[A-Za-z]*|publish[A-Za-z]*|package|deploy|generate[A-Za-z]*|kapt[A-Za-z]*|ksp[A-Za-z]*|nativeCompile|clean|prepare|test-compile|process-resources|codegen|[a-z][A-Za-z]*Classes)$' }
+  - { phase: running, match: '^(run|bootRun|appRun|jettyRun|tomcatRun|runIde|quarkusDev|spring-boot:run|exec:java|exec:exec|jetty:run|quarkus:dev|liberty:dev)$' }
+  - { phase: tests, match: '^(test|tests|check|verify|connectedCheck|integration-test|e2e|spec|coverage|test[A-Z][A-Za-z0-9]*|test:.*|[a-z][A-Za-z0-9]*Tests?|connected[A-Za-z]*Test|(verify|record|validate)(Paparazzi|Roborazzi)[A-Za-z0-9]*|jacoco[A-Za-z]*|kover[A-Za-z]*|surefire:test|failsafe:integration-test|failsafe:verify)$' }
+
+# Names of npm/pnpm/yarn/bun scripts and make targets, used only when the file that defines them
+# can't be read. Steps decided this way are tagged by-name.
+scripts:
+  - { phase: lint, match: '^(lint|lint:.*|.*:lint|format|format:.*|fmt|prettier|eslint|typecheck|type-check|types|tsc|check-types|check:types|stylelint|biome|rubocop|ruff|black|mypy|pylint|flake8|clippy|style)$' }
+  - { phase: tests, match: '^(test|tests|test:.*|.*:test|spec|specs|e2e|e2e:.*|unit|integration|coverage|cy:run|vitest|jest|pytest|check|verify|validate|ci)$' }
+  - { phase: build, match: '^(build|build:.*|.*:build|compile|bundle|dist|prepare|prepack|package|generate|codegen|install|deps|all)$' }
+  - { phase: running, match: '^(dev|develop|start|serve|server|preview|watch|storybook|seed|migrate|db|deploy|release|publish|up|down|ios|android|web|tauri|electron)$' }
+
+# Tool calls other than Bash, by name: exact names, or a regex in match. action: the call's action
+# ("a|b" for either), like a browser computer call's screenshot. A batch's calls are matched one by
+# one, and the batch takes the highest-ranked phase, as a compound command does.
+tools:
+  - { phase: exploring, name: [Read, Grep, Glob, LS, WebSearch, WebFetch, NotebookRead, LSP, ToolSearch, Skill, ListMcpResourcesTool, ReadMcpResourceTool, ListAgents] }
+  - { phase: writing, name: [Edit, Write, MultiEdit, NotebookEdit] }
+  - { phase: planning, name: [TodoWrite, TodoRead, TaskCreate, TaskUpdate, TaskList, TaskGet, EnterPlanMode, ExitPlanMode, StructuredOutput, SubagentHandback, SendMessage, SendUserMessage, SendUserFile, Workflow] }
+  - { phase: planning, match: '^mcp__ccd_turn__' }
+  - { phase: waiting, name: [AskUserQuestion] }
+  - { phase: running, name: [Monitor] }
+  - { phase: lint, name: [mcp__ide__getDiagnostics] }
+  # Browsers (Claude in Chrome, the desktop app's built-in browser): looking at a page is Exploring,
+  # acting on it Running scripts. Waiting for the page doesn't count next to other calls.
+  - { phase: exploring, match: '^mcp__(.+__)?(claude-in-chrome|Claude_Browser)__(navigate|get_page_text|read_page|find|tabs_context|tabs_context_mcp|read_console_messages|read_network_requests|preview_logs|preview_list|list_connected_browsers|shortcuts_list)$' }
+  - { phase: exploring, match: '^mcp__(.+__)?(claude-in-chrome|Claude_Browser)__computer$', action: 'screenshot|zoom|scroll|scroll_to' }
+  - { phase: neutral, match: '^mcp__(.+__)?(claude-in-chrome|Claude_Browser)__computer$', action: wait }
+  - { phase: running, match: '^mcp__(.+__)?(claude-in-chrome|Claude_Browser)__' }
+  # Computer use: the same on the whole screen. Asking you for access to an app waits on you.
+  - { phase: waiting, name: [mcp__computer-use__request_access] }
+  - { phase: exploring, match: '^mcp__computer-use__(screenshot|zoom|scroll|cursor_position|list_granted_applications|read_clipboard)$' }
+  - { phase: neutral, name: [mcp__computer-use__wait] }
+  - { phase: running, match: '^mcp__computer-use__' }
+
+# Files whose edits count as Writing tests rather than Writing code.
+testFiles:
+  - '**/*_test.go'
+  - '**/*.{test,spec}.{ts,tsx,mts,cts,js,jsx,mjs,cjs}'
+  - '**/*.{test,spec}-d.ts'
+  - '**/__tests__/**'
+  - '**/__mocks__/**'
+  - '**/test_*.py'
+  - '**/*_test.py'
+  - '**/conftest.py'
+  - '**/src/test/**'
+  - '**/src/androidTest/**'
+  - '**/src/*Test/**'
+  - '**/*{Test,Tests,IT,Spec}.{java,kt,scala,groovy}'
+  - '**/Tests/**'
+  - '**/*Tests/**'
+  - '**/*{Test,Tests}.swift'
+  - '**/*.Tests/**'
+  - '**/*.UnitTests/**'
+  - '**/*{Test,Tests}.cs'
+  - '**/*_spec.rb'
+  - '**/*_test.rb'
+  - '**/test/**'
+  - '**/tests/**'
+  - '**/spec/**/*.{rb,js,jsx,ts,tsx,mjs,cjs,py,ex,exs,php}'
+  - '**/tests.py'
+  - '**/testdata/**'
+  - '**/*.cy.{js,jsx,ts,tsx}'
+  - '**/__snapshots__/**'
+  - '**/e2e/**'
+  - '**/*_test.{c,cc,cpp,rs,exs,dart}'
+  - '**/*.test.{c,cc,cpp}'
+
+# Failure patterns, matched against a check's output when the transcript has it, to catch failures
+# a pipe hid (pnpm test | tail). tool names a check (program or rule tool); * applies to every check.
+failurePatterns:
+  - { tool: vitest, pattern: '(Test Files|Tests)\\s+(\\d+ failed|.*\\b\\d+ failed)' }
+  - { tool: jest, pattern: 'Tests:\\s+\\d+ failed' }
+  - { tool: mocha, pattern: '\\b\\d+ failing\\b' }
+  - { tool: node, pattern: '(?m)^(# fail [1-9]|\u2139 fail [1-9])' }
+  - { tool: bun, pattern: '(?m)^\\s*[1-9]\\d* fail\\b' }
+  - { tool: playwright, pattern: '(?m)^\\s+[1-9]\\d* failed' }
+  - { tool: pytest, pattern: '(?m)^(=+ .*\\b\\d+ (failed|error)|FAILED |ERROR \\S+(::|\\.py))' }
+  - { tool: tox, pattern: '(?m)evaluation failed|^ERROR:\\s+\\S+: (commands failed|exit \\d+)' }
+  - { tool: rspec, pattern: '\\d+ examples?, [1-9]\\d* failures?' }
+  - { tool: rails, pattern: '\\d+ runs, \\d+ assertions, ([1-9]\\d* failures|\\d+ failures, [1-9]\\d* errors)' }
+  - { tool: minitest, pattern: '\\d+ runs, \\d+ assertions, ([1-9]\\d* failures|\\d+ failures, [1-9]\\d* errors)' }
+  - { tool: phpunit, pattern: '(?m)^(FAILURES!|ERRORS!)' }
+  - { tool: ctest, pattern: 'tests failed out of' }
+  - { tool: go test, pattern: '(?m)^(FAIL|--- FAIL)\\b' }
+  - { tool: go build, pattern: '(?m)^\\S+\\.go:\\d+:\\d+: ' }
+  - { tool: go vet, pattern: '(?m)^\\S+\\.go:\\d+:\\d+: ' }
+  - { tool: cargo test, pattern: 'test result: FAILED' }
+  - { tool: cargo build, pattern: '(?m)^error(\\[E\\d{4}\\])?: ' }
+  - { tool: cargo check, pattern: '(?m)^error(\\[E\\d{4}\\])?: ' }
+  - { tool: cargo clippy, pattern: '(?m)^error(\\[|:)' }
+  - { tool: tsc, pattern: 'error TS\\d+' }
+  - { tool: tsc --noEmit, pattern: 'error TS\\d+' }
+  - { tool: eslint, pattern: '\\d+ problems? \\([1-9]\\d* errors?' }
+  - { tool: prettier, pattern: 'Code style issues found|\\[error\\]' }
+  - { tool: ruff, pattern: 'Found \\d+ errors?\\b(?! \\(\\d+ fixed, 0 remaining\\))|Would reformat' }
+  - { tool: mypy, pattern: 'Found \\d+ errors?' }
+  - { tool: pyright, pattern: '(?m)^\\s*[1-9]\\d* errors?, ' }
+  - { tool: golangci-lint, pattern: '(?m)^\\d+ issues?:' }
+  - { tool: rubocop, pattern: '[1-9]\\d* offenses? detected' }
+  - { tool: gradle, pattern: 'BUILD FAILED|FAILURE: Build failed' }
+  - { tool: mvn, pattern: 'BUILD FAILURE' }
+  - { tool: xcodebuild test, pattern: '\\*\\* TEST FAILED \\*\\*|Testing failed' }
+  - { tool: xcodebuild build, pattern: '\\*\\* BUILD FAILED \\*\\*' }
+  - { tool: dotnet build, pattern: 'Build FAILED|error [A-Z]{2,}\\d+' }
+  - { tool: dotnet test, pattern: 'Failed!\\s+-\\s+Failed:\\s+[1-9]' }
+  - { tool: swift test, pattern: '(?m)^(\\S+:\\d+:\\d+: )?error: |Test Suite .\\S+. failed|\u2718 Test run with .* failed' }
+  - { tool: ci, pattern: 'completed with .failure.|X .* failed|run failed' }
+  - { tool: '*', pattern: '(?m)ELIFECYCLE\\s+(Command|Test) failed|npm ERR! (code|Test failed)|npm error (code \\d|Lifecycle script)|error Command failed with exit code|ERR_PNPM_\\w+|^\\s*ERROR\\s+run failed|make(\\[\\d+\\])?: \\*\\*\\* \\[.*\\] Error \\d+|^FAILED\\b|BUILD FAILED|^error\\[' }
+`;
 
 // src/classify/rules.ts
 var RULE_PHASES = /* @__PURE__ */ new Set([
@@ -9410,6 +9778,8 @@ function compileRules(docs) {
       };
       if (r.name !== void 0) rule.names = new Set(list(r.name));
       if (r.match !== void 0) rule.match = regex(String(r.match), where);
+      if (r.action !== void 0)
+        rule.actions = new Set(list(r.action).flatMap((a) => a.split("|")));
       if (!rule.names && !rule.match) throw new Error(`${where}: needs name or match`);
       rules.tools.push(rule);
     });
@@ -10045,23 +10415,47 @@ var Classifier = class {
       step.tags = ["background-task"];
       return;
     }
-    const rule = this.rules.tools.find((r) => r.names?.has(name) || r.match?.test(name));
-    if (!rule || rule.phase === "neutral") {
-      step.phase = "unclassified";
+    const prefix = name.includes("__") ? name.slice(0, name.lastIndexOf("__") + 2) : "";
+    const calls = step.actions?.length ? step.actions.map((entry) => {
+      const colon = entry.indexOf(":");
+      const tool = colon < 0 ? entry : entry.slice(0, colon);
+      const action = colon < 0 ? void 0 : entry.slice(colon + 1);
+      return { rule: this.toolRule(prefix + tool, action), wait: (action ?? tool) === "wait" };
+    }) : [{ rule: this.toolRule(name), wait: name.slice(prefix.length) === "wait" }];
+    const counted = calls.filter((c) => c.rule?.phase !== "neutral");
+    if (counted.length === 0) {
+      const waits = calls.every((c) => c.wait);
+      step.phase = waits ? "running" : "unclassified";
+      step.tags = [waits ? "polling" : "neutral"];
+      if (calls[0]?.rule) step.rule = calls[0].rule.id;
       return;
     }
+    const phases = counted.map(({ rule: rule2 }) => {
+      if (!rule2) return "unclassified";
+      if (rule2.phase !== "writing") return rule2.phase;
+      return (step.files ?? []).some((f) => this.isTestFile(f)) ? "writing-tests" : "writing-code";
+    });
+    let best = 0;
+    phases.forEach((phase, i) => {
+      if (COMPOUND_RANK[phase] > COMPOUND_RANK[phases[best]]) best = i;
+    });
+    const primary = phases[best];
+    const others = unique(phases.filter((p) => p !== primary && p !== "unclassified"));
+    if (others.length > 0) step.tags = others;
+    step.phase = primary;
+    const rule = counted[best]?.rule;
+    if (!rule) return;
     step.rule = rule.id;
-    if (rule.phase === "writing") {
-      step.phase = (step.files ?? []).some((f) => this.isTestFile(f)) ? "writing-tests" : "writing-code";
-    } else {
-      step.phase = rule.phase;
-      if (isCheckPhase(rule.phase)) {
-        step.checks = [
-          { key: `${rule.phase}:${name}`, phase: rule.phase, tool: name, failed: false }
-        ];
-        this.markFailures(step);
-      }
+    if (isCheckPhase(primary)) {
+      step.checks = [{ key: `${primary}:${name}`, phase: primary, tool: name, failed: false }];
+      this.markFailures(step);
     }
+  }
+  /** The first tool rule for a call. A rule with `action` matches only calls with one of those. */
+  toolRule(name, action) {
+    return this.rules.tools.find(
+      (r) => (r.names?.has(name) || r.match?.test(name)) && (!r.actions || action !== void 0 && r.actions.has(action))
+    );
   }
   /**
    * Rule 4: the exit code decides when it belongs to the checks. Output patterns decide when a pipe,
@@ -10266,6 +10660,7 @@ import {
   writeFileSync
 } from "node:fs";
 import path6 from "node:path";
+var IMPORT_VERSION = 2;
 function cacheFile(id, env = process.env) {
   return path6.join(importedDir(env), `${safeId(id)}.json`);
 }
@@ -10274,7 +10669,7 @@ function readImported(id, env = process.env) {
   if (!existsSync3(file)) return void 0;
   try {
     const parsed = JSON.parse(readFileSync3(file, "utf8"));
-    return parsed.version === 1 && parsed.session ? parsed : void 0;
+    return (parsed.version === 1 || parsed.version === IMPORT_VERSION) && parsed.session ? parsed : void 0;
   } catch {
     return void 0;
   }
@@ -11193,6 +11588,38 @@ function importAgentFile(file, options = {}) {
 import { existsSync as existsSync6, readdirSync as readdirSync5, readFileSync as readFileSync8 } from "node:fs";
 import path11 from "node:path";
 
+// src/recorder/event.ts
+function str2(value) {
+  return typeof value === "string" && value.length > 0 ? value : void 0;
+}
+function obj2(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
+}
+var ACTION_NAME = /^[A-Za-z][\w.-]{0,63}$/;
+var MAX_ACTIONS = 50;
+function toolActions(tool, input) {
+  if (!tool.startsWith("mcp__")) return void 0;
+  const short = tool.slice(tool.lastIndexOf("__") + 2);
+  const named = (name, action2) => {
+    const n = str2(name);
+    if (!n || !ACTION_NAME.test(n)) return void 0;
+    const a = str2(action2);
+    return a && ACTION_NAME.test(a) ? `${n}:${a}` : n;
+  };
+  if (short.endsWith("batch") && Array.isArray(input.actions)) {
+    const out = [];
+    for (const item of input.actions.slice(0, MAX_ACTIONS)) {
+      const call = obj2(item);
+      if (!call) continue;
+      const action2 = call.name !== void 0 ? named(call.name, obj2(call.input)?.action) : named(call.action, void 0);
+      if (action2) out.push(action2);
+    }
+    return out.length > 0 ? out : void 0;
+  }
+  const action = named(short, input.action);
+  return action?.includes(":") ? [action] : void 0;
+}
+
 // src/importers/claude-code/format.ts
 var READ_TYPES = /* @__PURE__ */ new Set(["user", "assistant", "system", "queue-operation", "attachment"]);
 var SKIPPED_TYPES = /* @__PURE__ */ new Set([
@@ -11242,40 +11669,40 @@ var BLOCK_TYPES = /* @__PURE__ */ new Set([
   "server_tool_use",
   "web_search_tool_result"
 ]);
-function str2(value) {
+function str3(value) {
   return typeof value === "string" && value.length > 0 ? value : void 0;
 }
-function obj2(value) {
+function obj3(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
 }
 function timestampMs(entry) {
-  const raw = str2(entry.timestamp);
+  const raw = str3(entry.timestamp);
   if (!raw) return void 0;
   const ms = Date.parse(raw);
   return Number.isFinite(ms) ? ms : void 0;
 }
 function contentBlocks(entry) {
-  const content = obj2(entry.message)?.content;
-  return Array.isArray(content) ? content.filter((b) => !!obj2(b)) : [];
+  const content = obj3(entry.message)?.content;
+  return Array.isArray(content) ? content.filter((b) => !!obj3(b)) : [];
 }
 function messageText(entry) {
-  const content = obj2(entry.message)?.content;
+  const content = obj3(entry.message)?.content;
   if (typeof content === "string") return content;
   if (!Array.isArray(content)) return "";
-  return content.map((b) => obj2(b)?.type === "text" ? String(obj2(b)?.text ?? "") : "").filter(Boolean).join("\n");
+  return content.map((b) => obj3(b)?.type === "text" ? String(obj3(b)?.text ?? "") : "").filter(Boolean).join("\n");
 }
 function resultText(block) {
   const content = block.content;
   if (typeof content === "string") return content;
   if (!Array.isArray(content)) return "";
-  return content.map((b) => obj2(b)?.type === "text" ? String(obj2(b)?.text ?? "") : "").filter(Boolean).join("\n");
+  return content.map((b) => obj3(b)?.type === "text" ? String(obj3(b)?.text ?? "") : "").filter(Boolean).join("\n");
 }
 function promptKind(entry) {
   if (entry.isCompactSummary === true || entry.isVisibleInTranscriptOnly === true) return "none";
   if (contentBlocks(entry).some((b) => b.type === "tool_result")) return "none";
   const text = messageText(entry).trimStart();
   if (text.startsWith("[Request interrupted")) return "none";
-  const origin = str2(obj2(entry.origin)?.kind);
+  const origin = str3(obj3(entry.origin)?.kind);
   if (origin) return origin === "human" ? "human" : "notification";
   if (entry.isMeta === true || !text) return "none";
   if (text.startsWith("<task-notification>")) return "notification";
@@ -11357,7 +11784,7 @@ var TranscriptReader = class {
       if (!line.trim()) continue;
       try {
         const entry = JSON.parse(line);
-        if (obj2(entry)) entries2.push(entry);
+        if (obj3(entry)) entries2.push(entry);
         else this.diagnostics.badLines++;
       } catch {
         this.diagnostics.badLines++;
@@ -11367,11 +11794,11 @@ var TranscriptReader = class {
   }
   /** Checks an entry's type, notes its version and cwd; returns false for entries to skip. */
   accept(entry) {
-    const type = str2(entry.type) ?? "<no type>";
-    const version = str2(entry.version);
+    const type = str3(entry.type) ?? "<no type>";
+    const version = str3(entry.version);
     if (version && (!this.version || compareVersions(version, this.version) > 0))
       this.version = version;
-    if (!this.cwd && str2(entry.cwd)) this.cwd = str2(entry.cwd);
+    if (!this.cwd && str3(entry.cwd)) this.cwd = str3(entry.cwd);
     if (SKIPPED_TYPES.has(type)) return false;
     if (!READ_TYPES.has(type)) {
       this.count(type);
@@ -11384,7 +11811,7 @@ var TranscriptReader = class {
       if (!this.accept(entry)) continue;
       const ms = timestampMs(entry);
       if (ms === void 0) continue;
-      const agentId = entry.isSidechain === true ? str2(entry.agentId) ?? "sidechain" : void 0;
+      const agentId = entry.isSidechain === true ? str3(entry.agentId) ?? "sidechain" : void 0;
       switch (entry.type) {
         case "user":
           this.user(entry, ms, agentId);
@@ -11397,7 +11824,7 @@ var TranscriptReader = class {
           break;
         case "queue-operation":
         case "attachment": {
-          const text = entry.type === "attachment" ? JSON.stringify(entry.attachment ?? "") : str2(entry.content) ?? "";
+          const text = entry.type === "attachment" ? JSON.stringify(entry.attachment ?? "") : str3(entry.content) ?? "";
           const notice = parseNotification(text, ms);
           if (notice && (entry.type === "attachment" || entry.operation === "enqueue")) {
             this.notifications.push(notice);
@@ -11413,7 +11840,7 @@ var TranscriptReader = class {
     const first = entries2[0];
     const last = entries2[entries2.length - 1];
     if (!first || !last) return;
-    const at = this.agentTypes.get(agentId) ?? str2(first.agentType);
+    const at = this.agentTypes.get(agentId) ?? str3(first.agentType);
     this.emit({
       e: "SubagentStart",
       t: timestampMs(first),
@@ -11467,19 +11894,19 @@ var TranscriptReader = class {
     this.turnOpen = false;
   }
   toolResults(entry, ms, agentId) {
-    const result2 = obj2(entry.toolUseResult);
-    const decision = obj2(entry.permissionDecision);
+    const result2 = obj3(entry.toolUseResult);
+    const decision = obj3(entry.permissionDecision);
     for (const block of contentBlocks(entry)) {
       if (block.type !== "tool_result") {
         if (!BLOCK_TYPES.has(String(block.type))) this.count(`block:${String(block.type)}`);
         continue;
       }
-      const tuid = str2(block.tool_use_id);
+      const tuid = str3(block.tool_use_id);
       if (!tuid) continue;
       if (!agentId) this.lastActivity = Math.max(this.lastActivity, ms);
       const text = resultText(block);
       const failed = block.is_error === true;
-      const source = str2(decision?.source) ?? "";
+      const source = str3(decision?.source) ?? "";
       const use = this.toolUses.get(tuid);
       if (source.startsWith("user")) {
         const startEvent = this.startEvents.get(tuid);
@@ -11492,7 +11919,7 @@ var TranscriptReader = class {
             ...agentId ? { aid: agentId } : {}
           });
       }
-      if (str2(decision?.decision) === "reject") {
+      if (str3(decision?.decision) === "reject") {
         this.emit({ e: "PermissionDenied", t: ms, tuid, ...agentId ? { aid: agentId } : {} });
         this.resolveBatch(use, tuid, ms);
         continue;
@@ -11508,13 +11935,13 @@ var TranscriptReader = class {
       if (agentId) event.aid = agentId;
       if (code) event.code = Number(code[1]);
       if (result2?.interrupted === true) event.intr = true;
-      const child = str2(result2?.agentId);
+      const child = str3(result2?.agentId);
       if (child && use && (use.name === "Agent" || use.name === "Task")) {
         event.child = child;
-        const type = str2(result2?.agentType);
+        const type = str3(result2?.agentType);
         if (type && !this.agentTypes.has(child)) this.agentTypes.set(child, type);
       }
-      const bgid = str2(result2?.backgroundTaskId);
+      const bgid = str3(result2?.backgroundTaskId);
       if (bgid) event.bgid = bgid;
       this.emit(event);
       this.resolveBatch(use, tuid, ms);
@@ -11540,8 +11967,8 @@ var TranscriptReader = class {
     }
   }
   assistant(entry, ms, agentId) {
-    const message = obj2(entry.message) ?? {};
-    const messageId = str2(message.id) ?? str2(entry.uuid);
+    const message = obj3(entry.message) ?? {};
+    const messageId = str3(message.id) ?? str3(entry.uuid);
     if (!agentId && (!this.turnOpen || this.turnEndMark !== void 0 && ms > this.turnEndMark)) {
       if (this.turnOpen) this.closeTurn();
       this.startTurn(Math.min(this.pendingPrompt ?? ms, ms), "system");
@@ -11552,9 +11979,9 @@ var TranscriptReader = class {
       const record = known ?? { lastMs: ms };
       record.lastMs = Math.max(record.lastMs, ms);
       if (agentId) record.agentId = agentId;
-      const model = str2(message.model);
+      const model = str3(message.model);
       if (model && model !== "<synthetic>") record.model = model;
-      const usage2 = obj2(message.usage);
+      const usage2 = obj3(message.usage);
       if (usage2) record.tokens = tokens4(usage2);
       this.messages.set(messageId, record);
     }
@@ -11566,10 +11993,10 @@ var TranscriptReader = class {
     for (const block of contentBlocks(entry)) {
       if (!BLOCK_TYPES.has(String(block.type))) this.count(`block:${String(block.type)}`);
       if (block.type !== "tool_use") continue;
-      const tuid = str2(block.id);
-      const name = str2(block.name);
+      const tuid = str3(block.id);
+      const name = str3(block.name);
       if (!tuid || !name) continue;
-      const input = obj2(block.input) ?? {};
+      const input = obj3(block.input) ?? {};
       const event = {
         e: "PreToolUse",
         t: ms,
@@ -11577,14 +12004,16 @@ var TranscriptReader = class {
         tuid,
         ih: tuid
       };
-      const command = str2(input.command);
+      const command = str3(input.command);
       if (command) event.cmd = cleanCommand(command);
-      const files2 = FILE_KEYS.map((key) => str2(input[key])).filter((f) => !!f);
+      const files2 = FILE_KEYS.map((key) => str3(input[key])).filter((f) => !!f);
       if (files2.length > 0) event.files = files2;
       if (input.run_in_background === true) event.bg = true;
-      const sub = str2(input.subagent_type);
+      const sub = str3(input.subagent_type);
       if (sub) event.sub = sub;
-      const ref = str2(input.task_id) ?? str2(input.bash_id) ?? str2(input.shell_id);
+      const act = toolActions(name, input);
+      if (act) event.act = act;
+      const ref = str3(input.task_id) ?? str3(input.bash_id) ?? str3(input.shell_id);
       if (ref) event.bgid = ref;
       if (agentId) event.aid = agentId;
       this.emit(event);
@@ -11605,13 +12034,13 @@ var TranscriptReader = class {
       if (agentId) use.agentId = agentId;
       this.toolUses.set(tuid, use);
       if (this.options.detail) {
-        const description = str2(input.description);
+        const description = str3(input.description);
         if (description) this.details.set(tuid, { description: oneLine2(description) });
       }
     }
   }
   system(entry, ms) {
-    const subtype = str2(entry.subtype) ?? "<none>";
+    const subtype = str3(entry.subtype) ?? "<none>";
     if (!SYSTEM_SUBTYPES.has(subtype)) {
       this.count(`system:${subtype}`);
       return;
@@ -11619,9 +12048,9 @@ var TranscriptReader = class {
     if (subtype === "turn_duration" || subtype === "stop_hook_summary") {
       this.turnEndMark = Math.max(this.turnEndMark ?? 0, ms);
     } else if (subtype === "compact_boundary") {
-      const meta = obj2(entry.compactMetadata) ?? {};
+      const meta = obj3(entry.compactMetadata) ?? {};
       const duration = typeof meta.durationMs === "number" ? meta.durationMs : 0;
-      const trigger = str2(meta.trigger);
+      const trigger = str3(meta.trigger);
       this.emit({ e: "PreCompact", t: ms - duration, ...trigger ? { trigger } : {} });
       this.emit({ e: "PostCompact", t: ms, ...trigger ? { trigger } : {} });
     }
@@ -11855,6 +12284,7 @@ function mergeSessions(recorded, transcript) {
         merged.exitCode = twin.exitCode;
       if (merged.ok === void 0 && twin.ok !== void 0) merged.ok = twin.ok;
       if (!merged.command && twin.command) merged.command = twin.command;
+      if (!merged.actions && twin.actions) merged.actions = twin.actions;
       if (!merged.backgroundId && twin.backgroundId) merged.backgroundId = twin.backgroundId;
     }
     if (step.kind === "model") {
@@ -12658,7 +13088,7 @@ deleting old logs. Prints the sessions, steps and any log entries awf doesn't re
     for (const file of files2) {
       let session;
       const cached = options.force ? void 0 : readImported(file.id, ctx.env);
-      if (cached && cached.source.mtimeMs === file.mtimeMs && cached.source.size === file.size) {
+      if (cached?.version === IMPORT_VERSION && cached.source.mtimeMs === file.mtimeMs && cached.source.size === file.size) {
         session = cached.session;
         report.unchanged++;
       } else {
@@ -12674,7 +13104,7 @@ deleting old logs. Prints the sessions, steps and any log entries awf doesn't re
         if (!options["dry-run"]) {
           writeImported(
             {
-              version: 1,
+              version: IMPORT_VERSION,
               source: { path: file.path, mtimeMs: file.mtimeMs, size: file.size },
               session: stripDetail(session)
             },

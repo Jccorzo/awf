@@ -54,6 +54,7 @@ A turn ends at the next prompt, at the end of the file, or at the latest `turn_d
 - `toolUseResult` holds the structured result. Keys read: `interrupted`, `backgroundTaskId` (Bash with `run_in_background`), `agentId` and `agentType` (Agent calls). About 40% of tool results have no `toolUseResult`; nothing depends on it.
 - `permissionDecision` on the result says who allowed the call: `source: "config"` (rules, the classifier, the permission mode), `"user_temporary"` / `"user_reject"` (you, so the call waited for you), or `"hook"`. `decision: "reject"` means denied.
 - All `tool_use` blocks of one `message.id` form a batch; it is done when every one has a result.
+- Browser calls (Claude in Chrome, `mcp__claude-in-chrome__*`; the desktop app's built-in browser, `mcp__Claude_Browser__*`) name what they did in their input: a `computer` call's `input.action` (`screenshot`, `left_click`, `wait`), and a `browser_batch` call's `input.actions`, a list of `{ name, input }`. Computer use's `computer_batch` lists `{ action, ... }`, each action also the name of its own tool. awf keeps only these names, never URLs, typed text or selectors.
 
 ## Subagents
 

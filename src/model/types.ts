@@ -72,6 +72,8 @@ export interface Step {
   /** Bash command, with secrets masked and heredoc bodies dropped. */
   command?: string;
   files?: string[];
+  /** Browser and computer-use calls: what each call did, `tool` or `tool:action` (`computer:left_click`). */
+  actions?: string[];
   startMs: number;
   endMs: number;
   /** Tool result: true ok, false failed, undefined unknown. */

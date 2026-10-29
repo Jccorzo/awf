@@ -135,6 +135,30 @@ function hashText(text) {
   }
   return (h >>> 0).toString(16).padStart(8, "0");
 }
+var ACTION_NAME = /^[A-Za-z][\w.-]{0,63}$/;
+var MAX_ACTIONS = 50;
+function toolActions(tool, input) {
+  if (!tool.startsWith("mcp__")) return void 0;
+  const short = tool.slice(tool.lastIndexOf("__") + 2);
+  const named = (name, action2) => {
+    const n = str(name);
+    if (!n || !ACTION_NAME.test(n)) return void 0;
+    const a = str(action2);
+    return a && ACTION_NAME.test(a) ? `${n}:${a}` : n;
+  };
+  if (short.endsWith("batch") && Array.isArray(input.actions)) {
+    const out = [];
+    for (const item of input.actions.slice(0, MAX_ACTIONS)) {
+      const call = obj(item);
+      if (!call) continue;
+      const action2 = call.name !== void 0 ? named(call.name, obj(call.input)?.action) : named(call.action, void 0);
+      if (action2) out.push(action2);
+    }
+    return out.length > 0 ? out : void 0;
+  }
+  const action = named(short, input.action);
+  return action?.includes(":") ? [action] : void 0;
+}
 var FILE_KEYS = ["file_path", "notebook_path", "path"];
 var WITH_CWD = /* @__PURE__ */ new Set(["SessionStart", "UserPromptSubmit", "SessionEnd"]);
 var WITH_TRANSCRIPT = /* @__PURE__ */ new Set(["SessionStart", "UserPromptSubmit", "Stop", "SessionEnd"]);
@@ -167,6 +191,8 @@ function toEvent(input, t) {
     if (toolInput.run_in_background === true) ev.bg = true;
     const sub = str(toolInput.subagent_type);
     if (sub) ev.sub = sub;
+    const act = tool ? toolActions(tool, toolInput) : void 0;
+    if (act) ev.act = act;
     const ref = str(toolInput.task_id) ?? str(toolInput.bash_id) ?? str(toolInput.shell_id);
     if (ref) ev.bgid = ref;
   }

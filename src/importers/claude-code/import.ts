@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { cleanCommand, maskSecrets } from '../../model/mask';
 import type { Session, SessionDiagnostics, Step, StepDetail, TokenUsage } from '../../model/types';
-import type { RecorderEvent } from '../../recorder/event';
+import { type RecorderEvent, toolActions } from '../../recorder/event';
 import { eventsToSession } from '../../recorder/steps';
 import {
   BLOCK_TYPES,
@@ -358,6 +358,8 @@ class TranscriptReader {
       if (input.run_in_background === true) event.bg = true;
       const sub = str(input.subagent_type);
       if (sub) event.sub = sub;
+      const act = toolActions(name, input);
+      if (act) event.act = act;
       const ref = str(input.task_id) ?? str(input.bash_id) ?? str(input.shell_id);
       if (ref) event.bgid = ref;
       if (agentId) event.aid = agentId;

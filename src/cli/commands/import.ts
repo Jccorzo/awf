@@ -5,7 +5,7 @@ import { importClaudeCodeTranscript } from '../../importers/claude-code/import';
 import { listTranscripts } from '../../importers/claude-code/locate';
 import { parseSince } from '../../model/time';
 import type { Session } from '../../model/types';
-import { readImported, stripDetail, writeImported } from '../../store/imported';
+import { IMPORT_VERSION, readImported, stripDetail, writeImported } from '../../store/imported';
 import { claudeProjectsDir } from '../../store/paths';
 import { projectKey } from '../../store/sessions';
 import type { Command } from '../main';
@@ -84,7 +84,11 @@ deleting old logs. Prints the sessions, steps and any log entries awf doesn't re
     for (const file of files) {
       let session: Session;
       const cached = options.force ? undefined : readImported(file.id, ctx.env);
-      if (cached && cached.source.mtimeMs === file.mtimeMs && cached.source.size === file.size) {
+      if (
+        cached?.version === IMPORT_VERSION &&
+        cached.source.mtimeMs === file.mtimeMs &&
+        cached.source.size === file.size
+      ) {
         session = cached.session;
         report.unchanged++;
       } else {
@@ -100,7 +104,7 @@ deleting old logs. Prints the sessions, steps and any log entries awf doesn't re
         if (!options['dry-run']) {
           writeImported(
             {
-              version: 1,
+              version: IMPORT_VERSION,
               source: { path: file.path, mtimeMs: file.mtimeMs, size: file.size },
               session: stripDetail(session),
             },

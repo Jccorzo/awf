@@ -25,6 +25,8 @@ export interface RecorderEvent {
   bg?: true;
   /** Agent/Task calls: tool_input.subagent_type */
   sub?: string;
+  /** Browser and computer-use calls: what each call did, `tool` or `tool:action`. Names only. */
+  act?: string[];
   /** Hash of tool_input, to pair PermissionRequest (no tool_use_id) with its PreToolUse. */
   ih?: string;
   ok?: boolean;
@@ -82,6 +84,41 @@ export function hashText(text: string): string {
   return (h >>> 0).toString(16).padStart(8, '0');
 }
 
+/** A tool or action name as a tool's schema spells it. Free text (a description) doesn't pass. */
+export const ACTION_NAME = /^[A-Za-z][\w.-]{0,63}$/;
+const MAX_ACTIONS = 50;
+
+/**
+ * What an MCP call did, when its input says: a call's own `action` (`computer:screenshot`), or each
+ * call of a batch (`navigate`, `computer:left_click`). Names only, never URLs, typed text or selectors.
+ */
+export function toolActions(tool: string, input: Json): string[] | undefined {
+  if (!tool.startsWith('mcp__')) return undefined;
+  const short = tool.slice(tool.lastIndexOf('__') + 2);
+  const named = (name: unknown, action: unknown): string | undefined => {
+    const n = str(name);
+    if (!n || !ACTION_NAME.test(n)) return undefined;
+    const a = str(action);
+    return a && ACTION_NAME.test(a) ? `${n}:${a}` : n;
+  };
+  if (short.endsWith('batch') && Array.isArray(input.actions)) {
+    const out: string[] = [];
+    for (const item of input.actions.slice(0, MAX_ACTIONS)) {
+      const call = obj(item);
+      if (!call) continue;
+      // Browsers batch { name, input }; computer use batches { action }, each action also a tool.
+      const action =
+        call.name !== undefined
+          ? named(call.name, obj(call.input)?.action)
+          : named(call.action, undefined);
+      if (action) out.push(action);
+    }
+    return out.length > 0 ? out : undefined;
+  }
+  const action = named(short, input.action);
+  return action?.includes(':') ? [action] : undefined;
+}
+
 const FILE_KEYS = ['file_path', 'notebook_path', 'path'];
 const WITH_CWD = new Set(['SessionStart', 'UserPromptSubmit', 'SessionEnd']);
 const WITH_TRANSCRIPT = new Set(['SessionStart', 'UserPromptSubmit', 'Stop', 'SessionEnd']);
@@ -118,6 +155,8 @@ export function toEvent(input: Json, t: number): RecorderEvent | null {
     if (toolInput.run_in_background === true) ev.bg = true;
     const sub = str(toolInput.subagent_type);
     if (sub) ev.sub = sub;
+    const act = tool ? toolActions(tool, toolInput) : undefined;
+    if (act) ev.act = act;
     // TaskOutput, BashOutput, TaskStop: the background task they read or stop.
     const ref = str(toolInput.task_id) ?? str(toolInput.bash_id) ?? str(toolInput.shell_id);
     if (ref) ev.bgid = ref;

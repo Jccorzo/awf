@@ -52,6 +52,8 @@ export interface ToolRule {
   phase: RulePhase;
   names?: Set<string>;
   match?: RegExp;
+  /** The call's action must be one of these (a browser `computer` call's `screenshot`). */
+  actions?: Set<string>;
 }
 
 export interface Rules {
@@ -161,6 +163,8 @@ export function compileRules(docs: Array<{ text: string; source: string }>): Rul
       };
       if (r.name !== undefined) rule.names = new Set(list(r.name));
       if (r.match !== undefined) rule.match = regex(String(r.match), where);
+      if (r.action !== undefined)
+        rule.actions = new Set(list(r.action).flatMap((a) => a.split('|')));
       if (!rule.names && !rule.match) throw new Error(`${where}: needs name or match`);
       rules.tools.push(rule);
     });

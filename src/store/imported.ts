@@ -12,12 +12,16 @@ import { importedDir, safeId } from './paths';
 
 type Env = Record<string, string | undefined>;
 
+export const IMPORT_VERSION = 2;
+
 /**
  * What `awf import` keeps of a transcript, so the history survives Claude Code deleting it after 30 days.
- * Same content as the recorder's files: timings, tool names, commands and file paths. No prompts or output.
+ * Same content as the recorder's files: timings, tool names, commands, file paths and browser action
+ * names. No prompts or output.
  */
 export interface ImportedSession {
-  version: 1;
+  /** 2 adds browser and computer-use actions. Older entries still load; `awf import` redoes them. */
+  version: 1 | typeof IMPORT_VERSION;
   source: { path: string; mtimeMs: number; size: number };
   session: Session;
 }
@@ -31,7 +35,9 @@ export function readImported(id: string, env: Env = process.env): ImportedSessio
   if (!existsSync(file)) return undefined;
   try {
     const parsed = JSON.parse(readFileSync(file, 'utf8')) as ImportedSession;
-    return parsed.version === 1 && parsed.session ? parsed : undefined;
+    return (parsed.version === 1 || parsed.version === IMPORT_VERSION) && parsed.session
+      ? parsed
+      : undefined;
   } catch {
     return undefined;
   }
