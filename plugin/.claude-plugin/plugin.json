@@ -1,0 +1,11 @@
+{
+  "name": "awf",
+  "displayName": "awf: agent waterfall",
+  "version": "0.1.0",
+  "description": "Records where Claude Code's time goes (timings, tool names and commands; never prompts or output) and draws the session as a waterfall with /awf:waterfall.",
+  "author": {
+    "name": "Camilo Corzo"
+  },
+  "license": "MIT",
+  "keywords": ["timing", "profiling", "waterfall", "build", "tests", "lint"]
+}
