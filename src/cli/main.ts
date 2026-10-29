@@ -6,6 +6,7 @@ import { importCommand } from './commands/import';
 import { accuracyCommand, sampleCommand } from './commands/sample';
 import { sessionsCommand } from './commands/sessions';
 import { statsCommand } from './commands/stats';
+import { summaryCommand } from './commands/summary';
 
 export interface Io {
   out: (text: string) => void;
@@ -37,6 +38,7 @@ export const COMMANDS: Record<string, Command> = {
   sessions: sessionsCommand,
   import: importCommand,
   classify: classifyCommand,
+  summary: summaryCommand,
   stats: statsCommand,
   sample: sampleCommand,
   accuracy: accuracyCommand,
