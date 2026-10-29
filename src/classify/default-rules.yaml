@@ -3,8 +3,8 @@
 # A repo extends these in .awf/rules.yaml, in the same format. Its rules are tried first, so it can
 # also override these. Within a section the first matching rule wins: specific rules go first.
 #
-# Phases: lint, tests, build, exploring, writing (Writing code or Writing tests, by file), planning,
-# waiting, neutral (changes nothing and doesn't count, like cd or echo).
+# Phases: lint, tests, build, exploring, writing (Writing code or Writing tests, by file), running
+# (Running scripts), planning, waiting, neutral (changes nothing and doesn't count, like cd or echo).
 
 version: 1
 
@@ -70,7 +70,7 @@ commands:
   - { phase: tests, program: [jest, vitest, mocha, ava, tap, jasmine, karma, uvu, cucumber-js, wdio, testcafe, nightwatch] }
   - { phase: tests, program: playwright, args: ['test'] }
   - { phase: tests, program: cypress, args: ['run'] }
-  - { phase: tests, program: node, with: [--test] }
+  - { phase: tests, program: [node, tsx], with: [--test] }
   - { phase: tests, program: [bun, deno], args: ['test'] }
   - { phase: tests, program: [pytest, py.test, tox, nox, nose2, ward, behave] }
   - { phase: tests, program: unittest }
@@ -103,6 +103,7 @@ commands:
   - { phase: tests, program: gh, args: ['pr', 'checks'], with: [--watch], tool: ci }
 
   # Build
+  - { phase: running, program: [webpack, rspack], args: ['serve|dev|watch'] }
   - { phase: build, program: [tsc, vue-tsc, tsup, unbuild, swc, babel, rollup, webpack, esbuild, parcel, rspack, rolldown, microbundle, ncc, pkg, electron-builder] }
   - { phase: build, program: [vite, next, nuxt, astro, remix, svelte-kit, react-router, gatsby, ng, react-scripts, vue-cli-service, expo, storybook, craco], args: [build] }
   - { phase: build, program: remix, args: ['vite:build'] }
@@ -166,7 +167,7 @@ commands:
   - { phase: exploring, program: rustup, args: ['show|which|doc|check'] }
   - { phase: exploring, match: '^rustup\s+\S+\s+list(\s|$)' }
   - { phase: exploring, program: [nvm, fnm, pyenv, rbenv, asdf, mise, sdk, volta], args: ['ls|list|ls-remote|current|which|version|versions|list-remote'] }
-  - { phase: neutral, program: [nvm, fnm, pyenv, rbenv, asdf, mise, sdk], args: ['use|shell|local|global|deactivate'] }
+  - { phase: neutral, program: [nvm, fnm, pyenv, rbenv, asdf, mise, sdk], args: ['use|shell|local|global|deactivate|env|init'] }
   - { phase: build, program: [rustup, nvm, fnm, volta, pyenv, rbenv, asdf, mise, sdk], args: ['install|add|toolchain|target|component'], tag: install, tool: install }
 
   # Shell commands that only read
@@ -179,7 +180,7 @@ commands:
   - { phase: exploring, program: [sed, gsed, awk, gawk, nawk, mawk, perl] }
   - phase: exploring
     program: git
-    args: ['status|log|diff|show|blame|annotate|rev-parse|ls-files|ls-tree|ls-remote|grep|describe|shortlog|reflog|cat-file|whatchanged|range-diff|merge-base|name-rev|rev-list|count-objects|check-ignore|show-ref|for-each-ref|var|help|version|fetch']
+    args: ['status|log|diff|show|blame|annotate|rev-parse|ls-files|ls-tree|ls-remote|grep|describe|shortlog|reflog|cat-file|whatchanged|range-diff|merge-base|name-rev|rev-list|count-objects|check-ignore|show-ref|for-each-ref|var|help|version|fetch|clone']
   - { phase: exploring, program: git, args: ['stash|worktree|submodule|notes', 'list|show|status'] }
   - { phase: exploring, match: '^git config\s(.*\s)?(--get(-all|-regexp|-urlmatch|-color|colorbool)?|--list|-l)(\s|$)' }
   - { phase: exploring, match: '^git config(\s+--(global|local|system|worktree|show-origin|show-scope|includes|null|name-only))*\s+[A-Za-z][\w-]*\.[\w.-]+$' }
@@ -187,9 +188,11 @@ commands:
   - { phase: exploring, match: '^git (branch|tag|remote)( -[a-zA-Z-]+)*$' }
   - { phase: exploring, match: '^git (branch|tag)\s(.*\s)?--(list|contains|no-contains|merged|no-merged|sort|points-at|show-current|format)(\s|=|$)' }
   - { phase: exploring, program: git, args: ['remote', 'get-url|show'] }
-  - { phase: exploring, program: gh, args: ['pr|issue|run|repo|release|workflow|search|api|gist|label|cache', 'view|list|diff|checks|status|watch|search|download'] }
-  - { phase: exploring, program: gh, args: ['api'] }
-  - { phase: exploring, program: gh, args: ['auth', 'status|token'] }
+  - { phase: running, match: '^\S*(gh|glab)\s+api\s(.*\s)?(-X|--method)[\s=]*(POST|PUT|PATCH|DELETE)\b' }
+  - { phase: exploring, program: [gh, glab], args: ['pr|mr|issue|run|ci|pipeline|job|repo|release|workflow|search|api|gist|label|cache|variable', 'view|list|ls|diff|checks|status|watch|search|download|trace|get'] }
+  - { phase: exploring, program: [gh, glab], args: ['api'] }
+  - { phase: exploring, program: [gh, glab], args: ['auth', 'status|token'] }
+  - { phase: neutral, program: [gh, glab], args: ['auth', 'switch|login|logout|setup-git|refresh'] }
   - { phase: exploring, program: [npm, pnpm, yarn, bun], args: ['ls|list|why|view|info|show|outdated|audit|explain|query|search|config|bin|root|prefix|pkg|licenses|doctor'] }
   - { phase: exploring, program: uv, args: ['pip', 'list|show|freeze|tree|check'] }
   - { phase: exploring, program: [pip, pip3, uv, poetry, conda], args: ['list|show|freeze|check|tree|info|search|env'] }
@@ -200,7 +203,7 @@ commands:
   - { phase: exploring, program: [docker, podman], args: ['compose', 'ps|logs|config|images|ls'] }
   - { phase: exploring, program: docker-compose, args: ['ps|logs|config|images|ls|top|version'] }
   - { phase: exploring, program: kubectl, args: ['get|describe|logs|top|explain|version|api-resources|config|auth|events'] }
-  - { phase: exploring, program: simctl, args: ['list'] }
+  - { phase: exploring, program: [simctl, devicectl], args: ['list'] }
   - { phase: exploring, program: xcresulttool, args: ['get|export|metadata|graph|formatDescription'] }
   - { phase: exploring, program: xcrun }
   - { phase: exploring, program: [terraform, tofu], args: ['show|output|state|providers|version|graph'] }
@@ -208,16 +211,45 @@ commands:
   - { phase: exploring, match: '^tar\s+-?[a-zA-Z]*t' }
 
   # Shell commands that change files
-  - { phase: writing, program: [mkdir, touch, cp, mv, rm, rmdir, ln, chmod, chown, chgrp, truncate, tee, patch, install, rsync, unzip, ditto] }
+  - { phase: writing, program: [mkdir, touch, cp, mv, rm, rmdir, ln, chmod, chown, chgrp, truncate, tee, patch, install, rsync, scp, unzip, ditto] }
   - { phase: writing, program: tar }
   - phase: writing
     program: git
-    args: ['add|commit|checkout|switch|restore|reset|stash|merge|rebase|cherry-pick|revert|mv|rm|tag|apply|am|init|clean|branch|worktree|submodule|notes|config|remote']
+    args: ['add|commit|checkout|switch|restore|reset|stash|merge|rebase|cherry-pick|revert|mv|rm|tag|apply|am|init|clean|branch|worktree|submodule|notes|config|remote|pull']
     tool: git
+
+  # Running scripts: running something that isn't a check, an edit or a read. Scripts and programs,
+  # the app and its servers, HTTP calls, databases, containers and clusters, deploys, publishing,
+  # pushes and CI actions. These come after the rules above, so `gh pr view` still explores and
+  # `docker build` still builds. Waiting in a loop counts here too (polling, decided in code).
+  - { phase: running, match: '^(\S*/)?(python[23]?(\.\d+)?|pypy3?|py)(\s|$)' }
+  - { phase: running, program: [node, nodejs, tsx, ts-node, ts-node-esm, vite-node, esno, bun, deno, ruby, php, java, kotlin, groovy, scala, jshell, swift, dotnet, Rscript, julia, lua, luajit, elixir, escript, electron] }
+  - { phase: running, program: [bash, sh, zsh, dash, ksh, fish, pwsh, powershell] }
+  - { phase: running, program: [go, cargo, mix], args: ['run|watch|phx.server|ecto.*'] }
+  - { phase: running, program: [vite, next, nuxt, nuxi, astro, remix, gatsby, react-scripts, vue-cli-service, ng, expo, storybook, react-native, flutter, tauri, wrangler], args: ['dev|develop|start|serve|preview|run|run-ios|run-android|run:ios|run:android|attach'] }
+  - { phase: running, program: vite }
+  - { phase: running, program: [nodemon, pm2, forever, serve, http-server, live-server, json-server, browser-sync, wait-on, http.server, uvicorn, gunicorn, hypercorn, daphne, flask, fastapi, streamlit, gradio, jupyter, ipython, celery, puma, rackup, foreman, overmind, air, ngrok, cloudflared, caddy] }
+  - { phase: running, program: rails, args: ['server|s|console|c|runner|r|dbconsole|db|db:*'] }
+  - { phase: running, program: [curl, wget, http, https, xh, curlie, grpcurl, websocat, wscat, nc, ncat, netcat, telnet, ssh, mosh, ping, traceroute, mtr, dig, nslookup, host, whois, openssl] }
+  - { phase: running, program: [psql, pg_ctl, pg_dump, pg_dumpall, pg_restore, pg_isready, createdb, dropdb, createuser, dropuser, initdb, postgres, mysql, mysqldump, mysqladmin, mariadb, sqlite3, duckdb, redis-cli, redis-server, mongosh, mongo, mongod, mongodump, mongorestore, clickhouse, sqlcmd, cqlsh, alembic, flyway, liquibase, dbmate, goose, atlas] }
+  - { phase: running, program: [prisma, drizzle-kit], args: ['migrate|db|studio|push|up|seed'] }
+  - { phase: running, program: [docker, podman, docker-compose, nerdctl, colima, minikube, kind, k3d, kubectl, helm, skaffold, tilt, terraform, tofu, pulumi, ansible, ansible-playbook] }
+  - { phase: running, program: [gcloud, gsutil, bq, aws, az, doctl, flyctl, fly, heroku, vercel, netlify, firebase, wrangler, railway, supabase, eas, fastlane] }
+  - { phase: running, program: [simctl, devicectl, adb, emulator, ios-deploy, idb] }
+  - { phase: running, program: [npm, pnpm, yarn, bun], args: ['publish|unpublish|deprecate|dist-tag|login|logout|adduser'] }
+  - { phase: running, program: [cargo, poetry, uv, pdm, hatch, flit, gem], args: ['publish|push|yank|login|owner'] }
+  - { phase: running, program: twine }
+  - { phase: running, program: git, args: ['push'] }
+  - { phase: running, program: [gh, glab] }
+  - { phase: running, program: [playwright, lighthouse, ffmpeg, magick, sips, screencapture] }
+  # A script file, or a program run by its path (./run, bin/dev, .build/release/app): the project's
+  # own scripts and binaries.
+  - { phase: running, match: '^\S*\.(sh|bash|zsh|py|js|mjs|cjs|ts|mts|cts|rb|pl|php|lua|swift|kts|exs|ps1|command)(\s|$)' }
+  - { phase: running, match: '^\S*/' }
 
   # Changes nothing on its own, or takes no time worth a phase
   - phase: neutral
-    program: [cd, pushd, popd, echo, printf, export, unset, set, source, '.', 'true', 'false', ':', sleep, wait, exit, return, read, alias, unalias, trap, shift, local, declare, typeset, readonly, ulimit, umask, '[', '[[', test, clear, reset, hash, shopt, setopt, bindkey, eval, let, break, continue, osascript, say, afplay, notify-send, terminal-notifier, kill, pkill, killall, disown, jobs, fg, bg]
+    program: [cd, pushd, popd, echo, printf, print, export, unset, set, source, '.', 'true', 'false', ':', sleep, wait, exit, return, read, alias, unalias, trap, shift, local, declare, typeset, readonly, ulimit, umask, '[', '[[', test, clear, reset, hash, shopt, setopt, bindkey, eval, let, break, continue, osascript, say, afplay, notify-send, terminal-notifier, open, xdg-open, kill, pkill, killall, disown, jobs, fg, bg]
 
 # Gradle tasks, Maven goals, and task names given to turbo, nx, sbt and similar runners.
 # Tested against each task name, and against its last part for qualified names like :app:testDebug.
@@ -225,6 +257,7 @@ tasks:
   - { phase: exploring, match: '^(tasks|help|dependencies|dependencyInsight|properties|projects|buildEnvironment|outgoingVariants|resolvableConfigurations|javaToolchains|model|dependency:tree|dependency:list|help:effective-pom|versions:display-dependency-updates)$' }
   - { phase: lint, match: '^(lint[A-Za-z]*|ktlint[A-Za-z]*|detekt[A-Za-z]*|spotless[A-Za-z]*|spotless:(check|apply)|checkstyle[A-Za-z]*|checkstyle:check|pmd[A-Za-z]*|pmd:check|spotbugs[A-Za-z]*|spotbugs:check|ktfmt[A-Za-z]*|format[A-Za-z]*|typecheck|type-check|tsc|check-types|checkTypes|prettier|eslint|fmt)$' }
   - { phase: build, match: '^(build[A-Za-z]*|assemble[A-Za-z]*|bundle[A-Za-z]*|compile[A-Za-z]*|jar|bootJar|shadowJar|war|ear|dist[A-Za-z]*|install[A-Za-z]*|publish[A-Za-z]*|package|deploy|generate[A-Za-z]*|kapt[A-Za-z]*|ksp[A-Za-z]*|nativeCompile|clean|prepare|test-compile|process-resources|codegen|[a-z][A-Za-z]*Classes)$' }
+  - { phase: running, match: '^(run|bootRun|appRun|jettyRun|tomcatRun|runIde|quarkusDev|spring-boot:run|exec:java|exec:exec|jetty:run|quarkus:dev|liberty:dev)$' }
   - { phase: tests, match: '^(test|tests|check|verify|connectedCheck|integration-test|e2e|spec|coverage|test[A-Z][A-Za-z0-9]*|test:.*|[a-z][A-Za-z0-9]*Tests?|connected[A-Za-z]*Test|(verify|record|validate)(Paparazzi|Roborazzi)[A-Za-z0-9]*|jacoco[A-Za-z]*|kover[A-Za-z]*|surefire:test|failsafe:integration-test|failsafe:verify)$' }
 
 # Names of npm/pnpm/yarn/bun scripts and make targets, used only when the file that defines them
@@ -233,6 +266,7 @@ scripts:
   - { phase: lint, match: '^(lint|lint:.*|.*:lint|format|format:.*|fmt|prettier|eslint|typecheck|type-check|types|tsc|check-types|check:types|stylelint|biome|rubocop|ruff|black|mypy|pylint|flake8|clippy|style)$' }
   - { phase: tests, match: '^(test|tests|test:.*|.*:test|spec|specs|e2e|e2e:.*|unit|integration|coverage|cy:run|vitest|jest|pytest|check|verify|validate|ci)$' }
   - { phase: build, match: '^(build|build:.*|.*:build|compile|bundle|dist|prepare|prepack|package|generate|codegen|install|deps|all)$' }
+  - { phase: running, match: '^(dev|develop|start|serve|server|preview|watch|storybook|seed|migrate|db|deploy|release|publish|up|down|ios|android|web|tauri|electron)$' }
 
 # Tool calls other than Bash, by name: exact names, or a regex in match.
 tools:
@@ -241,6 +275,7 @@ tools:
   - { phase: planning, name: [TodoWrite, TodoRead, TaskCreate, TaskUpdate, TaskList, TaskGet, EnterPlanMode, ExitPlanMode, StructuredOutput, SubagentHandback, SendMessage, SendUserMessage, SendUserFile, Workflow] }
   - { phase: planning, match: '^mcp__ccd_turn__' }
   - { phase: waiting, name: [AskUserQuestion] }
+  - { phase: running, name: [Monitor] }
   - { phase: lint, name: [mcp__ide__getDiagnostics] }
 
 # Files whose edits count as Writing tests rather than Writing code.

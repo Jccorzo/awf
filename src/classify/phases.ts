@@ -8,6 +8,7 @@ export type PhaseId =
   | 'build'
   | 'rework'
   | 'exploring'
+  | 'running'
   | 'planning'
   | 'waiting'
   | 'unclassified';
@@ -22,6 +23,7 @@ export const PHASES: Array<{ id: PhaseId; label: string }> = [
   { id: 'build', label: 'Build' },
   { id: 'rework', label: 'Rework' },
   { id: 'exploring', label: 'Exploring' },
+  { id: 'running', label: 'Running scripts' },
   { id: 'planning', label: 'Planning and answering' },
   { id: 'waiting', label: 'Waiting on you' },
   { id: 'unclassified', label: 'Unclassified' },
@@ -41,12 +43,13 @@ export function isCheckPhase(phase: string | undefined): phase is CheckPhase {
  * Higher wins.
  */
 export const RANK: Record<PhaseId, number> = {
-  build: 10,
-  tests: 9,
-  lint: 8,
-  rework: 7,
-  'writing-tests': 6,
-  'writing-code': 5,
+  build: 11,
+  tests: 10,
+  lint: 9,
+  rework: 8,
+  'writing-tests': 7,
+  'writing-code': 6,
+  running: 5,
   exploring: 4,
   planning: 3,
   waiting: 2,

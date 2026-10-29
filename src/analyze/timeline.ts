@@ -4,8 +4,9 @@ import type { ClassifiedSession, ClassifiedStep } from '../classify/classify';
 import { PHASES, type PhaseId, RANK } from '../classify/phases';
 
 /**
- * Foreground work beats background work, which beats idle time between turns. Unclassified
- * background work (a dev server, a watcher) ranks last: it isn't work you wait on.
+ * Foreground work beats background work, which beats idle time between turns. A process left
+ * running in the background that is Running scripts or Unclassified (a dev server, a watcher, a
+ * poller) ranks last: it isn't work you wait on.
  */
 const FOREGROUND = 0;
 const BACKGROUND = 1;
@@ -14,6 +15,11 @@ const SERVICE = 3;
 
 const isBackground = (step: ClassifiedStep, background: (s: ClassifiedStep) => boolean) =>
   step.kind === 'background' || background(step);
+
+/** A background shell running a server, a watcher or anything awf has no rule for. */
+const isService = (step: ClassifiedStep) =>
+  (step.kind === 'background' || step.flags.includes('background')) &&
+  (step.phase === 'running' || step.phase === 'unclassified');
 
 export interface Interval {
   start: number;
@@ -51,7 +57,7 @@ export function intervals(session: ClassifiedSession): Interval[] {
       step.kind === 'idle'
         ? IDLE
         : isBackground(step, background)
-          ? step.phase === 'unclassified'
+          ? step.phase === 'unclassified' || isService(step)
             ? SERVICE
             : BACKGROUND
           : FOREGROUND;
@@ -152,8 +158,8 @@ export function phaseSegments(session: ClassifiedSession): Segment[] {
 }
 
 /**
- * Where the session ends for its phase times: its last step, except that unclassified background
- * work still running after everything else (a dev server left on) doesn't stretch it.
+ * Where the session ends for its phase times: its last step, except that a background process
+ * still running after everything else (a dev server left on) doesn't stretch it.
  */
 export function sessionEnd(session: ClassifiedSession): number {
   const start = session.startMs;
@@ -161,10 +167,7 @@ export function sessionEnd(session: ClassifiedSession): number {
   let lastService = -Infinity;
   let lastOther = start;
   for (const step of session.steps) {
-    const service =
-      (step.kind === 'background' || step.flags.includes('background')) &&
-      step.phase === 'unclassified';
-    if (service) lastService = Math.max(lastService, step.endMs);
+    if (isService(step)) lastService = Math.max(lastService, step.endMs);
     else lastOther = Math.max(lastOther, step.endMs);
   }
   // Only when that background work is what the session's end came from.

@@ -19,8 +19,10 @@ export interface PhaseLine {
   edits?: number;
   /** Rework: failures that led to rework. */
   failures?: number;
-  /** Exploring: calls. */
+  /** Exploring and Running scripts: calls. */
   calls?: number;
+  /** Running scripts: time spent in polling loops and long sleeps. */
+  pollingMs?: number;
   /** Waiting on you: approvals, questions and idle gaps between turns. */
   approvals?: number;
   questions?: number;
@@ -93,6 +95,16 @@ export function summarize(classified: ClassifiedSession): Analysis {
       line.failures = windows.filter((w) => w.edits > 0).length;
     } else if (id === 'exploring') {
       line.calls = count('exploring');
+    } else if (id === 'running') {
+      line.calls = count('running');
+      // Foreground calls only: a poller left in the background doesn't take the session's time.
+      const polling = tools
+        .filter(
+          (s) =>
+            s.phase === 'running' && s.tags.includes('polling') && !s.flags.includes('background'),
+        )
+        .reduce((n, s) => n + Math.max(0, s.endMs - s.startMs - (s.waitMs ?? 0)), 0);
+      line.pollingMs = Math.min(polling, ms);
     } else if (id === 'waiting') {
       line.approvals = tools.filter((s) => s.flags.includes('approval')).length;
       line.questions = tools.filter((s) => s.tool === 'AskUserQuestion').length;
@@ -157,6 +169,10 @@ export function phaseDetail(line: PhaseLine): string {
         : '';
     case 'exploring':
       return line.calls ? plural(line.calls, 'call') : '';
+    case 'running':
+      return line.calls
+        ? `${plural(line.calls, 'call')}${line.pollingMs ? `, ${formatDuration(line.pollingMs)} polling` : ''}`
+        : '';
     case 'waiting': {
       const parts = [
         line.approvals ? plural(line.approvals, 'approval') : '',

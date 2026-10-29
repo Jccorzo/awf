@@ -74,7 +74,7 @@ describe('timeline', () => {
     expect(totals.byPhase).toMatchObject({ exploring: 40, planning: 10 });
   });
 
-  it("doesn't let an unclassified background process take idle time or stretch the session", () => {
+  it("doesn't let a background server take idle time or stretch the session", () => {
     const steps = [
       step({ id: 'm', kind: 'model', startMs: 0, endMs: 10, phase: 'planning' }),
       step({ id: 'idle', kind: 'idle', startMs: 10, endMs: 100, phase: 'waiting' }),
@@ -92,6 +92,32 @@ describe('timeline', () => {
     const totals = phaseTotals(session(steps, 0, 10_000));
     expect(totals.totalMs).toBe(110);
     expect(totals.byPhase).toMatchObject({ planning: 20, waiting: 90, unclassified: 0 });
+    // The same as Running scripts, now that `next dev` has a rule.
+    const running = phaseTotals(
+      session(
+        steps.map((s) => (s.id === 'dev' ? { ...s, phase: 'running' as const } : s)),
+        0,
+        10_000,
+      ),
+    );
+    expect(running.totalMs).toBe(110);
+    expect(running.byPhase).toMatchObject({ planning: 20, waiting: 90, running: 0 });
+    // A background subagent running a script while you're away is still working.
+    const agent = phaseTotals(
+      session([
+        ...steps.slice(0, 3),
+        step({ id: 'agent:x', kind: 'subagent', startMs: 10, endMs: 60, flags: ['background'] }),
+        step({
+          id: 'py',
+          kind: 'tool',
+          parentId: 'agent:x',
+          startMs: 10,
+          endMs: 60,
+          phase: 'running',
+        }),
+      ]),
+    );
+    expect(agent.byPhase).toMatchObject({ running: 50, waiting: 40 });
     // A build left running while you're away still counts as Build.
     const build = phaseTotals(
       session([
@@ -283,6 +309,28 @@ describe('summary', () => {
     expect(lines.some((l) => l.startsWith('Waiting on you'))).toBe(true);
     expect(lines.at(-1)).toMatch(
       /^Total\s+22m 00s · 100% · 1 model call, 3 tool calls, 2 failures$/,
+    );
+  });
+
+  it('says how much of Running scripts was polling', () => {
+    const { summary } = summarize(
+      session([
+        step({ id: 'm', kind: 'model', startMs: 0, endMs: 1_000, phase: 'running' }),
+        step({ id: 'py', kind: 'tool', startMs: 1_000, endMs: 4_000, phase: 'running' }),
+        step({
+          id: 'poll',
+          kind: 'tool',
+          startMs: 4_000,
+          endMs: 64_000,
+          phase: 'running',
+          tags: ['polling'],
+        }),
+      ]),
+    );
+    const line = summary.phases.find((p) => p.phase === 'running');
+    expect(line).toMatchObject({ ms: 64_000, calls: 2, pollingMs: 60_000 });
+    expect(formatSummaryLines(summary).find((l) => l.startsWith('Running scripts'))).toMatch(
+      /^Running scripts\s+1m 04s · 100% · 2 calls, 1m 00s polling$/,
     );
   });
 

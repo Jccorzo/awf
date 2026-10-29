@@ -291,7 +291,6 @@ export function buildReportData(
   const MODEL = '\0model';
   const unclassifiedName = (step: ClassifiedStep): string => {
     if (step.kind === 'compact') return 'compaction';
-    if (step.tags.includes('polling')) return 'polling';
     if (step.kind === 'model') return MODEL;
     if (step.command && !share) return head(step.command);
     if (step.tool?.startsWith('mcp__')) return stepLabel(step, turnNumber, share);

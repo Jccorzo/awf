@@ -115,7 +115,7 @@ describe('report data', () => {
           parentId: 't',
           kind: 'tool',
           tool: 'Bash',
-          command: 'cd app && ./tools/frobnicate --all',
+          command: 'cd app && frobnicate --all',
           startMs: 6_000,
           endMs: 10_000,
           flags: [],

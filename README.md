@@ -2,7 +2,7 @@
 
 Find the build, test and lint tax on your coding agents.
 
-awf (agent waterfall) shows where a coding agent's time went, by phase: writing code, writing tests, lint and format, running tests, building, rework, exploring, planning and waiting on you. It reads Claude Code sessions (and Codex CLI, Gemini CLI and OpenCode ones), sorts every step into a phase, finds rework after failed checks, and draws each session as a one-file HTML waterfall. It runs only on your machine and sends nothing anywhere.
+awf (agent waterfall) shows where a coding agent's time went, by phase: writing code, writing tests, lint and format, running tests, building, rework, exploring, running scripts, planning and waiting on you. It reads Claude Code sessions (and Codex CLI, Gemini CLI and OpenCode ones), sorts every step into a phase, finds rework after failed checks, and draws each session as a one-file HTML waterfall. It runs only on your machine and sends nothing anywhere.
 
 ```text
 $ awf summary last
@@ -59,7 +59,7 @@ Every command takes `--help` and `--json`. A session is an ID or its first chara
 
 ## Phases and rules
 
-Every instant of a session gets exactly one phase, so phase times add up to the session's time. A Bash command is classified by what it really runs: `npm run test` by its script, `make lint` by its recipe, `./gradlew check` by its tasks, `git commit` by its pre-commit hook. A failed check is read from its exit code when the exit code is the check's own, and from its output when a pipe hid it. Edits after a failed check, until the same check passes, are Rework. [docs/phases.md](docs/phases.md) has every rule.
+Every instant of a session gets exactly one phase, so phase times add up to the session's time. A Bash command is classified by what it really runs: `npm run test` by its script, `make lint` by its recipe, `./gradlew check` by its tasks, `git commit` by its pre-commit hook, `git push` by its pre-push hook. Commands that run something other than a check, an edit or a read (scripts, the app and its servers, `curl`, databases, deploys, `git push`, polling loops) are Running scripts. A failed check is read from its exit code when the exit code is the check's own, and from its output when a pipe hid it. Edits after a failed check, until the same check passes, are Rework. [docs/phases.md](docs/phases.md) has every rule.
 
 Teach awf your own scripts and tools in `.awf/rules.yaml` in your repo, in the format of [src/classify/default-rules.yaml](src/classify/default-rules.yaml). `awf stats` lists the unclassified programs worth a rule.
 

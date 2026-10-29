@@ -24,6 +24,7 @@
   --c-build: #e87ba4;
   --c-rework: #6250d6;
   --c-exploring: #008300;
+  --c-running: #0b5f73;
   --c-planning: #7b8494;
   --c-waiting: repeating-linear-gradient(135deg, #a9a8a0 0 2px, #e2e1da 2px 5px);
   --c-unclassified: #a5a49d;
@@ -60,6 +61,7 @@
     --c-build: #d55181;
     --c-rework: #9085e9;
     --c-exploring: #008300;
+    --c-running: #86cfe0;
     --c-planning: #8a93a3;
     --c-waiting: repeating-linear-gradient(135deg, #7a7973 0 2px, #33332f 2px 5px);
     --c-unclassified: #6e6d68;
@@ -90,6 +92,7 @@
   --c-build: #d55181;
   --c-rework: #9085e9;
   --c-exploring: #008300;
+  --c-running: #86cfe0;
   --c-planning: #8a93a3;
   --c-waiting: repeating-linear-gradient(135deg, #7a7973 0 2px, #33332f 2px 5px);
   --c-unclassified: #6e6d68;

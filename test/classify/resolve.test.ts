@@ -52,8 +52,8 @@ describe('npm-style scripts', () => {
     expect(c.command('yarn eslint .', '/repo')).toMatchObject({ phase: 'lint' });
   });
 
-  it('leaves a dev server unclassified', () => {
-    expect(c.command('pnpm dev', '/repo').phase).toBe('unclassified');
+  it('counts a dev server as Running scripts', () => {
+    expect(c.command('pnpm dev', '/repo').phase).toBe('running');
   });
 
   it('decides workspace scripts by name', () => {
@@ -114,13 +114,14 @@ describe('make', () => {
     expect(c.command('make -C sub test', '/m').checks[0]?.tool).toBe('pytest');
   });
 
-  it('leaves an unknown target unclassified when its name says nothing', () => {
-    expect(c.command('make dev', '/m').phase).toBe('unclassified');
-    expect(c.command('make deploy-staging', '/m').phase).toBe('unclassified');
+  it('decides an unknown target by its name, and leaves it unclassified when it says nothing', () => {
+    expect(c.command('make dev', '/m').phase).toBe('running');
+    expect(c.command('make deploy-staging', '/m').phase).toBe('running');
+    expect(c.command('make frobnicate', '/m').phase).toBe('unclassified');
   });
 });
 
-describe('git commit hooks', () => {
+describe('git hooks', () => {
   it('classifies git commit by its pre-commit hook', () => {
     const husky = classifier({ '/g/.git/HEAD': 'x', '/g/.husky/pre-commit': 'npx lint-staged\n' });
     expect(husky.command('git commit -m "x"', '/g/src')).toMatchObject({ phase: 'lint' });
@@ -138,6 +139,35 @@ describe('git commit hooks', () => {
     const none = classifier({ '/n/.git/HEAD': 'x' });
     expect(none.command('git commit -m x', '/n').phase).toBe('writing-code');
   });
+
+  it('classifies git push by its pre-push hook, and the push itself as Running scripts', () => {
+    const husky = classifier({ '/g/.git/HEAD': 'x', '/g/.husky/pre-push': 'pnpm test\n' });
+    expect(husky.command('git push -u origin feature', '/g/src')).toMatchObject({
+      phase: 'tests',
+      tags: expect.arrayContaining(['hook:.husky/pre-push', 'running']),
+    });
+    expect(husky.command('git -c core.hooksPath=.husky push', '/g').phase).toBe('tests');
+    // -n is --dry-run for push, which still runs the hook.
+    expect(husky.command('git push -n', '/g').phase).toBe('tests');
+    expect(husky.command('git push --no-verify', '/g').phase).toBe('running');
+    // The pre-commit hook isn't the pre-push one.
+    expect(husky.command('git commit -m x', '/g').phase).toBe('writing-code');
+    const lefthook = classifier({
+      '/l/.git/HEAD': 'x',
+      '/l/lefthook.yml': 'pre-push:\n  commands:\n    lint:\n      run: npx eslint .\n',
+    });
+    expect(lefthook.command('git push', '/l').phase).toBe('lint');
+    const plain = classifier({
+      '/p/.git/HEAD': 'x',
+      '/p/.git/hooks/pre-push': '#!/bin/sh\ngit diff --stat\n',
+    });
+    expect(plain.command('git push', '/p')).toMatchObject({
+      phase: 'running',
+      tags: expect.arrayContaining(['hook:.git/hooks/pre-push', 'exploring']),
+    });
+    const none = classifier({ '/n/.git/HEAD': 'x' });
+    expect(none.command('git push', '/n').phase).toBe('running');
+  });
 });
 
 describe('script files', () => {
@@ -150,7 +180,8 @@ describe('script files', () => {
       tags: expect.arrayContaining(['file:./scripts/test.sh']),
     });
     expect(c.command('bash scripts/test.sh', '/s').phase).toBe('tests');
-    expect(c.command('./scripts/missing.sh', '/s').phase).toBe('unclassified');
+    // One awf can't read runs something it can't see: Running scripts.
+    expect(c.command('./scripts/missing.sh', '/s').phase).toBe('running');
   });
 });
 
@@ -232,7 +263,7 @@ describe('review fixes', () => {
 
   it('reads scripts called by path when they are shell scripts, and only then', () => {
     expect(c.command('script/test', '/repo')).toMatchObject({ phase: 'tests' });
-    expect(c.command('./scripts/release.py', '/repo').phase).toBe('unclassified');
+    expect(c.command('./scripts/release.py', '/repo').phase).toBe('running');
   });
 
   it('counts the right files as test files', () => {

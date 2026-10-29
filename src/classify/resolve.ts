@@ -47,7 +47,7 @@ export type Resolution =
   | { kind: 'make'; target: string; commands: string[]; cwd: string }
   | { kind: 'make-name'; target?: string }
   | { kind: 'tasks'; runner: string; tasks: string[] }
-  | { kind: 'hook'; name: string; commands: string[]; cwd: string }
+  | { kind: 'hook'; name: string; hook: 'pre-commit' | 'pre-push'; commands: string[]; cwd: string }
   | { kind: 'file'; file: string; commands: string[]; cwd: string };
 
 export function findUp(
@@ -763,36 +763,44 @@ function resolveTasks(program: string, args: string[]): Resolution | undefined {
   return { kind: 'tasks', runner: program, tasks };
 }
 
-function resolveGitCommit(args: string[], cwd: string, files: Files): Resolution | undefined {
+/** `git commit` runs its pre-commit hook, `git push` its pre-push hook, unless --no-verify. */
+function resolveGitHook(args: string[], cwd: string, files: Files): Resolution | undefined {
   const sub = positionals(args, ['-C', '-c', '--git-dir', '--work-tree', '--namespace'])[0];
-  if (sub !== 'commit' || args.includes('--no-verify') || args.includes('-n')) return undefined;
+  const hook = sub === 'commit' ? 'pre-commit' : sub === 'push' ? 'pre-push' : undefined;
+  if (!hook || args.includes('--no-verify')) return undefined;
+  // For commit, -n is --no-verify; for push it's --dry-run.
+  if (hook === 'pre-commit' && args.includes('-n')) return undefined;
   // The repo root: the folder holding .git (a directory, or a file in a worktree).
   const root = findUp(cwd, ['.git/HEAD', '.git'], files)?.dir ?? cwd;
-  const husky = files.read(path.join(root, '.husky', 'pre-commit'));
+  const husky = files.read(path.join(root, '.husky', hook));
   if (husky !== undefined)
-    return { kind: 'hook', name: '.husky/pre-commit', commands: [husky], cwd: root };
+    return { kind: 'hook', name: `.husky/${hook}`, hook, commands: [husky], cwd: root };
   const lefthook =
     files.read(path.join(root, 'lefthook.yml')) ?? files.read(path.join(root, 'lefthook.yaml'));
   if (lefthook !== undefined) {
     try {
-      const doc = YAML.parse(lefthook) as {
-        'pre-commit'?: { commands?: Record<string, { run?: string }> };
-      };
-      const commands = Object.values(doc?.['pre-commit']?.commands ?? {})
+      const doc = YAML.parse(lefthook) as Record<
+        string,
+        { commands?: Record<string, { run?: string }> } | undefined
+      >;
+      const commands = Object.values(doc?.[hook]?.commands ?? {})
         .map((c) => c?.run)
         .filter((c): c is string => typeof c === 'string');
       if (commands.length > 0)
-        return { kind: 'hook', name: 'lefthook pre-commit', commands, cwd: root };
+        return { kind: 'hook', name: `lefthook ${hook}`, hook, commands, cwd: root };
     } catch {
       // fall through
     }
   }
-  if (files.read(path.join(root, '.pre-commit-config.yaml')) !== undefined) {
-    return { kind: 'hook', name: 'pre-commit', commands: ['pre-commit run'], cwd: root };
+  if (
+    hook === 'pre-commit' &&
+    files.read(path.join(root, '.pre-commit-config.yaml')) !== undefined
+  ) {
+    return { kind: 'hook', name: 'pre-commit', hook, commands: ['pre-commit run'], cwd: root };
   }
-  const gitHook = files.read(path.join(root, '.git', 'hooks', 'pre-commit'));
+  const gitHook = files.read(path.join(root, '.git', 'hooks', hook));
   if (gitHook !== undefined)
-    return { kind: 'hook', name: '.git/hooks/pre-commit', commands: [gitHook], cwd: root };
+    return { kind: 'hook', name: `.git/hooks/${hook}`, hook, commands: [gitHook], cwd: root };
   return undefined;
 }
 
@@ -822,7 +830,7 @@ export function resolve(argv: string[], cwd: string, files: Files): Resolution |
     case 'lerna':
       return resolveTasks(program, args);
     case 'git':
-      return resolveGitCommit(args, cwd, files);
+      return resolveGitHook(args, cwd, files);
   }
   const file = scriptFile(argv);
   if (file) {

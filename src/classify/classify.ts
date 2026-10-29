@@ -73,12 +73,16 @@ interface Part {
 
 const MAX_DEPTH = 4;
 
-/** Rank within one command (rule 2): an unmatched part outranks the near-instant phases. */
+/**
+ * Rank within one command (rule 2): a part that runs something (a script, or a program no rule
+ * matches) outranks the near-instant phases.
+ */
 const COMPOUND_RANK: Record<PhaseId, number> = {
-  build: 10,
-  tests: 9,
-  lint: 8,
-  unclassified: 7,
+  build: 11,
+  tests: 10,
+  lint: 9,
+  unclassified: 8,
+  running: 7,
   rework: 6,
   'writing-tests': 5,
   'writing-code': 4,
@@ -493,6 +497,9 @@ export class Classifier {
       case 'hook':
       case 'file': {
         const parts = res.commands.flatMap((c) => this.parts(c, res.cwd, depth + 1));
+        // A push takes time of its own; a commit next to its hook doesn't.
+        if (res.kind === 'hook' && res.hook === 'pre-push')
+          parts.push(this.byRule(argv, program, piped, []));
         const tag = res.kind === 'hook' ? `hook:${res.name}` : `file:${res.file}`;
         return tagged(parts.length > 0 ? parts : [this.unmatched(program, piped)], tag);
       }
@@ -601,9 +608,10 @@ export class Classifier {
   }
 
   /**
-   * Rule 2: a compound command takes its highest-ranked phase; the rest become tags. A part no rule
-   * matches ranks above Writing and Exploring: those commands take next to no time, so the unknown
-   * part most likely took it. Waiting in a loop or a long sleep, with no check, is polling.
+   * Rule 2: a compound command takes its highest-ranked phase; the rest become tags. A script, or a
+   * part no rule matches, ranks above Writing and Exploring: those commands take next to no time, so
+   * it most likely took it. Waiting in a loop or a long sleep, with no check, is polling: Running
+   * scripts.
    */
   private combine(parts: Part[], cwd: string): CommandInfo {
     const counted = parts.filter(
@@ -621,7 +629,7 @@ export class Classifier {
     const phases = counted.map(resolvedPhase);
     const hasCheck = phases.some((p) => isCheckPhase(p));
     const polling = !hasCheck && parts.some((p) => p.polling);
-    let primary: PhaseId | undefined = polling ? 'unclassified' : undefined;
+    let primary: PhaseId | undefined = polling ? 'running' : undefined;
     if (!primary) {
       for (const phase of phases) {
         if (!primary || COMPOUND_RANK[phase] > COMPOUND_RANK[primary]) primary = phase;
@@ -639,18 +647,18 @@ export class Classifier {
     if (!primary || primary === 'unclassified') {
       const onlyNeutral =
         parts.length > 0 && parts.every((p) => p.phase === 'neutral' || (p.piped && p.phase));
-      if (onlyNeutral && !polling) tags.add('neutral');
+      if (onlyNeutral) tags.add('neutral');
       const rule = onlyNeutral
         ? (parts.find((p) => p.phase === 'neutral')?.rule ?? 'none')
         : 'none';
       return { phase: 'unclassified', tags: [...tags], checks: [...checks.values()], rule };
     }
-    const decider = counted[phases.indexOf(primary)];
+    const decider = polling ? undefined : counted[phases.indexOf(primary)];
     return {
       phase: primary,
       tags: [...tags],
       checks: [...checks.values()],
-      rule: decider?.rule ?? 'none',
+      rule: decider?.rule ?? (polling ? 'polling' : 'none'),
     };
   }
 
