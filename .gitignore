@@ -1,0 +1,13 @@
+node_modules/
+dist/
+coverage/
+test-results/
+*.log
+.DS_Store
+
+# Real sessions never leave this machine. Commit only scrubbed copies in fixtures/claude-code/.
+fixtures/raw/*
+!fixtures/raw/.gitkeep
+
+# Local labels made from your own sessions
+fixtures/labels.csv

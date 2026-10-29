@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm test)",
+      "Bash(pnpm test *)",
+      "Bash(pnpm lint)",
+      "Bash(pnpm lint *)",
+      "Bash(pnpm build)",
+      "Bash(pnpm build *)",
+      "Bash(git *)"
+    ],
+    "deny": ["Bash(curl *)", "Bash(wget *)", "Read(~/.claude/projects/**)"]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/format.mjs\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

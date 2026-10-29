@@ -1,0 +1,45 @@
+{
+  "name": "awf",
+  "version": "0.1.0",
+  "description": "Agent waterfall: see where a coding agent's time went, by phase.",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "awf": "dist/awf.mjs"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@10.33.2",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint . && prettier --check . && tsc --noEmit",
+    "format": "prettier --write .",
+    "awf": "node scripts/build.mjs --quiet --cli-only && node dist/awf.mjs"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.20.5",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.13.0",
+    "globals": "^17.13.0",
+    "playwright-core": "^1.64.1",
+    "prettier": "^3.9.10",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.72.1",
+    "vitest": "^5.0.5",
+    "yaml": "^2.9.1"
+  }
+}

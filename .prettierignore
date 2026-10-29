@@ -1,0 +1,7 @@
+dist/
+plugin/scripts/
+coverage/
+test-results/
+fixtures/
+pnpm-lock.yaml
+PLAN.md
