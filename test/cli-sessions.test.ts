@@ -14,6 +14,7 @@ function writeEvents(home: string, id: string, events: Array<Partial<RecorderEve
 
 describe('awf sessions', () => {
   const home = mkdtempSync(path.join(os.tmpdir(), 'awf-sessions-'));
+  const projects = mkdtempSync(path.join(os.tmpdir(), 'awf-projects-'));
   const start = new Date(2026, 9, 28, 9, 30).getTime();
   writeEvents(home, '11111111-aaaa', [
     { e: 'SessionStart', t: start - 5000, cwd: '/work/repo' },
@@ -31,10 +32,20 @@ describe('awf sessions', () => {
 
   it('lists sessions newest first with duration and active time', async () => {
     const io = captureIo();
-    expect(await main(['sessions'], io, { AWF_HOME: home, HOME: '/work' })).toBe(0);
+    expect(
+      await main(['sessions'], io, {
+        AWF_HOME: home,
+        AWF_CLAUDE_PROJECTS: projects,
+        HOME: '/work',
+      }),
+    ).toBe(0);
     const [header, first, second] = io.stdout[0]?.split('\n') ?? [];
-    expect(header).toMatch(/^SESSION\s+STARTED\s+DURATION\s+ACTIVE\s+TURNS\s+TOOLS\s+PROJECT$/);
-    expect(first).toMatch(/^11111111\s+2026-10-28 09:30\s+6m 10s\s+1m 10s\s+2\s+1\s+~\/repo$/);
+    expect(header).toMatch(
+      /^SESSION\s+STARTED\s+DURATION\s+ACTIVE\s+TURNS\s+TOOLS\s+SOURCE\s+PROJECT$/,
+    );
+    expect(first).toMatch(
+      /^11111111\s+2026-10-28 09:30\s+6m 10s\s+1m 10s\s+2\s+1\s+hooks\s+~\/repo$/,
+    );
     expect(second).toMatch(/^22222222/);
   });
 
@@ -43,7 +54,7 @@ describe('awf sessions', () => {
     await main(
       ['sessions', '--json', '--since', '12h'],
       io,
-      { AWF_HOME: home },
+      { AWF_HOME: home, AWF_CLAUDE_PROJECTS: projects },
       '/',
       start + 400_000,
     );
