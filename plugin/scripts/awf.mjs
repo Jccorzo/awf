@@ -11550,6 +11550,327 @@ the share left unclassified, and the programs behind that time, to show which ru
   }
 };
 
+// src/cli/commands/summary.ts
+import os7 from "node:os";
+
+// src/analyze/rework.ts
+var EDIT_PHASES = /* @__PURE__ */ new Set(["writing-code", "writing-tests"]);
+function isEdit(step) {
+  return (step.kind === "tool" || step.kind === "background") && !!step.phase && EDIT_PHASES.has(step.phase);
+}
+function detectRework(input) {
+  const steps = input.steps.map((s) => ({ ...s, tags: [...s.tags] }));
+  const session = { ...input, steps };
+  const ordered = steps.filter((s) => s.kind === "tool" || s.kind === "background").sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs);
+  const open = /* @__PURE__ */ new Map();
+  const windows = [];
+  for (const step of ordered) {
+    if (isEdit(step) && open.size > 0) {
+      const window = [...open.values()].filter((w) => w.failedAtMs <= step.startMs).sort((a, b) => b.failedAtMs - a.failedAtMs)[0];
+      if (window) {
+        step.tags.push(`was:${step.phase}`);
+        step.phase = "rework";
+        step.reworkFor = window.check;
+        window.edits++;
+      }
+    }
+    for (const check of step.checks) {
+      const current = open.get(check.key);
+      if (check.failed) {
+        if (!current) {
+          const window = {
+            check: check.key,
+            failedStepId: step.id,
+            failedAtMs: step.endMs,
+            edits: 0
+          };
+          open.set(check.key, window);
+          windows.push(window);
+        }
+      } else if (current && !step.flags.includes("interrupted")) {
+        current.passedAtMs = step.endMs;
+        open.delete(check.key);
+      }
+    }
+  }
+  const byId = new Map(steps.map((s) => [s.id, s]));
+  for (const step of steps) {
+    if (step.kind !== "model" || !step.produces?.length) continue;
+    const phases = [];
+    for (const id of step.produces) {
+      const produced = byId.get(id);
+      if (!produced) continue;
+      if (produced.tool && AGENT_TOOLS.has(produced.tool)) phases.push("planning");
+      else if (produced.phase === "waiting") phases.push("planning");
+      else if (produced.phase) phases.push(produced.phase);
+    }
+    const phase = topPhase(phases);
+    if (phase === "rework" && step.phase !== "rework") {
+      step.tags.push(`was:${step.phase}`);
+      step.phase = "rework";
+      step.reworkFor = step.produces.map((id) => byId.get(id)?.reworkFor).find(Boolean);
+    }
+  }
+  return { session, windows };
+}
+
+// src/analyze/timeline.ts
+var FOREGROUND = 0;
+var BACKGROUND = 1;
+var IDLE = 2;
+function intervals(session) {
+  const byId = new Map(session.steps.map((s) => [s.id, s]));
+  const background = (step) => {
+    if (step.flags.includes("background") || step.kind === "background") return true;
+    let parent = step.parentId ? byId.get(step.parentId) : void 0;
+    for (let depth = 0; parent && depth < 8; depth++) {
+      if (parent.kind === "subagent" && parent.flags.includes("background")) return true;
+      parent = parent.parentId ? byId.get(parent.parentId) : void 0;
+    }
+    return false;
+  };
+  const out = [];
+  for (const step of session.steps) {
+    if (!step.phase || step.endMs <= step.startMs) continue;
+    if (step.kind === "turn" || step.kind === "subagent") continue;
+    const tier = step.kind === "idle" ? IDLE : background(step) ? BACKGROUND : FOREGROUND;
+    const wait = step.kind === "tool" && step.waitMs ? Math.min(step.waitMs, step.endMs - step.startMs) : 0;
+    if (wait > 0) {
+      out.push({
+        start: step.startMs,
+        end: step.startMs + wait,
+        phase: "waiting",
+        tier,
+        stepId: step.id
+      });
+      if (step.startMs + wait < step.endMs) {
+        out.push({
+          start: step.startMs + wait,
+          end: step.endMs,
+          phase: step.phase,
+          tier,
+          stepId: step.id
+        });
+      }
+    } else {
+      out.push({ start: step.startMs, end: step.endMs, phase: step.phase, tier, stepId: step.id });
+    }
+  }
+  return out;
+}
+var PHASE_INDEX = new Map(PHASES.map((p, i) => [p.id, i]));
+function phaseTotals(session) {
+  const byPhase = Object.fromEntries(PHASES.map((p) => [p.id, 0]));
+  const start = session.startMs;
+  const end = Math.max(session.endMs, start);
+  const events = [];
+  for (const iv of intervals(session)) {
+    const a = Math.max(iv.start, start);
+    const b = Math.min(iv.end, end);
+    if (b <= a) continue;
+    const key = iv.tier * 100 + (PHASE_INDEX.get(iv.phase) ?? 0);
+    events.push({ t: a, key, delta: 1 }, { t: b, key, delta: -1 });
+  }
+  events.sort((x, y) => x.t - y.t || x.delta - y.delta);
+  const active = /* @__PURE__ */ new Map();
+  let cursor = start;
+  let uncoveredMs = 0;
+  const best = () => {
+    let chosen;
+    for (const [key, count] of active) {
+      if (count <= 0) continue;
+      const tier = Math.floor(key / 100);
+      const phase = PHASES[key % 100]?.id;
+      if (!chosen || tier < chosen.tier || tier === chosen.tier && RANK[phase] > RANK[chosen.phase]) {
+        chosen = { tier, phase };
+      }
+    }
+    return chosen?.phase;
+  };
+  const credit = (until) => {
+    if (until <= cursor) return;
+    const phase = best();
+    if (phase) byPhase[phase] += until - cursor;
+    else {
+      byPhase.unclassified += until - cursor;
+      uncoveredMs += until - cursor;
+    }
+    cursor = until;
+  };
+  for (const event of events) {
+    credit(event.t);
+    active.set(event.key, (active.get(event.key) ?? 0) + event.delta);
+  }
+  credit(end);
+  return { totalMs: end - start, byPhase, uncoveredMs };
+}
+
+// src/analyze/summary.ts
+function summarize(classified) {
+  const { session, windows } = detectRework(classified);
+  const totals = phaseTotals(session);
+  const tools = session.steps.filter((s) => s.kind === "tool");
+  const count = (phase) => tools.filter((s) => s.phase === phase).length;
+  const runners = session.steps.filter(
+    (s) => (s.kind === "tool" || s.kind === "background") && s.checks.length > 0
+  );
+  const checks = runners.flatMap((s) => s.checks);
+  const phases = PHASES.map(({ id, label: label2 }) => {
+    const ms = totals.byPhase[id];
+    const line = {
+      phase: id,
+      label: label2,
+      ms,
+      share: totals.totalMs > 0 ? ms / totals.totalMs : 0
+    };
+    if (id === "lint" || id === "tests" || id === "build") {
+      const runs = runners.filter((s) => s.checks.some((c) => c.phase === id));
+      line.runs = runs.length;
+      line.failed = runs.filter((s) => s.checks.some((c) => c.phase === id && c.failed)).length;
+    } else if (id === "writing-code" || id === "writing-tests") {
+      line.edits = count(id);
+    } else if (id === "rework") {
+      line.edits = count("rework");
+      line.failures = windows.filter((w) => w.edits > 0).length;
+    } else if (id === "exploring") {
+      line.calls = count("exploring");
+    } else if (id === "waiting") {
+      line.approvals = tools.filter((s) => s.flags.includes("approval")).length;
+      line.questions = tools.filter((s) => s.tool === "AskUserQuestion").length;
+      line.gaps = session.steps.filter((s) => s.kind === "idle").length;
+    } else if (id === "unclassified") {
+      line.steps = session.steps.filter((s) => s.phase === "unclassified").length;
+    }
+    return line;
+  });
+  const idleMs = session.steps.filter((s) => s.kind === "idle").reduce((n, s) => n + (s.endMs - s.startMs), 0);
+  const tokens2 = session.steps.reduce((sum, s) => {
+    if (!s.tokens) return sum;
+    const base = sum ?? { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 };
+    return {
+      input: base.input + s.tokens.input,
+      output: base.output + s.tokens.output,
+      cacheRead: base.cacheRead + s.tokens.cacheRead,
+      cacheWrite: base.cacheWrite + s.tokens.cacheWrite
+    };
+  }, void 0);
+  const summary = {
+    id: session.id,
+    sources: session.sources,
+    startMs: session.startMs,
+    endMs: session.endMs,
+    totalMs: totals.totalMs,
+    activeMs: Math.max(0, totals.totalMs - idleMs),
+    phases,
+    modelCalls: session.steps.filter((s) => s.kind === "model").length,
+    toolCalls: tools.length,
+    subagents: session.steps.filter((s) => s.kind === "subagent").length,
+    failures: checks.filter((c) => c.failed).length,
+    rework: windows,
+    uncoveredMs: totals.uncoveredMs
+  };
+  if (session.title) summary.title = session.title;
+  if (session.cwd) summary.cwd = session.cwd;
+  if (session.agentVersion) summary.agentVersion = session.agentVersion;
+  if (tokens2) summary.tokens = tokens2;
+  return { session, summary };
+}
+var plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+function phaseDetail(line) {
+  switch (line.phase) {
+    case "lint":
+    case "tests":
+    case "build":
+      return line.runs ? `${plural(line.runs, "run")}${line.failed ? `, ${line.failed} failed` : ""}` : "";
+    case "writing-code":
+    case "writing-tests":
+      return line.edits ? plural(line.edits, "edit") : "";
+    case "rework":
+      return line.edits ? `${plural(line.edits, "edit")} after ${plural(line.failures ?? 0, "failed check")}` : "";
+    case "exploring":
+      return line.calls ? plural(line.calls, "call") : "";
+    case "waiting": {
+      const parts = [
+        line.approvals ? plural(line.approvals, "approval") : "",
+        line.questions ? plural(line.questions, "question") : "",
+        line.gaps ? plural(line.gaps, "idle gap") : ""
+      ].filter(Boolean);
+      return parts.join(", ");
+    }
+    case "unclassified":
+      return line.steps ? plural(line.steps, "step") : "";
+    default:
+      return "";
+  }
+}
+var ALWAYS = /* @__PURE__ */ new Set(["rework", "waiting", "unclassified"]);
+function formatSummaryLines(summary) {
+  const lines = summary.phases.filter((p) => p.ms > 0 || ALWAYS.has(p.phase));
+  const labelWidth = Math.max(...lines.map((p) => PHASE_LABEL[p.phase].length), "Total".length);
+  const timeWidth = Math.max(
+    ...lines.map((p) => formatDuration(p.ms).length),
+    formatDuration(summary.totalMs).length
+  );
+  const out = lines.map((p) => {
+    const pct2 = `${Math.round(p.share * 100)}%`.padStart(4);
+    const detail = phaseDetail(p);
+    return `${p.label.padEnd(labelWidth)}  ${formatDuration(p.ms).padStart(timeWidth)} \xB7 ${pct2}${detail ? ` \xB7 ${detail}` : ""}`;
+  });
+  const totals = [
+    plural(summary.modelCalls, "model call"),
+    plural(summary.toolCalls, "tool call"),
+    ...summary.subagents ? [plural(summary.subagents, "subagent")] : [],
+    plural(summary.failures, "failure")
+  ];
+  out.push(
+    `${"Total".padEnd(labelWidth)}  ${formatDuration(summary.totalMs).padStart(timeWidth)} \xB7 100% \xB7 ${totals.join(", ")}`
+  );
+  return out;
+}
+
+// src/cli/commands/summary.ts
+var summaryCommand = {
+  summary: "One line per phase: time, share, runs and failures",
+  usage: `Usage: awf summary <session> [--json] [--share]
+
+Shows where a session's time went, one line per phase, with check runs, failures and rework.
+Phase times add up to the session's total. <session> is an ID or its first characters, "last",
+or a transcript or events file.
+  --json    print JSON
+  --share   phases, durations and tool names only: no task, folder, commands or files`,
+  options: {
+    json: { type: "boolean" },
+    share: { type: "boolean" },
+    project: { type: "string" }
+  },
+  run(ctx, args, options) {
+    const classified = classifier()(loadOne(ctx, args[0], options, true));
+    const { summary } = summarize(options.share ? shareSession(classified) : classified);
+    if (options.share) {
+      delete summary.title;
+      delete summary.cwd;
+      for (const window of summary.rework)
+        window.check = window.check.replace(/^(\w+):(npm|pnpm|yarn|bun|deno|make) .*/, "$1:$2");
+    }
+    if (options.json) {
+      ctx.io.out(JSON.stringify(summary, null, 2));
+      return 0;
+    }
+    const home = ctx.env.HOME ?? os7.homedir();
+    const header = [
+      `Session ${summary.id.slice(0, 8)}`,
+      formatClock(summary.startMs),
+      summary.activeMs < summary.totalMs ? `${formatDuration(summary.totalMs)} (active ${formatDuration(summary.activeMs)})` : formatDuration(summary.totalMs),
+      ...summary.cwd ? [homeRelative(summary.cwd, home)] : []
+    ].join(" \xB7 ");
+    ctx.io.out(header);
+    if (summary.title) ctx.io.out(`Task: ${summary.title}`);
+    ctx.io.out("");
+    for (const line of formatSummaryLines(summary)) ctx.io.out(line);
+    return 0;
+  }
+};
+
 // src/cli/main.ts
 var defaultIo = {
   out: (text) => process.stdout.write(text + "\n"),
@@ -11559,6 +11880,7 @@ var COMMANDS = {
   sessions: sessionsCommand,
   import: importCommand,
   classify: classifyCommand,
+  summary: summaryCommand,
   stats: statsCommand,
   sample: sampleCommand,
   accuracy: accuracyCommand,
