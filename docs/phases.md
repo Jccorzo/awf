@@ -36,6 +36,7 @@ Every instant of a session belongs to exactly one phase, so phase times add up t
 
 - When several things run at once (parallel calls, subagents), each instant goes to the highest-ranked phase among the calls running then, in the order of rule 2, followed by Planning and answering, Waiting on you and Unclassified.
 - Background work (a background shell or subagent) only takes an instant when nothing in the foreground is running, so a build left running while you're away counts as Build, not Waiting on you.
+- Unclassified background work (a dev server, a watcher, a script awf has no rule for) ranks below idle time: while you're away it's Waiting on you. Left running after the session's last step, it doesn't stretch the session.
 - A call that waited for your approval is split: the wait is Waiting on you, the run its own phase. With hooks, the run is `duration_ms`; from a transcript alone the wait's length is unknown, so the whole call counts as waiting.
 - A call that reads a background task's output (TaskOutput, BashOutput) takes that task's phase.
 - Only gaps between turns count as waiting: time before your first prompt and after the last turn isn't part of the session.

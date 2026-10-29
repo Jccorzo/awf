@@ -3,10 +3,17 @@
 import type { ClassifiedSession, ClassifiedStep } from '../classify/classify';
 import { PHASES, type PhaseId, RANK } from '../classify/phases';
 
-/** Foreground work beats background work, which beats idle time between turns. */
+/**
+ * Foreground work beats background work, which beats idle time between turns. Unclassified
+ * background work (a dev server, a watcher) ranks last: it isn't work you wait on.
+ */
 const FOREGROUND = 0;
 const BACKGROUND = 1;
 const IDLE = 2;
+const SERVICE = 3;
+
+const isBackground = (step: ClassifiedStep, background: (s: ClassifiedStep) => boolean) =>
+  step.kind === 'background' || background(step);
 
 export interface Interval {
   start: number;
@@ -40,7 +47,14 @@ export function intervals(session: ClassifiedSession): Interval[] {
   for (const step of session.steps) {
     if (!step.phase || step.endMs <= step.startMs) continue;
     if (step.kind === 'turn' || step.kind === 'subagent') continue;
-    const tier = step.kind === 'idle' ? IDLE : background(step) ? BACKGROUND : FOREGROUND;
+    const tier =
+      step.kind === 'idle'
+        ? IDLE
+        : isBackground(step, background)
+          ? step.phase === 'unclassified'
+            ? SERVICE
+            : BACKGROUND
+          : FOREGROUND;
     const wait =
       step.kind === 'tool' && step.waitMs ? Math.min(step.waitMs, step.endMs - step.startMs) : 0;
     if (wait > 0) {
@@ -83,7 +97,7 @@ export interface Segment {
  */
 export function phaseSegments(session: ClassifiedSession): Segment[] {
   const start = session.startMs;
-  const end = Math.max(session.endMs, start);
+  const end = sessionEnd(session);
   const events: Array<{ t: number; key: number; delta: number }> = [];
   for (const iv of intervals(session)) {
     const a = Math.max(iv.start, start);
@@ -137,6 +151,26 @@ export function phaseSegments(session: ClassifiedSession): Segment[] {
   return segments;
 }
 
+/**
+ * Where the session ends for its phase times: its last step, except that unclassified background
+ * work still running after everything else (a dev server left on) doesn't stretch it.
+ */
+export function sessionEnd(session: ClassifiedSession): number {
+  const start = session.startMs;
+  const end = Math.max(session.endMs, start);
+  let lastService = -Infinity;
+  let lastOther = start;
+  for (const step of session.steps) {
+    const service =
+      (step.kind === 'background' || step.flags.includes('background')) &&
+      step.phase === 'unclassified';
+    if (service) lastService = Math.max(lastService, step.endMs);
+    else lastOther = Math.max(lastOther, step.endMs);
+  }
+  // Only when that background work is what the session's end came from.
+  return lastService > lastOther && end > lastOther && end <= lastService ? lastOther : end;
+}
+
 /** Phase times that add up to the session's total. */
 export function phaseTotals(session: ClassifiedSession): PhaseTotals {
   const byPhase = Object.fromEntries(PHASES.map((p) => [p.id, 0])) as Record<PhaseId, number>;
@@ -145,6 +179,5 @@ export function phaseTotals(session: ClassifiedSession): PhaseTotals {
     byPhase[segment.phase] += segment.end - segment.start;
     if (!segment.covered) uncoveredMs += segment.end - segment.start;
   }
-  const start = session.startMs;
-  return { totalMs: Math.max(session.endMs, start) - start, byPhase, uncoveredMs };
+  return { totalMs: sessionEnd(session) - session.startMs, byPhase, uncoveredMs };
 }

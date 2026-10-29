@@ -9,6 +9,7 @@ import { type Browser, chromium, type Page } from 'playwright-core';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { analyze } from '../../src/analyze/summary';
 import { memoryFiles } from '../../src/classify/resolve';
+import { importAgentFile, detectAgentFile } from '../../src/importers/agents';
 import { importClaudeCodeTranscript } from '../../src/importers/claude-code/import';
 import type { Session } from '../../src/model/types';
 import { buildReportData } from '../../src/report/data';
@@ -119,6 +120,27 @@ describe.skipIf(!installed)('report in a browser', () => {
     await page.locator('.why .link').first().click();
     expect(await page.locator('.row.sel .badge').textContent()).toBe('slowest');
     expect(errors).toEqual([]);
+    await page.close();
+  });
+
+  it.each([
+    'codex/codex-0.50-test-fix/rollout-2026-10-28T14-03-12-0199c8a1-7f2e-7b31-9a4d-3c2b1a0f9e8d.jsonl',
+    'gemini/gemini-0.11-test-fix/session-2026-10-28T14-03-5f1e2d3c.json',
+    'opencode/opencode-0.15-test-fix/storage/session/4b825dc642cb6eb9a060e54bf8d69288fbee4904/ses_5a1b2c3d4e5fXYZabcdefghij.json',
+  ])('draws a session from another agent: %s', async (fixture) => {
+    const file = detectAgentFile(path.resolve(__dirname, '../../fixtures', fixture));
+    if (!file) throw new Error(`not an agent file: ${fixture}`);
+    const { page, errors, requests } = await open(
+      write(file.agent, importAgentFile(file, { detail: true })),
+    );
+    expect(errors).toEqual([]);
+    expect(requests).toEqual([]);
+    const agentName = { codex: 'Codex CLI', gemini: 'Gemini CLI', opencode: 'OpenCode' }[
+      file.agent
+    ];
+    expect(await page.locator('.meta').textContent()).toContain(agentName);
+    expect(await page.locator('.rows .fail').count()).toBe(1);
+    expect(await page.locator('.chip', { hasText: 'Rework' }).count()).toBe(1);
     await page.close();
   });
 

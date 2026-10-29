@@ -6,6 +6,7 @@ Local CLI that shows where a coding agent's time goes, by phase.
 
 - pnpm test · pnpm lint · pnpm build
 - pnpm awf report <session> --out /tmp/report.html
+- pnpm report:screenshots (every fixture's report, light and dark, laptop and phone)
 
 ## Rules
 

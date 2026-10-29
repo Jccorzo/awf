@@ -1,0 +1,22 @@
+{
+  "id": "prt_a15yyyyyyyyyyyyyyyyyyyy",
+  "sessionID": "ses_5a1b2c3d4e6aChildSessionAb",
+  "messageID": "msg_a13xxxxxxxxxxxxxxxxxxxx",
+  "type": "tool",
+  "callID": "toolu_C1",
+  "tool": "grep",
+  "state": {
+    "status": "completed",
+    "input": {
+      "pattern": "function sum",
+      "path": "/Users/user/demo"
+    },
+    "output": "‹text›",
+    "title": "",
+    "metadata": {},
+    "time": {
+      "start": 1793196207700,
+      "end": 1793196207800
+    }
+  }
+}

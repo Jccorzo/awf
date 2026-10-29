@@ -218,6 +218,43 @@ describe('Claude Code importer edge cases', () => {
     });
   });
 
+  it('starts a turn when the model answers a notice after its turn ended, not stretching model time', () => {
+    const notice = (t: number, words: string) => ({
+      type: 'user',
+      timestamp: new Date(ms(t)).toISOString(),
+      message: { role: 'user', content: words },
+    });
+    const day = 86_400;
+    const file = writeTranscript('s9', [
+      prompt(0, 'ship it'),
+      text(5, 'm1', 'Shipped.'),
+      system(5.1, 'stop_hook_summary'),
+      // Hours later the app sends a reminder, and the model answers it.
+      notice(
+        7 * 3600,
+        '<system-reminder>\nThe user started your proposal task.\n</system-reminder>',
+      ),
+      toolUse(7 * 3600 + 20, 'm2', 'r1', 'Read', { file_path: '/repo/a.ts' }),
+      result(7 * 3600 + 21, 'r1'),
+      text(7 * 3600 + 30, 'm3', 'Started it.'),
+      system(7 * 3600 + 30.1, 'stop_hook_summary'),
+      // Days later: a `!` command and an interruption, with no answer.
+      notice(6 * day, '<bash-input>glab auth login</bash-input>'),
+      notice(6 * day + 60, '[Request interrupted by user]'),
+    ]);
+    const session = importClaudeCodeTranscript(file);
+    const turns = session.steps.filter((s) => s.kind === 'turn');
+    expect(turns.map((t) => [t.startMs, t.endMs])).toEqual([
+      [ms(0), ms(5.1)],
+      [ms(7 * 3600), ms(7 * 3600 + 30.1)],
+    ]);
+    expect(turns[1]?.flags).toContain('notification');
+    const longest = Math.max(
+      ...session.steps.filter((s) => s.kind === 'model').map((s) => s.endMs - s.startMs),
+    );
+    expect(longest).toBeLessThan(60_000);
+  });
+
   it('treats a resumed session as one session with the gap as idle', () => {
     const file = writeTranscript('s6', [
       prompt(0, 'a'),

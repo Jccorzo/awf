@@ -1,6 +1,7 @@
 import { parseArgs, type ParseArgsConfig } from 'node:util';
 import { VERSION } from '../version';
 import { classifyCommand } from './commands/classify';
+import { compareCommand } from './commands/compare';
 import { doctorCommand } from './commands/doctor';
 import { importCommand } from './commands/import';
 import { purgeCommand } from './commands/purge';
@@ -42,6 +43,7 @@ export const COMMANDS: Record<string, Command> = {
   classify: classifyCommand,
   summary: summaryCommand,
   report: reportCommand,
+  compare: compareCommand,
   stats: statsCommand,
   sample: sampleCommand,
   accuracy: accuracyCommand,

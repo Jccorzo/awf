@@ -1,0 +1,45 @@
+Ld /Users/user/swift-dd/Build/Products/Debug/DemoApp normal (in target 'DemoApp-product' from project 'Demo')
+    cd /Users/user/swift-demo
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -Xlinker -reproducible -target arm64-apple-macos13.0 -emit-executable -sdk /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk -Xlinker -no_warn_duplicate_libraries -L/Users/user/swift-dd/Build/Intermediates.noindex/EagerLinkingTBDs/Debug -L/Users/user/swift-dd/Build/Products/Debug -L/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib -F/Users/user/swift-dd/Build/Intermediates.noindex/EagerLinkingTBDs/Debug -F/Users/user/swift-dd/Build/Products/Debug/PackageFrameworks -F/Users/user/swift-dd/Build/Products/Debug -Fsystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks @/Users/user/swift-dd/Build/Intermediates.noindex/Demo.build/Debug/DemoApp-p.build/Objects-normal/arm64/DemoApp.LinkFileList -Xlinker -rpath -Xlinker /usr/lib/swift -Xlinker -rpath -Xlinker @loader_path -Xlinker -rpath -Xlinker /Users/user/swift-dd/Build/Products/Debug/PackageFrameworks -Xlinker -rpath -Xlinker @executable_path/../lib -Xlinker -object_path_lto -Xlinker /Users/user/swift-dd/Build/Intermediates.noindex/Demo.build/Debug/DemoApp-p.build/Objects-normal/arm64/DemoApp_lto.o -Xclang-linker -rdynamic -Xlinker -no_deduplicate -Xlinker -dependency_info -Xlinker /Users/user/swift-dd/Build/Intermediates.noindex/Demo.build/Debug/DemoApp-p.build/Objects-normal/arm64/DemoApp_dependency_info.dat -link-objc-runtime -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /Users/user/swift-dd/Build/Intermediates.noindex/Demo.build/Debug/DemoApp-p.build/Objects-normal/arm64/DemoApp.swiftmodule -o /Users/user/swift-dd/Build/Products/Debug/DemoApp -no-stdlib-rpath
+
+RegisterExecutionPolicyException /Users/user/swift-dd/Build/Products/Debug/DemoApp (in target 'DemoApp-product' from project 'Demo')
+    cd /Users/user/swift-demo
+    builtin-RegisterExecutionPolicyException /Users/user/swift-dd/Build/Products/Debug/DemoApp
+
+GenerateSwiftModulesReport
+SwiftShims (Clang): 1 variant
+_SwiftConcurrencyShims (Clang): 1 variant
+
+Full report written to '/Users/user/swift-dd/Build/Intermediates.noindex/XCBuildData/swiftmodulesreport'
+PruneExplicitPrecompiledModules /Users/user/swift-dd/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /Users/user/swift-dd/SDKExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /Users/user/swift-dd/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+Build Timing Summary
+
+SwiftCompile (2 tasks) | 0.354 seconds
+
+Ld (2 tasks) | 0.124 seconds
+
+SwiftDriver (2 tasks) | 0.067 seconds
+
+SwiftEmitModule (2 tasks) | 0.064 seconds
+
+ExtractAppIntentsMetadata (1 task) | 0.042 seconds
+
+RegisterExecutionPolicyException (1 task) | 0.010 seconds
+
+Copy (5 tasks) | 0.007 seconds
+
+WriteAuxiliaryFile (14 tasks) | 0.002 seconds
+
+SwiftMergeGeneratedHeaders (1 task) | 0.000 seconds
+
+SwiftDriver Compilation (2 tasks) | 0.000 seconds
+
+SwiftDriver Compilation Requirements (2 tasks) | 0.000 seconds
+
+** BUILD SUCCEEDED **
+

@@ -1,0 +1,21 @@
+{
+  "id": "prt_a16yyyyyyyyyyyyyyyyyyyy",
+  "sessionID": "ses_5a1b2c3d4e6aChildSessionAb",
+  "messageID": "msg_a13xxxxxxxxxxxxxxxxxxxx",
+  "type": "tool",
+  "callID": "toolu_C2",
+  "tool": "read",
+  "state": {
+    "status": "completed",
+    "input": {
+      "filePath": "/Users/user/demo/sum.js"
+    },
+    "output": "‹text›",
+    "title": "",
+    "metadata": {},
+    "time": {
+      "start": 1793196208000,
+      "end": 1793196208050
+    }
+  }
+}

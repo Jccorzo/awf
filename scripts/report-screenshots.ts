@@ -2,12 +2,15 @@
 // in light and dark mode at laptop and phone width, into test-results/screenshots/. Prints any
 // console error, network request or horizontal scroll it sees.
 // Usage: pnpm report:screenshots
-import { mkdirSync, mkdtempSync, readdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { chromium } from 'playwright-core';
 import { analyze } from '../src/analyze/summary';
+import { attachBuildTimings } from '../src/build/drilldown';
+import type { Session } from '../src/model/types';
+import { detectAgentFile } from '../src/importers/agents';
 import { memoryFiles } from '../src/classify/resolve';
 import { main } from '../src/cli/main';
 import { buildReportData } from '../src/report/data';
@@ -39,6 +42,102 @@ for (const name of readdirSync(fixtures).sort()) {
     if (code !== 0) throw new Error(`awf report failed for ${name}`);
     reports.push({ name: `${name}${share ? '-share' : ''}`, file });
   }
+}
+for (const fixture of [
+  'codex/codex-0.50-test-fix/rollout-2026-10-28T14-03-12-0199c8a1-7f2e-7b31-9a4d-3c2b1a0f9e8d.jsonl',
+  'gemini/gemini-0.11-test-fix/session-2026-10-28T14-03-5f1e2d3c.json',
+  'opencode/opencode-0.15-test-fix/storage/session/4b825dc642cb6eb9a060e54bf8d69288fbee4904/ses_5a1b2c3d4e5fXYZabcdefghij.json',
+]) {
+  const input = path.join(root, 'fixtures', fixture);
+  const agent = detectAgentFile(input);
+  if (!agent) throw new Error(`not an agent file: ${fixture}`);
+  const file = path.join(work, `${agent.agent}.html`);
+  const env = { ...process.env, AWF_HOME: path.join(work, 'home'), HOME: os.homedir() };
+  if ((await main(['report', input, '--out', file], silent, env, root)) !== 0)
+    throw new Error(`awf report failed for ${fixture}`);
+  reports.push({ name: path.dirname(fixture).split('/')[1] ?? agent.agent, file });
+}
+// Build drill-down: a Gradle build (durations only) and a Bazel build (with start times).
+{
+  const gradleAt = new Date(2026, 9, 28, 14, 3, 19).getTime();
+  const profile = path.join(root, 'fixtures/builds/gradle/profile-2026-10-28-14-03-20.html');
+  const bazel = path.join(root, 'fixtures/builds/bazel/profile.json');
+  const at = (s: number) => gradleAt + s * 1000;
+  const session: Session = {
+    id: 'drilldown-0000-4000-8000-000000000000',
+    agent: 'claude-code',
+    sources: ['transcript'],
+    cwd: '/Users/user/demo',
+    title: 'Speed up the Android build',
+    startMs: at(-5),
+    endMs: at(95),
+    steps: [
+      { id: 't', parentId: null, kind: 'turn', startMs: at(-5), endMs: at(95), flags: [] },
+      {
+        id: 'm1',
+        parentId: 't',
+        kind: 'model',
+        startMs: at(-5),
+        endMs: at(0),
+        flags: [],
+        produces: ['g'],
+      },
+      {
+        id: 'g',
+        parentId: 't',
+        kind: 'tool',
+        tool: 'Bash',
+        command: './gradlew assembleDebug --profile',
+        startMs: at(0),
+        endMs: at(72),
+        flags: [],
+        ok: true,
+      },
+      {
+        id: 'm2',
+        parentId: 't',
+        kind: 'model',
+        startMs: at(72),
+        endMs: at(80),
+        flags: [],
+        produces: ['b'],
+      },
+      {
+        id: 'b',
+        parentId: 't',
+        kind: 'tool',
+        tool: 'Bash',
+        command: 'bazel build //app:main --profile=/tmp/p.json',
+        startMs: at(80),
+        endMs: at(91),
+        flags: [],
+        ok: true,
+      },
+      { id: 'm3', parentId: 't', kind: 'model', startMs: at(91), endMs: at(95), flags: ['answer'] },
+    ],
+  };
+  const reportFiles: Record<string, string> = {
+    [`/Users/user/demo/build/reports/profile/${path.basename(profile)}`]: readFileSync(
+      profile,
+      'utf8',
+    ),
+    '/tmp/p.json': readFileSync(bazel, 'utf8'),
+  };
+  attachBuildTimings(session, {
+    read: (f) => reportFiles[f],
+    list: (d) =>
+      Object.keys(reportFiles)
+        .filter((f) => path.dirname(f) === d)
+        .map((f) => path.basename(f)),
+  });
+  const file = path.join(work, 'drilldown.html');
+  writeFileSync(
+    file,
+    renderReportHtml(
+      buildReportData(analyze(session, { files: memoryFiles({}) }), { home: '/Users/user' }),
+    ),
+  );
+  reports.push({ name: 'drilldown', file });
 }
 const synthetic = path.join(work, 'synthetic-1h.html');
 const analysis = analyze(syntheticSession(), { files: memoryFiles({}) });

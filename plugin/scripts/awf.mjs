@@ -114,17 +114,17 @@ var require_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP;
     visit.REMOVE = REMOVE;
-    function visit_(key, node, visitor, path16) {
-      const ctrl = callVisitor(key, node, visitor, path16);
+    function visit_(key, node, visitor, path21) {
+      const ctrl = callVisitor(key, node, visitor, path21);
       if (identity.isNode(ctrl) || identity.isPair(ctrl)) {
-        replaceNode(key, path16, ctrl);
-        return visit_(key, ctrl, visitor, path16);
+        replaceNode(key, path21, ctrl);
+        return visit_(key, ctrl, visitor, path21);
       }
       if (typeof ctrl !== "symbol") {
         if (identity.isCollection(node)) {
-          path16 = Object.freeze(path16.concat(node));
+          path21 = Object.freeze(path21.concat(node));
           for (let i = 0; i < node.items.length; ++i) {
-            const ci = visit_(i, node.items[i], visitor, path16);
+            const ci = visit_(i, node.items[i], visitor, path21);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -135,13 +135,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity.isPair(node)) {
-          path16 = Object.freeze(path16.concat(node));
-          const ck = visit_("key", node.key, visitor, path16);
+          path21 = Object.freeze(path21.concat(node));
+          const ck = visit_("key", node.key, visitor, path21);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = visit_("value", node.value, visitor, path16);
+          const cv = visit_("value", node.value, visitor, path21);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -162,17 +162,17 @@ var require_visit = __commonJS({
     visitAsync.BREAK = BREAK;
     visitAsync.SKIP = SKIP;
     visitAsync.REMOVE = REMOVE;
-    async function visitAsync_(key, node, visitor, path16) {
-      const ctrl = await callVisitor(key, node, visitor, path16);
+    async function visitAsync_(key, node, visitor, path21) {
+      const ctrl = await callVisitor(key, node, visitor, path21);
       if (identity.isNode(ctrl) || identity.isPair(ctrl)) {
-        replaceNode(key, path16, ctrl);
-        return visitAsync_(key, ctrl, visitor, path16);
+        replaceNode(key, path21, ctrl);
+        return visitAsync_(key, ctrl, visitor, path21);
       }
       if (typeof ctrl !== "symbol") {
         if (identity.isCollection(node)) {
-          path16 = Object.freeze(path16.concat(node));
+          path21 = Object.freeze(path21.concat(node));
           for (let i = 0; i < node.items.length; ++i) {
-            const ci = await visitAsync_(i, node.items[i], visitor, path16);
+            const ci = await visitAsync_(i, node.items[i], visitor, path21);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -183,13 +183,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity.isPair(node)) {
-          path16 = Object.freeze(path16.concat(node));
-          const ck = await visitAsync_("key", node.key, visitor, path16);
+          path21 = Object.freeze(path21.concat(node));
+          const ck = await visitAsync_("key", node.key, visitor, path21);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = await visitAsync_("value", node.value, visitor, path16);
+          const cv = await visitAsync_("value", node.value, visitor, path21);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -216,23 +216,23 @@ var require_visit = __commonJS({
       }
       return visitor;
     }
-    function callVisitor(key, node, visitor, path16) {
+    function callVisitor(key, node, visitor, path21) {
       if (typeof visitor === "function")
-        return visitor(key, node, path16);
+        return visitor(key, node, path21);
       if (identity.isMap(node))
-        return visitor.Map?.(key, node, path16);
+        return visitor.Map?.(key, node, path21);
       if (identity.isSeq(node))
-        return visitor.Seq?.(key, node, path16);
+        return visitor.Seq?.(key, node, path21);
       if (identity.isPair(node))
-        return visitor.Pair?.(key, node, path16);
+        return visitor.Pair?.(key, node, path21);
       if (identity.isScalar(node))
-        return visitor.Scalar?.(key, node, path16);
+        return visitor.Scalar?.(key, node, path21);
       if (identity.isAlias(node))
-        return visitor.Alias?.(key, node, path16);
+        return visitor.Alias?.(key, node, path21);
       return void 0;
     }
-    function replaceNode(key, path16, node) {
-      const parent = path16[path16.length - 1];
+    function replaceNode(key, path21, node) {
+      const parent = path21[path21.length - 1];
       if (identity.isCollection(parent)) {
         parent.items[key] = node;
       } else if (identity.isPair(parent)) {
@@ -497,7 +497,7 @@ var require_anchors = __commonJS({
 var require_applyReviver = __commonJS({
   "node_modules/.pnpm/yaml@2.9.1/node_modules/yaml/dist/doc/applyReviver.js"(exports) {
     "use strict";
-    function applyReviver(reviver, obj2, key, val) {
+    function applyReviver(reviver, obj3, key, val) {
       if (val && typeof val === "object") {
         if (Array.isArray(val)) {
           for (let i = 0, len = val.length; i < len; ++i) {
@@ -537,7 +537,7 @@ var require_applyReviver = __commonJS({
           }
         }
       }
-      return reviver.call(obj2, key, val);
+      return reviver.call(obj3, key, val);
     }
     exports.applyReviver = applyReviver;
   }
@@ -605,8 +605,8 @@ var require_Node = __commonJS({
         };
         const res = toJS.toJS(this, "", ctx);
         if (typeof onAnchor === "function")
-          for (const { count, res: res2 } of ctx.anchors.values())
-            onAnchor(res2, count);
+          for (const { count: count2, res: res2 } of ctx.anchors.values())
+            onAnchor(res2, count2);
         return typeof reviver === "function" ? applyReviver.applyReviver(reviver, { "": res }, "", res) : res;
       }
     };
@@ -714,13 +714,13 @@ var require_Alias = __commonJS({
         const anchor = anchors2 && source && anchors2.get(source);
         return anchor ? anchor.count * anchor.aliasCount : 0;
       } else if (identity.isCollection(node)) {
-        let count = 0;
+        let count2 = 0;
         for (const item of node.items) {
           const c = getAliasCount(doc, item, anchors2);
-          if (c > count)
-            count = c;
+          if (c > count2)
+            count2 = c;
         }
-        return count;
+        return count2;
       } else if (identity.isPair(node)) {
         const kc = getAliasCount(doc, node.key, anchors2);
         const vc = getAliasCount(doc, node.value, anchors2);
@@ -844,10 +844,10 @@ var require_Collection = __commonJS({
     var createNode = require_createNode();
     var identity = require_identity();
     var Node = require_Node();
-    function collectionFromPath(schema, path16, value) {
+    function collectionFromPath(schema, path21, value) {
       let v = value;
-      for (let i = path16.length - 1; i >= 0; --i) {
-        const k = path16[i];
+      for (let i = path21.length - 1; i >= 0; --i) {
+        const k = path21[i];
         if (typeof k === "number" && Number.isInteger(k) && k >= 0) {
           const a = [];
           a[k] = v;
@@ -866,7 +866,7 @@ var require_Collection = __commonJS({
         sourceObjects: /* @__PURE__ */ new Map()
       });
     }
-    var isEmptyPath = (path16) => path16 == null || typeof path16 === "object" && !!path16[Symbol.iterator]().next().done;
+    var isEmptyPath = (path21) => path21 == null || typeof path21 === "object" && !!path21[Symbol.iterator]().next().done;
     var Collection = class extends Node.NodeBase {
       constructor(type, schema) {
         super(type);
@@ -896,11 +896,11 @@ var require_Collection = __commonJS({
        * be a Pair instance or a `{ key, value }` object, which may not have a key
        * that already exists in the map.
        */
-      addIn(path16, value) {
-        if (isEmptyPath(path16))
+      addIn(path21, value) {
+        if (isEmptyPath(path21))
           this.add(value);
         else {
-          const [key, ...rest] = path16;
+          const [key, ...rest] = path21;
           const node = this.get(key, true);
           if (identity.isCollection(node))
             node.addIn(rest, value);
@@ -914,8 +914,8 @@ var require_Collection = __commonJS({
        * Removes a value from the collection.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path16) {
-        const [key, ...rest] = path16;
+      deleteIn(path21) {
+        const [key, ...rest] = path21;
         if (rest.length === 0)
           return this.delete(key);
         const node = this.get(key, true);
@@ -929,8 +929,8 @@ var require_Collection = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path16, keepScalar) {
-        const [key, ...rest] = path16;
+      getIn(path21, keepScalar) {
+        const [key, ...rest] = path21;
         const node = this.get(key, true);
         if (rest.length === 0)
           return !keepScalar && identity.isScalar(node) ? node.value : node;
@@ -948,8 +948,8 @@ var require_Collection = __commonJS({
       /**
        * Checks if the collection includes a value with the key `key`.
        */
-      hasIn(path16) {
-        const [key, ...rest] = path16;
+      hasIn(path21) {
+        const [key, ...rest] = path21;
         if (rest.length === 0)
           return this.has(key);
         const node = this.get(key, true);
@@ -959,8 +959,8 @@ var require_Collection = __commonJS({
        * Sets a value in this collection. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path16, value) {
-        const [key, ...rest] = path16;
+      setIn(path21, value) {
+        const [key, ...rest] = path21;
         if (rest.length === 0) {
           this.set(key, value);
         } else {
@@ -984,13 +984,13 @@ var require_Collection = __commonJS({
 var require_stringifyComment = __commonJS({
   "node_modules/.pnpm/yaml@2.9.1/node_modules/yaml/dist/stringify/stringifyComment.js"(exports) {
     "use strict";
-    var stringifyComment = (str2) => str2.replace(/^(?!$)(?: $)?/gm, "#");
+    var stringifyComment = (str3) => str3.replace(/^(?!$)(?: $)?/gm, "#");
     function indentComment(comment, indent) {
       if (/^\n+$/.test(comment))
         return comment.substring(1);
       return indent ? comment.replace(/^(?! *$)/gm, indent) : comment;
     }
-    var lineComment = (str2, indent, comment) => str2.endsWith("\n") ? indentComment(comment, indent) : comment.includes("\n") ? "\n" + indentComment(comment, indent) : (str2.endsWith(" ") ? "" : " ") + comment;
+    var lineComment = (str3, indent, comment) => str3.endsWith("\n") ? indentComment(comment, indent) : comment.includes("\n") ? "\n" + indentComment(comment, indent) : (str3.endsWith(" ") ? "" : " ") + comment;
     exports.indentComment = indentComment;
     exports.lineComment = lineComment;
     exports.stringifyComment = stringifyComment;
@@ -1144,16 +1144,16 @@ var require_stringifyString = __commonJS({
       lineWidth: ctx.options.lineWidth,
       minContentWidth: ctx.options.minContentWidth
     });
-    var containsDocumentMarker = (str2) => /^(%|---|\.\.\.)/m.test(str2);
-    function lineLengthOverLimit(str2, lineWidth, indentLength) {
+    var containsDocumentMarker = (str3) => /^(%|---|\.\.\.)/m.test(str3);
+    function lineLengthOverLimit(str3, lineWidth, indentLength) {
       if (!lineWidth || lineWidth < 0)
         return false;
       const limit = lineWidth - indentLength;
-      const strLen = str2.length;
+      const strLen = str3.length;
       if (strLen <= limit)
         return false;
       for (let i = 0, start = 0; i < strLen; ++i) {
-        if (str2[i] === "\n") {
+        if (str3[i] === "\n") {
           if (i - start > limit)
             return true;
           start = i + 1;
@@ -1170,11 +1170,11 @@ var require_stringifyString = __commonJS({
       const { implicitKey } = ctx;
       const minMultiLineLength = ctx.options.doubleQuotedMinMultiLineLength;
       const indent = ctx.indent || (containsDocumentMarker(value) ? "  " : "");
-      let str2 = "";
+      let str3 = "";
       let start = 0;
       for (let i = 0, ch = json[i]; ch; ch = json[++i]) {
         if (ch === " " && json[i + 1] === "\\" && json[i + 2] === "n") {
-          str2 += json.slice(start, i) + "\\ ";
+          str3 += json.slice(start, i) + "\\ ";
           i += 1;
           start = i;
           ch = "\\";
@@ -1183,38 +1183,38 @@ var require_stringifyString = __commonJS({
           switch (json[i + 1]) {
             case "u":
               {
-                str2 += json.slice(start, i);
+                str3 += json.slice(start, i);
                 const code = json.substr(i + 2, 4);
                 switch (code) {
                   case "0000":
-                    str2 += "\\0";
+                    str3 += "\\0";
                     break;
                   case "0007":
-                    str2 += "\\a";
+                    str3 += "\\a";
                     break;
                   case "000b":
-                    str2 += "\\v";
+                    str3 += "\\v";
                     break;
                   case "001b":
-                    str2 += "\\e";
+                    str3 += "\\e";
                     break;
                   case "0085":
-                    str2 += "\\N";
+                    str3 += "\\N";
                     break;
                   case "00a0":
-                    str2 += "\\_";
+                    str3 += "\\_";
                     break;
                   case "2028":
-                    str2 += "\\L";
+                    str3 += "\\L";
                     break;
                   case "2029":
-                    str2 += "\\P";
+                    str3 += "\\P";
                     break;
                   default:
                     if (code.substr(0, 2) === "00")
-                      str2 += "\\x" + code.substr(2);
+                      str3 += "\\x" + code.substr(2);
                     else
-                      str2 += json.substr(i, 6);
+                      str3 += json.substr(i, 6);
                 }
                 i += 5;
                 start = i + 1;
@@ -1224,14 +1224,14 @@ var require_stringifyString = __commonJS({
               if (implicitKey || json[i + 2] === '"' || json.length < minMultiLineLength) {
                 i += 1;
               } else {
-                str2 += json.slice(start, i) + "\n\n";
+                str3 += json.slice(start, i) + "\n\n";
                 while (json[i + 2] === "\\" && json[i + 3] === "n" && json[i + 4] !== '"') {
-                  str2 += "\n";
+                  str3 += "\n";
                   i += 2;
                 }
-                str2 += indent;
+                str3 += indent;
                 if (json[i + 2] === " ")
-                  str2 += "\\";
+                  str3 += "\\";
                 i += 1;
                 start = i + 1;
               }
@@ -1240,8 +1240,8 @@ var require_stringifyString = __commonJS({
               i += 1;
           }
       }
-      str2 = start ? str2 + json.slice(start) : json;
-      return implicitKey ? str2 : foldFlowLines.foldFlowLines(str2, indent, foldFlowLines.FOLD_QUOTED, getFoldOptions(ctx, false));
+      str3 = start ? str3 + json.slice(start) : json;
+      return implicitKey ? str3 : foldFlowLines.foldFlowLines(str3, indent, foldFlowLines.FOLD_QUOTED, getFoldOptions(ctx, false));
     }
     function singleQuotedString(value, ctx) {
       if (ctx.options.singleQuote === false || ctx.implicitKey && value.includes("\n") || /[ \t]\n|\n[ \t]/.test(value))
@@ -1369,15 +1369,15 @@ ${indent}${start}${value}${end}`;
           return quotedString(value, ctx);
         }
       }
-      const str2 = value.replace(/\n+/g, `$&
+      const str3 = value.replace(/\n+/g, `$&
 ${indent}`);
       if (actualString) {
-        const test = (tag) => tag.default && tag.tag !== "tag:yaml.org,2002:str" && tag.test?.test(str2);
+        const test = (tag) => tag.default && tag.tag !== "tag:yaml.org,2002:str" && tag.test?.test(str3);
         const { compat, tags } = ctx.doc.schema;
         if (tags.some(test) || compat?.some(test))
           return quotedString(value, ctx);
       }
-      return implicitKey ? str2 : foldFlowLines.foldFlowLines(str2, indent, foldFlowLines.FOLD_FLOW, getFoldOptions(ctx, false));
+      return implicitKey ? str3 : foldFlowLines.foldFlowLines(str3, indent, foldFlowLines.FOLD_FLOW, getFoldOptions(ctx, false));
     }
     function stringifyString(item, ctx, onComment, onChompKeep) {
       const { implicitKey, inFlow } = ctx;
@@ -1473,10 +1473,10 @@ var require_stringify = __commonJS({
           return match.find((t) => t.format === item.format) ?? match[0];
       }
       let tagObj = void 0;
-      let obj2;
+      let obj3;
       if (identity.isScalar(item)) {
-        obj2 = item.value;
-        let match = tags.filter((t) => t.identify?.(obj2));
+        obj3 = item.value;
+        let match = tags.filter((t) => t.identify?.(obj3));
         if (match.length > 1) {
           const testMatch = match.filter((t) => t.test);
           if (testMatch.length > 0)
@@ -1484,11 +1484,11 @@ var require_stringify = __commonJS({
         }
         tagObj = match.find((t) => t.format === item.format) ?? match.find((t) => !t.format);
       } else {
-        obj2 = item;
-        tagObj = tags.find((t) => t.nodeClass && obj2 instanceof t.nodeClass);
+        obj3 = item;
+        tagObj = tags.find((t) => t.nodeClass && obj3 instanceof t.nodeClass);
       }
       if (!tagObj) {
-        const name = obj2?.constructor?.name ?? (obj2 === null ? "null" : typeof obj2);
+        const name = obj3?.constructor?.name ?? (obj3 === null ? "null" : typeof obj3);
         throw new Error(`Tag not resolved for ${name} value`);
       }
       return tagObj;
@@ -1529,11 +1529,11 @@ var require_stringify = __commonJS({
       const props = stringifyProps(node, tagObj, ctx);
       if (props.length > 0)
         ctx.indentAtStart = (ctx.indentAtStart ?? 0) + props.length + 1;
-      const str2 = typeof tagObj.stringify === "function" ? tagObj.stringify(node, ctx, onComment, onChompKeep) : identity.isScalar(node) ? stringifyString.stringifyString(node, ctx, onComment, onChompKeep) : node.toString(ctx, onComment, onChompKeep);
+      const str3 = typeof tagObj.stringify === "function" ? tagObj.stringify(node, ctx, onComment, onChompKeep) : identity.isScalar(node) ? stringifyString.stringifyString(node, ctx, onComment, onChompKeep) : node.toString(ctx, onComment, onChompKeep);
       if (!props)
-        return str2;
-      return identity.isScalar(node) || str2[0] === "{" || str2[0] === "[" ? `${props} ${str2}` : `${props}
-${ctx.indent}${str2}`;
+        return str3;
+      return identity.isScalar(node) || str3[0] === "{" || str3[0] === "[" ? `${props} ${str3}` : `${props}
+${ctx.indent}${str3}`;
     }
     exports.createStringifyContext = createStringifyContext;
     exports.stringify = stringify;
@@ -1568,8 +1568,8 @@ var require_stringifyPair = __commonJS({
       });
       let keyCommentDone = false;
       let chompKeep = false;
-      let str2 = stringify.stringify(key, ctx, () => keyCommentDone = true, () => chompKeep = true);
-      if (!explicitKey && !ctx.inFlow && str2.length > 1024) {
+      let str3 = stringify.stringify(key, ctx, () => keyCommentDone = true, () => chompKeep = true);
+      if (!explicitKey && !ctx.inFlow && str3.length > 1024) {
         if (simpleKeys)
           throw new Error("With simple keys, single line scalar must not span more than 1024 characters");
         explicitKey = true;
@@ -1578,27 +1578,27 @@ var require_stringifyPair = __commonJS({
         if (allNullValues || value == null) {
           if (keyCommentDone && onComment)
             onComment();
-          return str2 === "" ? "?" : explicitKey ? `? ${str2}` : str2;
+          return str3 === "" ? "?" : explicitKey ? `? ${str3}` : str3;
         }
       } else if (allNullValues && !simpleKeys || value == null && explicitKey) {
-        str2 = `? ${str2}`;
+        str3 = `? ${str3}`;
         if (keyComment && !keyCommentDone) {
-          str2 += stringifyComment.lineComment(str2, ctx.indent, commentString(keyComment));
+          str3 += stringifyComment.lineComment(str3, ctx.indent, commentString(keyComment));
         } else if (chompKeep && onChompKeep)
           onChompKeep();
-        return str2;
+        return str3;
       }
       if (keyCommentDone)
         keyComment = null;
       if (explicitKey) {
         if (keyComment)
-          str2 += stringifyComment.lineComment(str2, ctx.indent, commentString(keyComment));
-        str2 = `? ${str2}
+          str3 += stringifyComment.lineComment(str3, ctx.indent, commentString(keyComment));
+        str3 = `? ${str3}
 ${indent}:`;
       } else {
-        str2 = `${str2}:`;
+        str3 = `${str3}:`;
         if (keyComment)
-          str2 += stringifyComment.lineComment(str2, ctx.indent, commentString(keyComment));
+          str3 += stringifyComment.lineComment(str3, ctx.indent, commentString(keyComment));
       }
       let vsb, vcb, valueComment;
       if (identity.isNode(value)) {
@@ -1614,7 +1614,7 @@ ${indent}:`;
       }
       ctx.implicitKey = false;
       if (!explicitKey && !keyComment && identity.isScalar(value))
-        ctx.indentAtStart = str2.length + 1;
+        ctx.indentAtStart = str3.length + 1;
       chompKeep = false;
       if (!indentSeq && indentStep.length >= 2 && !ctx.inFlow && !explicitKey && identity.isSeq(value) && !value.flow && !value.tag && !value.anchor) {
         ctx.indent = ctx.indent.substring(2);
@@ -1658,16 +1658,16 @@ ${ctx.indent}`;
       } else if (valueStr === "" || valueStr[0] === "\n") {
         ws = "";
       }
-      str2 += ws + valueStr;
+      str3 += ws + valueStr;
       if (ctx.inFlow) {
         if (valueCommentDone && onComment)
           onComment();
       } else if (valueComment && !valueCommentDone) {
-        str2 += stringifyComment.lineComment(str2, ctx.indent, commentString(valueComment));
+        str3 += stringifyComment.lineComment(str3, ctx.indent, commentString(valueComment));
       } else if (chompKeep && onChompKeep) {
         onChompKeep();
       }
-      return str2;
+      return str3;
     }
     exports.stringifyPair = stringifyPair;
   }
@@ -1894,31 +1894,31 @@ var require_stringifyCollection = __commonJS({
           }
         }
         chompKeep = false;
-        let str3 = stringify.stringify(item, itemCtx, () => comment2 = null, () => chompKeep = true);
+        let str4 = stringify.stringify(item, itemCtx, () => comment2 = null, () => chompKeep = true);
         if (comment2)
-          str3 += stringifyComment.lineComment(str3, itemIndent, commentString(comment2));
+          str4 += stringifyComment.lineComment(str4, itemIndent, commentString(comment2));
         if (chompKeep && comment2)
           chompKeep = false;
-        lines.push(blockItemPrefix + str3);
+        lines.push(blockItemPrefix + str4);
       }
-      let str2;
+      let str3;
       if (lines.length === 0) {
-        str2 = flowChars.start + flowChars.end;
+        str3 = flowChars.start + flowChars.end;
       } else {
-        str2 = lines[0];
+        str3 = lines[0];
         for (let i = 1; i < lines.length; ++i) {
           const line = lines[i];
-          str2 += line ? `
+          str3 += line ? `
 ${indent}${line}` : "\n";
         }
       }
       if (comment) {
-        str2 += "\n" + stringifyComment.indentComment(commentString(comment), indent);
+        str3 += "\n" + stringifyComment.indentComment(commentString(comment), indent);
         if (onComment)
           onComment();
       } else if (chompKeep && onChompKeep)
         onChompKeep();
-      return str2;
+      return str3;
     }
     function stringifyFlowCollection({ items }, ctx, { flowChars, itemIndent }) {
       const { indent, indentStep, flowCollectionPadding: fcPadding, options: { commentString } } = ctx;
@@ -1961,21 +1961,21 @@ ${indent}${line}` : "\n";
         }
         if (comment)
           reqNewline = true;
-        let str2 = stringify.stringify(item, itemCtx, () => comment = null);
-        reqNewline || (reqNewline = lines.length > linesAtValue || str2.includes("\n"));
+        let str3 = stringify.stringify(item, itemCtx, () => comment = null);
+        reqNewline || (reqNewline = lines.length > linesAtValue || str3.includes("\n"));
         if (i < items.length - 1) {
-          str2 += ",";
+          str3 += ",";
         } else if (ctx.options.trailingComma) {
           if (ctx.options.lineWidth > 0) {
-            reqNewline || (reqNewline = lines.reduce((sum, line) => sum + line.length + 2, 2) + (str2.length + 2) > ctx.options.lineWidth);
+            reqNewline || (reqNewline = lines.reduce((sum, line) => sum + line.length + 2, 2) + (str3.length + 2) > ctx.options.lineWidth);
           }
           if (reqNewline) {
-            str2 += ",";
+            str3 += ",";
           }
         }
         if (comment)
-          str2 += stringifyComment.lineComment(str2, itemIndent, commentString(comment));
-        lines.push(str2);
+          str3 += stringifyComment.lineComment(str3, itemIndent, commentString(comment));
+        lines.push(str3);
         linesAtValue = lines.length;
       }
       const { start, end } = flowChars;
@@ -1987,11 +1987,11 @@ ${indent}${line}` : "\n";
           reqNewline = ctx.options.lineWidth > 0 && len > ctx.options.lineWidth;
         }
         if (reqNewline) {
-          let str2 = start;
+          let str3 = start;
           for (const line of lines)
-            str2 += line ? `
+            str3 += line ? `
 ${indentStep}${indent}${line}` : "\n";
-          return `${str2}
+          return `${str3}
 ${indent}${end}`;
         } else {
           return `${start}${fcPadding}${lines.join(" ")}${fcPadding}${end}`;
@@ -2044,23 +2044,23 @@ var require_YAMLMap = __commonJS({
        * A generic collection parsing method that can be extended
        * to other node classes that inherit from YAMLMap
        */
-      static from(schema, obj2, ctx) {
+      static from(schema, obj3, ctx) {
         const { keepUndefined, replacer } = ctx;
         const map = new this(schema);
         const add = (key, value) => {
           if (typeof replacer === "function")
-            value = replacer.call(obj2, key, value);
+            value = replacer.call(obj3, key, value);
           else if (Array.isArray(replacer) && !replacer.includes(key))
             return;
           if (value !== void 0 || keepUndefined)
             map.items.push(Pair.createPair(key, value, ctx));
         };
-        if (obj2 instanceof Map) {
-          for (const [key, value] of obj2)
+        if (obj3 instanceof Map) {
+          for (const [key, value] of obj3)
             add(key, value);
-        } else if (obj2 && typeof obj2 === "object") {
-          for (const key of Object.keys(obj2))
-            add(key, obj2[key]);
+        } else if (obj3 && typeof obj3 === "object") {
+          for (const key of Object.keys(obj3))
+            add(key, obj3[key]);
         }
         if (typeof schema.sortMapEntries === "function") {
           map.items.sort(schema.sortMapEntries);
@@ -2170,7 +2170,7 @@ var require_map = __commonJS({
           onError("Expected a mapping for this tag");
         return map2;
       },
-      createNode: (schema, obj2, ctx) => YAMLMap.YAMLMap.from(schema, obj2, ctx)
+      createNode: (schema, obj3, ctx) => YAMLMap.YAMLMap.from(schema, obj3, ctx)
     };
     exports.map = map;
   }
@@ -2266,15 +2266,15 @@ var require_YAMLSeq = __commonJS({
           onComment
         });
       }
-      static from(schema, obj2, ctx) {
+      static from(schema, obj3, ctx) {
         const { replacer } = ctx;
         const seq = new this(schema);
-        if (obj2 && Symbol.iterator in Object(obj2)) {
+        if (obj3 && Symbol.iterator in Object(obj3)) {
           let i = 0;
-          for (let it of obj2) {
+          for (let it of obj3) {
             if (typeof replacer === "function") {
-              const key = obj2 instanceof Set ? it : String(i++);
-              it = replacer.call(obj2, key, it);
+              const key = obj3 instanceof Set ? it : String(i++);
+              it = replacer.call(obj3, key, it);
             }
             seq.items.push(createNode.createNode(it, void 0, ctx));
           }
@@ -2308,7 +2308,7 @@ var require_seq = __commonJS({
           onError("Expected a sequence for this tag");
         return seq2;
       },
-      createNode: (schema, obj2, ctx) => YAMLSeq.YAMLSeq.from(schema, obj2, ctx)
+      createNode: (schema, obj3, ctx) => YAMLSeq.YAMLSeq.from(schema, obj3, ctx)
     };
     exports.seq = seq;
   }
@@ -2323,7 +2323,7 @@ var require_string = __commonJS({
       identify: (value) => typeof value === "string",
       default: true,
       tag: "tag:yaml.org,2002:str",
-      resolve: (str2) => str2,
+      resolve: (str3) => str3,
       stringify(item, ctx, onComment, onChompKeep) {
         ctx = Object.assign({ actualString: true }, ctx);
         return stringifyString.stringifyString(item, ctx, onComment, onChompKeep);
@@ -2361,7 +2361,7 @@ var require_bool = __commonJS({
       default: true,
       tag: "tag:yaml.org,2002:bool",
       test: /^(?:[Tt]rue|TRUE|[Ff]alse|FALSE)$/,
-      resolve: (str2) => new Scalar.Scalar(str2[0] === "t" || str2[0] === "T"),
+      resolve: (str3) => new Scalar.Scalar(str3[0] === "t" || str3[0] === "T"),
       stringify({ source, value }, ctx) {
         if (source && boolTag.test.test(source)) {
           const sv = source[0] === "t" || source[0] === "T";
@@ -2382,9 +2382,9 @@ var require_stringifyNumber = __commonJS({
     function stringifyNumber({ format, minFractionDigits, tag, value }) {
       if (typeof value === "bigint")
         return String(value);
-      const num = typeof value === "number" ? value : Number(value);
-      if (!isFinite(num))
-        return isNaN(num) ? ".nan" : num < 0 ? "-.inf" : ".inf";
+      const num2 = typeof value === "number" ? value : Number(value);
+      if (!isFinite(num2))
+        return isNaN(num2) ? ".nan" : num2 < 0 ? "-.inf" : ".inf";
       let n = Object.is(value, -0) ? "-0" : JSON.stringify(value);
       if (!format && minFractionDigits && (!tag || tag === "tag:yaml.org,2002:float") && /^-?\d/.test(n) && !n.includes("e")) {
         let i = n.indexOf(".");
@@ -2413,7 +2413,7 @@ var require_float = __commonJS({
       default: true,
       tag: "tag:yaml.org,2002:float",
       test: /^(?:[-+]?\.(?:inf|Inf|INF)|\.nan|\.NaN|\.NAN)$/,
-      resolve: (str2) => str2.slice(-3).toLowerCase() === "nan" ? NaN : str2[0] === "-" ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY,
+      resolve: (str3) => str3.slice(-3).toLowerCase() === "nan" ? NaN : str3[0] === "-" ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY,
       stringify: stringifyNumber.stringifyNumber
     };
     var floatExp = {
@@ -2422,10 +2422,10 @@ var require_float = __commonJS({
       tag: "tag:yaml.org,2002:float",
       format: "EXP",
       test: /^[-+]?(?:\.[0-9]+|[0-9]+(?:\.[0-9]*)?)[eE][-+]?[0-9]+$/,
-      resolve: (str2) => parseFloat(str2),
+      resolve: (str3) => parseFloat(str3),
       stringify(node) {
-        const num = Number(node.value);
-        return isFinite(num) ? num.toExponential() : stringifyNumber.stringifyNumber(node);
+        const num2 = Number(node.value);
+        return isFinite(num2) ? num2.toExponential() : stringifyNumber.stringifyNumber(node);
       }
     };
     var float = {
@@ -2433,11 +2433,11 @@ var require_float = __commonJS({
       default: true,
       tag: "tag:yaml.org,2002:float",
       test: /^[-+]?(?:\.[0-9]+|[0-9]+\.[0-9]*)$/,
-      resolve(str2) {
-        const node = new Scalar.Scalar(parseFloat(str2));
-        const dot = str2.indexOf(".");
-        if (dot !== -1 && str2[str2.length - 1] === "0")
-          node.minFractionDigits = str2.length - dot - 1;
+      resolve(str3) {
+        const node = new Scalar.Scalar(parseFloat(str3));
+        const dot = str3.indexOf(".");
+        if (dot !== -1 && str3[str3.length - 1] === "0")
+          node.minFractionDigits = str3.length - dot - 1;
         return node;
       },
       stringify: stringifyNumber.stringifyNumber
@@ -2454,7 +2454,7 @@ var require_int = __commonJS({
     "use strict";
     var stringifyNumber = require_stringifyNumber();
     var intIdentify = (value) => typeof value === "bigint" || Number.isInteger(value);
-    var intResolve = (str2, offset2, radix, { intAsBigInt }) => intAsBigInt ? BigInt(str2) : parseInt(str2.substring(offset2), radix);
+    var intResolve = (str3, offset2, radix, { intAsBigInt }) => intAsBigInt ? BigInt(str3) : parseInt(str3.substring(offset2), radix);
     function intStringify(node, radix, prefix) {
       const { value } = node;
       if (intIdentify(value) && value >= 0)
@@ -2467,7 +2467,7 @@ var require_int = __commonJS({
       tag: "tag:yaml.org,2002:int",
       format: "OCT",
       test: /^0o[0-7]+$/,
-      resolve: (str2, _onError, opt) => intResolve(str2, 2, 8, opt),
+      resolve: (str3, _onError, opt) => intResolve(str3, 2, 8, opt),
       stringify: (node) => intStringify(node, 8, "0o")
     };
     var int = {
@@ -2475,7 +2475,7 @@ var require_int = __commonJS({
       default: true,
       tag: "tag:yaml.org,2002:int",
       test: /^[-+]?[0-9]+$/,
-      resolve: (str2, _onError, opt) => intResolve(str2, 0, 10, opt),
+      resolve: (str3, _onError, opt) => intResolve(str3, 0, 10, opt),
       stringify: stringifyNumber.stringifyNumber
     };
     var intHex = {
@@ -2484,7 +2484,7 @@ var require_int = __commonJS({
       tag: "tag:yaml.org,2002:int",
       format: "HEX",
       test: /^0x[0-9a-fA-F]+$/,
-      resolve: (str2, _onError, opt) => intResolve(str2, 2, 16, opt),
+      resolve: (str3, _onError, opt) => intResolve(str3, 2, 16, opt),
       stringify: (node) => intStringify(node, 16, "0x")
     };
     exports.int = int;
@@ -2537,7 +2537,7 @@ var require_schema2 = __commonJS({
         identify: (value) => typeof value === "string",
         default: true,
         tag: "tag:yaml.org,2002:str",
-        resolve: (str2) => str2,
+        resolve: (str3) => str3,
         stringify: stringifyJSON
       },
       {
@@ -2554,7 +2554,7 @@ var require_schema2 = __commonJS({
         default: true,
         tag: "tag:yaml.org,2002:bool",
         test: /^true$|^false$/,
-        resolve: (str2) => str2 === "true",
+        resolve: (str3) => str3 === "true",
         stringify: stringifyJSON
       },
       {
@@ -2562,7 +2562,7 @@ var require_schema2 = __commonJS({
         default: true,
         tag: "tag:yaml.org,2002:int",
         test: /^-?(?:0|[1-9][0-9]*)$/,
-        resolve: (str2, _onError, { intAsBigInt }) => intAsBigInt ? BigInt(str2) : parseInt(str2, 10),
+        resolve: (str3, _onError, { intAsBigInt }) => intAsBigInt ? BigInt(str3) : parseInt(str3, 10),
         stringify: ({ value }) => intIdentify(value) ? value.toString() : JSON.stringify(value)
       },
       {
@@ -2570,7 +2570,7 @@ var require_schema2 = __commonJS({
         default: true,
         tag: "tag:yaml.org,2002:float",
         test: /^-?(?:0|[1-9][0-9]*)(?:\.[0-9]*)?(?:[eE][-+]?[0-9]+)?$/,
-        resolve: (str2) => parseFloat(str2),
+        resolve: (str3) => parseFloat(str3),
         stringify: stringifyJSON
       }
     ];
@@ -2578,9 +2578,9 @@ var require_schema2 = __commonJS({
       default: true,
       tag: "",
       test: /^/,
-      resolve(str2, onError) {
-        onError(`Unresolved plain scalar ${JSON.stringify(str2)}`);
-        return str2;
+      resolve(str3, onError) {
+        onError(`Unresolved plain scalar ${JSON.stringify(str3)}`);
+        return str3;
       }
     };
     var schema = [map.map, seq.seq].concat(jsonScalars, jsonError);
@@ -2612,10 +2612,10 @@ var require_binary = __commonJS({
         if (typeof node_buffer.Buffer === "function") {
           return node_buffer.Buffer.from(src, "base64");
         } else if (typeof atob === "function") {
-          const str2 = atob(src.replace(/[\n\r]/g, ""));
-          const buffer = new Uint8Array(str2.length);
-          for (let i = 0; i < str2.length; ++i)
-            buffer[i] = str2.charCodeAt(i);
+          const str3 = atob(src.replace(/[\n\r]/g, ""));
+          const buffer = new Uint8Array(str3.length);
+          for (let i = 0; i < str3.length; ++i)
+            buffer[i] = str3.charCodeAt(i);
           return buffer;
         } else {
           onError("This environment does not support reading binary tags; either Buffer or atob is required");
@@ -2626,28 +2626,28 @@ var require_binary = __commonJS({
         if (!value)
           return "";
         const buf = value;
-        let str2;
+        let str3;
         if (typeof node_buffer.Buffer === "function") {
-          str2 = buf instanceof node_buffer.Buffer ? buf.toString("base64") : node_buffer.Buffer.from(buf.buffer).toString("base64");
+          str3 = buf instanceof node_buffer.Buffer ? buf.toString("base64") : node_buffer.Buffer.from(buf.buffer).toString("base64");
         } else if (typeof btoa === "function") {
           let s = "";
           for (let i = 0; i < buf.length; ++i)
             s += String.fromCharCode(buf[i]);
-          str2 = btoa(s);
+          str3 = btoa(s);
         } else {
           throw new Error("This environment does not support writing binary tags; either Buffer or btoa is required");
         }
         type ?? (type = Scalar.Scalar.BLOCK_LITERAL);
         if (type !== Scalar.Scalar.QUOTE_DOUBLE) {
           const lineWidth = Math.max(ctx.options.lineWidth - ctx.indent.length, ctx.options.minContentWidth);
-          const n = Math.ceil(str2.length / lineWidth);
+          const n = Math.ceil(str3.length / lineWidth);
           const lines = new Array(n);
           for (let i = 0, o = 0; i < n; ++i, o += lineWidth) {
-            lines[i] = str2.substr(o, lineWidth);
+            lines[i] = str3.substr(o, lineWidth);
           }
-          str2 = lines.join(type === Scalar.Scalar.BLOCK_LITERAL ? "\n" : " ");
+          str3 = lines.join(type === Scalar.Scalar.BLOCK_LITERAL ? "\n" : " ");
         }
-        return stringifyString.stringifyString({ comment, type, value: str2 }, ctx, onComment, onChompKeep);
+        return stringifyString.stringifyString({ comment, type, value: str3 }, ctx, onComment, onChompKeep);
       }
     };
     exports.binary = binary;
@@ -2853,7 +2853,7 @@ var require_float2 = __commonJS({
       default: true,
       tag: "tag:yaml.org,2002:float",
       test: /^(?:[-+]?\.(?:inf|Inf|INF)|\.nan|\.NaN|\.NAN)$/,
-      resolve: (str2) => str2.slice(-3).toLowerCase() === "nan" ? NaN : str2[0] === "-" ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY,
+      resolve: (str3) => str3.slice(-3).toLowerCase() === "nan" ? NaN : str3[0] === "-" ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY,
       stringify: stringifyNumber.stringifyNumber
     };
     var floatExp = {
@@ -2862,10 +2862,10 @@ var require_float2 = __commonJS({
       tag: "tag:yaml.org,2002:float",
       format: "EXP",
       test: /^[-+]?(?:[0-9][0-9_]*)?(?:\.[0-9_]*)?[eE][-+]?[0-9]+$/,
-      resolve: (str2) => parseFloat(str2.replace(/_/g, "")),
+      resolve: (str3) => parseFloat(str3.replace(/_/g, "")),
       stringify(node) {
-        const num = Number(node.value);
-        return isFinite(num) ? num.toExponential() : stringifyNumber.stringifyNumber(node);
+        const num2 = Number(node.value);
+        return isFinite(num2) ? num2.toExponential() : stringifyNumber.stringifyNumber(node);
       }
     };
     var float = {
@@ -2873,11 +2873,11 @@ var require_float2 = __commonJS({
       default: true,
       tag: "tag:yaml.org,2002:float",
       test: /^[-+]?(?:[0-9][0-9_]*)?\.[0-9_]*$/,
-      resolve(str2) {
-        const node = new Scalar.Scalar(parseFloat(str2.replace(/_/g, "")));
-        const dot = str2.indexOf(".");
+      resolve(str3) {
+        const node = new Scalar.Scalar(parseFloat(str3.replace(/_/g, "")));
+        const dot = str3.indexOf(".");
         if (dot !== -1) {
-          const f = str2.substring(dot + 1).replace(/_/g, "");
+          const f = str3.substring(dot + 1).replace(/_/g, "");
           if (f[f.length - 1] === "0")
             node.minFractionDigits = f.length;
         }
@@ -2897,34 +2897,34 @@ var require_int2 = __commonJS({
     "use strict";
     var stringifyNumber = require_stringifyNumber();
     var intIdentify = (value) => typeof value === "bigint" || Number.isInteger(value);
-    function intResolve(str2, offset2, radix, { intAsBigInt }) {
-      const sign = str2[0];
+    function intResolve(str3, offset2, radix, { intAsBigInt }) {
+      const sign = str3[0];
       if (sign === "-" || sign === "+")
         offset2 += 1;
-      str2 = str2.substring(offset2).replace(/_/g, "");
+      str3 = str3.substring(offset2).replace(/_/g, "");
       if (intAsBigInt) {
         switch (radix) {
           case 2:
-            str2 = `0b${str2}`;
+            str3 = `0b${str3}`;
             break;
           case 8:
-            str2 = `0o${str2}`;
+            str3 = `0o${str3}`;
             break;
           case 16:
-            str2 = `0x${str2}`;
+            str3 = `0x${str3}`;
             break;
         }
-        const n2 = BigInt(str2);
+        const n2 = BigInt(str3);
         return sign === "-" ? BigInt(-1) * n2 : n2;
       }
-      const n = parseInt(str2, radix);
+      const n = parseInt(str3, radix);
       return sign === "-" ? -1 * n : n;
     }
     function intStringify(node, radix, prefix) {
       const { value } = node;
       if (intIdentify(value)) {
-        const str2 = value.toString(radix);
-        return value < 0 ? "-" + prefix + str2.substr(1) : prefix + str2;
+        const str3 = value.toString(radix);
+        return value < 0 ? "-" + prefix + str3.substr(1) : prefix + str3;
       }
       return stringifyNumber.stringifyNumber(node);
     }
@@ -2934,7 +2934,7 @@ var require_int2 = __commonJS({
       tag: "tag:yaml.org,2002:int",
       format: "BIN",
       test: /^[-+]?0b[0-1_]+$/,
-      resolve: (str2, _onError, opt) => intResolve(str2, 2, 2, opt),
+      resolve: (str3, _onError, opt) => intResolve(str3, 2, 2, opt),
       stringify: (node) => intStringify(node, 2, "0b")
     };
     var intOct = {
@@ -2943,7 +2943,7 @@ var require_int2 = __commonJS({
       tag: "tag:yaml.org,2002:int",
       format: "OCT",
       test: /^[-+]?0[0-7_]+$/,
-      resolve: (str2, _onError, opt) => intResolve(str2, 1, 8, opt),
+      resolve: (str3, _onError, opt) => intResolve(str3, 1, 8, opt),
       stringify: (node) => intStringify(node, 8, "0")
     };
     var int = {
@@ -2951,7 +2951,7 @@ var require_int2 = __commonJS({
       default: true,
       tag: "tag:yaml.org,2002:int",
       test: /^[-+]?[0-9][0-9_]*$/,
-      resolve: (str2, _onError, opt) => intResolve(str2, 0, 10, opt),
+      resolve: (str3, _onError, opt) => intResolve(str3, 0, 10, opt),
       stringify: stringifyNumber.stringifyNumber
     };
     var intHex = {
@@ -2960,7 +2960,7 @@ var require_int2 = __commonJS({
       tag: "tag:yaml.org,2002:int",
       format: "HEX",
       test: /^[-+]?0x[0-9a-fA-F_]+$/,
-      resolve: (str2, _onError, opt) => intResolve(str2, 2, 16, opt),
+      resolve: (str3, _onError, opt) => intResolve(str3, 2, 16, opt),
       stringify: (node) => intStringify(node, 16, "0x")
     };
     exports.int = int;
@@ -3064,26 +3064,26 @@ var require_timestamp = __commonJS({
   "node_modules/.pnpm/yaml@2.9.1/node_modules/yaml/dist/schema/yaml-1.1/timestamp.js"(exports) {
     "use strict";
     var stringifyNumber = require_stringifyNumber();
-    function parseSexagesimal(str2, asBigInt) {
-      const sign = str2[0];
-      const parts = sign === "-" || sign === "+" ? str2.substring(1) : str2;
-      const num = (n) => asBigInt ? BigInt(n) : Number(n);
-      const res = parts.replace(/_/g, "").split(":").reduce((res2, p) => res2 * num(60) + num(p), num(0));
-      return sign === "-" ? num(-1) * res : res;
+    function parseSexagesimal(str3, asBigInt) {
+      const sign = str3[0];
+      const parts = sign === "-" || sign === "+" ? str3.substring(1) : str3;
+      const num2 = (n) => asBigInt ? BigInt(n) : Number(n);
+      const res = parts.replace(/_/g, "").split(":").reduce((res2, p) => res2 * num2(60) + num2(p), num2(0));
+      return sign === "-" ? num2(-1) * res : res;
     }
     function stringifySexagesimal(node) {
       let { value } = node;
-      let num = (n) => n;
+      let num2 = (n) => n;
       if (typeof value === "bigint")
-        num = (n) => BigInt(n);
+        num2 = (n) => BigInt(n);
       else if (isNaN(value) || !isFinite(value))
         return stringifyNumber.stringifyNumber(node);
       let sign = "";
       if (value < 0) {
         sign = "-";
-        value *= num(-1);
+        value *= num2(-1);
       }
-      const _60 = num(60);
+      const _60 = num2(60);
       const parts = [value % _60];
       if (value < 60) {
         parts.unshift(0);
@@ -3103,7 +3103,7 @@ var require_timestamp = __commonJS({
       tag: "tag:yaml.org,2002:int",
       format: "TIME",
       test: /^[-+]?[0-9][0-9_]*(?::[0-5]?[0-9])+$/,
-      resolve: (str2, _onError, { intAsBigInt }) => parseSexagesimal(str2, intAsBigInt),
+      resolve: (str3, _onError, { intAsBigInt }) => parseSexagesimal(str3, intAsBigInt),
       stringify: stringifySexagesimal
     };
     var floatTime = {
@@ -3112,7 +3112,7 @@ var require_timestamp = __commonJS({
       tag: "tag:yaml.org,2002:float",
       format: "TIME",
       test: /^[-+]?[0-9][0-9_]*(?::[0-5]?[0-9])+\.[0-9_]*$/,
-      resolve: (str2) => parseSexagesimal(str2, false),
+      resolve: (str3) => parseSexagesimal(str3, false),
       stringify: stringifySexagesimal
     };
     var timestamp = {
@@ -3123,8 +3123,8 @@ var require_timestamp = __commonJS({
       // may be omitted altogether, resulting in a date format. In such a case, the time part is
       // assumed to be 00:00:00Z (start of day, UTC).
       test: RegExp("^([0-9]{4})-([0-9]{1,2})-([0-9]{1,2})(?:(?:t|T|[ \\t]+)([0-9]{1,2}):([0-9]{1,2}):([0-9]{1,2}(\\.[0-9]+)?)(?:[ \\t]*(Z|[-+][012]?[0-9](?::[0-9]{2})?))?)?$"),
-      resolve(str2) {
-        const match = str2.match(timestamp.test);
+      resolve(str3) {
+        const match = str3.match(timestamp.test);
         if (!match)
           throw new Error("!!timestamp expects a date, starting with yyyy-mm-dd");
         const [, year, month, day, hour, minute, second] = match.map(Number);
@@ -3475,9 +3475,9 @@ var require_Document = __commonJS({
           this.contents.add(value);
       }
       /** Adds a value to the document. */
-      addIn(path16, value) {
+      addIn(path21, value) {
         if (assertCollection(this.contents))
-          this.contents.addIn(path16, value);
+          this.contents.addIn(path21, value);
       }
       /**
        * Create a new `Alias` node, ensuring that the target `node` has the required anchor.
@@ -3552,14 +3552,14 @@ var require_Document = __commonJS({
        * Removes a value from the document.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path16) {
-        if (Collection.isEmptyPath(path16)) {
+      deleteIn(path21) {
+        if (Collection.isEmptyPath(path21)) {
           if (this.contents == null)
             return false;
           this.contents = null;
           return true;
         }
-        return assertCollection(this.contents) ? this.contents.deleteIn(path16) : false;
+        return assertCollection(this.contents) ? this.contents.deleteIn(path21) : false;
       }
       /**
        * Returns item at `key`, or `undefined` if not found. By default unwraps
@@ -3574,10 +3574,10 @@ var require_Document = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path16, keepScalar) {
-        if (Collection.isEmptyPath(path16))
+      getIn(path21, keepScalar) {
+        if (Collection.isEmptyPath(path21))
           return !keepScalar && identity.isScalar(this.contents) ? this.contents.value : this.contents;
-        return identity.isCollection(this.contents) ? this.contents.getIn(path16, keepScalar) : void 0;
+        return identity.isCollection(this.contents) ? this.contents.getIn(path21, keepScalar) : void 0;
       }
       /**
        * Checks if the document includes a value with the key `key`.
@@ -3588,10 +3588,10 @@ var require_Document = __commonJS({
       /**
        * Checks if the document includes a value at `path`.
        */
-      hasIn(path16) {
-        if (Collection.isEmptyPath(path16))
+      hasIn(path21) {
+        if (Collection.isEmptyPath(path21))
           return this.contents !== void 0;
-        return identity.isCollection(this.contents) ? this.contents.hasIn(path16) : false;
+        return identity.isCollection(this.contents) ? this.contents.hasIn(path21) : false;
       }
       /**
        * Sets a value in this document. For `!!set`, `value` needs to be a
@@ -3608,13 +3608,13 @@ var require_Document = __commonJS({
        * Sets a value in this document. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path16, value) {
-        if (Collection.isEmptyPath(path16)) {
+      setIn(path21, value) {
+        if (Collection.isEmptyPath(path21)) {
           this.contents = value;
         } else if (this.contents == null) {
-          this.contents = Collection.collectionFromPath(this.schema, Array.from(path16), value);
+          this.contents = Collection.collectionFromPath(this.schema, Array.from(path21), value);
         } else if (assertCollection(this.contents)) {
-          this.contents.setIn(path16, value);
+          this.contents.setIn(path21, value);
         }
       }
       /**
@@ -3673,8 +3673,8 @@ var require_Document = __commonJS({
         };
         const res = toJS.toJS(this.contents, jsonArg ?? "", ctx);
         if (typeof onAnchor === "function")
-          for (const { count, res: res2 } of ctx.anchors.values())
-            onAnchor(res2, count);
+          for (const { count: count2, res: res2 } of ctx.anchors.values())
+            onAnchor(res2, count2);
         return typeof reviver === "function" ? applyReviver.applyReviver(reviver, { "": res }, "", res) : res;
       }
       /**
@@ -3751,12 +3751,12 @@ var require_errors = __commonJS({
         lineStr = prev + lineStr;
       }
       if (/[^ ]/.test(lineStr)) {
-        let count = 1;
+        let count2 = 1;
         const end = error.linePos[1];
         if (end?.line === line && end.col > col) {
-          count = Math.max(1, Math.min(end.col - col, 80 - ci));
+          count2 = Math.max(1, Math.min(end.col - col, 80 - ci));
         }
-        const pointer = " ".repeat(ci) + "^".repeat(count);
+        const pointer = " ".repeat(ci) + "^".repeat(count2);
         error.message += `:
 
 ${lineStr}
@@ -3775,7 +3775,7 @@ ${pointer}
 var require_resolve_props = __commonJS({
   "node_modules/.pnpm/yaml@2.9.1/node_modules/yaml/dist/compose/resolve-props.js"(exports) {
     "use strict";
-    function resolveProps(tokens2, { flow, indicator, next, offset: offset2, onError, parentIndent, startOnNewline }) {
+    function resolveProps(tokens5, { flow, indicator, next, offset: offset2, onError, parentIndent, startOnNewline }) {
       let spaceBefore = false;
       let atNewline = startOnNewline;
       let hasSpace = startOnNewline;
@@ -3790,7 +3790,7 @@ var require_resolve_props = __commonJS({
       let comma = null;
       let found = null;
       let start = null;
-      for (const token of tokens2) {
+      for (const token of tokens5) {
         if (reqSpace) {
           if (token.type !== "space" && token.type !== "newline" && token.type !== "comma")
             onError(token.offset, "MISSING_CHAR", "Tags and anchors must be separated from the next token by white space");
@@ -3881,7 +3881,7 @@ var require_resolve_props = __commonJS({
             hasSpace = false;
         }
       }
-      const last = tokens2[tokens2.length - 1];
+      const last = tokens5[tokens5.length - 1];
       const end = last ? last.offset + last.source.length : offset2;
       if (reqSpace && next && next.type !== "space" && next.type !== "newline" && next.type !== "comma" && (next.type !== "scalar" || next.source !== "")) {
         onError(next.offset, "MISSING_CHAR", "Tags and anchors must be separated from the next token by white space");
@@ -5221,8 +5221,8 @@ ${cb}` : comment;
        * @param forceDoc - If the stream contains no document, still emit a final document including any comments and directives that would be applied to a subsequent document.
        * @param endOffset - Should be set if `forceDoc` is also set, to set the document range end and to indicate errors correctly.
        */
-      *compose(tokens2, forceDoc = false, endOffset = -1) {
-        for (const token of tokens2)
+      *compose(tokens5, forceDoc = false, endOffset = -1) {
+        for (const token of tokens5)
           yield* this.next(token);
         yield* this.end(forceDoc, endOffset);
       }
@@ -5575,9 +5575,9 @@ var require_cst_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP;
     visit.REMOVE = REMOVE;
-    visit.itemAtPath = (cst, path16) => {
+    visit.itemAtPath = (cst, path21) => {
       let item = cst;
-      for (const [field, index] of path16) {
+      for (const [field, index] of path21) {
         const tok = item?.[field];
         if (tok && "items" in tok) {
           item = tok.items[index];
@@ -5586,23 +5586,23 @@ var require_cst_visit = __commonJS({
       }
       return item;
     };
-    visit.parentCollection = (cst, path16) => {
-      const parent = visit.itemAtPath(cst, path16.slice(0, -1));
-      const field = path16[path16.length - 1][0];
+    visit.parentCollection = (cst, path21) => {
+      const parent = visit.itemAtPath(cst, path21.slice(0, -1));
+      const field = path21[path21.length - 1][0];
       const coll = parent?.[field];
       if (coll && "items" in coll)
         return coll;
       throw new Error("Parent collection not found");
     };
-    function _visit(path16, item, visitor) {
-      let ctrl = visitor(item, path16);
+    function _visit(path21, item, visitor) {
+      let ctrl = visitor(item, path21);
       if (typeof ctrl === "symbol")
         return ctrl;
       for (const field of ["key", "value"]) {
         const token = item[field];
         if (token && "items" in token) {
           for (let i = 0; i < token.items.length; ++i) {
-            const ci = _visit(Object.freeze(path16.concat([[field, i]])), token.items[i], visitor);
+            const ci = _visit(Object.freeze(path21.concat([[field, i]])), token.items[i], visitor);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -5613,10 +5613,10 @@ var require_cst_visit = __commonJS({
             }
           }
           if (typeof ctrl === "function" && field === "key")
-            ctrl = ctrl(item, path16);
+            ctrl = ctrl(item, path21);
         }
       }
-      return typeof ctrl === "function" ? ctrl(item, path16) : ctrl;
+      return typeof ctrl === "function" ? ctrl(item, path21) : ctrl;
     }
     exports.visit = visit;
   }
@@ -6351,15 +6351,15 @@ var require_parser = __commonJS({
     var node_process = __require("process");
     var cst = require_cst();
     var lexer = require_lexer();
-    function includesToken(list2, type) {
-      for (let i = 0; i < list2.length; ++i)
-        if (list2[i].type === type)
+    function includesToken(list3, type) {
+      for (let i = 0; i < list3.length; ++i)
+        if (list3[i].type === type)
           return true;
       return false;
     }
-    function findNonEmptyIndex(list2) {
-      for (let i = 0; i < list2.length; ++i) {
-        switch (list2[i].type) {
+    function findNonEmptyIndex(list3) {
+      for (let i = 0; i < list3.length; ++i) {
+        switch (list3[i].type) {
           case "space":
           case "comment":
           case "newline":
@@ -7368,13 +7368,13 @@ var require_dist = __commonJS({
 });
 
 // src/cli/main.ts
-import { parseArgs } from "node:util";
+import { parseArgs as parseArgs2 } from "node:util";
 
 // src/version.ts
 var VERSION = "0.1.0";
 
 // src/cli/commands/classify.ts
-import os3 from "node:os";
+import os4 from "node:os";
 
 // src/classify/phases.ts
 var PHASES = [
@@ -7440,7 +7440,7 @@ function parseSince(value) {
 }
 
 // src/cli/load.ts
-import path10 from "node:path";
+import path14 from "node:path";
 
 // src/classify/classify.ts
 import path3 from "node:path";
@@ -7624,7 +7624,7 @@ var Builder = class {
       this.closeOpenTools(this.main, e.t, "interrupted");
       this.closeTurn(e.t);
     }
-    this.openTurn(e.t, e.src === "task-notification" ? ["notification"] : []);
+    this.openTurn(e.t, e.src ? ["notification"] : []);
     this.main.modelStart = e.t;
   }
   ensureTurn(t) {
@@ -7915,31 +7915,105 @@ import path from "node:path";
 var OPERATORS = ["&&", "||", "|&", ";;", ";", "|", "&", "\n", "(", ")"];
 var REDIRECT_OP = /^(>>|>\||>&|>|<<<|<<-|<<|<>|<&|<)/;
 var TEMP = /^(\/tmp\/|\/private\/tmp\/|\/var\/folders\/|\$TMPDIR|\$\{TMPDIR\})/;
+function heredocTags(line, stack) {
+  const tags = [];
+  const top = () => stack[stack.length - 1] ?? "top";
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    const context = top();
+    if (context === "sq") {
+      if (c === "'") stack.pop();
+      continue;
+    }
+    if (c === "\\") {
+      i++;
+      continue;
+    }
+    if (context === "dq") {
+      if (c === '"') stack.pop();
+      else if (c === "$" && line[i + 1] === "(") {
+        stack.push(line[i + 2] === "(" ? "arith" : "cmd");
+        i += line[i + 2] === "(" ? 2 : 1;
+      }
+      continue;
+    }
+    if (context === "arith") {
+      if (c === ")" && line[i + 1] === ")") {
+        stack.pop();
+        i++;
+      }
+      continue;
+    }
+    if (c === "'") stack.push("sq");
+    else if (c === '"') stack.push("dq");
+    else if (c === "$" && line[i + 1] === "(") {
+      stack.push(line[i + 2] === "(" ? "arith" : "cmd");
+      i += line[i + 2] === "(" ? 2 : 1;
+    } else if (c === "(") stack.push("paren");
+    else if (c === ")" && (context === "cmd" || context === "paren")) stack.pop();
+    else if (c === "<" && line[i + 1] === "<") {
+      if (line[i + 2] === "<") {
+        i += 2;
+        continue;
+      }
+      const match = /^<<-?\s*(?:'([^']+)'|"([^"]+)"|\\?([A-Za-z_][A-Za-z0-9_]*))/.exec(
+        line.slice(i)
+      );
+      const tag = match?.[1] ?? match?.[2] ?? match?.[3];
+      if (match && tag) {
+        tags.push(tag);
+        i += match[0].length - 1;
+      } else i++;
+    }
+  }
+  return tags;
+}
 function stripHeredocs(text) {
   if (!text.includes("<<")) return text;
   const lines = text.split("\n");
   const out = [];
+  const stack = [];
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i] ?? "";
     out.push(line);
-    const tags = [...line.matchAll(/<<-?\s*(?:'([^']+)'|"([^"]+)"|\\?([A-Za-z_][A-Za-z0-9_]*))/g)].map((m) => m[1] ?? m[2] ?? m[3]).filter((tag) => Boolean(tag));
-    for (const tag of tags) {
+    for (const tag of heredocTags(line, stack)) {
       while (i + 1 < lines.length && (lines[i + 1] ?? "").trim() !== tag) i++;
       if (i + 1 < lines.length) i++;
     }
   }
   return out.join("\n");
 }
+function substitutionsIn(text) {
+  const subs = [];
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (c === "\\") i++;
+    else if (c === "$" && text[i + 1] === "(" && text[i + 2] !== "(") {
+      const end = closingParen(text, i + 1);
+      subs.push(text.slice(i + 2, end));
+      i = end;
+    } else if (c === "`") {
+      const end = text.indexOf("`", i + 1);
+      const stop = end === -1 ? text.length : end;
+      subs.push(text.slice(i + 1, stop));
+      i = stop;
+    }
+  }
+  return subs;
+}
 function tokenize(text) {
-  const tokens2 = [];
+  const tokens5 = [];
   let word = "";
   let quoted = false;
   let inWord = false;
+  let subs = [];
   const flush = () => {
-    if (inWord) tokens2.push({ kind: "word", value: word, quoted });
+    if (inWord)
+      tokens5.push({ kind: "word", value: word, quoted, ...subs.length ? { subs } : {} });
     word = "";
     quoted = false;
     inWord = false;
+    subs = [];
   };
   for (let i = 0; i < text.length; i++) {
     const c = text[i];
@@ -7961,7 +8035,9 @@ function tokenize(text) {
     }
     if (c === '"') {
       const j = closingQuote(text, i);
-      word += text.slice(i + 1, j).replace(/\\(["\\$`])/g, "$1");
+      const inside = text.slice(i + 1, j);
+      word += inside.replace(/\\(["\\$`])/g, "$1");
+      subs.push(...substitutionsIn(inside));
       quoted = inWord = true;
       i = j;
       continue;
@@ -7969,6 +8045,7 @@ function tokenize(text) {
     if (c === "$" && text[i + 1] === "(") {
       const end = closingParen(text, i + 1);
       word += text.slice(i, end + 1);
+      if (text[i + 2] !== "(") subs.push(text.slice(i + 2, end));
       inWord = true;
       i = end;
       continue;
@@ -7977,8 +8054,17 @@ function tokenize(text) {
       const end = text.indexOf("`", i + 1);
       const stop = end === -1 ? text.length : end;
       word += text.slice(i, stop + 1);
+      subs.push(text.slice(i + 1, stop));
       inWord = true;
       i = stop;
+      continue;
+    }
+    if ((c === "<" || c === ">") && text[i + 1] === "(") {
+      const end = closingParen(text, i + 1);
+      word += text.slice(i, end + 1);
+      subs.push(text.slice(i + 2, end));
+      inWord = true;
+      i = end;
       continue;
     }
     if (c === "#" && !inWord) {
@@ -8006,14 +8092,14 @@ function tokenize(text) {
       }
       const match = REDIRECT_OP.exec(text.slice(j));
       const symbol = match?.[1] ?? text[j];
-      tokens2.push({ kind: "redirect", value: fd + op + symbol });
+      tokens5.push({ kind: "redirect", value: fd + op + symbol });
       i = j + symbol.length - 1;
       continue;
     }
     const operator = OPERATORS.find((o) => text.startsWith(o, i));
     if (operator) {
       flush();
-      tokens2.push({ kind: "op", value: operator });
+      tokens5.push({ kind: "op", value: operator });
       i += operator.length - 1;
       continue;
     }
@@ -8021,7 +8107,7 @@ function tokenize(text) {
     inWord = true;
   }
   flush();
-  return tokens2;
+  return tokens5;
 }
 function closingQuote(text, open) {
   let j = open + 1;
@@ -8065,31 +8151,60 @@ var LEADING_KEYWORDS = /* @__PURE__ */ new Set([
 ]);
 var SKIPPED_HEADS = /* @__PURE__ */ new Set(["fi", "done", "esac", "for", "select", "case", "function"]);
 var ASSIGNMENT = /^[A-Za-z_][A-Za-z0-9_]*(\[[^\]]*\])?\+?=/;
-function splitCommand(text) {
+function splitCommand(text, depth = 0) {
   const commands = [];
   let words = [];
   let writes = [];
   let piped = false;
   let redirect = null;
   const cd = [];
+  const scopes = [];
   const functions = /* @__PURE__ */ new Set();
   let caseDepth = 0;
   let inPattern = false;
   const end = (operator) => {
+    if (words[0]?.value === "function" && words[1] && words[2]?.value === "{") {
+      functions.add(words[1].value.replace(/\(\)$/, ""));
+      words = words.slice(3);
+    }
     const argv = clean(words);
     if (words[0]?.value === "function" && words[1])
       functions.add(words[1].value.replace(/\(\)$/, ""));
+    if (depth < 4) {
+      for (const sub of words.flatMap((w) => w.subs ?? [])) {
+        for (const inner of splitCommand(sub, depth + 1)) {
+          commands.push({
+            ...inner,
+            cd: [...cd, ...inner.cd],
+            substituted: true,
+            piped: inner.piped
+          });
+        }
+      }
+    }
     if (argv.length > 0 && !functions.has(argv[0])) {
-      commands.push({ argv, writes, cd: [...cd], piped });
-      if (argv[0] === "cd" && !piped) cd.push(argv[1] ?? "~");
+      const command = { argv, writes, cd: [...cd], piped };
+      if (operator !== null) command.next = operator;
+      if (scopes.length > 0) command.subshell = true;
+      commands.push(command);
+      if ((argv[0] === "cd" || argv[0] === "pushd") && !piped) cd.push(argv[1] ?? "~");
+      else if (argv[0] === "popd" && cd.length > (scopes.at(-1) ?? 0)) cd.pop();
+    } else if (operator !== "(" && operator !== ")") {
+      const last = commands.at(-1);
+      if (last?.next === ")") {
+        if (operator === null) delete last.next;
+        else last.next = operator;
+      }
     }
     words = [];
     writes = [];
     piped = operator === "|" || operator === "|&";
+    if (operator === "(") scopes.push(cd.length);
+    else if (operator === ")" && scopes.length > 0) cd.length = scopes.pop();
   };
-  const tokens2 = tokenize(stripHeredocs(text));
-  for (let t = 0; t < tokens2.length; t++) {
-    const token = tokens2[t];
+  const tokens5 = tokenize(stripHeredocs(text));
+  for (let t = 0; t < tokens5.length; t++) {
+    const token = tokens5[t];
     if (inPattern) {
       if (token.kind === "word" && token.value === "esac") {
         caseDepth--;
@@ -8109,7 +8224,7 @@ function splitCommand(text) {
       inPattern = true;
       continue;
     }
-    if (token.kind === "op" && token.value === "(" && words.length === 1 && tokens2[t + 1]?.kind === "op" && tokens2[t + 1]?.value === ")") {
+    if (token.kind === "op" && token.value === "(" && words.length === 1 && tokens5[t + 1]?.kind === "op" && tokens5[t + 1]?.value === ")") {
       functions.add(words[0]?.value);
       words = [];
       t++;
@@ -8136,7 +8251,11 @@ function splitCommand(text) {
       if (token.value === ";;" && caseDepth > 0) inPattern = true;
       continue;
     }
-    words.push({ value: token.value, quoted: token.quoted });
+    words.push({
+      value: token.value,
+      quoted: token.quoted,
+      ...token.subs ? { subs: token.subs } : {}
+    });
   }
   end(null);
   return commands;
@@ -8204,7 +8323,8 @@ var WRAPPERS = {
     valueOptions: ["--reporter", "-r", "--report-dir", "--include", "--exclude", "--extension"]
   },
   chronic: {},
-  corepack: {}
+  corepack: {},
+  xcrun: { valueOptions: ["--sdk", "-sdk", "--toolchain", "-toolchain"] }
 };
 var WRAPPER_PAIRS = {
   npm: {
@@ -8231,6 +8351,7 @@ var WRAPPER_PAIRS = {
   },
   poetry: { run: [] },
   pipenv: { run: [] },
+  pipx: { run: ["--spec", "--python", "--pip-args"] },
   pdm: { run: [] },
   rye: { run: [] },
   hatch: { run: [] },
@@ -8259,13 +8380,65 @@ var GLOBAL_VALUE_OPTIONS = {
 };
 var PYTHON = /^(python|python[23](\.\d+)?|py|pypy3?)$/;
 var SHELLS = /* @__PURE__ */ new Set(["sh", "bash", "zsh", "dash", "ksh"]);
+var SCOPED = {
+  "@playwright/test": "playwright",
+  "@angular/cli": "ng",
+  "@biomejs/biome": "biome",
+  "@tailwindcss/cli": "tailwindcss",
+  "@vue/cli-service": "vue-cli-service",
+  "@nestjs/cli": "nest",
+  "@redocly/cli": "redocly",
+  "@stoplight/spectral-cli": "spectral"
+};
 function programName(word) {
+  const scoped = /^(@[\w.-]+\/[\w.-]+)(@[^\s/]+)?$/.exec(word);
+  if (scoped?.[1]) return SCOPED[scoped[1]] ?? scoped[1].split("/")[1] ?? scoped[1];
   let name = word.replace(/\\/g, "/").split("/").pop() ?? word;
   name = name.replace(/\.(exe|cmd|bat)$/i, "");
+  if (word.includes("/") && /@v?\d[\w.-]*$/.test(name)) name = name.replace(/@v?\d[\w.-]*$/, "");
+  name = name.replace(/^([\w.-]+)(@[\w.^~<>=*-]+|==[\w.]+|\[[\w,-]+\])$/, "$1");
   if (name === "gradlew") return "gradle";
   if (name === "mvnw") return "mvn";
   return name;
 }
+var PYTHON_FLAGS = /* @__PURE__ */ new Set([
+  "-u",
+  "-B",
+  "-I",
+  "-E",
+  "-O",
+  "-OO",
+  "-s",
+  "-S",
+  "-q",
+  "-b",
+  "-bb",
+  "-d",
+  "-R",
+  "-P",
+  "-v"
+]);
+var GO_TOOLS = /* @__PURE__ */ new Set([
+  "addr2line",
+  "asm",
+  "buildid",
+  "cgo",
+  "compile",
+  "covdata",
+  "cover",
+  "dist",
+  "doc",
+  "fix",
+  "link",
+  "nm",
+  "objdump",
+  "pack",
+  "pprof",
+  "preprofile",
+  "test2json",
+  "trace",
+  "vet"
+]);
 function unwrap(input) {
   let argv = [...input];
   const wrappers = [];
@@ -8283,20 +8456,61 @@ function unwrap(input) {
       argv = after;
       continue;
     }
-    if (PYTHON.test(program) && rest[0] === "-m" && rest[1]) {
-      wrappers.push(`${program} -m`);
+    if (PYTHON.test(program)) {
+      let i = 0;
+      while (i < rest.length) {
+        const flag = rest[i];
+        if (PYTHON_FLAGS.has(flag)) i++;
+        else if (flag === "-W" || flag === "-X") i += 2;
+        else break;
+      }
+      if (rest[i] === "-m" && rest[i + 1]) {
+        wrappers.push(`${program} -m`);
+        argv = rest.slice(i + 1);
+        continue;
+      }
+    }
+    if (program === "coverage" && rest[0] === "run") {
+      const valueOptions = [
+        "--rcfile",
+        "--source",
+        "--omit",
+        "--include",
+        "--concurrency",
+        "--data-file",
+        "--context"
+      ];
+      let i = 1;
+      while (i < rest.length && rest[i].startsWith("-") && rest[i] !== "-m")
+        i += valueOptions.includes(rest[i]) ? 2 : 1;
+      const after = rest[i] === "-m" ? rest.slice(i + 1) : rest.slice(i);
+      if (after.length === 0) break;
+      wrappers.push("coverage run");
+      argv = rest[i] === "-m" ? after : ["python", ...after];
+      continue;
+    }
+    if (program === "xcrun" && rest.some((a) => /^-(-?find|f|-show-.*|-sdk-.*|-version|v|h|-help)$/.test(a)))
+      break;
+    if ((program === "uv" || program === "dotnet") && rest[0] === "tool" && rest[1] === "run") {
+      const after = skipOptions(rest.slice(2), ["--from", "--with", "--python", "-p"], false);
+      if (after.length === 0) break;
+      wrappers.push(`${program} tool run`);
+      argv = after;
+      continue;
+    }
+    if (program === "php" && /(^|\/)(vendor\/)?bin\/[\w.-]+$/.test(rest[0] ?? "")) {
+      wrappers.push("php");
+      argv = rest;
+      continue;
+    }
+    if (program === "go" && rest[0] === "tool" && rest[1] && !GO_TOOLS.has(rest[1])) {
+      wrappers.push("go tool");
       argv = rest.slice(1);
       continue;
     }
-    if (program === "coverage" && rest[0] === "run") {
-      const after = skipOptions(
-        rest.slice(1),
-        ["--rcfile", "--source", "--omit", "--include", "--concurrency"],
-        false
-      );
-      if (after.length === 0) break;
-      wrappers.push("coverage run");
-      argv = after[0] === "-m" ? after.slice(1) : ["python", ...after];
+    if (program === "go" && rest[0] === "run" && /^[\w.-]+\.[a-z]+\/\S+@\S+$/.test(rest[1] ?? "")) {
+      wrappers.push("go run");
+      argv = rest.slice(1);
       continue;
     }
     if (SHELLS.has(program)) break;
@@ -8361,7 +8575,11 @@ function shellString(argv) {
   for (let i = 1; i < argv.length; i++) {
     const arg = argv[i];
     if (/^-[a-z]*c[a-z]*$/.test(arg)) return argv[i + 1];
-    if (!arg.startsWith("-")) return void 0;
+    if (/^[-+][a-zA-Z]*[oO]$/.test(arg)) {
+      i++;
+      continue;
+    }
+    if (!arg.startsWith("-") && !arg.startsWith("+")) return void 0;
   }
   return void 0;
 }
@@ -8371,7 +8589,7 @@ function scriptFile(argv) {
     const file = argv.slice(1).find((a) => !a.startsWith("-"));
     return file && !shellString(argv) ? file : void 0;
   }
-  return /^(\.{0,2}\/|[\w.-]+\/)[^\s]*\.(sh|bash)$/.test(first) || /^\.\/[\w./-]+$/.test(first) ? first : void 0;
+  return /^(\.{0,2}\/|[\w.-]+\/)[^\s]*\.(sh|bash|zsh)$/.test(first) || /^\.\/[\w./-]+$/.test(first) || /^(script|scripts|bin|tools|ci|\.github)\/[\w./-]+$/.test(first) ? first : void 0;
 }
 
 // src/classify/resolve.ts
@@ -8394,12 +8612,12 @@ function diskFiles() {
     }
   };
 }
-function findUp(start, names, files) {
+function findUp(start, names, files2) {
   let dir = path.resolve(start);
   for (let i = 0; i < 16; i++) {
     for (const name of names) {
       const file = path.join(dir, name);
-      const text = files.read(file);
+      const text = files2.read(file);
       if (text !== void 0) return { dir, file, text };
     }
     const parent = path.dirname(dir);
@@ -8583,8 +8801,8 @@ var PNPM_VALUE_OPTIONS = [
 ];
 var YARN_VALUE_OPTIONS = ["--cwd"];
 var NPM_VALUE_OPTIONS = ["--prefix", "-w", "--workspace", "--loglevel", "--userconfig"];
-function packageScripts(cwd, files) {
-  const found = findUp(cwd, ["package.json"], files);
+function packageScripts(cwd, files2) {
+  const found = findUp(cwd, ["package.json"], files2);
   if (!found) return void 0;
   try {
     const pkg = JSON.parse(found.text);
@@ -8603,9 +8821,9 @@ function scriptCommands(scripts, name, prePost) {
     (c) => typeof c === "string"
   );
 }
-function resolveScript(runner, name, rest, cwd, files, options) {
+function resolveScript(runner, name, rest, cwd, files2, options) {
   if (options.workspace) return { kind: "script-name", runner, name, rest };
-  const pkg = packageScripts(cwd, files);
+  const pkg = packageScripts(cwd, files2);
   if (pkg && typeof pkg.scripts[name] === "string") {
     return {
       kind: "script",
@@ -8619,7 +8837,7 @@ function resolveScript(runner, name, rest, cwd, files, options) {
   if (options.runsBins) return { kind: "bin", argv: [name, ...rest] };
   return { kind: "script-name", runner, name, rest };
 }
-function resolveNpm(args, cwd, files) {
+function resolveNpm(args, cwd, files2) {
   const prefix = optionValue(args, ["--prefix"]);
   const dir = prefix ? resolvePath(cwd, prefix) : cwd;
   const workspace = optionValue(args, ["-w", "--workspace"]) !== void 0 || args.includes("--workspaces") || args.includes("-ws");
@@ -8630,7 +8848,7 @@ function resolveNpm(args, cwd, files) {
     const j = firstPositional(args.slice(i + 1), []);
     if (j < 0) return void 0;
     const name = args[i + 1 + j];
-    return resolveScript("npm", name, args.slice(i + 2 + j), dir, files, {
+    return resolveScript("npm", name, args.slice(i + 2 + j), dir, files2, {
       prePost: true,
       runsBins: false,
       workspace
@@ -8638,14 +8856,14 @@ function resolveNpm(args, cwd, files) {
   }
   const alias = NPM_ALIASES[sub];
   if (alias)
-    return resolveScript("npm", alias, args.slice(i + 1), dir, files, {
+    return resolveScript("npm", alias, args.slice(i + 1), dir, files2, {
       prePost: true,
       runsBins: false,
       workspace
     });
   return void 0;
 }
-function resolvePnpm(args, cwd, files) {
+function resolvePnpm(args, cwd, files2) {
   const dirOption = optionValue(args, ["-C", "--dir"]);
   const dir = dirOption ? resolvePath(cwd, dirOption) : cwd;
   const workspace = args.includes("-r") || args.includes("--recursive") || optionValue(args, ["--filter", "-F"]) !== void 0;
@@ -8655,26 +8873,26 @@ function resolvePnpm(args, cwd, files) {
   if (sub === "run" || sub === "run-script") {
     const j = firstPositional(args.slice(i + 1), PNPM_VALUE_OPTIONS);
     if (j < 0) return void 0;
-    return resolveScript("pnpm", args[i + 1 + j], args.slice(i + 2 + j), dir, files, {
+    return resolveScript("pnpm", args[i + 1 + j], args.slice(i + 2 + j), dir, files2, {
       prePost: false,
       runsBins: false,
       workspace
     });
   }
   if (sub === "test" || sub === "t")
-    return resolveScript("pnpm", "test", args.slice(i + 1), dir, files, {
+    return resolveScript("pnpm", "test", args.slice(i + 1), dir, files2, {
       prePost: false,
       runsBins: false,
       workspace
     });
   if (PNPM_BUILTINS.has(sub)) return void 0;
-  return resolveScript("pnpm", sub, args.slice(i + 1), dir, files, {
+  return resolveScript("pnpm", sub, args.slice(i + 1), dir, files2, {
     prePost: false,
     runsBins: true,
     workspace
   });
 }
-function resolveYarn(args, cwd, files) {
+function resolveYarn(args, cwd, files2) {
   const cwdOption = optionValue(args, ["--cwd"]);
   const dir = cwdOption ? resolvePath(cwd, cwdOption) : cwd;
   const i = firstPositional(args, YARN_VALUE_OPTIONS);
@@ -8682,7 +8900,7 @@ function resolveYarn(args, cwd, files) {
   const sub = args[i];
   if (sub === "run") {
     const name = args[i + 1];
-    return name ? resolveScript("yarn", name, args.slice(i + 2), dir, files, {
+    return name ? resolveScript("yarn", name, args.slice(i + 2), dir, files2, {
       prePost: true,
       runsBins: true,
       workspace: false
@@ -8703,20 +8921,22 @@ function resolveYarn(args, cwd, files) {
     return name ? { kind: "script-name", runner: "yarn", name, rest: [] } : void 0;
   }
   if (YARN_BUILTINS.has(sub)) return void 0;
-  return resolveScript("yarn", sub, args.slice(i + 1), dir, files, {
+  return resolveScript("yarn", sub, args.slice(i + 1), dir, files2, {
     prePost: true,
     runsBins: true,
     workspace: false
   });
 }
-function resolveBun(args, cwd, files) {
+function resolveBun(args, cwd, files2) {
   const i = firstPositional(args, ["--cwd"]);
   if (i < 0) return void 0;
   const sub = args[i];
-  const name = sub === "run" ? args[i + 1] : sub;
+  const after = sub === "run" ? firstPositional(args.slice(i + 1), ["--cwd", "--filter", "-F"]) : -1;
+  const nameAt = sub === "run" ? after < 0 ? -1 : i + 1 + after : i;
+  const name = nameAt >= 0 ? args[nameAt] : void 0;
   if (!name || sub !== "run" && BUN_BUILTINS.has(sub)) return void 0;
   if (/\.(m?[jt]sx?|cjs|cts)$/.test(name)) return void 0;
-  const pkg = packageScripts(cwd, files);
+  const pkg = packageScripts(cwd, files2);
   if (pkg && typeof pkg.scripts[name] === "string") {
     return {
       kind: "script",
@@ -8726,12 +8946,12 @@ function resolveBun(args, cwd, files) {
       cwd: pkg.dir
     };
   }
-  return sub === "run" ? { kind: "script-name", runner: "bun", name, rest: args.slice(i + 2) } : void 0;
+  return sub === "run" ? { kind: "script-name", runner: "bun", name, rest: args.slice(nameAt + 1) } : void 0;
 }
-function resolveDeno(args, cwd, files) {
+function resolveDeno(args, cwd, files2) {
   if (args[0] !== "task" || !args[1]) return void 0;
   const name = args[1];
-  const found = findUp(cwd, ["deno.json", "deno.jsonc"], files);
+  const found = findUp(cwd, ["deno.json", "deno.jsonc"], files2);
   if (found) {
     try {
       const config = JSON.parse(found.text.replace(/^\s*\/\/.*$/gm, ""));
@@ -8801,7 +9021,7 @@ function recipeFor(rules, target, depth = 0) {
   if (rule.recipe.length > 0 || depth > 3) return rule.recipe;
   return rule.deps.flatMap((dep) => recipeFor(rules, dep, depth + 1) ?? []);
 }
-function resolveMake(args, cwd, files) {
+function resolveMake(args, cwd, files2) {
   if (args.some(
     (a) => [
       "-n",
@@ -8811,7 +9031,11 @@ function resolveMake(args, cwd, files) {
       "-q",
       "--question",
       "-p",
-      "--print-data-base"
+      "--print-data-base",
+      "-v",
+      "--version",
+      "-h",
+      "--help"
     ].includes(a)
   )) {
     return void 0;
@@ -8844,7 +9068,7 @@ function resolveMake(args, cwd, files) {
     if (arg.startsWith("-") || arg.includes("=")) continue;
     targets.push(arg);
   }
-  const text = fileOption ? files.read(resolvePath(dir, fileOption)) : files.read(path.join(dir, "GNUmakefile")) ?? files.read(path.join(dir, "makefile")) ?? files.read(path.join(dir, "Makefile"));
+  const text = fileOption ? files2.read(resolvePath(dir, fileOption)) : files2.read(path.join(dir, "GNUmakefile")) ?? files2.read(path.join(dir, "makefile")) ?? files2.read(path.join(dir, "Makefile"));
   if (text === void 0)
     return { kind: "make-name", ...targets[0] ? { target: targets[0] } : {} };
   const parsed = parseMakefile(text);
@@ -8878,7 +9102,12 @@ var GRADLE_VALUE_OPTIONS = [
   "-D",
   "-P",
   "--priority",
-  "--include-build"
+  "--include-build",
+  "--configuration",
+  "--dependency",
+  "--task",
+  "--tests",
+  "--args"
 ];
 var MAVEN_VALUE_OPTIONS = [
   "-pl",
@@ -8900,8 +9129,7 @@ var MAVEN_VALUE_OPTIONS = [
   "--toolchains",
   "-b",
   "--builder",
-  "-D",
-  "-e"
+  "-D"
 ];
 function positionals(args, valueOptions) {
   const out = [];
@@ -8918,8 +9146,15 @@ function positionals(args, valueOptions) {
 function resolveTasks(program, args) {
   let tasks = [];
   if (program === "gradle") tasks = positionals(args, GRADLE_VALUE_OPTIONS);
-  else if (program === "mvn") tasks = positionals(args, MAVEN_VALUE_OPTIONS);
-  else if (program === "sbt") tasks = positionals(args, []).map((t) => t.replace(/^[^/]+\//, ""));
+  else if (program === "mvn") {
+    tasks = positionals(args, MAVEN_VALUE_OPTIONS);
+    if (args.some((a) => /^-D(skipTests|maven\.test\.skip)(=true)?$/.test(a)))
+      tasks = tasks.map((t) => t === "verify" ? "package" : t);
+  } else if (program === "lerna") {
+    const all = positionals(args, ["--scope", "--ignore", "--concurrency", "--since"]);
+    if (all[0] !== "run" || !all[1]) return void 0;
+    tasks = [all[1]];
+  } else if (program === "sbt") tasks = positionals(args, []).map((t) => t.replace(/^[^/]+\//, ""));
   else if (program === "turbo") {
     const all = positionals(args, [
       "--filter",
@@ -8998,14 +9233,14 @@ function resolveTasks(program, args) {
   if (tasks.length > 1) tasks = tasks.filter((t) => t !== "clean" && !t.endsWith(":clean"));
   return { kind: "tasks", runner: program, tasks };
 }
-function resolveGitCommit(args, cwd, files) {
+function resolveGitCommit(args, cwd, files2) {
   const sub = positionals(args, ["-C", "-c", "--git-dir", "--work-tree", "--namespace"])[0];
   if (sub !== "commit" || args.includes("--no-verify") || args.includes("-n")) return void 0;
-  const root = findUp(cwd, [".git/HEAD", ".git"], files)?.dir ?? cwd;
-  const husky = files.read(path.join(root, ".husky", "pre-commit"));
+  const root = findUp(cwd, [".git/HEAD", ".git"], files2)?.dir ?? cwd;
+  const husky = files2.read(path.join(root, ".husky", "pre-commit"));
   if (husky !== void 0)
     return { kind: "hook", name: ".husky/pre-commit", commands: [husky], cwd: root };
-  const lefthook = files.read(path.join(root, "lefthook.yml")) ?? files.read(path.join(root, "lefthook.yaml"));
+  const lefthook = files2.read(path.join(root, "lefthook.yml")) ?? files2.read(path.join(root, "lefthook.yaml"));
   if (lefthook !== void 0) {
     try {
       const doc = import_yaml.default.parse(lefthook);
@@ -9015,47 +9250,54 @@ function resolveGitCommit(args, cwd, files) {
     } catch {
     }
   }
-  if (files.read(path.join(root, ".pre-commit-config.yaml")) !== void 0) {
+  if (files2.read(path.join(root, ".pre-commit-config.yaml")) !== void 0) {
     return { kind: "hook", name: "pre-commit", commands: ["pre-commit run"], cwd: root };
   }
-  const gitHook = files.read(path.join(root, ".git", "hooks", "pre-commit"));
+  const gitHook = files2.read(path.join(root, ".git", "hooks", "pre-commit"));
   if (gitHook !== void 0)
     return { kind: "hook", name: ".git/hooks/pre-commit", commands: [gitHook], cwd: root };
   return void 0;
 }
-function resolve(argv, cwd, files) {
+function resolve(argv, cwd, files2) {
   const program = programName(argv[0] ?? "");
   const args = argv.slice(1);
   switch (program) {
     case "npm":
-      return resolveNpm(args, cwd, files);
+      return resolveNpm(args, cwd, files2);
     case "pnpm":
-      return resolvePnpm(args, cwd, files);
+      return resolvePnpm(args, cwd, files2);
     case "yarn":
-      return resolveYarn(args, cwd, files);
+      return resolveYarn(args, cwd, files2);
     case "bun":
-      return resolveBun(args, cwd, files);
+      return resolveBun(args, cwd, files2);
     case "deno":
-      return resolveDeno(args, cwd, files);
+      return resolveDeno(args, cwd, files2);
     case "make":
     case "gmake":
-      return resolveMake(args, cwd, files);
+      return resolveMake(args, cwd, files2);
     case "gradle":
     case "mvn":
     case "sbt":
     case "turbo":
     case "nx":
+    case "lerna":
       return resolveTasks(program, args);
     case "git":
-      return resolveGitCommit(args, cwd, files);
+      return resolveGitCommit(args, cwd, files2);
   }
   const file = scriptFile(argv);
   if (file) {
     const full = resolvePath(cwd, file);
-    const text = files.read(full);
-    if (text !== void 0) return { kind: "file", file, commands: [text], cwd };
+    const text = files2.read(full);
+    if (text !== void 0 && isShellScript(file, text))
+      return { kind: "file", file, commands: [text], cwd };
   }
   return void 0;
+}
+var SHELL_SHEBANG = /^#!\s*\S*\/(env\s+)?(sh|bash|zsh|dash|ksh)\b/;
+function isShellScript(file, text) {
+  if (text.startsWith("#!")) return SHELL_SHEBANG.test(text);
+  return /\.(sh|bash|zsh)$/.test(file);
 }
 
 // src/classify/rules.ts
@@ -9087,19 +9329,19 @@ version: 1
 #   tag       an extra tag on the step, like install
 #   tool      the check's name, when it isn't the program (go test is "go test")
 commands:
-  # --version, --help and friends only read.
-  - { phase: exploring, match: '^\\S+\\s+(--version|-v|-V|--help|-h|version|help|-version|--usage)$' }
+  # --version, --help and friends only read. For these programs -v and -V mean verbose.
+  - { phase: exploring, match: '^(?!(pytest|py\\.test|unittest|tox|nox|ctest|ninja|mypy|flake8|black|isort|pylint|behave|ansible-lint)\\s)\\S+\\s+(--version|-v|-V|--help|-h|version|help|-version|--usage)$' }
 
   # Lint and format
   - { phase: exploring, program: eslint, with: [--print-config] }
   - phase: lint
-    program: [eslint, prettier, oxlint, standard, xo, stylelint, markdownlint, markdownlint-cli2, htmlhint, jsonlint, yamllint, hadolint, shellcheck, shfmt, actionlint, editorconfig-checker, eclint, lint-staged, commitlint, knip, depcheck, sort-package-json, syncpack, cspell]
+    program: [eslint, prettier, oxlint, standard, xo, stylelint, markdownlint, markdownlint-cli2, htmlhint, jsonlint, yamllint, hadolint, shellcheck, shfmt, actionlint, editorconfig-checker, eclint, lint-staged, commitlint, knip, depcheck, sort-package-json, syncpack, cspell, swift-format]
   - { phase: lint, program: biome, args: ['check|lint|format|ci'] }
   - { phase: lint, program: ruff, args: ['check|format'] }
   - { phase: lint, program: [black, isort, flake8, pylint, mypy, pyright, basedpyright, pyflakes, pycodestyle, pydocstyle, bandit, autopep8, yapf, pyre, pytype, vulture] }
   - { phase: lint, program: [golangci-lint, gofmt, goimports, gofumpt, staticcheck, revive, errcheck, govulncheck] }
-  - { phase: lint, program: go, args: ['vet|fmt'], tool: go vet }
-  - { phase: lint, program: cargo, args: ['clippy|fmt|check|audit|deny|udeps'], tool: cargo clippy }
+  - { phase: lint, program: go, args: ['vet|fmt'], tool: 'go {1}' }
+  - { phase: lint, program: [cargo, cross], args: ['clippy|fmt|check|audit|deny|udeps|machete|semver-checks|hack'], tool: 'cargo {1}' }
   - { phase: lint, program: [rustfmt, clippy-driver] }
   - { phase: lint, program: [ktlint, detekt, ktfmt, swiftlint, swiftformat, clang-format, clang-tidy, cpplint, cppcheck] }
   - { phase: lint, program: swift, args: ['format'], tool: swift format }
@@ -9115,11 +9357,21 @@ commands:
   - { phase: lint, program: [flutter, dart], args: ['analyze|format'] }
   - { phase: lint, program: mix, args: ['format|credo|dialyzer'] }
   - { phase: lint, program: pre-commit, args: ['run'] }
-  - { phase: lint, program: xcrun, args: ['swift-format|swiftlint'] }
+  - { phase: lint, program: [ty, pyrefly], args: ['check'] }
+  - { phase: lint, program: [next, ng, vue-cli-service, expo], args: ['lint'] }
+  - { phase: lint, program: [nuxi, nuxt], args: ['typecheck'] }
+  - { phase: lint, program: xcodebuild, with: [analyze], tool: xcodebuild analyze }
+  - { phase: lint, match: '^(python\\S*\\s+)?(\\./)?manage\\.py\\s+check(\\s|$)', tool: django check }
+  - { phase: lint, match: '^(tox|nox)\\s(.*\\s)?(-e|-s|--session)\\s+\\S*(lint|mypy|typecheck|types|format|fmt|style|ruff|flake8|pylint|pre-commit)', tool: tox lint }
 
   # Running tests (before Build, so a few build-like commands with test flags land here)
   - { phase: exploring, program: [jest, vitest], with: [--listTests] }
   - { phase: exploring, program: [pytest, py.test], with: [--collect-only] }
+  - { phase: exploring, program: [pytest, py.test], with: [--co] }
+  - { phase: exploring, program: go, args: [test], with: [-list] }
+  - { phase: exploring, program: cargo, args: ['nextest', 'list'] }
+  - { phase: exploring, program: cargo, args: [test], with: [--list] }
+  - { phase: exploring, program: [swift, dotnet], args: [test], with: [--list-tests] }
   - { phase: build, program: go, args: [test], with: [-c], tool: go test -c }
   - { phase: build, program: cargo, args: ['test|nextest'], with: [--no-run] }
   - { phase: tests, program: [jest, vitest, mocha, ava, tap, jasmine, karma, uvu, cucumber-js, wdio, testcafe, nightwatch] }
@@ -9129,17 +9381,27 @@ commands:
   - { phase: tests, program: [bun, deno], args: ['test'] }
   - { phase: tests, program: [pytest, py.test, tox, nox, nose2, ward, behave] }
   - { phase: tests, program: unittest }
+  - { phase: tests, match: '^(python\\S*\\s+)?(\\./)?manage\\.py\\s+test(\\s|$)', tool: django test }
+  - { phase: tests, match: '^ruby\\s+(-I\\s*\\S+\\s+)*\\S*_test\\.rb', tool: minitest }
+  - { phase: tests, program: php, args: ['artisan', 'test'], tool: artisan test }
+  - { phase: tests, program: [ng, react-scripts, craco, vue-cli-service], args: ['test|test:*|e2e'] }
+  - { phase: tests, program: [hatch, rye, tuist], args: ['test'] }
+  - { phase: tests, program: fastlane, args: ['scan|test|tests'] }
   - { phase: tests, program: go, args: [test], tool: go test }
   - { phase: tests, program: [gotestsum, ginkgo] }
-  - { phase: tests, program: cargo, args: ['test|nextest|bench|miri'], tool: cargo test }
+  - { phase: tests, program: [cargo, cross], args: ['test|nextest|bench|miri|llvm-cov|tarpaulin|insta|mutants'], tool: cargo test }
+  - { phase: tests, program: cargo, args: ['xtask|make', 'test|tests|ci'], tool: cargo test }
   - { phase: tests, program: dotnet, args: ['test|vstest'], tool: dotnet test }
+  - { phase: tests, program: dotnet, args: ['watch', 'test'], tool: dotnet test }
   - { phase: tests, program: xcodebuild, with: [test], tool: xcodebuild test }
   - { phase: tests, program: xcodebuild, with: [test-without-building], tool: xcodebuild test }
   - { phase: tests, program: swift, args: [test], tool: swift test }
   - { phase: tests, program: [bazel, bazelisk], args: [test], tool: bazel test }
   - { phase: tests, program: [rspec, phpunit, pest, ctest, busted, prove] }
-  - { phase: tests, program: rails, args: ['test|spec'] }
-  - { phase: tests, program: rake, args: ['test|spec|test:*|spec:*'] }
+  - { phase: tests, program: rails, args: ['test|test:*|spec|spec:*'] }
+  - { phase: tests, program: meson, args: [test] }
+  - { phase: tests, program: ninja, args: ['test|check'] }
+  - { phase: tests, match: '^cmake\\s.*--target\\s+(test|check|RUN_TESTS)(\\s|$)', tool: ctest }
   - { phase: tests, program: mix, args: ['test'] }
   - { phase: tests, program: [flutter, dart], args: ['test'] }
   - { phase: tests, program: [k6, artillery], args: ['run'] }
@@ -9148,44 +9410,71 @@ commands:
   - { phase: tests, program: gh, args: ['pr', 'checks'], with: [--watch], tool: ci }
 
   # Build
-  - { phase: build, program: [tsc, vue-tsc, tsup, unbuild, swc, babel, rollup, webpack, esbuild, parcel, rspack, rolldown, microbundle, ncc, pkg] }
-  - { phase: build, program: [vite, next, nuxt, astro, remix, svelte-kit, react-router, gatsby, ng, react-scripts, vue-cli-service, electron-builder, expo], args: [build] }
+  - { phase: build, program: [tsc, vue-tsc, tsup, unbuild, swc, babel, rollup, webpack, esbuild, parcel, rspack, rolldown, microbundle, ncc, pkg, electron-builder] }
+  - { phase: build, program: [vite, next, nuxt, astro, remix, svelte-kit, react-router, gatsby, ng, react-scripts, vue-cli-service, expo, storybook, craco], args: [build] }
+  - { phase: build, program: remix, args: ['vite:build'] }
+  - { phase: build, program: expo, args: ['export|prebuild'] }
+  - { phase: build, program: [gcc, g++, cc, c++, clang, clang++, rustc, javac, kotlinc, swiftc, scalac, zig, tinygo] }
+  - { phase: build, program: build, tool: python -m build }
+  - { phase: build, program: [uv, poetry, hatch, pdm, rye], args: [build] }
+  - { phase: build, program: maturin, args: ['build|develop'] }
   - { phase: build, program: vite, args: ['optimize'] }
-  - { phase: build, program: go, args: ['build|install|generate'], tool: go build }
-  - { phase: build, program: cargo, args: ['build|install|doc'], tool: cargo build }
-  - { phase: build, program: dotnet, args: ['build|publish|pack|msbuild'], tool: dotnet build }
-  - { phase: build, program: [msbuild, xbuild] }
-  - { phase: build, program: xcodebuild, without: [-list, -showsdks, -version, -showBuildSettings], tool: xcodebuild build }
+  - { phase: build, program: go, args: ['build|install|generate'], tool: 'go {1}' }
+  - { phase: build, program: [cargo, cross], args: ['build|install|doc'], tool: 'cargo {1}' }
+  - { phase: build, program: dotnet, args: ['build|publish|pack|msbuild'], tool: 'dotnet {1}' }
+  - { phase: build, program: [msbuild, MSBuild, xbuild] }
+  - { phase: build, program: xcodebuild, with: [-resolvePackageDependencies], tag: install, tool: install }
+  - { phase: build, program: xcodebuild, without: [-list, -showsdks, -version, -showBuildSettings, -showdestinations, -showTestPlans, -showBuildSettingsForIndex, -showComponent, -help, -usage, -license, -checkFirstLaunchStatus], tool: xcodebuild build }
   - { phase: exploring, program: xcodebuild }
   - { phase: build, program: swift, args: ['build'], tool: swift build }
   - { phase: build, program: [bazel, bazelisk, buck, buck2, pants], args: ['build'], tool: bazel build }
   - { phase: build, program: [cmake, ninja, meson, scons, xmake, premake5, autoreconf, configure] }
   - { phase: build, program: [docker, podman], args: ['build'], tool: docker build }
   - { phase: build, program: [docker, podman], args: ['buildx|compose|image', 'build'], tool: docker build }
+  - { phase: build, program: docker-compose, args: ['build'], tool: docker build }
+  - { phase: build, match: '^(docker\\s+compose|docker-compose)\\s(.*\\s)?up\\s(.*\\s)?--build', tool: docker build }
   - { phase: build, program: [protoc, flatc, thrift, graphql-codegen, openapi-generator, openapi-generator-cli, sqlc, wire, mockgen, stringer] }
   - { phase: build, program: buf, args: ['generate'] }
   - { phase: build, program: prisma, args: ['generate'] }
+  - { phase: build, program: [dart, flutter], args: ['run|pub', 'build_runner'] }
   - { phase: build, program: flutter, args: ['build|pub'] }
+  - { phase: build, program: dart, args: ['pub', 'get|upgrade|add|remove|downgrade'], tag: install, tool: install }
   - { phase: build, program: mix, args: ['compile|deps.get|release'] }
   - { phase: build, program: [pod, carthage], args: ['install|update|bootstrap'], tag: install }
   - { phase: build, program: [tuist, xcodegen], args: ['generate|install|fetch|build'] }
+  - { phase: build, program: xcodegen, only: [] }
+  - { phase: build, program: fastlane, args: ['gym|build|build_app'] }
   - { phase: build, program: deno, args: ['compile'] }
   - { phase: build, program: bun, args: ['build'] }
 
   # Installing dependencies counts as Build, tagged install
   - { phase: build, program: [npm, pnpm, bun], args: ['install|i|ci|add|remove|rm|uninstall|update|up|upgrade|link|rebuild|prune|dedupe'], tag: install, tool: install }
-  - { phase: build, program: yarn, only: [], tag: install, tool: install }
+  - { phase: build, match: '^yarn(\\s+--?[a-z][a-z-]*)*$', tag: install, tool: install }
   - { phase: build, program: yarn, args: ['install|add|remove|upgrade|up|dedupe'], tag: install, tool: install }
   - { phase: build, program: [pip, pip3, pipx, uv, poetry, pipenv, pdm, conda, mamba, micromamba], args: ['install|sync|add|lock|update|uninstall|remove|venv|create'], tag: install, tool: install }
   - { phase: build, program: uv, args: ['pip', 'install|sync|compile'], tag: install, tool: install }
+  - { phase: build, program: uv, args: ['tool', 'install|upgrade'], tag: install, tool: install }
+  - { phase: build, program: [conda, mamba, micromamba], args: ['env', 'create|update'], tag: install, tool: install }
   - { phase: build, program: [bundle, gem, composer], args: ['install|update|add|require'], tag: install, tool: install }
-  - { phase: build, program: go, args: ['mod|get'], tag: install, tool: install }
+  - { phase: build, match: '^bundle(\\s+(--?[a-z][a-z-]*|\\d+))*$', tag: install, tool: install }
+  - { phase: build, program: swift, args: ['package', 'resolve|update'], tag: install, tool: install }
+  - { phase: exploring, program: go, args: ['mod', 'why|graph|verify'] }
+  - { phase: writing, program: go, args: ['mod', 'edit|init'] }
+  - { phase: build, program: go, args: ['mod', 'tidy|download|vendor'], tag: install, tool: install }
+  - { phase: build, program: go, args: ['get'], tag: install, tool: install }
   - { phase: build, program: cargo, args: ['fetch|update|add|vendor'], tag: install, tool: install }
+  - { phase: writing, program: dotnet, args: ['add|remove', 'reference'] }
   - { phase: build, program: dotnet, args: ['restore|add|tool'], tag: install, tool: install }
   - { phase: build, program: [brew, apt, apt-get, dnf, yum, apk, port], args: ['install|upgrade|reinstall'], tag: install, tool: install }
   - { phase: build, program: playwright, args: ['install'], tag: install, tool: install }
   - { phase: build, program: [docker, podman], args: ['pull'], tag: install, tool: install }
-  - { phase: build, program: [rustup, nvm, fnm, volta, pyenv, rbenv, asdf, mise, sdk], args: ['install|add|use|toolchain|target|component'], tag: install, tool: install }
+  - { phase: build, program: [docker, podman], args: ['compose', 'pull'], tag: install, tool: install }
+  - { phase: build, program: docker-compose, args: ['pull'], tag: install, tool: install }
+  - { phase: exploring, program: rustup, args: ['show|which|doc|check'] }
+  - { phase: exploring, match: '^rustup\\s+\\S+\\s+list(\\s|$)' }
+  - { phase: exploring, program: [nvm, fnm, pyenv, rbenv, asdf, mise, sdk, volta], args: ['ls|list|ls-remote|current|which|version|versions|list-remote'] }
+  - { phase: neutral, program: [nvm, fnm, pyenv, rbenv, asdf, mise, sdk], args: ['use|shell|local|global|deactivate'] }
+  - { phase: build, program: [rustup, nvm, fnm, volta, pyenv, rbenv, asdf, mise, sdk], args: ['install|add|toolchain|target|component'], tag: install, tool: install }
 
   # Shell commands that only read
   - phase: exploring
@@ -9194,28 +9483,33 @@ commands:
   - { phase: exploring, program: command, with: [-v] }
   - { phase: exploring, program: [make, gmake], with: [-n] }
   - { phase: exploring, match: '^(gcloud|aws|az|doctl|flyctl|heroku|vercel|netlify)\\s(\\S+\\s)*(list|describe|read|get|show|status|logs|print-access-token|print-identity-token|info|get-[a-z-]+|describe-[a-z-]+|list-[a-z-]+)(\\s|$)' }
-  - { phase: writing, match: '^(sed|gsed)(\\s.*)?\\s(-i\\S*|--in-place\\S*)(\\s|$)' }
-  - { phase: writing, match: '^perl(\\s.*)?\\s-[a-zA-Z]*i' }
   - { phase: exploring, program: [sed, gsed, awk, gawk, nawk, mawk, perl] }
   - phase: exploring
     program: git
     args: ['status|log|diff|show|blame|annotate|rev-parse|ls-files|ls-tree|ls-remote|grep|describe|shortlog|reflog|cat-file|whatchanged|range-diff|merge-base|name-rev|rev-list|count-objects|check-ignore|show-ref|for-each-ref|var|help|version|fetch']
   - { phase: exploring, program: git, args: ['stash|worktree|submodule|notes', 'list|show|status'] }
-  - { phase: exploring, program: git, args: ['config'], with: [--get] }
-  - { phase: exploring, program: git, args: ['config'], with: [--list] }
+  - { phase: exploring, match: '^git config\\s(.*\\s)?(--get(-all|-regexp|-urlmatch|-color|colorbool)?|--list|-l)(\\s|$)' }
+  - { phase: exploring, match: '^git config(\\s+--(global|local|system|worktree|show-origin|show-scope|includes|null|name-only))*\\s+[A-Za-z][\\w-]*\\.[\\w.-]+$' }
   - { phase: exploring, program: git, args: ['tag'], with: [-l] }
   - { phase: exploring, match: '^git (branch|tag|remote)( -[a-zA-Z-]+)*$' }
+  - { phase: exploring, match: '^git (branch|tag)\\s(.*\\s)?--(list|contains|no-contains|merged|no-merged|sort|points-at|show-current|format)(\\s|=|$)' }
+  - { phase: exploring, program: git, args: ['remote', 'get-url|show'] }
   - { phase: exploring, program: gh, args: ['pr|issue|run|repo|release|workflow|search|api|gist|label|cache', 'view|list|diff|checks|status|watch|search|download'] }
   - { phase: exploring, program: gh, args: ['api'] }
   - { phase: exploring, program: gh, args: ['auth', 'status|token'] }
   - { phase: exploring, program: [npm, pnpm, yarn, bun], args: ['ls|list|why|view|info|show|outdated|audit|explain|query|search|config|bin|root|prefix|pkg|licenses|doctor'] }
+  - { phase: exploring, program: uv, args: ['pip', 'list|show|freeze|tree|check'] }
   - { phase: exploring, program: [pip, pip3, uv, poetry, conda], args: ['list|show|freeze|check|tree|info|search|env'] }
+  - { phase: exploring, program: swift, args: ['package', 'describe|dump-package|show-dependencies|show-executables|tools-version'] }
   - { phase: exploring, program: go, args: ['list|env|doc|version|tool'] }
   - { phase: exploring, program: cargo, args: ['tree|metadata|search|locate-project|pkgid|info'] }
   - { phase: exploring, program: [docker, podman], args: ['ps|images|logs|inspect|stats|top|port|history|version|info|context'] }
   - { phase: exploring, program: [docker, podman], args: ['compose', 'ps|logs|config|images|ls'] }
+  - { phase: exploring, program: docker-compose, args: ['ps|logs|config|images|ls|top|version'] }
   - { phase: exploring, program: kubectl, args: ['get|describe|logs|top|explain|version|api-resources|config|auth|events'] }
-  - { phase: exploring, program: xcrun, args: ['simctl', 'list'] }
+  - { phase: exploring, program: simctl, args: ['list'] }
+  - { phase: exploring, program: xcresulttool, args: ['get|export|metadata|graph|formatDescription'] }
+  - { phase: exploring, program: xcrun }
   - { phase: exploring, program: [terraform, tofu], args: ['show|output|state|providers|version|graph'] }
   - { phase: exploring, program: coverage, args: ['report|html|xml|json'] }
   - { phase: exploring, match: '^tar\\s+-?[a-zA-Z]*t' }
@@ -9237,14 +9531,14 @@ commands:
 tasks:
   - { phase: exploring, match: '^(tasks|help|dependencies|dependencyInsight|properties|projects|buildEnvironment|outgoingVariants|resolvableConfigurations|javaToolchains|model|dependency:tree|dependency:list|help:effective-pom|versions:display-dependency-updates)$' }
   - { phase: lint, match: '^(lint[A-Za-z]*|ktlint[A-Za-z]*|detekt[A-Za-z]*|spotless[A-Za-z]*|spotless:(check|apply)|checkstyle[A-Za-z]*|checkstyle:check|pmd[A-Za-z]*|pmd:check|spotbugs[A-Za-z]*|spotbugs:check|ktfmt[A-Za-z]*|format[A-Za-z]*|typecheck|type-check|tsc|check-types|checkTypes|prettier|eslint|fmt)$' }
-  - { phase: build, match: '^(build[A-Za-z]*|assemble[A-Za-z]*|bundle[A-Za-z]*|compile[A-Za-z]*|jar|bootJar|shadowJar|war|ear|dist[A-Za-z]*|install[A-Za-z]*|publish[A-Za-z]*|package|deploy|generate[A-Za-z]*|kapt[A-Za-z]*|ksp[A-Za-z]*|nativeCompile|clean|prepare|test-compile|process-resources|codegen)$' }
-  - { phase: tests, match: '^(test|tests|check|verify|connectedCheck|integration-test|e2e|spec|coverage|test[A-Z][A-Za-z]*|test:.*|[a-z][A-Za-z]*Test|[a-z][A-Za-z]*Tests|connected[A-Za-z]*Test|jacoco[A-Za-z]*|kover[A-Za-z]*|surefire:test|failsafe:integration-test|failsafe:verify)$' }
+  - { phase: build, match: '^(build[A-Za-z]*|assemble[A-Za-z]*|bundle[A-Za-z]*|compile[A-Za-z]*|jar|bootJar|shadowJar|war|ear|dist[A-Za-z]*|install[A-Za-z]*|publish[A-Za-z]*|package|deploy|generate[A-Za-z]*|kapt[A-Za-z]*|ksp[A-Za-z]*|nativeCompile|clean|prepare|test-compile|process-resources|codegen|[a-z][A-Za-z]*Classes)$' }
+  - { phase: tests, match: '^(test|tests|check|verify|connectedCheck|integration-test|e2e|spec|coverage|test[A-Z][A-Za-z0-9]*|test:.*|[a-z][A-Za-z0-9]*Tests?|connected[A-Za-z]*Test|(verify|record|validate)(Paparazzi|Roborazzi)[A-Za-z0-9]*|jacoco[A-Za-z]*|kover[A-Za-z]*|surefire:test|failsafe:integration-test|failsafe:verify)$' }
 
 # Names of npm/pnpm/yarn/bun scripts and make targets, used only when the file that defines them
 # can't be read. Steps decided this way are tagged by-name.
 scripts:
-  - { phase: lint, match: '^(lint|lint:.*|.*:lint|format|format:.*|fmt|prettier|eslint|typecheck|type-check|types|tsc|check-types|check:types|stylelint|biome)$' }
-  - { phase: tests, match: '^(test|tests|test:.*|.*:test|spec|e2e|e2e:.*|unit|integration|coverage|cy:run|vitest|jest)$' }
+  - { phase: lint, match: '^(lint|lint:.*|.*:lint|format|format:.*|fmt|prettier|eslint|typecheck|type-check|types|tsc|check-types|check:types|stylelint|biome|rubocop|ruff|black|mypy|pylint|flake8|clippy|style)$' }
+  - { phase: tests, match: '^(test|tests|test:.*|.*:test|spec|specs|e2e|e2e:.*|unit|integration|coverage|cy:run|vitest|jest|pytest|check|verify|validate|ci)$' }
   - { phase: build, match: '^(build|build:.*|.*:build|compile|bundle|dist|prepare|prepack|package|generate|codegen|install|deps|all)$' }
 
 # Tool calls other than Bash, by name: exact names, or a regex in match.
@@ -9280,7 +9574,11 @@ testFiles:
   - '**/*_test.rb'
   - '**/test/**'
   - '**/tests/**'
-  - '**/spec/**'
+  - '**/spec/**/*.{rb,js,jsx,ts,tsx,mjs,cjs,py,ex,exs,php}'
+  - '**/tests.py'
+  - '**/testdata/**'
+  - '**/*.cy.{js,jsx,ts,tsx}'
+  - '**/__snapshots__/**'
   - '**/e2e/**'
   - '**/*_test.{c,cc,cpp,rs,exs,dart}'
   - '**/*.test.{c,cc,cpp}'
@@ -9291,27 +9589,41 @@ failurePatterns:
   - { tool: vitest, pattern: '(Test Files|Tests)\\s+(\\d+ failed|.*\\b\\d+ failed)' }
   - { tool: jest, pattern: 'Tests:\\s+\\d+ failed' }
   - { tool: mocha, pattern: '\\b\\d+ failing\\b' }
-  - { tool: node, pattern: '(?m)^# fail [1-9]' }
-  - { tool: pytest, pattern: '(?m)^(=+ .*\\b\\d+ (failed|error)|FAILED |ERROR )' }
+  - { tool: node, pattern: '(?m)^(# fail [1-9]|\u2139 fail [1-9])' }
+  - { tool: bun, pattern: '(?m)^\\s*[1-9]\\d* fail\\b' }
+  - { tool: playwright, pattern: '(?m)^\\s+[1-9]\\d* failed' }
+  - { tool: pytest, pattern: '(?m)^(=+ .*\\b\\d+ (failed|error)|FAILED |ERROR \\S+(::|\\.py))' }
+  - { tool: tox, pattern: '(?m)evaluation failed|^ERROR:\\s+\\S+: (commands failed|exit \\d+)' }
+  - { tool: rspec, pattern: '\\d+ examples?, [1-9]\\d* failures?' }
+  - { tool: rails, pattern: '\\d+ runs, \\d+ assertions, ([1-9]\\d* failures|\\d+ failures, [1-9]\\d* errors)' }
+  - { tool: minitest, pattern: '\\d+ runs, \\d+ assertions, ([1-9]\\d* failures|\\d+ failures, [1-9]\\d* errors)' }
+  - { tool: phpunit, pattern: '(?m)^(FAILURES!|ERRORS!)' }
+  - { tool: ctest, pattern: 'tests failed out of' }
   - { tool: go test, pattern: '(?m)^(FAIL|--- FAIL)\\b' }
+  - { tool: go build, pattern: '(?m)^\\S+\\.go:\\d+:\\d+: ' }
+  - { tool: go vet, pattern: '(?m)^\\S+\\.go:\\d+:\\d+: ' }
   - { tool: cargo test, pattern: 'test result: FAILED' }
-  - { tool: cargo build, pattern: 'error(\\[E\\d{4}\\])?: ' }
+  - { tool: cargo build, pattern: '(?m)^error(\\[E\\d{4}\\])?: ' }
+  - { tool: cargo check, pattern: '(?m)^error(\\[E\\d{4}\\])?: ' }
   - { tool: cargo clippy, pattern: '(?m)^error(\\[|:)' }
   - { tool: tsc, pattern: 'error TS\\d+' }
   - { tool: tsc --noEmit, pattern: 'error TS\\d+' }
-  - { tool: eslint, pattern: '\\d+ problems? \\(\\d+ errors?' }
+  - { tool: eslint, pattern: '\\d+ problems? \\([1-9]\\d* errors?' }
   - { tool: prettier, pattern: 'Code style issues found|\\[error\\]' }
-  - { tool: ruff, pattern: 'Found \\d+ errors?|Would reformat' }
+  - { tool: ruff, pattern: 'Found \\d+ errors?\\b(?! \\(\\d+ fixed, 0 remaining\\))|Would reformat' }
   - { tool: mypy, pattern: 'Found \\d+ errors?' }
+  - { tool: pyright, pattern: '(?m)^\\s*[1-9]\\d* errors?, ' }
+  - { tool: golangci-lint, pattern: '(?m)^\\d+ issues?:' }
+  - { tool: rubocop, pattern: '[1-9]\\d* offenses? detected' }
   - { tool: gradle, pattern: 'BUILD FAILED|FAILURE: Build failed' }
   - { tool: mvn, pattern: 'BUILD FAILURE' }
   - { tool: xcodebuild test, pattern: '\\*\\* TEST FAILED \\*\\*|Testing failed' }
   - { tool: xcodebuild build, pattern: '\\*\\* BUILD FAILED \\*\\*' }
   - { tool: dotnet build, pattern: 'Build FAILED|error [A-Z]{2,}\\d+' }
   - { tool: dotnet test, pattern: 'Failed!\\s+-\\s+Failed:\\s+[1-9]' }
-  - { tool: swift test, pattern: 'error: |Test Suite .* failed' }
+  - { tool: swift test, pattern: '(?m)^(\\S+:\\d+:\\d+: )?error: |Test Suite .\\S+. failed|\u2718 Test run with .* failed' }
   - { tool: ci, pattern: 'completed with .failure.|X .* failed|run failed' }
-  - { tool: '*', pattern: 'ELIFECYCLE\\s+(Command|Test) failed|npm ERR! (code|Test failed)|\\bFAILED\\b|BUILD FAILED|error\\[' }
+  - { tool: '*', pattern: '(?m)ELIFECYCLE\\s+(Command|Test) failed|npm ERR! (code|Test failed)|npm error (code \\d|Lifecycle script)|error Command failed with exit code|ERR_PNPM_\\w+|^\\s*ERROR\\s+run failed|make(\\[\\d+\\])?: \\*\\*\\* \\[.*\\] Error \\d+|^FAILED\\b|BUILD FAILED|^error\\[' }
 `;
 
 // src/classify/rules.ts
@@ -9432,12 +9744,12 @@ function defaultRules() {
   defaults ??= compileRules([{ text: default_rules_default, source: DEFAULT_RULES_SOURCE }]);
   return defaults;
 }
-function loadRules(cwd, files) {
+function loadRules(cwd, files2) {
   if (!cwd) return defaultRules();
   let dir = path2.resolve(cwd);
   for (let i = 0; i < 12; i++) {
     const file = path2.join(dir, ".awf", "rules.yaml");
-    const text = files.read(file);
+    const text = files2.read(file);
     if (text !== void 0) {
       return compileRules([
         { text, source: file },
@@ -9472,6 +9784,170 @@ function sleepSeconds(arg) {
   return Number(match[1]) * (unit[match[2] ?? ""] ?? 1);
 }
 var BACKGROUND_TOOLS = /* @__PURE__ */ new Set(["TaskOutput", "BashOutput", "KillShell", "KillBash", "TaskStop"]);
+var DOCKER_OPTIONS = [
+  "-H",
+  "--host",
+  "--context",
+  "-c",
+  "--config",
+  "-l",
+  "--log-level",
+  "-f",
+  "--file",
+  "-p",
+  "--project-name",
+  "--profile",
+  "--env-file",
+  "--project-directory"
+];
+var VALUE_OPTIONS = {
+  kubectl: [
+    "-n",
+    "--namespace",
+    "--context",
+    "--kubeconfig",
+    "--cluster",
+    "--user",
+    "-s",
+    "--server"
+  ],
+  gh: ["-R", "--repo"],
+  docker: DOCKER_OPTIONS,
+  podman: DOCKER_OPTIONS,
+  "docker-compose": DOCKER_OPTIONS,
+  bun: ["--cwd"],
+  cargo: ["--color", "--config", "-Z", "-C"],
+  cross: ["--color", "--config", "-Z"],
+  ninja: ["-C", "-f", "-j", "-k", "-l", "-d", "-t", "-w"],
+  meson: ["-C"],
+  swift: ["--package-path", "--scratch-path", "-c", "--configuration"],
+  terraform: ["-chdir"],
+  dotnet: ["--project", "-p"],
+  xcodebuild: [
+    "-scheme",
+    "-project",
+    "-workspace",
+    "-configuration",
+    "-destination",
+    "-sdk",
+    "-target",
+    "-derivedDataPath",
+    "-resultBundlePath",
+    "-testPlan",
+    "-xcconfig",
+    "-arch",
+    "-toolchain",
+    "-archivePath",
+    "-exportPath",
+    "-exportOptionsPlist",
+    "-parallel-testing-worker-count"
+  ],
+  tox: ["-e", "-c", "--conf"],
+  nox: ["-s", "--session", "-f", "--noxfile"]
+};
+function positionalArgs(program, args) {
+  const valued = VALUE_OPTIONS[program] ?? [];
+  const out = [];
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (valued.includes(arg)) i++;
+    else if (!arg.startsWith("-") && !arg.startsWith("+")) out.push(arg);
+  }
+  return out;
+}
+var TASK_RUNNERS = {
+  just: { valueOptions: ["-f", "--justfile", "-d", "--working-directory", "--set"] },
+  task: { valueOptions: ["-t", "--taskfile", "-d", "--dir"] },
+  mise: { sub: ["run", "r"] },
+  poe: {},
+  devbox: { sub: ["run"] },
+  composer: { valueOptions: ["-d", "--working-dir"] },
+  rake: { valueOptions: ["-f", "--rakefile"] },
+  invoke: {},
+  inv: {}
+};
+var COMPOSER_COMMANDS = /* @__PURE__ */ new Set([
+  "install",
+  "i",
+  "update",
+  "u",
+  "upgrade",
+  "require",
+  "r",
+  "remove",
+  "rm",
+  "dump-autoload",
+  "dumpautoload",
+  "show",
+  "info",
+  "outdated",
+  "validate",
+  "diagnose",
+  "config",
+  "create-project",
+  "init",
+  "search",
+  "depends",
+  "why",
+  "prohibits",
+  "why-not",
+  "audit",
+  "global",
+  "exec",
+  "archive",
+  "licenses",
+  "status",
+  "self-update",
+  "clear-cache",
+  "check-platform-reqs",
+  "fund",
+  "bump",
+  "reinstall",
+  "list",
+  "help"
+]);
+var SCRIPT_RUNNERS = /* @__PURE__ */ new Set([
+  "run-s",
+  "run-p",
+  "npm-run-all",
+  "npm-run-all2",
+  "concurrently",
+  "start-server-and-test",
+  "server-test",
+  "start-test"
+]);
+function inPlaceEdit(program, args) {
+  const positional = args.filter((a) => !a.startsWith("-"));
+  if (program === "sed" || program === "gsed") {
+    const inPlace = args.some((a) => /^-[a-zA-Z]*i/.test(a) || a.startsWith("--in-place"));
+    if (!inPlace) return void 0;
+    const script = args.some((a) => a === "-e" || a === "-f" || a === "--expression") ? 0 : 1;
+    return positional.slice(script);
+  }
+  if (program === "perl") {
+    const inPlace = args.some((a) => {
+      if (!/^-[^-]/.test(a)) return false;
+      for (const letter of a.slice(1)) {
+        if (letter === "i") return true;
+        if ("MmIdDxeEFlC0".includes(letter)) return false;
+      }
+      return false;
+    });
+    return inPlace ? positional.slice(1) : void 0;
+  }
+  if (program === "yq") {
+    return args.some((a) => a === "-i" || a === "--inplace") ? positional.slice(1) : void 0;
+  }
+  if (program === "gawk" || program === "awk") {
+    const i = args.indexOf("-i");
+    return i >= 0 && args[i + 1] === "inplace" ? positional.slice(2) : void 0;
+  }
+  if (program === "sort") {
+    const i = args.indexOf("-o");
+    return i >= 0 && args[i + 1] ? [args[i + 1]] : void 0;
+  }
+  return void 0;
+}
 var WRITERS = /* @__PURE__ */ new Set([
   "mkdir",
   "touch",
@@ -9492,15 +9968,18 @@ var WRITERS = /* @__PURE__ */ new Set([
   "unzip"
 ]);
 var Classifier = class {
-  constructor(rules, files) {
+  constructor(rules, files2) {
     this.rules = rules;
-    this.files = files;
+    this.files = files2;
   }
   rules;
   files;
   /** Classifies one Bash command run in `cwd`. */
   command(text, cwd) {
-    return this.combine(this.parts(text, cwd, 0), cwd);
+    const parts = this.parts(text, cwd, 0);
+    const info = this.combine(parts, cwd);
+    if (info.checks.length > 0) info.exit = exitTrust(splitCommand(text), parts);
+    return info;
   }
   isTestFile(file) {
     return matchesAny(file, this.rules.testFiles);
@@ -9508,11 +9987,13 @@ var Classifier = class {
   parts(text, cwd, depth) {
     const parts = [];
     const simples = splitCommand(text);
-    for (const simple of simples) {
-      if (simple.argv[0] === "cd") continue;
+    simples.forEach((simple, index) => {
+      if (simple.argv[0] === "cd") return;
       const where = simple.cd.reduce((dir, target) => resolvePath(dir, target), cwd);
-      parts.push(...this.simple(simple, where, depth));
-    }
+      const made = this.simple(simple, where, depth);
+      if (depth === 0) for (const part of made) part.index = index;
+      parts.push(...made);
+    });
     const sleeps = simples.map((s) => unwrap(s.argv).argv).filter((a) => programName(a[0] ?? "") === "sleep");
     const loop = /(^|[\s;&|])(while|until|for)\s[\s\S]*(^|[\s;])do(\s|$)/m.test(
       stripHeredocs(text)
@@ -9545,11 +10026,100 @@ var Classifier = class {
       ];
     }
     if (depth < MAX_DEPTH) {
+      const expanded = this.expanded(argv, program, cwd, depth, simple.piped);
+      if (expanded) return [...out, ...expanded];
       const resolved = this.resolved(argv, cwd, depth, simple.piped);
       if (resolved) return [...out, ...resolved];
     }
     out.push(this.byRule(argv, program, simple.piped, []));
     return out;
+  }
+  /** The phase a script, target or task name suggests: its first word decides (build:test is a build). */
+  byName(name) {
+    const first = name.split(/[:_-]/)[0] ?? name;
+    return this.rules.scripts.find((r) => r.match.test(first)) ?? this.rules.scripts.find((r) => r.match.test(name));
+  }
+  named(runner, name, piped, tag) {
+    const rule = this.byName(name);
+    if (!rule) return { ...this.unmatched(runner, piped), tags: [tag] };
+    return this.part(rule.phase, runner, rule.id, piped, ["by-name", tag], `${runner} ${name}`);
+  }
+  /** Commands that run other commands awf can name: find -exec, task runners, script runners. */
+  expanded(argv, program, cwd, depth, piped) {
+    const args = argv.slice(1);
+    if (program === "find" || program === "fd" || program === "fdfind") {
+      const at = args.findIndex(
+        (a) => ["-exec", "-execdir", "-ok", "-okdir", "-x", "--exec", "-X", "--exec-batch"].includes(a)
+      );
+      const parts = [];
+      if (args.includes("-delete"))
+        parts.push({ ...this.part("writing", program, "find-delete", piped, [], program) });
+      if (at >= 0) {
+        const rest = args.slice(at + 1);
+        const stop = rest.findIndex((a) => a === ";" || a === "+");
+        const inner = stop >= 0 ? rest.slice(0, stop) : rest;
+        if (inner.length > 0)
+          parts.push(...this.simple({ argv: inner, writes: [], cd: [], piped }, cwd, depth + 1));
+      }
+      if (parts.length === 0) return void 0;
+      return [
+        this.byRule(
+          [argv[0], ...args.slice(0, at >= 0 ? at : args.length)],
+          program,
+          piped,
+          []
+        ),
+        ...parts
+      ];
+    }
+    const runner = TASK_RUNNERS[program];
+    if (runner) {
+      let rest = args;
+      if (runner.sub) {
+        const at = rest.findIndex((a) => !a.startsWith("-"));
+        if (at < 0 || !runner.sub.includes(rest[at])) return void 0;
+        rest = rest.slice(at + 1);
+      }
+      const names = positionals2(rest, runner.valueOptions ?? []).filter((n) => !n.includes("="));
+      if (program === "composer") {
+        if (["run", "run-script"].includes(names[0] ?? "")) names.shift();
+        else if (COMPOSER_COMMANDS.has(names[0] ?? "")) return void 0;
+      }
+      const name = names[0];
+      if (!name) return void 0;
+      return [this.named(program, name, piped, `task:${name}`)];
+    }
+    if (SCRIPT_RUNNERS.has(program)) {
+      const valueOptions = program === "concurrently" ? [
+        "-n",
+        "--names",
+        "-c",
+        "--prefix-colors",
+        "-p",
+        "--prefix",
+        "-m",
+        "--max-processes",
+        "--success",
+        "-t",
+        "--timestamp-format",
+        "--restart-tries",
+        "--restart-after"
+      ] : ["--max-parallel", "--npm-path"];
+      let names = positionals2(args, valueOptions);
+      if (program.includes("server") || program.endsWith("start-test")) names = names.slice(-1);
+      if (names.length === 0) return void 0;
+      const parts = names.flatMap((name) => {
+        const shorthand = /^(npm|pnpm|yarn|bun):(.+)$/.exec(name);
+        const command = program === "concurrently" && !shorthand ? name : `npm run ${shorthand?.[2] ?? name}`;
+        return this.parts(command, cwd, depth + 1);
+      });
+      return parts.map((p) => ({
+        ...p,
+        piped: p.piped || piped,
+        tags: unique([...p.tags, `via:${program}`])
+      }));
+    }
+    return void 0;
   }
   /** Scripts, make targets, task runners, hooks and script files, classified by what they run. */
   resolved(argv, cwd, depth, piped) {
@@ -9583,7 +10153,7 @@ var Classifier = class {
         return tagged(parts, `via:${program}`);
       }
       case "script-name": {
-        const rule = this.rules.scripts.find((r) => r.match.test(res.name));
+        const rule = this.byName(res.name);
         if (rule)
           return [
             this.part(
@@ -9603,7 +10173,7 @@ var Classifier = class {
       case "make-name": {
         if (!res.target)
           return [this.part("build", "make", "make:default", piped, ["by-default"], "make")];
-        const rule = this.rules.scripts.find((r) => r.match.test(res.target));
+        const rule = this.byName(res.target);
         if (rule)
           return [
             this.part(
@@ -9619,6 +10189,13 @@ var Classifier = class {
       }
       case "tasks": {
         return res.tasks.map((task) => {
+          if (["turbo", "nx", "lerna"].includes(res.runner))
+            return this.named(
+              res.runner,
+              task.replace(/^[^:]+:(?=[^:]+:)/, ""),
+              piped,
+              `task:${task}`
+            );
           const last = task.split(":").pop() ?? task;
           const rule = this.rules.tasks.find((r) => r.match.test(task) || r.match.test(last));
           if (!rule) return { ...this.unmatched(res.runner, piped), tags: [`task:${task}`] };
@@ -9635,15 +10212,25 @@ var Classifier = class {
     return { phase: void 0, program, tags: [], checks: [], rule: "none", files: [], piped };
   }
   byRule(argv, program, piped, tags) {
-    const rule = this.rules.commands.find((r) => ruleMatches(r, program, argv));
+    const edited = inPlaceEdit(program, argv.slice(1));
+    if (edited)
+      return {
+        ...this.part("writing", program, "in-place-edit", piped, tags, program),
+        files: edited
+      };
+    const byPath = (argv[0] ?? "").includes("/");
+    const rule = this.rules.commands.find(
+      (r) => !(byPath && r.phase === "neutral") && ruleMatches(r, program, argv)
+    );
     if (!rule) return { ...this.unmatched(program, piped), tags };
+    const sub = positionalArgs(program, argv.slice(1))[0] ?? "";
     const part = this.part(
       rule.phase,
       program,
       rule.id,
       piped,
       rule.tag ? [rule.tag, ...tags] : tags,
-      rule.tool ?? program
+      rule.tool?.replace("{1}", sub) ?? program
     );
     if (rule.phase === "writing" && WRITERS.has(program)) {
       part.files = argv.slice(1).filter((a) => !a.startsWith("-") && /[/.]/.test(a));
@@ -9727,6 +10314,7 @@ var Classifier = class {
           checks: info.checks,
           rule: info.rule
         });
+        if (info.exit) step.exit = info.exit;
         if (step.kind === "tool") shellCwd.set(ctx, nextCwd(step.command, cwd, home));
         this.markFailures(step);
       } else {
@@ -9785,20 +10373,34 @@ var Classifier = class {
       }
     }
   }
-  /** Rule 4: exit code or failure event, else output patterns; a tool's own pattern names the check. */
+  /**
+   * Rule 4: the exit code decides when it belongs to the checks. Output patterns decide when a pipe,
+   * `;` or `|| true` hid it, or when a command chained after the checks may have failed instead.
+   * A tool's own pattern names the check that failed.
+   */
   markFailures(step) {
     if (step.checks.length === 0) return;
+    const exit = step.exit ?? "full";
     const stopped = step.flags.includes("interrupted") || step.flags.includes("denied");
+    const known = step.ok !== void 0 && !stopped;
+    const passed = known && step.ok === true && exit !== "none";
     const output = step.detail?.output;
     const byTool = (tool) => this.rules.failurePatterns.filter((p) => p.tool === tool);
     const named = output ? step.checks.filter((c) => byTool(c.tool).some((p) => p.pattern.test(output))) : [];
     const generic = output ? byTool("*").some((p) => p.pattern.test(output)) : false;
-    if (named.length > 0) {
-      for (const check of named) check.failed = true;
-    } else if (step.ok === false && !stopped || generic) {
-      const top = [...step.checks].sort((a, b) => RANK[b.phase] - RANK[a.phase])[0];
-      top.failed = true;
-      if (step.checks.length > 1) step.tags = unique([...step.tags, "failure-unattributed"]);
+    const top = () => [...step.checks].sort((a, b) => RANK[b.phase] - RANK[a.phase])[0];
+    const blame = (checks, sure) => {
+      for (const check of checks) check.failed = true;
+      if (!sure) step.tags = unique([...step.tags, "failure-unattributed"]);
+    };
+    if (passed) {
+    } else if (named.length > 0) {
+      blame(named, true);
+    } else if (known && step.ok === false) {
+      if (exit === "full") blame([top()], step.checks.length === 1);
+      else if (!output || generic) blame([top()], false);
+    } else if (generic) {
+      blame([top()], step.checks.length === 1);
     }
     step.failed = step.checks.some((c) => c.failed);
   }
@@ -9815,6 +10417,34 @@ var Classifier = class {
     return topPhase(phases) ?? "planning";
   }
 };
+function exitTrust(simples, parts) {
+  const withChecks = parts.filter((p) => p.checks.length > 0 && p.index !== void 0);
+  if (withChecks.length === 0) return "full";
+  const last = Math.max(...withChecks.map((p) => p.index));
+  if (simples[last]?.substituted) return "none";
+  const own = parts.filter((p) => p.index === last);
+  const lastCheck = own.findLastIndex((p) => p.checks.length > 0);
+  if (own.slice(lastCheck + 1).some((p) => p.piped)) return "none";
+  let trust = "full";
+  for (let k = last; k < simples.length; k++) {
+    const op = simples[k]?.next;
+    if (op === void 0) break;
+    if (op === "(" || op === ")") continue;
+    if (op === "|" || op === "|&") {
+      if (k === last) return "none";
+      trust = "pass";
+      continue;
+    }
+    if (op === "&") return "none";
+    if (k === simples.length - 1) break;
+    if (op === "&&") {
+      trust = "pass";
+      continue;
+    }
+    return "none";
+  }
+  return trust;
+}
 function withoutGlobalOptions(argv) {
   if (programName(argv[0] ?? "") !== "git") return argv;
   const out = [argv[0]];
@@ -9835,7 +10465,8 @@ function isShellTool(tool) {
 function nextCwd(command, cwd, home) {
   let dir = cwd;
   for (const simple of splitCommand(command)) {
-    if (simple.argv[0] === "cd" && !simple.piped)
+    if (simple.subshell || simple.substituted) continue;
+    if ((simple.argv[0] === "cd" || simple.argv[0] === "pushd") && !simple.piped)
       dir = resolvePath(
         simple.cd.reduce((d, t) => resolvePath(d, t), cwd),
         simple.argv[1] ?? "~"
@@ -9848,7 +10479,7 @@ function ruleMatches(rule, program, argv) {
   const args = argv.slice(1);
   if (rule.match && !rule.match.test(argv.join(" "))) return false;
   if (rule.args) {
-    const positional = args.filter((a) => !a.startsWith("-") && !a.startsWith("+"));
+    const positional = positionalArgs(program, args);
     let at = 0;
     for (let i = 0; i < rule.args.length; i++) {
       const options = rule.args[i];
@@ -9868,6 +10499,16 @@ function ruleMatches(rule, program, argv) {
   if (rule.without && rule.without.some(has)) return false;
   if (rule.only && !args.every((a) => rule.only?.has(a))) return false;
   return true;
+}
+function positionals2(args, valueOptions) {
+  const out = [];
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === "--") break;
+    if (valueOptions.includes(arg)) i++;
+    else if (!arg.startsWith("-")) out.push(arg);
+  }
+  return out;
 }
 function unique(items) {
   return [...new Set(items)];
@@ -9903,12 +10544,12 @@ function listEventFiles(env = process.env) {
   if (!existsSync2(dir)) return [];
   return readdirSync(dir).filter((name) => name.endsWith(".jsonl")).map((name) => {
     const file = path5.join(dir, name);
-    const stat = statSync2(file);
+    const stat2 = statSync2(file);
     return {
       id: name.slice(0, -".jsonl".length),
       path: file,
-      mtimeMs: stat.mtimeMs,
-      size: stat.size
+      mtimeMs: stat2.mtimeMs,
+      size: stat2.size
     };
   });
 }
@@ -9973,11 +10614,16 @@ function stripDetail(session) {
 }
 
 // src/store/sessions.ts
-import { existsSync as existsSync6, statSync as statSync4 } from "node:fs";
-import path9 from "node:path";
+import { existsSync as existsSync8, statSync as statSync5 } from "node:fs";
+import path13 from "node:path";
 
-// src/importers/claude-code/import.ts
-import { existsSync as existsSync4, readdirSync as readdirSync3, readFileSync as readFileSync4 } from "node:fs";
+// src/importers/agents.ts
+import { existsSync as existsSync5, readdirSync as readdirSync4, readFileSync as readFileSync7, statSync as statSync3 } from "node:fs";
+import os3 from "node:os";
+import path10 from "node:path";
+
+// src/importers/codex/import.ts
+import { readFileSync as readFileSync4 } from "node:fs";
 import path7 from "node:path";
 
 // src/model/mask.ts
@@ -10060,6 +10706,803 @@ function cleanCommand(command) {
   return cleaned.length > MAX_COMMAND ? cleaned.slice(0, MAX_COMMAND) + " \u2039\u2026\u203A" : cleaned;
 }
 
+// src/importers/common.ts
+function obj(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
+}
+function str(value) {
+  return typeof value === "string" && value.length > 0 ? value : void 0;
+}
+function num(value) {
+  return typeof value === "number" && Number.isFinite(value) ? value : void 0;
+}
+var MAX_OUTPUT = 4e3;
+function clipOutput(text) {
+  if (text.length <= MAX_OUTPUT) return text;
+  const head2 = text.slice(0, 1500);
+  const tail = text.slice(-2400);
+  return `${head2}
+\u2026 ${text.length - head2.length - tail.length} characters cut \u2026
+${tail}`;
+}
+function oneLine(text) {
+  const plain = maskSecrets(text.replace(/\s+/g, " ").trim());
+  return plain.length > 160 ? plain.slice(0, 157) + "\u2026" : plain;
+}
+function commandFromArgv(argv) {
+  if (typeof argv === "string") return argv;
+  if (!Array.isArray(argv) || !argv.every((a) => typeof a === "string")) return void 0;
+  const words = argv;
+  if (words.length >= 3 && /^(ba|z|da|k)?sh$/.test(words[0]?.split("/").pop() ?? "")) {
+    const flag = words[1] ?? "";
+    if (/^-[a-z]*c[a-z]*$/.test(flag)) return words[2];
+  }
+  return words.map((w) => /^[\w@%+=:,./-]+$/.test(w) ? w : `'${w.replace(/'/g, `'\\''`)}'`).join(" ");
+}
+var SessionLog = class {
+  constructor(id, agent, options) {
+    this.id = id;
+    this.agent = agent;
+    this.options = options;
+  }
+  id;
+  agent;
+  options;
+  events = [];
+  details = /* @__PURE__ */ new Map();
+  usages = [];
+  turnOpen = false;
+  lastMs = -Infinity;
+  title;
+  cwd;
+  version;
+  diagnostics = { unknownEntries: {}, badLines: 0, warnings: [] };
+  emit(event) {
+    this.events.push({ v: 1, sid: this.id, ...event });
+    this.lastMs = Math.max(this.lastMs, event.t);
+  }
+  get latest() {
+    return this.lastMs;
+  }
+  unknown(kind) {
+    this.diagnostics.unknownEntries[kind] = (this.diagnostics.unknownEntries[kind] ?? 0) + 1;
+  }
+  /** You sent a prompt: the open turn ends where its last activity did, and a new one starts. */
+  prompt(ms, text) {
+    this.stop();
+    this.turnOpen = true;
+    this.emit({ e: "UserPromptSubmit", t: ms });
+    if (this.options.detail && !this.title && text?.trim()) this.title = oneLine(text);
+  }
+  start(ms, call) {
+    if (!this.turnOpen && !call.agentId) this.prompt(ms);
+    const event = {
+      e: "PreToolUse",
+      t: ms,
+      tool: call.tool,
+      tuid: call.id
+    };
+    if (call.command) event.cmd = cleanCommand(call.command);
+    if (call.files?.length) event.files = call.files;
+    if (call.sub) event.sub = call.sub;
+    if (call.agentId) event.aid = call.agentId;
+    this.emit(event);
+    if (this.options.detail && call.description)
+      this.detail(call.id).description = oneLine(call.description);
+  }
+  end(ms, id, result2) {
+    const event = {
+      e: result2.ok ? "PostToolUse" : "PostToolUseFailure",
+      t: ms,
+      tuid: id,
+      ok: result2.ok
+    };
+    if (result2.code !== void 0) event.code = result2.code;
+    if (result2.durMs !== void 0) event.dur = Math.max(0, Math.round(result2.durMs));
+    if (result2.interrupted) event.intr = true;
+    if (result2.agentId) event.aid = result2.agentId;
+    this.emit(event);
+    if (this.options.detail && result2.output)
+      this.detail(id).output = clipOutput(maskSecrets(result2.output));
+  }
+  subagentStart(ms, agentId, type) {
+    this.emit({ e: "SubagentStart", t: ms, aid: agentId, ...type ? { at: type } : {} });
+  }
+  subagentStop(ms, agentId, type) {
+    this.emit({ e: "SubagentStop", t: ms, aid: agentId, ...type ? { at: type } : {} });
+  }
+  /** Tokens of one model call, reported when it finished: the turn lasts at least until then. */
+  usage(ms, tokens5, model, agentId) {
+    this.usages.push({ ms, tokens: tokens5, ...model ? { model } : {}, ...agentId ? { agentId } : {} });
+    if (!agentId) this.lastMs = Math.max(this.lastMs, ms);
+  }
+  /** The agent was still working at `ms` (a reply logged without a tool call). */
+  active(ms) {
+    this.lastMs = Math.max(this.lastMs, ms);
+  }
+  /** The turn ends: at `ms`, or at its last activity. */
+  stop(ms) {
+    if (!this.turnOpen) return;
+    this.turnOpen = false;
+    this.emit({ e: "Stop", t: Math.max(ms ?? this.lastMs, this.lastMs) });
+  }
+  detail(id) {
+    let detail = this.details.get(id);
+    if (!detail) this.details.set(id, detail = {});
+    return detail;
+  }
+  build(file) {
+    this.stop();
+    const events = this.events.map((event, i) => ({ event, i })).sort((a, b) => a.event.t - b.event.t || a.i - b.i).map((x) => x.event);
+    const session = eventsToSession(this.id, events);
+    session.agent = this.agent;
+    session.sources = ["transcript"];
+    session.transcriptPath = file;
+    if (this.cwd) session.cwd = this.cwd;
+    if (this.version) session.agentVersion = this.version;
+    if (this.title) session.title = this.title;
+    session.diagnostics = this.diagnostics;
+    const models = session.steps.filter((s) => s.kind === "model").sort((a, b) => a.endMs - b.endMs);
+    for (const usage2 of this.usages) {
+      const step = models.filter(
+        (s) => !s.tokens && (s.agentId ?? "") === (usage2.agentId ?? "") && s.endMs <= usage2.ms + 1e3
+      ).at(-1);
+      if (!step) continue;
+      step.tokens = usage2.tokens;
+      if (usage2.model) step.model = usage2.model;
+    }
+    if (this.options.detail) {
+      for (const step of session.steps) {
+        const detail = this.details.get(step.id);
+        if (detail) step.detail = detail;
+      }
+    }
+    if (session.steps.length > 0) {
+      session.startMs = Math.min(...session.steps.map((s) => s.startMs));
+      session.endMs = Math.max(...session.steps.map((s) => s.endMs));
+    }
+    return session;
+  }
+};
+
+// src/importers/codex/import.ts
+var UUID = /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;
+var INJECTED = /^\s*<(user_instructions|environment_context|user_shell_command|turn_aborted)>/;
+function codexSessionId(file) {
+  return UUID.exec(path7.basename(file))?.[1] ?? path7.basename(file, ".jsonl");
+}
+function parseArgs(text) {
+  if (typeof text !== "string") return obj(text) ?? {};
+  try {
+    return obj(JSON.parse(text)) ?? {};
+  } catch {
+    return {};
+  }
+}
+function patchFiles(patch) {
+  const files2 = [];
+  let adds = false;
+  for (const match of patch.matchAll(/^\*\*\* (Update|Add|Delete) File: (.+)$/gm)) {
+    if (match[1] === "Add") adds = true;
+    if (match[2]) files2.push(match[2].trim());
+  }
+  return { files: files2, adds };
+}
+function toCall(id, name, args, cwd, input) {
+  const inDir = (command, workdir) => workdir && cwd && path7.resolve(cwd, workdir) !== path7.resolve(cwd) ? `cd ${workdir} && ${command}` : command;
+  switch (name) {
+    case "shell":
+    case "container.exec":
+    case "local_shell": {
+      const command = commandFromArgv(args.command);
+      return {
+        id,
+        tool: "Bash",
+        ...command ? { command: inDir(command, str(args.workdir)) } : {}
+      };
+    }
+    case "exec_command": {
+      const command = str(args.cmd) ?? commandFromArgv(args.command);
+      return {
+        id,
+        tool: "Bash",
+        ...command ? { command: inDir(command, str(args.workdir)) } : {}
+      };
+    }
+    case "apply_patch": {
+      const patch = input ?? str(args.input) ?? str(args.patch) ?? "";
+      const { files: files2, adds } = patchFiles(patch);
+      return {
+        id,
+        tool: adds && files2.length === 1 ? "Write" : "Edit",
+        ...files2.length ? { files: files2 } : {}
+      };
+    }
+    case "update_plan":
+      return { id, tool: "TodoWrite" };
+    case "view_image": {
+      const file = str(args.path);
+      return { id, tool: "Read", ...file ? { files: [file] } : {} };
+    }
+    default:
+      return { id, tool: name.includes("__") ? `mcp__${name}` : name };
+  }
+}
+function result(output) {
+  let text = typeof output === "string" ? output : JSON.stringify(output ?? "");
+  let code;
+  let seconds;
+  const parsed = typeof output === "string" && output.startsWith("{") ? parseArgs(output) : obj(output);
+  if (parsed && ("output" in parsed || "metadata" in parsed)) {
+    const meta = obj(parsed.metadata) ?? {};
+    code = num(meta.exit_code);
+    seconds = num(meta.duration_seconds);
+    text = str(parsed.output) ?? "";
+  } else {
+    const exit = /^Exit code: (-?\d+)/m.exec(text);
+    if (exit?.[1]) code = Number(exit[1]);
+    const wall = /^Wall time: ([\d.]+) seconds/m.exec(text);
+    if (wall?.[1]) seconds = Number(wall[1]);
+  }
+  const failedPatch = /^(apply_patch verification failed|Failed to apply patch|error:)/im.test(
+    text
+  );
+  return {
+    ok: code !== void 0 ? code === 0 : !failedPatch,
+    ...code !== void 0 ? { code } : {},
+    ...seconds !== void 0 ? { durMs: seconds * 1e3 } : {},
+    text
+  };
+}
+function tokens(usage2) {
+  const input = num(usage2.input_tokens) ?? 0;
+  const cached = num(usage2.cached_input_tokens) ?? 0;
+  return {
+    input: Math.max(0, input - cached),
+    output: num(usage2.output_tokens) ?? 0,
+    cacheRead: cached,
+    cacheWrite: 0
+  };
+}
+function importCodexRollout(file, options = {}) {
+  const lines = readFileSync4(file, "utf8").split("\n");
+  let id = codexSessionId(file);
+  let log;
+  const promptsFromEvents = lines.some((l) => l.includes('"type":"user_message"'));
+  let model;
+  let badLines = 0;
+  const open = /* @__PURE__ */ new Set();
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    let entry;
+    try {
+      entry = obj(JSON.parse(line));
+    } catch {
+      badLines++;
+      continue;
+    }
+    if (!entry) continue;
+    const type = str(entry.type) ?? "";
+    const payload = obj(entry.payload) ?? {};
+    const ms = Date.parse(str(entry.timestamp) ?? "");
+    if (type === "session_meta") {
+      id = str(payload.id) ?? id;
+      log ??= new SessionLog(id, "codex", options);
+      log.cwd = str(payload.cwd) ?? log.cwd;
+      log.version = str(payload.cli_version) ?? log.version;
+      continue;
+    }
+    log ??= new SessionLog(id, "codex", options);
+    if (!Number.isFinite(ms)) {
+      log.unknown(`untimed:${str(entry.type) ?? "line"}`);
+      continue;
+    }
+    if (type === "turn_context") {
+      log.cwd ??= str(payload.cwd);
+      model = str(payload.model) ?? model;
+      continue;
+    }
+    if (type === "event_msg") {
+      const kind = str(payload.type) ?? "";
+      if (kind === "user_message") {
+        const text = str(payload.message) ?? "";
+        if (!INJECTED.test(text)) log.prompt(ms, text);
+      } else if (kind === "token_count") {
+        const usage2 = obj(obj(payload.info)?.last_token_usage);
+        if (usage2) log.usage(ms, tokens(usage2), model);
+      } else if (kind === "task_complete" || kind === "turn_complete") {
+        log.stop(ms);
+      } else if (kind === "turn_aborted") {
+        for (const callId of open) log.end(ms, callId, { ok: false, interrupted: true });
+        open.clear();
+        log.stop(ms);
+      } else if (![
+        "agent_message",
+        "agent_reasoning",
+        "agent_reasoning_raw_content",
+        "entered_review_mode",
+        "exited_review_mode"
+      ].includes(kind)) {
+        log.unknown(`event_msg:${kind}`);
+      }
+      continue;
+    }
+    if (type !== "response_item") {
+      if (type !== "compacted") log.unknown(type);
+      continue;
+    }
+    const item = str(payload.type) ?? "";
+    switch (item) {
+      case "message": {
+        if (str(payload.role) !== "user" || promptsFromEvents) break;
+        const content = Array.isArray(payload.content) ? payload.content : [];
+        const text = content.map((c) => str(obj(c)?.text) ?? "").join("\n");
+        if (text && !INJECTED.test(text)) log.prompt(ms, text);
+        break;
+      }
+      case "function_call":
+      case "custom_tool_call": {
+        const callId = str(payload.call_id) ?? str(payload.id);
+        const name = str(payload.name) ?? "tool";
+        if (!callId) break;
+        const args = item === "function_call" ? parseArgs(payload.arguments) : {};
+        log.start(ms, toCall(callId, name, args, log.cwd, str(payload.input)));
+        open.add(callId);
+        break;
+      }
+      case "local_shell_call": {
+        const callId = str(payload.call_id) ?? str(payload.id);
+        if (!callId) break;
+        const action = obj(payload.action) ?? {};
+        log.start(
+          ms,
+          toCall(
+            callId,
+            "local_shell",
+            { command: action.command, workdir: action.working_directory },
+            log.cwd
+          )
+        );
+        open.add(callId);
+        break;
+      }
+      case "function_call_output":
+      case "custom_tool_call_output":
+      case "local_shell_call_output": {
+        const callId = str(payload.call_id);
+        if (!callId || !open.has(callId)) break;
+        open.delete(callId);
+        const r = result(payload.output);
+        log.end(ms, callId, {
+          ok: r.ok,
+          ...r.code !== void 0 ? { code: r.code } : {},
+          ...r.durMs !== void 0 ? { durMs: r.durMs } : {},
+          output: r.text
+        });
+        break;
+      }
+      case "web_search_call": {
+        const callId = str(payload.id) ?? `search:${ms}`;
+        log.start(ms, { id: callId, tool: "WebSearch" });
+        log.end(ms, callId, { ok: str(payload.status) !== "failed" });
+        break;
+      }
+      case "reasoning":
+        break;
+      default:
+        log.unknown(`response_item:${item}`);
+    }
+  }
+  log ??= new SessionLog(id, "codex", options);
+  for (const callId of open) log.end(log.latest, callId, { ok: false, interrupted: true });
+  log.diagnostics.badLines = badLines;
+  return log.build(file);
+}
+
+// src/importers/gemini/import.ts
+import { createHash } from "node:crypto";
+import { readFileSync as readFileSync5 } from "node:fs";
+import path8 from "node:path";
+var FILE_ARGS = ["absolute_path", "file_path", "path", "dir_path", "directory"];
+function files(args) {
+  const out = FILE_ARGS.map((key) => str(args[key])).filter((f) => !!f);
+  if (Array.isArray(args.paths)) {
+    for (const p of args.paths) if (typeof p === "string") out.push(p);
+  }
+  return out;
+}
+function toCall2(id, name, args) {
+  const withFiles = (tool) => {
+    const list3 = files(args);
+    return { id, tool, ...list3.length ? { files: list3 } : {} };
+  };
+  const description = str(args.description);
+  switch (name) {
+    case "run_shell_command": {
+      const command = str(args.command);
+      const dir = str(args.directory) ?? str(args.dir_path);
+      return {
+        id,
+        tool: "Bash",
+        ...command ? { command: dir ? `cd ${dir} && ${command}` : command } : {},
+        ...description ? { description } : {}
+      };
+    }
+    case "read_file":
+    case "read_many_files":
+      return withFiles("Read");
+    case "write_file":
+      return withFiles("Write");
+    case "replace":
+    case "edit":
+      return withFiles("Edit");
+    case "glob":
+    case "list_directory":
+      return { id, tool: "Glob" };
+    case "search_file_content":
+    case "grep":
+      return { id, tool: "Grep" };
+    case "web_fetch":
+      return { id, tool: "WebFetch" };
+    case "google_web_search":
+      return { id, tool: "WebSearch" };
+    case "write_todos":
+      return { id, tool: "TodoWrite" };
+    default:
+      return { id, tool: name.includes("__") ? `mcp__${name}` : name };
+  }
+}
+function outcome(call) {
+  const parts = Array.isArray(call.result) ? call.result : [];
+  let text = "";
+  for (const part of parts) {
+    const response = obj(obj(obj(part)?.functionResponse)?.response);
+    const value = response?.output ?? response?.error ?? response?.content;
+    if (typeof value === "string") text += value;
+  }
+  if (!text && typeof call.resultDisplay === "string") text = call.resultDisplay;
+  const exit = /^Exit Code: (-?\d+)/m.exec(text);
+  return { text, ...exit?.[1] ? { code: Number(exit[1]) } : {} };
+}
+function tokens2(usage2) {
+  const input = num(usage2.input) ?? 0;
+  const cached = num(usage2.cached) ?? 0;
+  return {
+    input: Math.max(0, input - cached),
+    output: (num(usage2.output) ?? 0) + (num(usage2.thoughts) ?? 0),
+    cacheRead: cached,
+    cacheWrite: 0
+  };
+}
+function projectFolder(hash, messages) {
+  if (!hash) return void 0;
+  const candidates = /* @__PURE__ */ new Set();
+  for (const message of messages) {
+    for (const call of Array.isArray(message.toolCalls) ? message.toolCalls : []) {
+      for (const file of files(obj(obj(call)?.args) ?? {})) {
+        if (!path8.isAbsolute(file)) continue;
+        for (let dir = file; dir !== path8.dirname(dir); dir = path8.dirname(dir))
+          candidates.add(dir);
+      }
+    }
+  }
+  for (const dir of candidates) {
+    if (createHash("sha256").update(dir).digest("hex") === hash) return dir;
+  }
+  return void 0;
+}
+function geminiSessionId(file) {
+  try {
+    const head2 = readFileSync5(file, "utf8").slice(0, 600);
+    const match = /"sessionId"\s*:\s*"([^"]+)"/.exec(head2);
+    if (match?.[1]) return match[1];
+  } catch {
+  }
+  return path8.basename(file, ".json");
+}
+function importGeminiChat(file, options = {}) {
+  const chat = obj(JSON.parse(readFileSync5(file, "utf8"))) ?? {};
+  const id = str(chat.sessionId) ?? path8.basename(file, ".json");
+  const log = new SessionLog(id, "gemini", options);
+  const messages = (Array.isArray(chat.messages) ? chat.messages : []).map((m) => obj(m) ?? {});
+  const folder = projectFolder(str(chat.projectHash), messages);
+  if (folder) log.cwd = folder;
+  let counter = 0;
+  for (const message of messages) {
+    const ms = Date.parse(str(message.timestamp) ?? "");
+    if (!Number.isFinite(ms)) {
+      log.unknown("untimed message");
+      continue;
+    }
+    const type = str(message.type) ?? "";
+    if (type === "user") {
+      const content = message.content;
+      const text = typeof content === "string" ? content : JSON.stringify(content ?? "");
+      log.prompt(ms, text);
+      continue;
+    }
+    if (type !== "gemini") {
+      if (!["info", "error", "warning"].includes(type)) log.unknown(`message:${type}`);
+      continue;
+    }
+    const usage2 = obj(message.tokens);
+    if (usage2) log.usage(ms, tokens2(usage2), str(message.model));
+    log.active(ms);
+    const calls = (Array.isArray(message.toolCalls) ? message.toolCalls : []).map(
+      (c) => obj(c) ?? {}
+    );
+    for (const call of calls) {
+      const callId = str(call.id) ?? `call:${++counter}`;
+      const ended = Date.parse(str(call.timestamp) ?? "");
+      const end = Number.isFinite(ended) ? Math.max(ms, ended) : ms;
+      log.start(ms, toCall2(callId, str(call.name) ?? "tool", obj(call.args) ?? {}));
+      const { text, code } = outcome(call);
+      const status = str(call.status) ?? "";
+      const ok = status === "success" && (code === void 0 || code === 0);
+      log.end(end, callId, {
+        ok,
+        ...code !== void 0 ? { code } : {},
+        ...status === "cancelled" ? { interrupted: true } : {},
+        output: text
+      });
+    }
+  }
+  return log.build(file);
+}
+
+// src/importers/opencode/import.ts
+import { existsSync as existsSync4, readdirSync as readdirSync3, readFileSync as readFileSync6 } from "node:fs";
+import path9 from "node:path";
+function readJson(file) {
+  try {
+    return obj(JSON.parse(readFileSync6(file, "utf8"))) ?? {};
+  } catch {
+    return {};
+  }
+}
+function readDir(dir) {
+  if (!existsSync4(dir)) return [];
+  return readdirSync3(dir).filter((name) => name.endsWith(".json")).sort().map((name) => readJson(path9.join(dir, name)));
+}
+function storageRoot(sessionFile) {
+  return path9.resolve(path9.dirname(sessionFile), "..", "..");
+}
+var time = (value, key) => num(obj(value)?.[key]);
+function toCall3(id, tool, input, agentId) {
+  const file = str(input.filePath) ?? str(input.file_path) ?? str(input.path);
+  const base = { id, ...agentId ? { agentId } : {} };
+  const description = str(input.description);
+  switch (tool) {
+    case "bash": {
+      const command = str(input.command);
+      return {
+        ...base,
+        tool: "Bash",
+        ...command ? { command } : {},
+        ...description ? { description } : {}
+      };
+    }
+    case "read":
+      return { ...base, tool: "Read", ...file ? { files: [file] } : {} };
+    case "write":
+      return { ...base, tool: "Write", ...file ? { files: [file] } : {} };
+    case "edit":
+    case "multiedit":
+    case "patch":
+      return { ...base, tool: "Edit", ...file ? { files: [file] } : {} };
+    case "grep":
+      return { ...base, tool: "Grep" };
+    case "glob":
+    case "list":
+      return { ...base, tool: "Glob" };
+    case "webfetch":
+      return { ...base, tool: "WebFetch" };
+    case "todowrite":
+    case "todoread":
+      return { ...base, tool: "TodoWrite" };
+    case "task": {
+      const sub = str(input.subagent_type);
+      return {
+        ...base,
+        tool: "Agent",
+        ...sub ? { sub } : {},
+        ...description ? { description } : {}
+      };
+    }
+    default:
+      return {
+        ...base,
+        tool: tool.includes("_") && !tool.startsWith("mcp__") ? `mcp__${tool.replace("_", "__")}` : tool
+      };
+  }
+}
+function tokens3(usage2) {
+  const cache = obj(usage2.cache) ?? {};
+  return {
+    input: num(usage2.input) ?? 0,
+    output: (num(usage2.output) ?? 0) + (num(usage2.reasoning) ?? 0),
+    cacheRead: num(cache.read) ?? 0,
+    cacheWrite: num(cache.write) ?? 0
+  };
+}
+function readSession(log, root, sessionId, agentId, seen) {
+  if (seen.has(sessionId)) return;
+  seen.add(sessionId);
+  const messages = readDir(path9.join(root, "message", sessionId)).sort(
+    (a, b) => (time(a.time, "created") ?? 0) - (time(b.time, "created") ?? 0)
+  );
+  for (const message of messages) {
+    const messageId = str(message.id);
+    const created = time(message.time, "created");
+    if (!messageId || created === void 0) continue;
+    const parts = readDir(path9.join(root, "part", messageId));
+    if (str(message.role) === "user") {
+      if (agentId) continue;
+      const text = parts.map((p) => str(p.type) === "text" && !p.synthetic ? str(p.text) ?? "" : "").join("\n");
+      log.prompt(created, text);
+      continue;
+    }
+    const usage2 = obj(message.tokens);
+    const completed = time(message.time, "completed");
+    if (usage2) log.usage(completed ?? created, tokens3(usage2), str(message.modelID), agentId);
+    for (const part of parts) {
+      if (str(part.type) !== "tool") continue;
+      const state = obj(part.state) ?? {};
+      const callId = str(part.callID) ?? str(part.id);
+      const start = time(state.time, "start");
+      if (!callId || start === void 0) continue;
+      const end = time(state.time, "end") ?? completed ?? start;
+      const tool = str(part.tool) ?? "tool";
+      const input = obj(state.input) ?? {};
+      log.start(start, toCall3(callId, tool, input, agentId));
+      const metadata = obj(state.metadata) ?? {};
+      if (tool === "task") {
+        const child = str(metadata.sessionId);
+        if (child) {
+          const type = str(input.subagent_type);
+          log.subagentStart(start, child, type);
+          readSession(log, root, child, child, seen);
+          log.subagentStop(end, child, type);
+        }
+      }
+      const status = str(state.status) ?? "";
+      const exit = num(metadata.exit);
+      const output = str(state.output) ?? str(state.error) ?? "";
+      log.end(end, callId, {
+        ok: status === "completed" && (exit === void 0 || exit === 0),
+        ...exit !== void 0 ? { code: exit } : {},
+        ...status === "error" && /abort|interrupt/i.test(str(state.error) ?? "") ? { interrupted: true } : {},
+        ...agentId ? { agentId } : {},
+        output
+      });
+    }
+    if (!agentId && completed !== void 0 && str(message.finish) && str(message.finish) !== "tool-calls") {
+      log.stop(completed);
+    }
+  }
+}
+function importOpenCodeSession(file, options = {}) {
+  const info = readJson(file);
+  const id = str(info.id) ?? path9.basename(file, ".json");
+  const log = new SessionLog(id, "opencode", options);
+  log.cwd = str(info.directory);
+  log.version = str(info.version);
+  if (options.detail && str(info.title)) log.title = str(info.title);
+  readSession(log, storageRoot(file), id, void 0, /* @__PURE__ */ new Set());
+  return log.build(file);
+}
+
+// src/importers/agents.ts
+var AGENT_NAMES = {
+  "claude-code": "Claude Code",
+  codex: "Codex CLI",
+  gemini: "Gemini CLI",
+  opencode: "OpenCode"
+};
+function agentDirs(env = process.env) {
+  const home = env.HOME || os3.homedir();
+  return {
+    codex: path10.join(env.CODEX_HOME || path10.join(home, ".codex"), "sessions"),
+    gemini: path10.join(env.AWF_GEMINI_DIR || path10.join(home, ".gemini"), "tmp"),
+    opencode: env.AWF_OPENCODE_STORAGE || path10.join(env.XDG_DATA_HOME || path10.join(home, ".local", "share"), "opencode", "storage")
+  };
+}
+function stat(file) {
+  try {
+    const s = statSync3(file);
+    return s.isFile() ? { mtimeMs: s.mtimeMs, size: s.size } : void 0;
+  } catch {
+    return void 0;
+  }
+}
+function isDir(file) {
+  try {
+    return statSync3(file).isDirectory();
+  } catch {
+    return false;
+  }
+}
+function list2(dir) {
+  try {
+    return readdirSync4(dir);
+  } catch {
+    return [];
+  }
+}
+function listAgentSessions(env = process.env, sinceMs = -Infinity) {
+  const dirs = agentDirs(env);
+  const out = [];
+  const add = (agent, file, id) => {
+    const s = stat(file);
+    if (s && s.mtimeMs >= sinceMs) out.push({ agent, id, path: file, ...s });
+  };
+  const walk = (dir, depth) => {
+    for (const name of list2(dir)) {
+      const full = path10.join(dir, name);
+      if (/^rollout-.*\.jsonl$/.test(name)) add("codex", full, codexSessionId(full));
+      else if (depth < 4 && isDir(full)) walk(full, depth + 1);
+    }
+  };
+  if (existsSync5(dirs.codex)) walk(dirs.codex, 0);
+  for (const project of list2(dirs.gemini)) {
+    const chats = path10.join(dirs.gemini, project, "chats");
+    for (const name of list2(chats)) {
+      if (!/^session-.*\.json$/.test(name)) continue;
+      const full = path10.join(chats, name);
+      add("gemini", full, geminiSessionId(full));
+    }
+  }
+  const sessions = path10.join(dirs.opencode, "session");
+  for (const project of list2(sessions)) {
+    for (const name of list2(path10.join(sessions, project))) {
+      if (!name.endsWith(".json")) continue;
+      const full = path10.join(sessions, project, name);
+      if (isChildSession(full)) continue;
+      add("opencode", full, name.slice(0, -".json".length));
+    }
+  }
+  return out;
+}
+function isChildSession(file) {
+  try {
+    return /"parentID"\s*:\s*"/.test(readFileSync7(file, "utf8").slice(0, 2e3));
+  } catch {
+    return false;
+  }
+}
+function detectAgentFile(file) {
+  const s = stat(file);
+  if (!s) return void 0;
+  const full = path10.resolve(file);
+  let head2;
+  try {
+    head2 = readFileSync7(full, "utf8").slice(0, 4e3);
+  } catch {
+    return void 0;
+  }
+  if (full.endsWith(".jsonl") && /"type"\s*:\s*"session_meta"/.test(head2.split("\n")[0] ?? ""))
+    return { agent: "codex", id: codexSessionId(full), path: full, ...s };
+  if (full.endsWith(".json") && /"sessionId"/.test(head2) && /"messages"/.test(head2))
+    return { agent: "gemini", id: geminiSessionId(full), path: full, ...s };
+  if (full.endsWith(".json") && /[/\\]storage[/\\]session[/\\]/.test(full))
+    return { agent: "opencode", id: path10.basename(full, ".json"), path: full, ...s };
+  return void 0;
+}
+function importAgentFile(file, options = {}) {
+  switch (file.agent) {
+    case "codex":
+      return importCodexRollout(file.path, options);
+    case "gemini":
+      return importGeminiChat(file.path, options);
+    case "opencode":
+      return importOpenCodeSession(file.path, options);
+  }
+}
+
+// src/importers/claude-code/import.ts
+import { existsSync as existsSync6, readdirSync as readdirSync5, readFileSync as readFileSync8 } from "node:fs";
+import path11 from "node:path";
+
 // src/importers/claude-code/format.ts
 var READ_TYPES = /* @__PURE__ */ new Set(["user", "assistant", "system", "queue-operation", "attachment"]);
 var SKIPPED_TYPES = /* @__PURE__ */ new Set([
@@ -10109,40 +11552,40 @@ var BLOCK_TYPES = /* @__PURE__ */ new Set([
   "server_tool_use",
   "web_search_tool_result"
 ]);
-function str(value) {
+function str2(value) {
   return typeof value === "string" && value.length > 0 ? value : void 0;
 }
-function obj(value) {
+function obj2(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
 }
 function timestampMs(entry) {
-  const raw = str(entry.timestamp);
+  const raw = str2(entry.timestamp);
   if (!raw) return void 0;
   const ms = Date.parse(raw);
   return Number.isFinite(ms) ? ms : void 0;
 }
 function contentBlocks(entry) {
-  const content = obj(entry.message)?.content;
-  return Array.isArray(content) ? content.filter((b) => !!obj(b)) : [];
+  const content = obj2(entry.message)?.content;
+  return Array.isArray(content) ? content.filter((b) => !!obj2(b)) : [];
 }
 function messageText(entry) {
-  const content = obj(entry.message)?.content;
+  const content = obj2(entry.message)?.content;
   if (typeof content === "string") return content;
   if (!Array.isArray(content)) return "";
-  return content.map((b) => obj(b)?.type === "text" ? String(obj(b)?.text ?? "") : "").filter(Boolean).join("\n");
+  return content.map((b) => obj2(b)?.type === "text" ? String(obj2(b)?.text ?? "") : "").filter(Boolean).join("\n");
 }
 function resultText(block) {
   const content = block.content;
   if (typeof content === "string") return content;
   if (!Array.isArray(content)) return "";
-  return content.map((b) => obj(b)?.type === "text" ? String(obj(b)?.text ?? "") : "").filter(Boolean).join("\n");
+  return content.map((b) => obj2(b)?.type === "text" ? String(obj2(b)?.text ?? "") : "").filter(Boolean).join("\n");
 }
 function promptKind(entry) {
   if (entry.isCompactSummary === true || entry.isVisibleInTranscriptOnly === true) return "none";
   if (contentBlocks(entry).some((b) => b.type === "tool_result")) return "none";
   const text = messageText(entry).trimStart();
   if (text.startsWith("[Request interrupted")) return "none";
-  const origin = str(obj(entry.origin)?.kind);
+  const origin = str2(obj2(entry.origin)?.kind);
   if (origin) return origin === "human" ? "human" : "notification";
   if (entry.isMeta === true || !text) return "none";
   if (text.startsWith("<task-notification>")) return "notification";
@@ -10166,22 +11609,22 @@ var EXIT_CODE = /^(?:Error: )?Exit code (\d+)/;
 
 // src/importers/claude-code/import.ts
 var FILE_KEYS = ["file_path", "notebook_path", "path"];
-var MAX_OUTPUT = 4e3;
+var MAX_OUTPUT2 = 4e3;
 function importClaudeCodeTranscript(file, options = {}) {
-  const sessionId = path7.basename(file, ".jsonl");
+  const sessionId = path11.basename(file, ".jsonl");
   const reader = new TranscriptReader(options);
   reader.readMain(readLines(file));
-  const subDir = path7.join(path7.dirname(file), sessionId, "subagents");
-  if (existsSync4(subDir)) {
-    for (const name of readdirSync3(subDir).sort()) {
+  const subDir = path11.join(path11.dirname(file), sessionId, "subagents");
+  if (existsSync6(subDir)) {
+    for (const name of readdirSync5(subDir).sort()) {
       const match = /^agent-(.+)\.jsonl$/.exec(name);
-      if (match?.[1]) reader.readSubagent(match[1], readLines(path7.join(subDir, name)));
+      if (match?.[1]) reader.readSubagent(match[1], readLines(path11.join(subDir, name)));
     }
   }
   return reader.build(sessionId, file);
 }
 function readLines(file) {
-  return readFileSync4(file, "utf8").split("\n");
+  return readFileSync8(file, "utf8").split("\n");
 }
 var TranscriptReader = class {
   constructor(options) {
@@ -10207,6 +11650,8 @@ var TranscriptReader = class {
   turnStart = 0;
   lastActivity = 0;
   turnEndMark;
+  /** A message after the turn ended that wasn't a prompt (an app notice, a `!` command). */
+  pendingPrompt;
   cwd;
   version;
   title;
@@ -10222,7 +11667,7 @@ var TranscriptReader = class {
       if (!line.trim()) continue;
       try {
         const entry = JSON.parse(line);
-        if (obj(entry)) entries2.push(entry);
+        if (obj2(entry)) entries2.push(entry);
         else this.diagnostics.badLines++;
       } catch {
         this.diagnostics.badLines++;
@@ -10232,11 +11677,11 @@ var TranscriptReader = class {
   }
   /** Checks an entry's type, notes its version and cwd; returns false for entries to skip. */
   accept(entry) {
-    const type = str(entry.type) ?? "<no type>";
-    const version = str(entry.version);
+    const type = str2(entry.type) ?? "<no type>";
+    const version = str2(entry.version);
     if (version && (!this.version || compareVersions(version, this.version) > 0))
       this.version = version;
-    if (!this.cwd && str(entry.cwd)) this.cwd = str(entry.cwd);
+    if (!this.cwd && str2(entry.cwd)) this.cwd = str2(entry.cwd);
     if (SKIPPED_TYPES.has(type)) return false;
     if (!READ_TYPES.has(type)) {
       this.count(type);
@@ -10249,7 +11694,7 @@ var TranscriptReader = class {
       if (!this.accept(entry)) continue;
       const ms = timestampMs(entry);
       if (ms === void 0) continue;
-      const agentId = entry.isSidechain === true ? str(entry.agentId) ?? "sidechain" : void 0;
+      const agentId = entry.isSidechain === true ? str2(entry.agentId) ?? "sidechain" : void 0;
       switch (entry.type) {
         case "user":
           this.user(entry, ms, agentId);
@@ -10262,7 +11707,7 @@ var TranscriptReader = class {
           break;
         case "queue-operation":
         case "attachment": {
-          const text = entry.type === "attachment" ? JSON.stringify(entry.attachment ?? "") : str(entry.content) ?? "";
+          const text = entry.type === "attachment" ? JSON.stringify(entry.attachment ?? "") : str2(entry.content) ?? "";
           const notice = parseNotification(text, ms);
           if (notice && (entry.type === "attachment" || entry.operation === "enqueue")) {
             this.notifications.push(notice);
@@ -10278,7 +11723,7 @@ var TranscriptReader = class {
     const first = entries2[0];
     const last = entries2[entries2.length - 1];
     if (!first || !last) return;
-    const at = this.agentTypes.get(agentId) ?? str(first.agentType);
+    const at = this.agentTypes.get(agentId) ?? str2(first.agentType);
     this.emit({
       e: "SubagentStart",
       t: timestampMs(first),
@@ -10299,8 +11744,12 @@ var TranscriptReader = class {
     }
     const kind = promptKind(entry);
     if (kind === "none") {
-      if (messageText(entry).startsWith("[Request interrupted"))
-        this.lastActivity = Math.max(this.lastActivity, ms);
+      const ended = !this.turnOpen || this.turnEndMark !== void 0;
+      if (messageText(entry).startsWith("[Request interrupted")) {
+        if (!ended) this.lastActivity = Math.max(this.lastActivity, ms);
+      } else if (ended && !contentBlocks(entry).some((b) => b.type === "tool_result")) {
+        this.pendingPrompt ??= ms;
+      }
       this.toolResults(entry, ms, void 0);
       return;
     }
@@ -10310,17 +11759,17 @@ var TranscriptReader = class {
       const notice = parseNotification(text, ms);
       if (notice) this.notifications.push(notice);
     } else if (this.options.detail && !this.title) {
-      this.title = oneLine(text);
+      this.title = oneLine2(text);
     }
-    this.emit({
-      e: "UserPromptSubmit",
-      t: ms,
-      ...kind === "notification" ? { src: "task-notification" } : {}
-    });
+    this.startTurn(ms, kind === "notification" ? "task-notification" : void 0);
+  }
+  startTurn(ms, src) {
+    this.emit({ e: "UserPromptSubmit", t: ms, ...src ? { src } : {} });
     this.turnOpen = true;
     this.turnStart = ms;
     this.lastActivity = ms;
     this.turnEndMark = void 0;
+    this.pendingPrompt = void 0;
   }
   closeTurn() {
     const end = this.turnEndMark !== void 0 && this.turnEndMark >= this.lastActivity ? this.turnEndMark : this.lastActivity;
@@ -10328,19 +11777,19 @@ var TranscriptReader = class {
     this.turnOpen = false;
   }
   toolResults(entry, ms, agentId) {
-    const result = obj(entry.toolUseResult);
-    const decision = obj(entry.permissionDecision);
+    const result2 = obj2(entry.toolUseResult);
+    const decision = obj2(entry.permissionDecision);
     for (const block of contentBlocks(entry)) {
       if (block.type !== "tool_result") {
         if (!BLOCK_TYPES.has(String(block.type))) this.count(`block:${String(block.type)}`);
         continue;
       }
-      const tuid = str(block.tool_use_id);
+      const tuid = str2(block.tool_use_id);
       if (!tuid) continue;
       if (!agentId) this.lastActivity = Math.max(this.lastActivity, ms);
       const text = resultText(block);
       const failed = block.is_error === true;
-      const source = str(decision?.source) ?? "";
+      const source = str2(decision?.source) ?? "";
       const use = this.toolUses.get(tuid);
       if (source.startsWith("user")) {
         const startEvent = this.startEvents.get(tuid);
@@ -10353,7 +11802,7 @@ var TranscriptReader = class {
             ...agentId ? { aid: agentId } : {}
           });
       }
-      if (str(decision?.decision) === "reject") {
+      if (str2(decision?.decision) === "reject") {
         this.emit({ e: "PermissionDenied", t: ms, tuid, ...agentId ? { aid: agentId } : {} });
         this.resolveBatch(use, tuid, ms);
         continue;
@@ -10368,14 +11817,14 @@ var TranscriptReader = class {
       if (use) event.tool = use.name;
       if (agentId) event.aid = agentId;
       if (code) event.code = Number(code[1]);
-      if (result?.interrupted === true) event.intr = true;
-      const child = str(result?.agentId);
+      if (result2?.interrupted === true) event.intr = true;
+      const child = str2(result2?.agentId);
       if (child && use && (use.name === "Agent" || use.name === "Task")) {
         event.child = child;
-        const type = str(result?.agentType);
+        const type = str2(result2?.agentType);
         if (type && !this.agentTypes.has(child)) this.agentTypes.set(child, type);
       }
-      const bgid = str(result?.backgroundTaskId);
+      const bgid = str2(result2?.backgroundTaskId);
       if (bgid) event.bgid = bgid;
       this.emit(event);
       this.resolveBatch(use, tuid, ms);
@@ -10401,18 +11850,22 @@ var TranscriptReader = class {
     }
   }
   assistant(entry, ms, agentId) {
-    const message = obj(entry.message) ?? {};
-    const messageId = str(message.id) ?? str(entry.uuid);
+    const message = obj2(entry.message) ?? {};
+    const messageId = str2(message.id) ?? str2(entry.uuid);
+    if (!agentId && (!this.turnOpen || this.turnEndMark !== void 0 && ms > this.turnEndMark)) {
+      if (this.turnOpen) this.closeTurn();
+      this.startTurn(Math.min(this.pendingPrompt ?? ms, ms), "system");
+    }
     if (!agentId) this.lastActivity = Math.max(this.lastActivity, ms);
     if (messageId) {
       const known = this.messages.get(messageId);
       const record = known ?? { lastMs: ms };
       record.lastMs = Math.max(record.lastMs, ms);
       if (agentId) record.agentId = agentId;
-      const model = str(message.model);
+      const model = str2(message.model);
       if (model && model !== "<synthetic>") record.model = model;
-      const usage2 = obj(message.usage);
-      if (usage2) record.tokens = tokens(usage2);
+      const usage2 = obj2(message.usage);
+      if (usage2) record.tokens = tokens4(usage2);
       this.messages.set(messageId, record);
     }
     if (entry.isApiErrorMessage === true && !agentId) {
@@ -10423,10 +11876,10 @@ var TranscriptReader = class {
     for (const block of contentBlocks(entry)) {
       if (!BLOCK_TYPES.has(String(block.type))) this.count(`block:${String(block.type)}`);
       if (block.type !== "tool_use") continue;
-      const tuid = str(block.id);
-      const name = str(block.name);
+      const tuid = str2(block.id);
+      const name = str2(block.name);
       if (!tuid || !name) continue;
-      const input = obj(block.input) ?? {};
+      const input = obj2(block.input) ?? {};
       const event = {
         e: "PreToolUse",
         t: ms,
@@ -10434,14 +11887,14 @@ var TranscriptReader = class {
         tuid,
         ih: tuid
       };
-      const command = str(input.command);
+      const command = str2(input.command);
       if (command) event.cmd = cleanCommand(command);
-      const files = FILE_KEYS.map((key) => str(input[key])).filter((f) => !!f);
-      if (files.length > 0) event.files = files;
+      const files2 = FILE_KEYS.map((key) => str2(input[key])).filter((f) => !!f);
+      if (files2.length > 0) event.files = files2;
       if (input.run_in_background === true) event.bg = true;
-      const sub = str(input.subagent_type);
+      const sub = str2(input.subagent_type);
       if (sub) event.sub = sub;
-      const ref = str(input.task_id) ?? str(input.bash_id) ?? str(input.shell_id);
+      const ref = str2(input.task_id) ?? str2(input.bash_id) ?? str2(input.shell_id);
       if (ref) event.bgid = ref;
       if (agentId) event.aid = agentId;
       this.emit(event);
@@ -10462,13 +11915,13 @@ var TranscriptReader = class {
       if (agentId) use.agentId = agentId;
       this.toolUses.set(tuid, use);
       if (this.options.detail) {
-        const description = str(input.description);
-        if (description) this.details.set(tuid, { description: oneLine(description) });
+        const description = str2(input.description);
+        if (description) this.details.set(tuid, { description: oneLine2(description) });
       }
     }
   }
   system(entry, ms) {
-    const subtype = str(entry.subtype) ?? "<none>";
+    const subtype = str2(entry.subtype) ?? "<none>";
     if (!SYSTEM_SUBTYPES.has(subtype)) {
       this.count(`system:${subtype}`);
       return;
@@ -10476,9 +11929,9 @@ var TranscriptReader = class {
     if (subtype === "turn_duration" || subtype === "stop_hook_summary") {
       this.turnEndMark = Math.max(this.turnEndMark ?? 0, ms);
     } else if (subtype === "compact_boundary") {
-      const meta = obj(entry.compactMetadata) ?? {};
+      const meta = obj2(entry.compactMetadata) ?? {};
       const duration = typeof meta.durationMs === "number" ? meta.durationMs : 0;
-      const trigger = str(meta.trigger);
+      const trigger = str2(meta.trigger);
       this.emit({ e: "PreCompact", t: ms - duration, ...trigger ? { trigger } : {} });
       this.emit({ e: "PostCompact", t: ms, ...trigger ? { trigger } : {} });
     }
@@ -10548,7 +12001,7 @@ var TranscriptReader = class {
     }
   }
 };
-function tokens(usage2) {
+function tokens4(usage2) {
   const n = (key) => typeof usage2[key] === "number" ? usage2[key] : 0;
   return {
     input: n("input_tokens"),
@@ -10557,13 +12010,13 @@ function tokens(usage2) {
     cacheWrite: n("cache_creation_input_tokens")
   };
 }
-function oneLine(text) {
+function oneLine2(text) {
   const plain = text.replace(/<(system-reminder|local-command-caveat|command-message)>[\s\S]*?<\/\1>/g, " ").replace(/<command-name>([^<]*)<\/command-name>/g, "$1 ").replace(/<\/?[a-z][a-z0-9_-]*(?:\s[^>]*)?>/gi, " ").replace(/\s+/g, " ").trim();
   const masked = maskSecrets(plain);
   return masked.length > 160 ? masked.slice(0, 157) + "\u2026" : masked;
 }
 function clip(text) {
-  if (text.length <= MAX_OUTPUT) return text;
+  if (text.length <= MAX_OUTPUT2) return text;
   const head2 = text.slice(0, 1500);
   const tail = text.slice(-2400);
   return `${head2}
@@ -10581,39 +12034,39 @@ function compareVersions(a, b) {
 }
 
 // src/importers/claude-code/locate.ts
-import { existsSync as existsSync5, readdirSync as readdirSync4, statSync as statSync3 } from "node:fs";
-import path8 from "node:path";
+import { existsSync as existsSync7, readdirSync as readdirSync6, statSync as statSync4 } from "node:fs";
+import path12 from "node:path";
 function listTranscripts(env = process.env, sinceMs = -Infinity) {
   const root = claudeProjectsDir(env);
-  if (!existsSync5(root)) return [];
-  const files = [];
-  for (const project of readdirSync4(root)) {
-    const dir = path8.join(root, project);
+  if (!existsSync7(root)) return [];
+  const files2 = [];
+  for (const project of readdirSync6(root)) {
+    const dir = path12.join(root, project);
     let names;
     try {
-      if (!statSync3(dir).isDirectory()) continue;
-      names = readdirSync4(dir);
+      if (!statSync4(dir).isDirectory()) continue;
+      names = readdirSync6(dir);
     } catch {
       continue;
     }
     for (const name of names) {
       if (!name.endsWith(".jsonl")) continue;
-      const file = path8.join(dir, name);
+      const file = path12.join(dir, name);
       try {
-        const stat = statSync3(file);
-        if (!stat.isFile() || stat.mtimeMs < sinceMs) continue;
-        files.push({
+        const stat2 = statSync4(file);
+        if (!stat2.isFile() || stat2.mtimeMs < sinceMs) continue;
+        files2.push({
           id: name.slice(0, -".jsonl".length),
           path: file,
           project,
-          mtimeMs: stat.mtimeMs,
-          size: stat.size
+          mtimeMs: stat2.mtimeMs,
+          size: stat2.size
         });
       } catch {
       }
     }
   }
-  return files;
+  return files2;
 }
 
 // src/store/sessions.ts
@@ -10627,18 +12080,25 @@ function sessionIndex(env = process.env) {
   for (const file of listEventFiles(env)) entry(file.id).events = file;
   for (const id of listImportedIds(env)) entry(id).imported = true;
   for (const file of listTranscripts(env)) entry(file.id).transcript = file;
+  for (const file of listAgentSessions(env)) entry(file.id).external = file;
   return index;
 }
 function latestMs(ref) {
-  return Math.max(ref.events?.mtimeMs ?? 0, ref.transcript?.mtimeMs ?? 0);
+  return Math.max(
+    ref.events?.mtimeMs ?? 0,
+    ref.transcript?.mtimeMs ?? 0,
+    ref.external?.mtimeMs ?? 0
+  );
 }
 function resolveSession(input, env = process.env, project) {
-  if (input.endsWith(".jsonl") && existsSync6(input)) {
-    const stat = statSync4(input);
-    const id = path9.basename(input, ".jsonl");
-    const file = { id, path: path9.resolve(input), mtimeMs: stat.mtimeMs, size: stat.size };
-    if (path9.basename(path9.dirname(input)) === "events") return { id, events: file };
-    return { id, transcript: { ...file, project: path9.basename(path9.dirname(input)) } };
+  const external = existsSync8(input) ? detectAgentFile(input) : void 0;
+  if (external) return { id: external.id, external };
+  if (input.endsWith(".jsonl") && existsSync8(input)) {
+    const stat2 = statSync5(input);
+    const id = path13.basename(input, ".jsonl");
+    const file = { id, path: path13.resolve(input), mtimeMs: stat2.mtimeMs, size: stat2.size };
+    if (path13.basename(path13.dirname(input)) === "events") return { id, events: file };
+    return { id, transcript: { ...file, project: path13.basename(path13.dirname(input)) } };
   }
   const index = sessionIndex(env);
   if (input === "last" || input === "latest" || input === "current") {
@@ -10657,7 +12117,7 @@ function resolveSession(input, env = process.env, project) {
   throw new Error(`no session "${input}". Run "awf sessions" to list them, or "awf import" first.`);
 }
 function projectKey(dir) {
-  return path9.resolve(dir).replace(/[^A-Za-z0-9]/g, "-");
+  return path13.resolve(dir).replace(/[^A-Za-z0-9]/g, "-");
 }
 function refProject(ref) {
   return ref.transcript?.project;
@@ -10677,12 +12137,18 @@ function loadSession(ref, options = {}) {
   if (recorded && transcript) return mergeSessions(recorded, transcript);
   if (recorded) return recorded;
   if (transcript) return transcript;
+  if (ref.external && existsSync8(ref.external.path)) {
+    try {
+      return importAgentFile(ref.external, { detail: options.detail ?? false });
+    } catch {
+    }
+  }
   const imported = readImported(ref.id, env);
   if (imported) return { ...imported.session, sources: ["import-cache"] };
   throw new Error(`session ${ref.id} has no readable data`);
 }
 function existing(file) {
-  return file && existsSync6(file) ? file : void 0;
+  return file && existsSync8(file) ? file : void 0;
 }
 function mergeSessions(recorded, transcript) {
   const fromTranscript = new Map(transcript.steps.map((s) => [s.id, s]));
@@ -10735,26 +12201,26 @@ function mergeSessions(recorded, transcript) {
 function loadOne(ctx, ref, options, detail) {
   if (!ref)
     throw new Error('which session? Give an ID (or its first characters), "last", or a file path.');
-  const project = typeof options.project === "string" ? projectKey(path10.resolve(ctx.cwd, options.project)) : void 0;
+  const project = typeof options.project === "string" ? projectKey(path14.resolve(ctx.cwd, options.project)) : void 0;
   return loadSession(resolveSession(ref, ctx.env, project), { detail, env: ctx.env });
 }
-function classifier(files = diskFiles()) {
+function classifier(files2 = diskFiles()) {
   const cache = /* @__PURE__ */ new Map();
   return (session) => {
     const key = session.cwd ?? "";
     let c = cache.get(key);
-    if (!c) cache.set(key, c = new Classifier(loadRules(session.cwd, files), files));
+    if (!c) cache.set(key, c = new Classifier(loadRules(session.cwd, files2), files2));
     return c.session(session);
   };
 }
 function loadMany(ctx, options) {
   const since = typeof options.since === "string" ? ctx.now - parseSince(options.since) : -Infinity;
-  const project = typeof options.project === "string" ? path10.resolve(ctx.cwd, options.project) : void 0;
+  const project = typeof options.project === "string" ? path14.resolve(ctx.cwd, options.project) : void 0;
   const sessions = [];
   for (const ref of sessionIndex(ctx.env).values()) {
     const session = quick(ref, ctx.env);
     if (!session || session.steps.length === 0 || session.startMs < since) continue;
-    if (project && !(session.cwd && (session.cwd === project || session.cwd.startsWith(project + path10.sep))))
+    if (project && !(session.cwd && (session.cwd === project || session.cwd.startsWith(project + path14.sep))))
       continue;
     sessions.push(session);
   }
@@ -10882,7 +12348,7 @@ Lists each step (turns, model time, tool calls, subagents) with its phase, tags 
       return 0;
     }
     const shown = options.share ? shareSession(session) : session;
-    const home = ctx.env.HOME ?? os3.homedir();
+    const home = ctx.env.HOME ?? os4.homedir();
     ctx.io.out(
       `Session ${session.id.slice(0, 8)} \xB7 ${formatClock(session.startMs)} \xB7 ${formatDuration(session.endMs - session.startMs)}` + (shown.cwd ? ` \xB7 ${homeRelative(shown.cwd, home)}` : "")
     );
@@ -10920,267 +12386,6 @@ Lists each step (turns, model time, tool calls, subagents) with its phase, tags 
 function withoutDetail(session) {
   return { ...session, steps: session.steps.map(({ detail: _detail, ...rest }) => rest) };
 }
-
-// src/cli/commands/doctor.ts
-import os4 from "node:os";
-var doctorCommand = {
-  summary: "Check the recorder and list transcript entries awf does not recognise",
-  usage: `Usage: awf doctor [--json]
-
-Shows whether the recorder is writing events, where awf reads and writes, and every transcript entry
-type the importer didn't recognise, with the Claude Code versions that wrote it. Run it after a
-Claude Code update. It reads what "awf import" stored, so run that first.`,
-  options: { json: { type: "boolean" } },
-  run(ctx, _args, options) {
-    const events = listEventFiles(ctx.env);
-    const lastEvent = Math.max(0, ...events.map((f) => f.mtimeMs));
-    const transcripts = listTranscripts(ctx.env, ctx.now - 30 * 864e5);
-    const imported = listImportedIds(ctx.env);
-    const unknown = /* @__PURE__ */ new Map();
-    for (const id of imported) {
-      const session = readImported(id, ctx.env)?.session;
-      for (const [type, count] of Object.entries(session?.diagnostics?.unknownEntries ?? {})) {
-        const entry = unknown.get(type) ?? { count: 0, versions: /* @__PURE__ */ new Set() };
-        entry.count += count;
-        if (session?.agentVersion) entry.versions.add(session.agentVersion);
-        unknown.set(type, entry);
-      }
-    }
-    const report = {
-      awf: VERSION,
-      node: process.version,
-      awfHome: awfHome(ctx.env),
-      claudeProjects: claudeProjectsDir(ctx.env),
-      recordedSessions: events.length,
-      lastEventMs: lastEvent || null,
-      transcriptsLast30Days: transcripts.length,
-      importedSessions: imported.length,
-      unknownEntries: Object.fromEntries(
-        [...unknown].map(([type, u]) => [
-          type,
-          { count: u.count, versions: [...u.versions].sort() }
-        ])
-      )
-    };
-    if (options.json) {
-      ctx.io.out(JSON.stringify(report, null, 2));
-      return 0;
-    }
-    const home = ctx.env.HOME ?? os4.homedir();
-    const recorder = events.length === 0 ? "no events yet. Install the plugin: claude plugin install awf@awf" : `${events.length} sessions, last event ${formatDuration(ctx.now - lastEvent)} ago`;
-    ctx.io.out(
-      [
-        `awf ${VERSION} on Node ${process.version}`,
-        `Writes:   ${homeRelative(report.awfHome, home)} (events/, imported/)`,
-        `Reads:    ${homeRelative(report.claudeProjects, home)} (never changes it)`,
-        `Recorder: ${recorder}`,
-        `Transcripts changed in the last 30 days: ${transcripts.length}; imported sessions: ${imported.length}`
-      ].join("\n")
-    );
-    if (unknown.size === 0) {
-      ctx.io.out(
-        imported.length > 0 ? "Unknown transcript entries: none." : 'Run "awf import" to check transcripts.'
-      );
-    } else {
-      ctx.io.out("Unknown transcript entries (skipped; new in a Claude Code update?):");
-      ctx.io.out(
-        table(
-          ["TYPE", "COUNT", "CLAUDE CODE"],
-          [...unknown].sort((a, b) => b[1].count - a[1].count).map(([type, u]) => [type, String(u.count), [...u.versions].sort().join(", ")]),
-          [1]
-        )
-      );
-    }
-    return 0;
-  }
-};
-
-// src/cli/commands/import.ts
-import os5 from "node:os";
-import path11 from "node:path";
-function inProject(folder, dir) {
-  if (!dir) return true;
-  const key = projectKey(dir);
-  return folder === key || folder.startsWith(key + "-");
-}
-var importCommand = {
-  summary: "Import past sessions from Claude Code transcripts (read-only)",
-  usage: `Usage: awf import [--since 30d] [--project <dir>] [--force] [--dry-run] [--json]
-
-Reads every transcript under ~/.claude/projects/ (read-only) and keeps the timings in ~/.awf/imported/,
-so your history survives Claude Code deleting transcripts after 30 days. Prints the sessions, steps
-and any transcript entries awf doesn't recognise.
-  --since <age>     only transcripts changed within this age
-  --project <dir>   only sessions started in this folder or below it
-  --force           re-import transcripts that haven't changed
-  --dry-run         read and report, but write nothing
-  --json            print JSON`,
-  options: {
-    since: { type: "string" },
-    project: { type: "string" },
-    force: { type: "boolean" },
-    "dry-run": { type: "boolean" },
-    json: { type: "boolean" }
-  },
-  run(ctx, _args, options) {
-    const since = typeof options.since === "string" ? ctx.now - parseSince(options.since) : -Infinity;
-    const project = typeof options.project === "string" ? path11.resolve(ctx.cwd, options.project) : void 0;
-    const files = listTranscripts(ctx.env, since).filter((f) => inProject(f.project, project));
-    const report = {
-      transcripts: files.length,
-      imported: 0,
-      unchanged: 0,
-      steps: 0,
-      toolCalls: 0,
-      unknownEntries: {},
-      badLines: 0,
-      versions: [],
-      errors: []
-    };
-    const versions = /* @__PURE__ */ new Set();
-    for (const file of files) {
-      let session;
-      const cached = options.force ? void 0 : readImported(file.id, ctx.env);
-      if (cached && cached.source.mtimeMs === file.mtimeMs && cached.source.size === file.size) {
-        session = cached.session;
-        report.unchanged++;
-      } else {
-        try {
-          session = importClaudeCodeTranscript(file.path);
-        } catch (error) {
-          report.errors.push({
-            file: file.path,
-            message: error instanceof Error ? error.message : String(error)
-          });
-          continue;
-        }
-        if (!options["dry-run"]) {
-          writeImported(
-            {
-              version: 1,
-              source: { path: file.path, mtimeMs: file.mtimeMs, size: file.size },
-              session: stripDetail(session)
-            },
-            ctx.env
-          );
-        }
-        report.imported++;
-      }
-      report.steps += session.steps.length;
-      report.toolCalls += session.steps.filter((s) => s.kind === "tool").length;
-      report.badLines += session.diagnostics?.badLines ?? 0;
-      if (session.agentVersion) versions.add(session.agentVersion);
-      for (const [type, count] of Object.entries(session.diagnostics?.unknownEntries ?? {})) {
-        const entry = report.unknownEntries[type] ??= { count: 0, versions: [] };
-        entry.count += count;
-        if (session.agentVersion && !entry.versions.includes(session.agentVersion)) {
-          entry.versions.push(session.agentVersion);
-        }
-      }
-    }
-    report.versions = [...versions].sort();
-    if (options.json) {
-      ctx.io.out(JSON.stringify(report, null, 2));
-      return report.errors.length > 0 ? 1 : 0;
-    }
-    const home = ctx.env.HOME ?? os5.homedir();
-    const verb = options["dry-run"] ? "Read" : "Imported";
-    ctx.io.out(
-      `${verb} ${report.transcripts - report.errors.length} of ${report.transcripts} sessions from ${homeRelative(claudeProjectsDir(ctx.env), home)} (${report.imported} new or changed, ${report.unchanged} unchanged): ${report.steps.toLocaleString("en-US")} steps, ${report.toolCalls.toLocaleString("en-US")} tool calls.`
-    );
-    if (report.versions.length > 0) {
-      ctx.io.out(
-        `Claude Code versions: ${report.versions[0]} to ${report.versions[report.versions.length - 1]}.`
-      );
-    }
-    const unknown = Object.entries(report.unknownEntries).sort((a, b) => b[1].count - a[1].count);
-    if (unknown.length === 0) {
-      ctx.io.out("Unknown entries: none.");
-    } else {
-      ctx.io.out(`Unknown entries (${unknown.length} types, counted and skipped):`);
-      ctx.io.out(
-        table(
-          ["TYPE", "COUNT", "CLAUDE CODE"],
-          unknown.map(([type, u]) => [type, String(u.count), u.versions.sort().join(", ")]),
-          [1]
-        )
-      );
-    }
-    if (report.badLines > 0) ctx.io.out(`Lines that weren't valid JSON: ${report.badLines}.`);
-    if (report.errors.length > 0) {
-      ctx.io.out(`Failed: ${report.errors.length} files`);
-      for (const error of report.errors)
-        ctx.io.out(`  ${homeRelative(error.file, home)}: ${error.message}`);
-      return 1;
-    }
-    return 0;
-  }
-};
-
-// src/cli/commands/purge.ts
-import { existsSync as existsSync7, readdirSync as readdirSync5, rmSync, statSync as statSync5 } from "node:fs";
-import os6 from "node:os";
-import path12 from "node:path";
-var OURS = /* @__PURE__ */ new Set(["events", "imported", "reports", ".DS_Store"]);
-function size(target) {
-  const stat = statSync5(target, { throwIfNoEntry: false });
-  if (!stat) return 0;
-  if (!stat.isDirectory()) return stat.size;
-  return readdirSync5(target).reduce((n, name) => n + size(path12.join(target, name)), 0);
-}
-function human(bytes) {
-  if (bytes >= 1e9) return `${(bytes / 1e9).toFixed(1)} GB`;
-  if (bytes >= 1e6) return `${(bytes / 1e6).toFixed(1)} MB`;
-  if (bytes >= 1e3) return `${(bytes / 1e3).toFixed(0)} kB`;
-  return `${bytes} B`;
-}
-var purgeCommand = {
-  summary: "Delete everything awf stored (~/.awf); Claude Code's own files stay",
-  usage: `Usage: awf purge [--yes]
-
-Deletes awf's folder (~/.awf, or $AWF_HOME): recorded timings, the import cache and reports.
-Claude Code's transcripts are never touched. Without --yes it only lists what it would delete.
-  --yes   delete it`,
-  options: { yes: { type: "boolean" }, json: { type: "boolean" } },
-  run(ctx, _args, options) {
-    const home = ctx.env.HOME ?? os6.homedir();
-    const dir = awfHome(ctx.env);
-    const shown = homeRelative(dir, home);
-    if (!existsSync7(dir)) {
-      ctx.io.out(`Nothing to delete: ${shown} doesn't exist.`);
-      return 0;
-    }
-    const entries2 = readdirSync5(dir);
-    const foreign = entries2.filter((name) => !OURS.has(name));
-    const parts = entries2.filter((name) => OURS.has(name) && name !== ".DS_Store").map((name) => ({ name, bytes: size(path12.join(dir, name)) }));
-    if (options.json) {
-      ctx.io.out(JSON.stringify({ dir, parts, foreign, deleted: false }, null, 2));
-      if (!options.yes) return 0;
-    }
-    if (foreign.length) {
-      ctx.io.err(
-        `${shown} holds files awf didn't make (${foreign.slice(0, 5).join(", ")}${foreign.length > 5 ? ", \u2026" : ""}), so awf won't delete it. Remove them first, or delete the folder yourself.`
-      );
-      return 1;
-    }
-    if (!options.yes) {
-      ctx.io.out(`Would delete ${shown}:`);
-      for (const part of parts) ctx.io.out(`  ${part.name.padEnd(9)} ${human(part.bytes)}`);
-      ctx.io.out(`Run "awf purge --yes" to delete it. Claude Code's transcripts are not touched.`);
-      return 0;
-    }
-    rmSync(dir, { recursive: true, force: true });
-    if (!options.json) ctx.io.out(`Deleted ${shown}.`);
-    return 0;
-  }
-};
-
-// src/cli/commands/report.ts
-import { spawn } from "node:child_process";
-import { mkdirSync as mkdirSync2, writeFileSync as writeFileSync2 } from "node:fs";
-import os7 from "node:os";
-import path13 from "node:path";
-import { pathToFileURL } from "node:url";
 
 // src/analyze/rework.ts
 var EDIT_PHASES = /* @__PURE__ */ new Set(["writing-code", "writing-tests"]);
@@ -11247,6 +12452,8 @@ function detectRework(input) {
 var FOREGROUND = 0;
 var BACKGROUND = 1;
 var IDLE = 2;
+var SERVICE = 3;
+var isBackground = (step, background) => step.kind === "background" || background(step);
 function intervals(session) {
   const byId = new Map(session.steps.map((s) => [s.id, s]));
   const background = (step) => {
@@ -11262,7 +12469,7 @@ function intervals(session) {
   for (const step of session.steps) {
     if (!step.phase || step.endMs <= step.startMs) continue;
     if (step.kind === "turn" || step.kind === "subagent") continue;
-    const tier = step.kind === "idle" ? IDLE : background(step) ? BACKGROUND : FOREGROUND;
+    const tier = step.kind === "idle" ? IDLE : isBackground(step, background) ? step.phase === "unclassified" ? SERVICE : BACKGROUND : FOREGROUND;
     const wait = step.kind === "tool" && step.waitMs ? Math.min(step.waitMs, step.endMs - step.startMs) : 0;
     if (wait > 0) {
       out.push({
@@ -11290,7 +12497,7 @@ function intervals(session) {
 var PHASE_INDEX = new Map(PHASES.map((p, i) => [p.id, i]));
 function phaseSegments(session) {
   const start = session.startMs;
-  const end = Math.max(session.endMs, start);
+  const end = sessionEnd(session);
   const events = [];
   for (const iv of intervals(session)) {
     const a = Math.max(iv.start, start);
@@ -11305,8 +12512,8 @@ function phaseSegments(session) {
   let cursor = start;
   const best = () => {
     let chosen;
-    for (const [key, count] of active) {
-      if (count <= 0) continue;
+    for (const [key, count2] of active) {
+      if (count2 <= 0) continue;
       const tier = Math.floor(key / 100);
       const phase = PHASES[key % 100]?.id;
       if (!chosen || tier < chosen.tier || tier === chosen.tier && RANK[phase] > RANK[chosen.phase]) {
@@ -11334,6 +12541,18 @@ function phaseSegments(session) {
   credit(end);
   return segments;
 }
+function sessionEnd(session) {
+  const start = session.startMs;
+  const end = Math.max(session.endMs, start);
+  let lastService = -Infinity;
+  let lastOther = start;
+  for (const step of session.steps) {
+    const service = (step.kind === "background" || step.flags.includes("background")) && step.phase === "unclassified";
+    if (service) lastService = Math.max(lastService, step.endMs);
+    else lastOther = Math.max(lastOther, step.endMs);
+  }
+  return lastService > lastOther && end > lastOther && end <= lastService ? lastOther : end;
+}
 function phaseTotals(session) {
   const byPhase = Object.fromEntries(PHASES.map((p) => [p.id, 0]));
   let uncoveredMs = 0;
@@ -11341,8 +12560,7 @@ function phaseTotals(session) {
     byPhase[segment.phase] += segment.end - segment.start;
     if (!segment.covered) uncoveredMs += segment.end - segment.start;
   }
-  const start = session.startMs;
-  return { totalMs: Math.max(session.endMs, start) - start, byPhase, uncoveredMs };
+  return { totalMs: sessionEnd(session) - session.startMs, byPhase, uncoveredMs };
 }
 
 // src/analyze/summary.ts
@@ -11350,7 +12568,7 @@ function summarize(classified) {
   const { session, windows } = detectRework(classified);
   const totals = phaseTotals(session);
   const tools = session.steps.filter((s) => s.kind === "tool");
-  const count = (phase) => tools.filter((s) => s.phase === phase).length;
+  const count2 = (phase) => tools.filter((s) => s.phase === phase).length;
   const runners = session.steps.filter(
     (s) => (s.kind === "tool" || s.kind === "background") && s.checks.length > 0
   );
@@ -11368,12 +12586,12 @@ function summarize(classified) {
       line.runs = runs.length;
       line.failed = runs.filter((s) => s.checks.some((c) => c.phase === id && c.failed)).length;
     } else if (id === "writing-code" || id === "writing-tests") {
-      line.edits = count(id);
+      line.edits = count2(id);
     } else if (id === "rework") {
-      line.edits = count("rework");
+      line.edits = count2("rework");
       line.failures = windows.filter((w) => w.edits > 0).length;
     } else if (id === "exploring") {
-      line.calls = count("exploring");
+      line.calls = count2("exploring");
     } else if (id === "waiting") {
       line.approvals = tools.filter((s) => s.flags.includes("approval")).length;
       line.questions = tools.filter((s) => s.tool === "AskUserQuestion").length;
@@ -11384,7 +12602,7 @@ function summarize(classified) {
     return line;
   });
   const idleMs = session.steps.filter((s) => s.kind === "idle").reduce((n, s) => n + (s.endMs - s.startMs), 0);
-  const tokens2 = session.steps.reduce((sum, s) => {
+  const tokens5 = session.steps.reduce((sum, s) => {
     if (!s.tokens) return sum;
     const base = sum ?? { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 };
     return {
@@ -11398,7 +12616,7 @@ function summarize(classified) {
     id: session.id,
     sources: session.sources,
     startMs: session.startMs,
-    endMs: session.endMs,
+    endMs: session.startMs + totals.totalMs,
     totalMs: totals.totalMs,
     activeMs: Math.max(0, totals.totalMs - idleMs),
     phases,
@@ -11412,7 +12630,7 @@ function summarize(classified) {
   if (session.title) summary.title = session.title;
   if (session.cwd) summary.cwd = session.cwd;
   if (session.agentVersion) summary.agentVersion = session.agentVersion;
-  if (tokens2) summary.tokens = tokens2;
+  if (tokens5) summary.tokens = tokens5;
   return { session, summary };
 }
 var plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
@@ -11468,6 +12686,659 @@ function formatSummaryLines(summary) {
   return out;
 }
 
+// src/cli/commands/compare.ts
+var DAY = 864e5;
+function parseRange(text, now) {
+  const date = (s) => {
+    const m = /^(\d{4})-(\d\d)-(\d\d)$/.exec(s);
+    return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).getTime() : void 0;
+  };
+  const age = (s) => /^\d+(\.\d+)?\s*[mhdw]$/.test(s) ? now - parseSince(s) : void 0;
+  const [a = "", b] = text.split("..");
+  if (b === void 0) {
+    const day = date(a);
+    if (day !== void 0) return { from: day, to: day + DAY };
+    const since = age(a);
+    return since !== void 0 ? { from: since, to: now } : void 0;
+  }
+  const from = date(a) ?? age(a);
+  const to = date(b) !== void 0 ? date(b) + DAY : age(b);
+  if (from === void 0 || to === void 0) return void 0;
+  return from <= to ? { from, to } : { from: to, to: from };
+}
+function sideOf(label2, summaries) {
+  const totalMs = summaries.reduce((n, s) => n + s.totalMs, 0);
+  const sum = (pick) => summaries.reduce((n, s) => n + pick(s), 0);
+  return {
+    label: label2,
+    sessions: summaries.length,
+    totalMs,
+    activeMs: sum((s) => s.activeMs),
+    phases: PHASES.map(({ id, label: name }) => {
+      const ms = sum((s) => s.phases.find((p) => p.phase === id)?.ms ?? 0);
+      return { phase: id, label: name, ms, share: totalMs > 0 ? ms / totalMs : 0 };
+    }),
+    modelCalls: sum((s) => s.modelCalls),
+    toolCalls: sum((s) => s.toolCalls),
+    failures: sum((s) => s.failures),
+    reworkLoops: sum((s) => s.rework.filter((w) => w.edits > 0).length)
+  };
+}
+function load(ctx, text, options) {
+  const classify = classifier();
+  const range = parseRange(text, ctx.now);
+  if (range) {
+    const sessions = loadMany(ctx, options).filter(
+      (s) => s.startMs >= range.from && s.startMs < range.to
+    );
+    if (sessions.length === 0) throw new Error(`no sessions in ${text}. Run "awf import" first?`);
+    return sideOf(
+      text,
+      sessions.map((s) => summarize(classify(s)).summary)
+    );
+  }
+  const session = loadOne(ctx, text, options, false);
+  const { summary } = summarize(classify(session));
+  return sideOf(`${session.id.slice(0, 8)} (${formatClock(session.startMs)})`, [summary]);
+}
+var pts = (a, b) => {
+  const d = Math.round((b - a) * 100);
+  return d === 0 ? "0" : `${d > 0 ? "+" : "\u2212"}${Math.abs(d)} pts`;
+};
+var delta = (a, b) => b === a ? "" : `${b > a ? "+" : "\u2212"}${formatDuration(Math.abs(b - a))}`;
+var count = (a, b) => b === a ? "" : `${b > a ? "+" : "\u2212"}${Math.abs(b - a)}`;
+var compareCommand = {
+  summary: "Phase totals side by side for two sessions or date ranges",
+  usage: `Usage: awf compare <before> <after> [--project <dir>] [--json]
+
+Shows each phase's time and share for two sessions, or two time ranges summed, and the change
+from the first to the second: a before/after check for a faster build or test setup.
+Each side is a session (ID, its first characters, "last", or a file) or a range:
+  2026-10-01..2026-10-15   those days (the end day included)
+  2026-10-20               that day
+  7d                       the last 7 days (also h, w, m for hours, weeks, minutes)
+  14d..7d                  from 14 days ago to 7 days ago
+  --project <dir>   only sessions started in this folder or below it
+  --json            print JSON`,
+  options: { project: { type: "string" }, json: { type: "boolean" } },
+  run(ctx, args, options) {
+    if (args.length !== 2) throw new Error("compare needs two sides: awf compare <before> <after>");
+    const [a, b] = [load(ctx, args[0], options), load(ctx, args[1], options)];
+    if (options.json) {
+      const changes = a.phases.map((p, i) => ({
+        phase: p.phase,
+        ms: (b.phases[i]?.ms ?? 0) - p.ms,
+        share: (b.phases[i]?.share ?? 0) - p.share
+      }));
+      ctx.io.out(JSON.stringify({ before: a, after: b, changes }, null, 2));
+      return 0;
+    }
+    const perSession = a.sessions > 1 || b.sessions > 1;
+    ctx.io.out(
+      `Before: ${a.label}${perSession ? ` \xB7 ${a.sessions} sessions` : ""} \xB7 ${formatDuration(a.totalMs)}`
+    );
+    ctx.io.out(
+      `After:  ${b.label}${perSession ? ` \xB7 ${b.sessions} sessions` : ""} \xB7 ${formatDuration(b.totalMs)}`
+    );
+    ctx.io.out("");
+    const rows = a.phases.map((p, i) => [p, b.phases[i]]).filter(([p, q]) => p.ms > 0 || (q?.ms ?? 0) > 0).map(([p, q]) => [
+      p.label,
+      formatDuration(p.ms),
+      `${Math.round(p.share * 100)}%`,
+      formatDuration(q?.ms ?? 0),
+      `${Math.round((q?.share ?? 0) * 100)}%`,
+      pts(p.share, q?.share ?? 0),
+      delta(p.ms, q?.ms ?? 0)
+    ]);
+    rows.push([
+      "Total",
+      formatDuration(a.totalMs),
+      "100%",
+      formatDuration(b.totalMs),
+      "100%",
+      "",
+      delta(a.totalMs, b.totalMs)
+    ]);
+    ctx.io.out(
+      table(
+        ["PHASE", "BEFORE", "SHARE", "AFTER", "SHARE", "SHARE CHANGE", "TIME CHANGE"],
+        rows,
+        [1, 2, 3, 4, 5, 6]
+      )
+    );
+    ctx.io.out("");
+    const facts = [
+      ["Failed checks", a.failures, b.failures],
+      ["Rework loops", a.reworkLoops, b.reworkLoops],
+      ["Model calls", a.modelCalls, b.modelCalls],
+      ["Tool calls", a.toolCalls, b.toolCalls],
+      ...perSession ? [["Sessions", a.sessions, b.sessions]] : []
+    ];
+    ctx.io.out(
+      table(
+        ["", "BEFORE", "AFTER", "CHANGE"],
+        facts.map(([name, x, y]) => [name, String(x), String(y), count(x, y)]),
+        [1, 2, 3]
+      )
+    );
+    if (perSession && a.sessions !== b.sessions)
+      ctx.io.out(
+        "\nThe sides have different numbers of sessions: compare the shares, not the times."
+      );
+    return 0;
+  }
+};
+
+// src/cli/commands/doctor.ts
+import os5 from "node:os";
+var doctorCommand = {
+  summary: "Check the recorder and list transcript entries awf does not recognise",
+  usage: `Usage: awf doctor [--json]
+
+Shows whether the recorder is writing events, where awf reads and writes, and every transcript entry
+type the importer didn't recognise, with the Claude Code versions that wrote it. Run it after a
+Claude Code update. It reads what "awf import" stored, so run that first.`,
+  options: { json: { type: "boolean" } },
+  run(ctx, _args, options) {
+    const events = listEventFiles(ctx.env);
+    const lastEvent = Math.max(0, ...events.map((f) => f.mtimeMs));
+    const transcripts = listTranscripts(ctx.env, ctx.now - 30 * 864e5);
+    const imported = listImportedIds(ctx.env);
+    const unknown = /* @__PURE__ */ new Map();
+    for (const id of imported) {
+      const session = readImported(id, ctx.env)?.session;
+      for (const [type, count2] of Object.entries(session?.diagnostics?.unknownEntries ?? {})) {
+        const entry = unknown.get(type) ?? { count: 0, versions: /* @__PURE__ */ new Set() };
+        entry.count += count2;
+        if (session?.agentVersion) entry.versions.add(session.agentVersion);
+        unknown.set(type, entry);
+      }
+    }
+    const report = {
+      awf: VERSION,
+      node: process.version,
+      awfHome: awfHome(ctx.env),
+      claudeProjects: claudeProjectsDir(ctx.env),
+      recordedSessions: events.length,
+      lastEventMs: lastEvent || null,
+      transcriptsLast30Days: transcripts.length,
+      importedSessions: imported.length,
+      unknownEntries: Object.fromEntries(
+        [...unknown].map(([type, u]) => [
+          type,
+          { count: u.count, versions: [...u.versions].sort() }
+        ])
+      )
+    };
+    if (options.json) {
+      ctx.io.out(JSON.stringify(report, null, 2));
+      return 0;
+    }
+    const home = ctx.env.HOME ?? os5.homedir();
+    const recorder = events.length === 0 ? "no events yet. Install the plugin: claude plugin install awf@awf" : `${events.length} sessions, last event ${formatDuration(ctx.now - lastEvent)} ago`;
+    ctx.io.out(
+      [
+        `awf ${VERSION} on Node ${process.version}`,
+        `Writes:   ${homeRelative(report.awfHome, home)} (events/, imported/)`,
+        `Reads:    ${homeRelative(report.claudeProjects, home)} (never changes it)`,
+        `Recorder: ${recorder}`,
+        `Transcripts changed in the last 30 days: ${transcripts.length}; imported sessions: ${imported.length}`
+      ].join("\n")
+    );
+    if (unknown.size === 0) {
+      ctx.io.out(
+        imported.length > 0 ? "Unknown transcript entries: none." : 'Run "awf import" to check transcripts.'
+      );
+    } else {
+      ctx.io.out("Unknown transcript entries (skipped; new in a Claude Code update?):");
+      ctx.io.out(
+        table(
+          ["TYPE", "COUNT", "CLAUDE CODE"],
+          [...unknown].sort((a, b) => b[1].count - a[1].count).map(([type, u]) => [type, String(u.count), [...u.versions].sort().join(", ")]),
+          [1]
+        )
+      );
+    }
+    return 0;
+  }
+};
+
+// src/cli/commands/import.ts
+import os6 from "node:os";
+import path15 from "node:path";
+function inProject(folder, dir) {
+  if (!dir) return true;
+  const key = projectKey(dir);
+  return folder === key || folder.startsWith(key + "-");
+}
+var importCommand = {
+  summary: "Import past sessions from Claude Code, Codex, Gemini and OpenCode (read-only)",
+  usage: `Usage: awf import [--since 30d] [--project <dir>] [--agent <name>] [--force] [--dry-run] [--json]
+
+Reads every Claude Code transcript under ~/.claude/projects/, and the session logs of Codex CLI
+(~/.codex/sessions), Gemini CLI (~/.gemini/tmp) and OpenCode (~/.local/share/opencode/storage),
+all read-only, and keeps the timings in ~/.awf/imported/, so your history survives the agents
+deleting old logs. Prints the sessions, steps and any log entries awf doesn't recognise.
+  --since <age>     only logs changed within this age
+  --project <dir>   only sessions started in this folder or below it
+  --agent <name>    only one agent: claude-code, codex, gemini or opencode
+  --force           re-import transcripts that haven't changed
+  --dry-run         read and report, but write nothing
+  --json            print JSON`,
+  options: {
+    since: { type: "string" },
+    project: { type: "string" },
+    agent: { type: "string" },
+    force: { type: "boolean" },
+    "dry-run": { type: "boolean" },
+    json: { type: "boolean" }
+  },
+  run(ctx, _args, options) {
+    const since = typeof options.since === "string" ? ctx.now - parseSince(options.since) : -Infinity;
+    const project = typeof options.project === "string" ? path15.resolve(ctx.cwd, options.project) : void 0;
+    const agent = typeof options.agent === "string" ? options.agent : void 0;
+    if (agent && !(agent in AGENT_NAMES))
+      throw new Error(`unknown agent "${agent}": use ${Object.keys(AGENT_NAMES).join(", ")}`);
+    const files2 = (!agent || agent === "claude-code" ? listTranscripts(ctx.env, since) : []).filter((f) => inProject(f.project, project)).map((f) => ({ ...f, read: () => importClaudeCodeTranscript(f.path), agent: "claude-code" }));
+    for (const f of listAgentSessions(ctx.env, since)) {
+      if (agent && f.agent !== agent) continue;
+      files2.push({ ...f, project: "", read: () => importAgentFile(f), agent: f.agent });
+    }
+    const report = {
+      transcripts: files2.length,
+      agents: {},
+      imported: 0,
+      unchanged: 0,
+      steps: 0,
+      toolCalls: 0,
+      unknownEntries: {},
+      badLines: 0,
+      versions: [],
+      errors: []
+    };
+    const versions = /* @__PURE__ */ new Set();
+    for (const file of files2) {
+      let session;
+      const cached = options.force ? void 0 : readImported(file.id, ctx.env);
+      if (cached && cached.source.mtimeMs === file.mtimeMs && cached.source.size === file.size) {
+        session = cached.session;
+        report.unchanged++;
+      } else {
+        try {
+          session = file.read();
+        } catch (error) {
+          report.errors.push({
+            file: file.path,
+            message: error instanceof Error ? error.message : String(error)
+          });
+          continue;
+        }
+        if (!options["dry-run"]) {
+          writeImported(
+            {
+              version: 1,
+              source: { path: file.path, mtimeMs: file.mtimeMs, size: file.size },
+              session: stripDetail(session)
+            },
+            ctx.env
+          );
+        }
+        report.imported++;
+      }
+      if (file.agent !== "claude-code" && project && !(session.cwd && (session.cwd === project || session.cwd.startsWith(project + path15.sep)))) {
+        report.transcripts--;
+        continue;
+      }
+      report.agents[file.agent] = (report.agents[file.agent] ?? 0) + 1;
+      report.steps += session.steps.length;
+      report.toolCalls += session.steps.filter((s) => s.kind === "tool").length;
+      report.badLines += session.diagnostics?.badLines ?? 0;
+      if (session.agentVersion && session.agent === "claude-code")
+        versions.add(session.agentVersion);
+      for (const [type, count2] of Object.entries(session.diagnostics?.unknownEntries ?? {})) {
+        const key = session.agent === "claude-code" ? type : `${session.agent}:${type}`;
+        const entry = report.unknownEntries[key] ??= { count: 0, versions: [] };
+        entry.count += count2;
+        if (session.agentVersion && !entry.versions.includes(session.agentVersion)) {
+          entry.versions.push(session.agentVersion);
+        }
+      }
+    }
+    report.versions = [...versions].sort();
+    if (options.json) {
+      ctx.io.out(JSON.stringify(report, null, 2));
+      return report.errors.length > 0 ? 1 : 0;
+    }
+    const home = ctx.env.HOME ?? os6.homedir();
+    const verb = options["dry-run"] ? "Read" : "Imported";
+    const byAgent = Object.entries(report.agents).map(([name, n]) => `${AGENT_NAMES[name] ?? name} ${n}`).join(", ");
+    const from = Object.keys(report.agents).every((a) => a === "claude-code") ? `from ${homeRelative(claudeProjectsDir(ctx.env), home)} ` : `(${byAgent}) `;
+    ctx.io.out(
+      `${verb} ${report.transcripts - report.errors.length} of ${report.transcripts} sessions ${from}(${report.imported} new or changed, ${report.unchanged} unchanged): ${report.steps.toLocaleString("en-US")} steps, ${report.toolCalls.toLocaleString("en-US")} tool calls.`
+    );
+    if (report.versions.length > 0) {
+      ctx.io.out(
+        `Claude Code versions: ${report.versions[0]} to ${report.versions[report.versions.length - 1]}.`
+      );
+    }
+    const unknown = Object.entries(report.unknownEntries).sort((a, b) => b[1].count - a[1].count);
+    if (unknown.length === 0) {
+      ctx.io.out("Unknown entries: none.");
+    } else {
+      ctx.io.out(`Unknown entries (${unknown.length} types, counted and skipped):`);
+      ctx.io.out(
+        table(
+          ["TYPE", "COUNT", "CLAUDE CODE"],
+          unknown.map(([type, u]) => [type, String(u.count), u.versions.sort().join(", ")]),
+          [1]
+        )
+      );
+    }
+    if (report.badLines > 0) ctx.io.out(`Lines that weren't valid JSON: ${report.badLines}.`);
+    if (report.errors.length > 0) {
+      ctx.io.out(`Failed: ${report.errors.length} files`);
+      for (const error of report.errors)
+        ctx.io.out(`  ${homeRelative(error.file, home)}: ${error.message}`);
+      return 1;
+    }
+    return 0;
+  }
+};
+
+// src/cli/commands/purge.ts
+import { existsSync as existsSync9, readdirSync as readdirSync7, rmSync, statSync as statSync6 } from "node:fs";
+import os7 from "node:os";
+import path16 from "node:path";
+var OURS = /* @__PURE__ */ new Set(["events", "imported", "reports", ".DS_Store"]);
+function size(target) {
+  const stat2 = statSync6(target, { throwIfNoEntry: false });
+  if (!stat2) return 0;
+  if (!stat2.isDirectory()) return stat2.size;
+  return readdirSync7(target).reduce((n, name) => n + size(path16.join(target, name)), 0);
+}
+function human(bytes) {
+  if (bytes >= 1e9) return `${(bytes / 1e9).toFixed(1)} GB`;
+  if (bytes >= 1e6) return `${(bytes / 1e6).toFixed(1)} MB`;
+  if (bytes >= 1e3) return `${(bytes / 1e3).toFixed(0)} kB`;
+  return `${bytes} B`;
+}
+var purgeCommand = {
+  summary: "Delete everything awf stored (~/.awf); Claude Code's own files stay",
+  usage: `Usage: awf purge [--yes]
+
+Deletes awf's folder (~/.awf, or $AWF_HOME): recorded timings, the import cache and reports.
+Claude Code's transcripts are never touched. Without --yes it only lists what it would delete.
+  --yes   delete it`,
+  options: { yes: { type: "boolean" }, json: { type: "boolean" } },
+  run(ctx, _args, options) {
+    const home = ctx.env.HOME ?? os7.homedir();
+    const dir = awfHome(ctx.env);
+    const shown = homeRelative(dir, home);
+    if (!existsSync9(dir)) {
+      ctx.io.out(`Nothing to delete: ${shown} doesn't exist.`);
+      return 0;
+    }
+    const entries2 = readdirSync7(dir);
+    const foreign = entries2.filter((name) => !OURS.has(name));
+    const parts = entries2.filter((name) => OURS.has(name) && name !== ".DS_Store").map((name) => ({ name, bytes: size(path16.join(dir, name)) }));
+    if (options.json) {
+      ctx.io.out(JSON.stringify({ dir, parts, foreign, deleted: false }, null, 2));
+      if (!options.yes) return 0;
+    }
+    if (foreign.length) {
+      ctx.io.err(
+        `${shown} holds files awf didn't make (${foreign.slice(0, 5).join(", ")}${foreign.length > 5 ? ", \u2026" : ""}), so awf won't delete it. Remove them first, or delete the folder yourself.`
+      );
+      return 1;
+    }
+    if (!options.yes) {
+      ctx.io.out(`Would delete ${shown}:`);
+      for (const part of parts) ctx.io.out(`  ${part.name.padEnd(9)} ${human(part.bytes)}`);
+      ctx.io.out(`Run "awf purge --yes" to delete it. Claude Code's transcripts are not touched.`);
+      return 0;
+    }
+    rmSync(dir, { recursive: true, force: true });
+    if (!options.json) ctx.io.out(`Deleted ${shown}.`);
+    return 0;
+  }
+};
+
+// src/cli/commands/report.ts
+import { spawn } from "node:child_process";
+import { mkdirSync as mkdirSync2, writeFileSync as writeFileSync2 } from "node:fs";
+import os8 from "node:os";
+import path18 from "node:path";
+import { pathToFileURL } from "node:url";
+
+// src/build/drilldown.ts
+import { readdirSync as readdirSync8, readFileSync as readFileSync9 } from "node:fs";
+import path17 from "node:path";
+import { gunzipSync } from "node:zlib";
+
+// src/build/parsers.ts
+var bySlowest = (tasks) => tasks.sort((a, b) => b.ms - a.ms);
+function parseCargoTimings(html) {
+  const start = /Build start:<\/td>\s*<td>([^<]+)</.exec(html)?.[1];
+  const startMs = start ? Date.parse(start) : NaN;
+  const data = /const UNIT_DATA = (\[[\s\S]*?\]);\s*\n\s*const /.exec(html)?.[1];
+  if (!data) return { tasks: [] };
+  let units;
+  try {
+    units = JSON.parse(data);
+  } catch {
+    return { tasks: [] };
+  }
+  const tasks = units.filter((u) => typeof u.duration === "number" && u.name).map((u) => {
+    const target = (u.target ?? "").trim();
+    const task = {
+      name: `${u.name} v${u.version ?? ""}${target ? ` (${target.replace(/"/g, "")})` : ""}`,
+      ms: Math.round((u.duration ?? 0) * 1e3)
+    };
+    if (Number.isFinite(startMs) && typeof u.start === "number")
+      task.startMs = startMs + Math.round(u.start * 1e3);
+    return task;
+  });
+  return { ...Number.isFinite(startMs) ? { startMs } : {}, tasks: bySlowest(tasks) };
+}
+function parseXcodeTimingSummary(output) {
+  const at = output.lastIndexOf("Build Timing Summary");
+  if (at < 0) return [];
+  const tasks = [];
+  for (const match of output.slice(at).matchAll(/^(\S.*?) \((\d+) tasks?\) \| ([\d.]+) seconds$/gm)) {
+    tasks.push({
+      name: match[1],
+      count: Number(match[2]),
+      ms: Math.round(Number(match[3]) * 1e3)
+    });
+  }
+  return bySlowest(tasks);
+}
+function gradleDuration(text) {
+  const match = /^(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m)?(?:([\d.]+)s)$/.exec(text.trim());
+  if (!match) return void 0;
+  const [, d = "0", h = "0", m = "0", s = "0"] = match;
+  return Math.round(((Number(d) * 24 + Number(h)) * 60 + Number(m)) * 6e4 + Number(s) * 1e3);
+}
+function parseGradleProfile(html) {
+  const at = html.indexOf("<h2>Task Execution</h2>");
+  if (at < 0) return [];
+  const section = html.slice(at, html.indexOf("</table>", at) + 8);
+  const tasks = [];
+  for (const row of section.matchAll(/<tr>([\s\S]*?)<\/tr>/g)) {
+    const cells = [...(row[1] ?? "").matchAll(/<td[^>]*?(?:\/>|>([\s\S]*?)<\/td>)/g)].map(
+      (c) => (c[1] ?? "").replace(/<[^>]+>/g, "").trim()
+    );
+    const [name, duration, result2 = ""] = cells;
+    if (!name || !duration || result2 === "(total)") continue;
+    const ms = gradleDuration(duration);
+    if (ms === void 0) continue;
+    tasks.push({ name, ms, ...result2 ? { result: result2 } : {} });
+  }
+  return bySlowest(tasks);
+}
+function gradleProfileTime(file) {
+  const m = /profile-(\d{4})-(\d\d)-(\d\d)-(\d\d)-(\d\d)-(\d\d)\.html$/.exec(file);
+  if (!m) return void 0;
+  const [, y, mo, d, h, mi, s] = m.map(Number);
+  return new Date(y, mo - 1, d, h, mi, s).getTime();
+}
+function cargoTimingTime(file) {
+  const m = /cargo-timing-(\d{4})(\d\d)(\d\d)T(\d\d)(\d\d)(\d\d)(?:\.(\d+))?Z\.html$/.exec(file);
+  if (!m) return void 0;
+  const [, y, mo, d, h, mi, s] = m.map(Number);
+  return Date.UTC(y, mo - 1, d, h, mi, s) + Math.round(Number(`0.${m[7] ?? "0"}`) * 1e3);
+}
+function parseBazelProfile(json, startMs) {
+  let trace;
+  try {
+    trace = JSON.parse(json);
+  } catch {
+    return [];
+  }
+  const tasks = [];
+  for (const e of trace.traceEvents ?? []) {
+    if (e.ph !== "X" || typeof e.dur !== "number" || typeof e.ts !== "number" || !e.name) continue;
+    if (e.cat !== "action processing") continue;
+    tasks.push({
+      name: e.name,
+      ms: Math.round(e.dur / 1e3),
+      startMs: startMs + Math.round(e.ts / 1e3)
+    });
+  }
+  return bySlowest(tasks);
+}
+function parseMsbuildSummary(output) {
+  const at = output.lastIndexOf("Target Performance Summary:");
+  if (at < 0) return [];
+  const tasks = [];
+  for (const line of output.slice(at).split("\n").slice(1)) {
+    const match = /^\s*(\d+) ms\s+(.+?)\s+(\d+) calls?\s*$/.exec(line);
+    if (!match) {
+      if (line.trim() === "" || /Performance Summary:/.test(line)) {
+        if (tasks.length > 0) break;
+        continue;
+      }
+      continue;
+    }
+    tasks.push({ name: match[2], ms: Number(match[1]), count: Number(match[3]) });
+  }
+  return bySlowest(tasks);
+}
+
+// src/build/drilldown.ts
+var diskBuildFiles = {
+  read(file) {
+    try {
+      const bytes = readFileSync9(file);
+      return file.endsWith(".gz") ? gunzipSync(bytes).toString("utf8") : bytes.toString("utf8");
+    } catch {
+      return void 0;
+    }
+  },
+  list(dir) {
+    try {
+      return readdirSync8(dir);
+    } catch {
+      return [];
+    }
+  }
+};
+var WINDOW_MS = 1e4;
+var MAX_TASKS = 12;
+function attachBuildTimings(session, files2 = diskBuildFiles) {
+  let found = 0;
+  for (const step of session.steps) {
+    if (step.kind !== "tool" || !step.command) continue;
+    const timings = timingsFor(step, session.cwd, files2);
+    if (!timings || timings.tasks.length === 0) continue;
+    step.build = {
+      ...timings,
+      tasks: timings.tasks.slice(0, MAX_TASKS),
+      total: timings.tasks.length
+    };
+    found++;
+  }
+  return found;
+}
+function optionValue2(args, names) {
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (names.includes(arg)) return args[i + 1];
+    const eq = names.find((n) => arg.startsWith(`${n}=`));
+    if (eq) return arg.slice(eq.length + 1);
+  }
+  return void 0;
+}
+function nearest(files2, dir, timeOf, step) {
+  let best;
+  let distance = Infinity;
+  for (const name of files2.list(dir)) {
+    const t = timeOf(name);
+    if (t === void 0 || t < step.startMs - WINDOW_MS || t > step.endMs + WINDOW_MS) continue;
+    if (Math.abs(t - step.startMs) < distance) {
+      best = path17.join(dir, name);
+      distance = Math.abs(t - step.startMs);
+    }
+  }
+  return best;
+}
+function timingsFor(step, sessionCwd, files2) {
+  const output = step.detail?.output ?? "";
+  for (const simple of splitCommand(step.command ?? "")) {
+    const argv = unwrap(simple.argv).argv;
+    const program = programName(argv[0] ?? "");
+    const args = argv.slice(1);
+    const cwd = simple.cd.reduce((dir, target) => resolvePath(dir, target), sessionCwd ?? "/");
+    switch (program) {
+      case "xcodebuild": {
+        if (!args.includes("-showBuildTimingSummary")) break;
+        const tasks = parseXcodeTimingSummary(output);
+        if (tasks.length) return { tool: "xcodebuild", source: "output", tasks };
+        break;
+      }
+      case "msbuild":
+      case "MSBuild":
+      case "dotnet": {
+        const tasks = parseMsbuildSummary(output);
+        if (tasks.length) return { tool: "msbuild", source: "output", tasks };
+        break;
+      }
+      case "cargo":
+      case "cross": {
+        if (!args.some((a) => a === "--timings" || a.startsWith("--timings="))) break;
+        const manifest = optionValue2(args, ["--manifest-path"]);
+        const root = manifest ? path17.dirname(resolvePath(cwd, manifest)) : cwd;
+        const file = /Timing report saved to (\S+\.html)/.exec(output)?.[1] ?? nearest(files2, path17.join(root, "target", "cargo-timings"), cargoTimingTime, step);
+        const html = file ? files2.read(file) : void 0;
+        if (file && html)
+          return { tool: "cargo", source: file, tasks: parseCargoTimings(html).tasks };
+        break;
+      }
+      case "gradle": {
+        if (!args.includes("--profile")) break;
+        const project = optionValue2(args, ["-p", "--project-dir"]);
+        const root = project ? resolvePath(cwd, project) : cwd;
+        const file = /See the profiling report at: file:\/\/(\S+\.html)/.exec(output)?.[1] ?? nearest(files2, path17.join(root, "build", "reports", "profile"), gradleProfileTime, step);
+        const html = file ? files2.read(decodeURI(file)) : void 0;
+        if (file && html)
+          return { tool: "gradle", source: decodeURI(file), tasks: parseGradleProfile(html) };
+        break;
+      }
+      case "bazel":
+      case "bazelisk": {
+        const flag = optionValue2(args, ["--profile"]);
+        if (!flag) break;
+        const file = resolvePath(cwd, flag);
+        const text = files2.read(file);
+        if (text)
+          return { tool: "bazel", source: file, tasks: parseBazelProfile(text, step.startMs) };
+        break;
+      }
+    }
+  }
+  return void 0;
+}
+
 // src/report/data.ts
 var MAX_OUTPUT_STEP = 4e3;
 var MAX_OUTPUT_TOTAL = 25e5;
@@ -11518,8 +13389,8 @@ function buildReportData(analysis, options = {}) {
     const parent = step.parentId && byId.has(step.parentId) ? step.parentId : null;
     children.set(parent, [...children.get(parent) ?? [], step]);
   }
-  for (const list2 of children.values())
-    list2.sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs);
+  for (const list3 of children.values())
+    list3.sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs);
   const turnNumber = /* @__PURE__ */ new Map();
   for (const step of session.steps.filter((s) => s.kind === "turn").sort((a, b) => a.startMs - b.startMs)) {
     turnNumber.set(step.id, turnNumber.size + 1);
@@ -11577,6 +13448,32 @@ function buildReportData(analysis, options = {}) {
     }
     steps.push(out);
     displayIndex.set(step.id, i);
+    if (step.build && !share) {
+      out.container = true;
+      out.description = `Slowest ${step.build.tasks.length} of ${step.build.total} tasks, from ${step.build.source === "output" ? `${step.build.tool}'s output` : shortPath(step.build.source, session.cwd, options.home)}`;
+      for (const task of step.build.tasks) {
+        const started = task.startMs !== void 0;
+        const s0 = started ? task.startMs - t0 : step.startMs - t0;
+        steps.push({
+          i: steps.length,
+          p: i,
+          depth: depth + 1,
+          kind: "build-task",
+          ...step.phase ? { phase: step.phase } : {},
+          s: s0,
+          e: s0 + task.ms,
+          label: task.name,
+          ...task.count && task.count > 1 ? { text: `${task.count} ${step.build.tool === "msbuild" ? "calls" : "tasks"}` } : task.result ? { text: task.result } : {},
+          tool: step.build.tool,
+          failed: false,
+          flags: [],
+          tags: [],
+          checks: [],
+          container: false,
+          started
+        });
+      }
+    }
     for (const kid of kids) visit(kid, i, depth + 1);
   };
   for (const top of children.get(null) ?? []) visit(top, -1, 0);
@@ -11587,7 +13484,7 @@ function buildReportData(analysis, options = {}) {
     if (made.length) steps[target].produces = made;
   }
   const leaves = steps.filter(
-    (s) => !s.container && s.kind !== "idle" && s.kind !== "turn" && s.kind !== "background" && !s.flags.includes("background")
+    (s) => (!s.container || steps[s.i + 1]?.kind === "build-task") && s.kind !== "build-task" && s.kind !== "idle" && s.kind !== "turn" && s.kind !== "background" && !s.flags.includes("background")
   );
   const slowest = [...leaves].sort((a, b) => b.e - b.s - (a.e - a.s)).slice(0, 3).map((s) => s.i);
   const MODEL = "\0model";
@@ -11677,8 +13574,8 @@ function buildReportData(analysis, options = {}) {
 }
 
 // report-assets:report-assets
-var CLIENT_JS = '"use strict";(()=>{function f(e){if(!Number.isFinite(e)||e<0)return"\\u2013";if(e<1e3)return`${Math.round(e)} ms`;if(e<1e4)return`${(e/1e3).toFixed(1)}s`;let t=Math.round(e/1e3),s=Math.floor(t/3600),a=Math.floor(t%3600/60),o=t%60;return s>0?`${s}h ${pe(a)}m ${pe(o)}s`:a>0?`${a}m ${pe(o)}s`:`${o}s`}function pe(e){return String(e).padStart(2,"0")}var Ee="0.1.0";var Je=performance.now(),c=JSON.parse(document.getElementById("awf-data")?.textContent??"null"),b=c.steps,$=Math.max(1,c.session.totalMs),oe=b.map(()=>[]);for(let e of b)e.p>=0&&oe[e.p]?.push(e.i);var Ae=new Map(c.phases.map(e=>[e.id,e.label])),Qe=new Map(c.slowest.map((e,t)=>[e,t])),he=b.filter(e=>!e.container).length;function n(e,t={},...s){let a=document.createElement(e);for(let[o,i]of Object.entries(t))i===void 0||i===!1||(o==="class"?a.className=String(i):o==="text"?a.textContent=String(i):a.setAttribute(o,i===!0?"":String(i)));for(let o of s)o&&a.append(o);return a}var M=e=>String(e).padStart(2,"0"),O=e=>e.replace(/\\s+/g," ").trim(),j=(e,t)=>e.length>t?e.slice(0,t-1)+"\\u2026":e,R=(e,t,s=`${t}s`)=>`${e.toLocaleString("en-US")} ${e===1?t:s}`,_=e=>`var(--c-${e})`,H=e=>e?Ae.get(e)??e:"",T=e=>e.e-e.s;function v(e){return e>0&&e<.005?"<1%":`${Math.round(e*100)}%`}function S(e,t=!0){let s=Math.max(0,Math.round(e/1e3)),a=Math.floor(s/3600),o=Math.floor(s%3600/60);return $>=36e5?`${a}:${M(o)}${t?`:${M(s%60)}`:""}`:`${Math.floor(s/60)}:${M(s%60)}`}function ge(e,t=!1){let s=new Date(e),a=`${M(s.getHours())}:${M(s.getMinutes())}:${M(s.getSeconds())}`;return t?`${s.getFullYear()}-${M(s.getMonth()+1)}-${M(s.getDate())} ${a.slice(0,5)}`:a}function G(e){return e>=1e6?`${(e/1e6).toFixed(e>=1e7?0:1)}M`:e>=1e3?`${(e/1e3).toFixed(e>=1e4?0:1)}k`:String(e)}function D(e){if(e.text)return e.text;if(e.description)return e.description;if(e.kind==="turn"&&e.flags.includes("notification"))return"started by a background task"}var Ze=[...[1,2,5,10,15,30].map(e=>e*1e3),...[1,2,5,10,15,30].map(e=>e*6e4),...[1,2,3,6,12,24].map(e=>e*36e5)];function et(){let e=b.filter(o=>o.kind!=="idle"&&o.e>o.s).map(o=>[o.s,o.e]).sort((o,i)=>o[0]-i[0]),t=Math.max(6e4,$*.03),s=[],a=0;for(let[o,i]of e)o-a>=t&&s.push({s:a,e:o}),a=Math.max(a,i);return $-a>=t&&s.push({s:a,e:$}),s}var xe=et();function Ie(e){let t=e?xe:[],s=t.reduce((x,h)=>x+h.e-h.s,0),a=$-s,o=t.length&&a>0?Math.min(1.5,12/t.length):0,i=o?t:[],d=(100-i.length*o)/(o?a:$),u=[[0,0]],m=[],p=0,w=0;for(let x of i)p+=(x.s-w)*d,u.push([x.s,p]),m.push({s:x.s,e:x.e,x0:p,x1:p+o}),p+=o,u.push([x.e,p]),w=x.e;return u.push([$,100]),{x:x=>{if(x<=0)return 0;if(x>=$)return 100;let h=0,A=u.length-1;for(;A-h>1;){let ue=h+A>>1;u[ue][0]<=x?h=ue:A=ue}let[ce,de]=u[h],[ve,Xe]=u[A];return ve===ce?de:de+(x-ce)/(ve-ce)*(Xe-de)},gaps:m,k:d}}function tt(e){let t=Math.round(e/6e4);return t>=60?`${Math.floor(t/60)}h ${M(t%60)}m`:t>=1?`${t}m`:`${Math.round(e/1e3)}s`}var Pe=e=>`${tt(e.e-e.s)} idle`;function nt(e){let t=d=>{let u=(me(d)+22)/Math.max(e,1)*100,m=u/g.k,p=Ze.find(w=>w>=m)??Math.ceil(m/864e5)*864e5;return{minPct:u,step:p}},{minPct:s,step:a}=t($>=36e5?"0:00":"00:00");$>=36e5&&a<6e4&&({minPct:s,step:a}=t("0:00:00"));let o=[],i=-1/0;for(let d=0;d<=$;d+=a){if(g.gaps.some(p=>d>p.s&&d<p.e))continue;let u=g.x(d);if(u-i<s)continue;let m=g.gaps.some(p=>{let w=(me(Pe(p))/2+12)/Math.max(e,1)*100;return Math.abs(u-(p.x0+p.x1)/2)<w+s/2});d>0&&m||(o.push({x:u,text:S(d,a<6e4)}),i=u)}let r=$>=36e5?a<6e4?"h:mm:ss":"h:mm":"m:ss";return{ticks:o,unit:r}}var l={collapsed:new Set,filterCollapsed:new Set,phases:new Set,failedOnly:!1,query:"",open:-1,focus:-1,squeeze:xe.length>0};for(let e of b)e.container&&(e.kind==="subagent"||he>250&&e.kind==="turn")&&l.collapsed.add(e.i);var g=Ie(l.squeeze),E=()=>l.phases.size>0||l.failedOnly||l.query!=="";function Re(e){return!(l.phases.size>0&&!(e.phase&&l.phases.has(e.phase))||l.failedOnly&&!e.failed||l.query&&![e.label,e.text,e.tool,e.agentType,e.description,...e.checks.map(s=>s.key)].filter(Boolean).join(`\n`).toLowerCase().includes(l.query))}function _e(){let e=E(),t,s=new Set;if(e){t=new Set;for(let r of b)if(Re(r)){t.add(r.i);for(let d=r.p;d>=0&&!s.has(d);d=b[d]?.p??-1)t.add(d),s.add(d)}}else for(let r of b)r.container&&s.add(r.i);let a=e?l.filterCollapsed:l.collapsed,o=[],i=1/0;for(let r of b)r.depth>i||(i=1/0,!(t&&!t.has(r.i))&&(o.push(r),s.has(r.i)&&a.has(r.i)&&(i=r.depth)));return{rows:o,parents:s}}var k=_e(),st=document.getElementById("app"),V=n("div",{class:"wrap"});st.append(V);var P=c.session.totalMs,ee=c.session.activeMs,at=c.share?`Shared session ${c.session.id.slice(0,8)}`:c.session.title??`Session ${c.session.id.slice(0,8)}`,te=n("button",{class:"theme",type:"button"});function ot(){try{let e=localStorage.getItem("awf-theme");return e==="light"||e==="dark"?e:"auto"}catch{return"auto"}}function He(e){e==="auto"?delete document.documentElement.dataset.theme:document.documentElement.dataset.theme=e,te.textContent=`Theme: ${e[0]?.toUpperCase()}${e.slice(1)}`,te.setAttribute("aria-label",`Color theme: ${e}. Change theme`)}var I=ot();He(I);te.addEventListener("click",()=>{I=I==="auto"?"light":I==="light"?"dark":"auto",He(I);try{I==="auto"?localStorage.removeItem("awf-theme"):localStorage.setItem("awf-theme",I)}catch{}});var it=c.session.agent==="claude-code"?"Claude Code":c.session.agent,rt=[ge(c.session.startMs,!0),ee<P?`${f(P)} (active ${f(ee)})`:f(P),c.session.cwd,`${it}${c.session.agentVersion?` ${c.session.agentVersion}`:""}`].filter(e=>!!e);V.append(n("header",{class:"top"},n("div",{},n("p",{class:"brand",text:"awf \\xB7 agent waterfall"}),n("h1",{text:j(O(at),220)}),n("p",{class:"meta",text:rt.join(" \\xB7 ")})),te));var ie=c.phases.filter(e=>e.ms>0),F=n("section",{class:"card","aria-label":"Where the time went"});F.append(n("div",{class:"total"},n("span",{class:"value",text:f(P)}),n("span",{class:"sub",text:ee<P?`total, ${f(ee)} active (the rest is idle time between turns)`:"total"})));var ke=n("div",{class:"stack",role:"img","aria-label":ie.map(e=>`${e.label} ${v(e.share)}`).join(", ")});for(let e of ie){let t=n("span",{"data-phase":e.id});t.style.background=_(e.id),t.style.flex=`${e.ms} 1 0`,ke.append(t)}F.append(ke);var Fe=n("ul",{class:"legend","aria-label":"Phases. Pick one or more to filter steps"}),qe=new Map;for(let e of ie){let t=n("button",{class:"chip",type:"button","aria-pressed":"false",title:e.detail?`${e.label}: ${e.detail}`:e.label},n("span",{class:"sw","aria-hidden":"true"}),n("span",{class:"name",text:e.label}),n("span",{class:"num",text:`${f(e.ms)} \\xB7 ${v(e.share)}`}));t.firstChild.style.background=_(e.id),t.addEventListener("click",()=>{l.phases.has(e.id)?l.phases.delete(e.id):l.phases.add(e.id),le()}),qe.set(e.id,t),Fe.append(n("li",{},t))}F.append(Fe);var q=c.counts,lt=[[q.modelCalls,"model call"],[q.toolCalls,"tool call"],...q.subagents?[[q.subagents,"subagent"]]:[],[q.failures,"failed check"],[q.reworkLoops,"rework loop"]],$e=n("p",{class:"counts"});for(let[e,t]of lt){let[s,...a]=R(e,t).split(" ");$e.append(n("span",{},n("b",{text:s??""}),` ${a.join(" ")}`))}if(c.tokens){let e=c.tokens.input+c.tokens.cacheRead+c.tokens.cacheWrite,t=e>0?c.tokens.cacheRead/e:0;$e.append(n("span",{},n("b",{text:G(e)}),` tokens in (${v(t)} from cache), `,n("b",{text:G(c.tokens.output)})," out"))}F.append($e);var W=n("ul",{class:"why"}),ct=[...ie].sort((e,t)=>t.ms-e.ms),[B,Y,X]=ct;B&&W.append(n("li",{},"Most time went to ",n("b",{text:B.label}),`: ${f(B.ms)} (${v(B.share)})${B.detail?`, ${B.detail}`:""}.`,Y?` Then ${Y.label} ${f(Y.ms)} (${v(Y.share)})${X?` and ${X.label} ${f(X.ms)} (${v(X.share)})`:""}.`:""));if(c.slowest.length){let e=n("li",{},"Slowest steps: ");c.slowest.forEach((t,s)=>{let a=b[t];if(!a)return;let o=a.kind==="model"?b[a.produces?.[0]??-1]:void 0,i=o?D(o):a.kind==="model"?void 0:D(a),r=n("button",{class:"link",type:"button",title:"Show this step"},o?`${a.label} ${f(T(a))}, writing ${o.label}`:a.label,i?n("code",{text:j(O(i),60)}):null,o?"":` ${f(T(a))}`,a.failed?" \\u2715 failed":"");r.addEventListener("click",()=>Ye(t)),e.append(s>0?", ":"",r)}),e.append("."),W.append(e)}if(c.rework.length){let e=c.rework.filter(s=>s.edits>0),t=n("li",{},e.length?"Rework: ":"Rework: none. ");e.slice(0,3).forEach((s,a)=>{t.append(a>0?"; ":"",n("code",{text:s.check}),` failed at ${S(s.failedAt)}`,s.passedAt!==void 0?` and passed at ${S(s.passedAt)} after ${R(s.edits,"edit")}`:` and hadn\'t passed by the end (${R(s.edits,"edit")})`)}),e.length>3&&t.append(`; ${e.length-3} more`),e.length?t.append("."):t.append("checks failed, but no edits followed before they ran again."),W.append(t)}else W.append(n("li",{text:"No rework: no check failed and then got fixed."}));var J=c.phases.find(e=>e.id==="unclassified");J&&J.share>=.05&&c.unclassified.length&&W.append(n("li",{},`Unclassified ${f(J.ms)} (${v(J.share)}): `,...c.unclassified.slice(0,3).flatMap((e,t)=>[t>0?", ":"",n("code",{text:e.name}),` ${f(e.ms)}`]),c.unclassifiedModelMs>=1e3?`, and ${f(c.unclassifiedModelMs)} of model time writing those calls`:"",". Rules in ",n("code",{text:".awf/rules.yaml"})," can sort them."));F.append(W);var we=n("table",{},n("caption",{class:"sr",text:"Time by phase"}));we.append(n("thead",{},n("tr",{},n("th",{scope:"col",text:"Phase"}),n("th",{scope:"col",class:"n",text:"Time"}),n("th",{scope:"col",class:"n",text:"Share"}),n("th",{scope:"col",text:"Detail"}))));var ye=n("tbody");for(let e of c.phases)ye.append(n("tr",{},n("td",{text:e.label}),n("td",{class:"n",text:f(e.ms)}),n("td",{class:"n",text:v(e.share)}),n("td",{text:e.detail})));ye.append(n("tr",{class:"sum"},n("td",{text:"Total"}),n("td",{class:"n",text:f(P)}),n("td",{class:"n",text:"100%"}),n("td",{})));we.append(ye);F.append(n("details",{class:"table"},n("summary",{text:"Phase table"}),we));V.append(F);var ne=n("input",{type:"checkbox"}),se=n("input",{type:"search",placeholder:c.share?"Search tools and phases":"Search commands, files, tools","aria-label":"Search steps"}),ae=n("input",{type:"checkbox"});ae.checked=l.squeeze;var Be=n("span",{class:"count","aria-live":"polite"}),re=n("button",{class:"link",type:"button",text:"Clear filters"}),Ne=n("button",{class:"link",type:"button",text:"Expand all"}),De=n("button",{class:"link",type:"button",text:"Collapse all"}),dt=n("div",{class:"filters"},se,n("label",{},ne,"Failed only"),xe.length?n("label",{title:"Squeeze long idle stretches to a sliver"},ae,"Squeeze idle gaps"):null,Ne,De,re,Be);V.append(dt);ne.addEventListener("change",()=>{l.failedOnly=ne.checked,le()});var Ce=0;se.addEventListener("input",()=>{clearTimeout(Ce),Ce=window.setTimeout(()=>{l.query=se.value.trim().toLowerCase(),le()},120)});ae.addEventListener("change",()=>{l.squeeze=ae.checked,g=Ie(l.squeeze),je(),C()});re.addEventListener("click",()=>{l.phases.clear(),l.failedOnly=!1,l.query="",ne.checked=!1,se.value="",le()});Ne.addEventListener("click",()=>{(E()?l.filterCollapsed:l.collapsed).clear(),C()});De.addEventListener("click",()=>{let e=E()?l.filterCollapsed:l.collapsed;for(let t of k.parents)e.add(t);C()});function le(){l.filterCollapsed.clear();for(let[e,t]of qe)t.setAttribute("aria-pressed",String(l.phases.has(e))),t.classList.toggle("dim",l.phases.size>0&&!l.phases.has(e));for(let e of ke.children){let t=e.dataset.phase;e.style.opacity=l.phases.size>0&&!l.phases.has(t)?"0.3":""}C()}var Me=n("section",{class:"fall","aria-label":"Waterfall of every step"}),N=n("div",{class:"axis","aria-hidden":"true"}),Q=n("div",{class:"strip",role:"img"}),We=n("div",{class:"hl"});Me.append(n("div",{class:"head"},We,N,n("div",{class:"hl sub",text:"Phase at each moment"}),Q));var Z=n("div",{class:"lines","aria-hidden":"true"}),L=n("div",{class:"rows",role:"list","aria-label":"Steps"});Me.append(n("div",{class:"body"},Z,L));V.append(Me);function Se(e,t,s){let a=g.x(t);e.style.left=`${a}%`,e.style.width=`${Math.max(0,g.x(s)-a)}%`}var K=0,ze=64,fe=document.createElement("canvas").getContext("2d"),Te=new Map;function me(e){let t=Te.get(e);return t===void 0&&(fe?(fe.font=`11.5px ${getComputedStyle(document.body).fontFamily}`,t=fe.measureText(e).width):t=e.length*7,Te.set(e,t)),t}function Oe(){K=N.clientWidth,ze=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--pad"))||64;let{ticks:e,unit:t}=nt(K||800);We.textContent=`Step \\xB7 elapsed ${t}`,N.replaceChildren(),Z.replaceChildren();for(let s of e){let a=n("span",{class:`tick${s.x===0?" start":s.x>94?" end":""}`,text:s.text});a.style.left=`${s.x}%`,N.append(a);let o=n("i");o.style.left=`${s.x}%`,Z.append(o)}for(let s of g.gaps){let a=n("span",{class:"brk",title:`${f(s.e-s.s)} idle, squeezed`});a.style.left=`${s.x0}%`,a.style.width=`${s.x1-s.x0}%`;let o=n("span",{class:"gapl",text:Pe(s)});o.style.left=`${(s.x0+s.x1)/2}%`,N.append(a,o);let i=n("i",{class:"gap"});i.style.left=`${s.x0}%`,i.style.width=`${s.x1-s.x0}%`,Z.append(i)}}function je(){Oe(),Q.replaceChildren(),c.timeline.forEach(([e,t,s],a)=>{if(g.x(t)-g.x(e)<.02)return;let o=n("span",{"data-seg":a});o.style.background=_(s),Se(o,e,t),Q.append(o)}),Q.setAttribute("aria-label",`Phase over time, from 0 to ${f(P)}. The phase table lists the totals.`)}function Ve(e){let t=[];if(e.kind==="turn")for(let[s,a,o]of c.timeline)a>e.s&&s<e.e&&t.push([Math.max(s,e.s),Math.min(a,e.e),o]);else{let s=a=>{for(let o of oe[a]??[]){let i=b[o];i&&(i.container?s(o):i.phase&&i.e>i.s&&t.push([i.s,i.e,i.phase]))}};s(e.i)}return t}function ut(e){let t=new Map;for(let[s,a,o]of Ve(e))t.set(o,(t.get(o)??0)+a-s);return[...t].sort((s,a)=>a[1]-s[1])}var Ge=(e,t=3)=>ut(e).slice(0,t).map(([s,a])=>`${H(s)} ${f(a)}`).join(" \\xB7 ");function pt(e){let t=n("span",{class:"mix"});Se(t,e.s,e.e);let s=g.x(e.e)-g.x(e.s);if(s<=0)return t;let a=Ve(e),o=g.x(e.s);for(let[i,r,d]of a){let u=(g.x(i)-o)/s*100,m=(g.x(r)-o)/s*100;if(m-u<.05)continue;let p=n("span");p.style.left=`${u}%`,p.style.width=`${m-u}%`,p.style.background=_(d),t.append(p)}return t}var Ke={approval:"approval",denied:"denied",interrupted:"interrupted",background:"background","api-error":"API error",unfinished:"no end seen"};function ft(e){let t=D(e);return[e.label,t?j(O(t),120):"",H(e.phase),f(T(e)),e.failed?"failed":""].filter(Boolean).join(", ")}function ht(e){let t=E(),s=k.parents.has(e.i),a=(t?l.filterCollapsed:l.collapsed).has(e.i),o=n("div",{class:`row${e.container?" group":""}${e.kind==="idle"?" idle":""}${l.open===e.i?" sel":""}`,role:"listitem","data-i":e.i}),i=n("div",{class:"name"});if(i.style.paddingLeft=`calc(6px + ${e.depth} * var(--indent))`,s){let h=oe[e.i]?.length??0;i.append(n("button",{class:"tw",type:"button",tabindex:-1,"aria-expanded":String(!a),"aria-label":`${a?"Show":"Hide"} ${R(h,"step")} inside ${e.label}`,text:a?"\\u25B8":"\\u25BE"}))}else i.append(n("span",{class:"tw","aria-hidden":"true"}));let r=n("button",{class:"pick",type:"button",tabindex:l.focus===e.i?0:-1,"aria-expanded":String(l.open===e.i),"aria-label":ft(e)});if(e.phase&&!e.container){let h=n("span",{class:"dot","aria-hidden":"true"});h.style.background=_(e.phase),r.append(h)}r.append(n("span",{class:"kind",text:e.label}));let d=D(e);d&&r.append(n("span",{class:"text",text:j(O(d),300)})),e.failed&&r.append(n("span",{class:"fail"},"\\u2715",n("span",{class:"w",text:" failed"})));let u=Qe.get(e.i);u!==void 0&&r.append(n("span",{class:"badge",text:u===0?"slowest":`#${u+1} slowest`}));for(let h of e.flags){let A=Ke[h];A&&!(h==="background"&&e.kind==="background")&&r.append(n("span",{class:"badge soft",text:A}))}i.append(r),o.append(i);let m=n("div",{class:"track","aria-hidden":"true"});if(e.container&&a)m.append(pt(e));else{let h=n("span",{class:`bar${e.failed?" failed":""}`});e.failed?h.style.background="var(--critical)":!e.container&&e.phase&&(h.style.background=_(e.phase)),Se(h,e.s,e.e),m.append(h)}let p=n("span",{class:"dur"},e.failed?n("span",{class:"x",text:"\\u2715 "}):null,f(T(e))),w=g.x(e.s),U=g.x(e.e),x=me(p.textContent??"")+6;return(100-U)/100*K+ze>=x+4?p.style.left=`calc(${U}% + 6px)`:w/100*K>=x+4?p.style.right=`calc(${100-w}% + 6px)`:(p.classList.add("in"),p.style.right=`calc(${100-U}% + 4px)`),m.append(p),o.append(m),l.open===e.i&&o.append(bt(e)),o}function mt(e){let t=e.indexOf(":"),s=t>0?e.slice(0,t):e,a=t>0?e.slice(t+1):"";switch(s){case"script":return`runs the package script "${a}"`;case"make":return`runs the make target "${a}"`;case"task":return`runs the task "${a}"`;case"hook":return`runs the git hook ${a}`;case"file":return`runs the script ${a}`;case"via":return`through ${a}`;case"unmatched":return`no rule for "${a}"`;case"was":return`was ${H(a)||a} before a check failed`}let o={"by-name":"phase guessed from a script or task name",install:"installs dependencies",polling:"waits in a loop",neutral:"only commands that say nothing about the phase","failure-unattributed":"the failure could not be pinned on one check","background-task":"waits on a background task",compaction:"context compaction",subagent:"ran a subagent","no-command":"no command recorded"};return o[e]?o[e]:Ae.has(e)?`also ${H(e)}`:e}function bt(e){let t=n("div",{class:"more",role:"region","aria-label":`Details: ${e.label}`}),s=n("dl"),a=(r,...d)=>s.append(n("dt",{text:r}),n("dd",{},...d));if(e.phase){let r=n("span",{class:"sw","aria-hidden":"true"});r.style.background=_(e.phase),a("Phase",r,H(e.phase),e.reworkFor?` (after ${e.reworkFor} failed)`:"")}if(a("When",`${S(e.s)} \\u2192 ${S(e.e)} \\xB7 ${f(T(e))} \\xB7 ${ge(c.session.startMs+e.s)}`),e.waitMs&&a("Waited for you",f(e.waitMs)),e.runMs!==void 0&&e.waitMs&&a("Ran",f(e.runMs)),e.kind==="tool"||e.kind==="background"){let r=e.failed?n("span",{class:"status-failed",text:"\\u2715 Failed"}):e.ok===!0?"OK":e.ok===!1?"Error":"Unknown";a("Result",r,e.exitCode!==void 0?` \\xB7 exit code ${e.exitCode}`:"")}if(e.tool&&a("Tool",e.tool),e.agentType&&a("Agent type",e.agentType),e.model&&a("Model",e.model),e.tokens){let r=e.tokens,d=T(e)/1e3;a("Tokens",`${G(r.input+r.cacheRead+r.cacheWrite)} in (${G(r.cacheRead)} cached) \\xB7 ${G(r.output)} out`,e.kind==="model"&&d>=1&&r.output>0?` \\xB7 ${Math.round(r.output/d)} tokens/s out`:"")}e.checks.length&&a("Checks",e.checks.map(r=>`${r.key} ${r.failed?"failed":"passed"}`).join(", ")),e.flags.length&&a("Flags",e.flags.map(r=>Ke[r]??r).join(", "));let o=e.tags.map(mt).filter(Boolean);if(o.length&&a("Notes",o.join("; ")),e.container){a("Inside",R(oe[e.i]?.length??0,"step"));let r=Ge(e,5);r&&a("By phase",r)}e.kind==="tool"&&!c.session.sources.includes("recorder")&&!e.waitMs&&a("Note","May include waiting for your approval: only the recorder (the plugin) sees approvals."),t.append(s);let i=(r,d)=>t.append(n("h3",{text:r}),n("pre",{text:d}));if(e.kind==="model"&&e.produces?.length){t.append(n("h3",{text:"Wrote these calls"}));let r=n("ul",{class:"made"});for(let d of e.produces){let u=b[d];if(!u)continue;let m=D(u),p=n("button",{class:"link",type:"button"},u.label,m?n("code",{text:j(O(m),100)}):null,` ${f(T(u))}`);p.addEventListener("click",w=>{w.stopPropagation(),Ye(d)}),r.append(n("li",{},p))}t.append(r)}else e.text&&e.tool==="Bash"&&i("Command",e.text);return e.files?.length&&i(e.files.length===1?"File":"Files",e.files.join(`\n`)),e.description&&e.description!==e.text&&i("Description",e.description),e.output&&i(`Output (secrets masked${e.output.length>=4e3?", first 4,000 characters":""})`,e.output),c.share&&t.append(n("p",{class:"note",text:"Shared report: commands, files and output are left out."})),t}function C(){let e=L.contains(document.activeElement);k=_e(),k.rows.some(a=>a.i===l.focus)||(l.focus=k.rows[0]?.i??-1);let t=document.createDocumentFragment();for(let a of k.rows)t.append(ht(a));k.rows.length||t.append(n("p",{class:"empty",text:b.length?"No steps match these filters.":"This session has no steps."})),L.replaceChildren(t);let s=k.rows.filter(a=>!a.container).length;Be.textContent=E()?`${R(s,"step")} match, of ${he.toLocaleString("en-US")}`:R(he,"step"),re.hidden=!E(),e&&z(l.focus)}function z(e){l.focus=e;for(let s of L.querySelectorAll(".pick"))s.tabIndex=-1;let t=L.querySelector(`.row[data-i="${e}"] .pick`);t&&(t.tabIndex=0,t.focus({preventScroll:!1}))}function be(e){let t=E()?l.filterCollapsed:l.collapsed;t.has(e)?t.delete(e):t.add(e),l.focus=e,C(),z(e)}function Ue(e){l.open=l.open===e?-1:e,l.focus=e,C(),z(e)}function Ye(e){let t=b[e];if(t){E()&&!Re(t)&&re.click();for(let s=t.p;s>=0;s=b[s]?.p??-1)l.collapsed.delete(s),l.filterCollapsed.delete(s);l.open=e,l.focus=e,C(),z(e),L.querySelector(`.row[data-i="${e}"]`)?.scrollIntoView({block:"center"})}}L.addEventListener("click",e=>{let t=e.target;if(t.closest(".more"))return;let s=t.closest(".row");if(!s)return;let a=Number(s.getAttribute("data-i"));t.closest(".tw")?be(a):Ue(a)});L.addEventListener("keydown",e=>{let t=e.target.closest(".row");if(!t||!e.target.closest(".pick"))return;let s=Number(t.getAttribute("data-i")),a=k.rows.findIndex(d=>d.i===s),o=b[s];if(!o)return;let i=(E()?l.filterCollapsed:l.collapsed).has(s),r=d=>{let u=k.rows[Math.max(0,Math.min(k.rows.length-1,d))];u&&z(u.i)};switch(e.key){case"ArrowDown":r(a+1);break;case"ArrowUp":r(a-1);break;case"Home":r(0);break;case"End":r(k.rows.length-1);break;case"ArrowRight":k.parents.has(s)&&i?be(s):k.parents.has(s)&&r(a+1);break;case"ArrowLeft":k.parents.has(s)&&!i?be(s):o.p>=0&&z(o.p);break;case"Escape":l.open>=0&&Ue(l.open);break;default:return}e.preventDefault()});var y=n("div",{class:"tip",role:"tooltip",hidden:!0});document.body.append(y);var gt=window.matchMedia("(hover: hover)").matches;function xt(e){let t=e.closest("[data-phase]");if(t){let i=c.phases.find(r=>r.id===t.dataset.phase);if(i)return[n("b",{text:i.label}),n("span",{text:`${f(i.ms)} \\xB7 ${v(i.share)}${i.detail?` \\xB7 ${i.detail}`:""}`})]}let s=e.closest("[data-seg]");if(s){let i=c.timeline[Number(s.dataset.seg)];if(i)return[n("b",{text:H(i[2])}),n("span",{text:`${S(i[0])} \\u2192 ${S(i[1])} \\xB7 ${f(i[1]-i[0])}`})]}let o=e.closest(".track")?.closest(".row");if(o){let i=b[Number(o.getAttribute("data-i"))];if(!i)return;let r=D(i);return[n("b",{text:i.label}),r?n("code",{text:j(O(r),160)}):null,n("span",{text:[H(i.phase),f(T(i)),`${S(i.s)} \\u2192 ${S(i.e)}`,i.failed?"\\u2715 failed":""].filter(Boolean).join(" \\xB7 ")}),i.container?n("span",{text:Ge(i)}):null]}}gt&&(document.addEventListener("mousemove",e=>{let t=e.target instanceof Element?xt(e.target):void 0;if(!t){y.hidden=!0;return}y.replaceChildren(...t.filter(r=>!!r)),y.hidden=!1;let s=y.offsetWidth,a=y.offsetHeight,o=Math.min(e.clientX+14,window.innerWidth-s-8),i=e.clientY+18+a>window.innerHeight?e.clientY-a-12:e.clientY+18;y.style.left=`${Math.max(8,o)}px`,y.style.top=`${Math.max(8,i)}px`}),document.addEventListener("mouseleave",()=>y.hidden=!0));V.append(n("footer",{class:"foot"},`Made by awf ${Ee} on ${ge(c.generatedAt,!0)}. `,c.share?"Shared report: phases, durations and tool names only.":"This file holds commands, file paths and tool output from the session, with secrets masked. Make a version without them with --share."));je();C();var Le=0;window.addEventListener("resize",()=>{cancelAnimationFrame(Le),Le=requestAnimationFrame(()=>{N.clientWidth!==K&&(Oe(),C())})});document.body.dataset.ready="1";document.body.dataset.renderMs=String(Math.round(performance.now()-Je));})();';
-var CLIENT_CSS = ':root{color-scheme:light;--page: #f9f9f7;--surface: #fcfcfb;--raised: #ffffff;--ink: #0b0b0b;--ink-2: #52514e;--muted: #6f6d68;--grid: #e8e7e1;--axis: #c3c2b7;--ring: rgba(11, 11, 11, .12);--hover: rgba(11, 11, 11, .04);--selected: rgba(42, 120, 214, .08);--focus: #2a78d6;--link: #1f63b5;--critical: #d03b3b;--critical-ink: #b42323;--container: #a3a29b;--c-writing-code: #2a78d6;--c-writing-tests: #eb6834;--c-lint: #1baf7a;--c-tests: #eda100;--c-build: #e87ba4;--c-rework: #6250d6;--c-exploring: #008300;--c-planning: #7b8494;--c-waiting: repeating-linear-gradient(135deg, #a9a8a0 0 2px, #e2e1da 2px 5px);--c-unclassified: #a5a49d;--mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;--sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;--label: 34%;--pad: 64px;--indent: 14px;--row: 28px}@media(prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;--page: #0d0d0d;--surface: #1a1a19;--raised: #222220;--ink: #f0efec;--ink-2: #c3c2b7;--muted: #9c9a92;--grid: #2a2a28;--axis: #383835;--ring: rgba(255, 255, 255, .12);--hover: rgba(255, 255, 255, .05);--selected: rgba(57, 135, 229, .14);--focus: #3987e5;--link: #7fb1ef;--critical: #e05252;--critical-ink: #f08080;--container: #6e6d68;--c-writing-code: #3987e5;--c-writing-tests: #d95926;--c-lint: #199e70;--c-tests: #c98500;--c-build: #d55181;--c-rework: #9085e9;--c-exploring: #008300;--c-planning: #8a93a3;--c-waiting: repeating-linear-gradient(135deg, #7a7973 0 2px, #33332f 2px 5px);--c-unclassified: #6e6d68}}:root[data-theme=dark]{color-scheme:dark;--page: #0d0d0d;--surface: #1a1a19;--raised: #222220;--ink: #f0efec;--ink-2: #c3c2b7;--muted: #9c9a92;--grid: #2a2a28;--axis: #383835;--ring: rgba(255, 255, 255, .12);--hover: rgba(255, 255, 255, .05);--selected: rgba(57, 135, 229, .14);--focus: #3987e5;--link: #7fb1ef;--critical: #e05252;--critical-ink: #f08080;--container: #6e6d68;--c-writing-code: #3987e5;--c-writing-tests: #d95926;--c-lint: #199e70;--c-tests: #c98500;--c-build: #d55181;--c-rework: #9085e9;--c-exploring: #008300;--c-planning: #8a93a3;--c-waiting: repeating-linear-gradient(135deg, #7a7973 0 2px, #33332f 2px 5px);--c-unclassified: #6e6d68}*{box-sizing:border-box}html,body{margin:0;background:var(--page);color:var(--ink);font:14px/1.45 var(--sans);-webkit-text-size-adjust:100%}button,input{font:inherit;color:inherit}:focus-visible{outline:2px solid var(--focus);outline-offset:2px}[hidden]{display:none!important}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}.wrap{max-width:1440px;margin:0 auto;padding:20px 24px 48px}code{font-family:var(--mono);font-size:12.5px;background:var(--hover);border-radius:4px;padding:1px 4px;overflow-wrap:anywhere}.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.brand{font-size:12px;color:var(--muted);letter-spacing:.02em;margin:0 0 6px}h1{font-size:20px;line-height:1.3;font-weight:600;margin:0 0 6px;overflow-wrap:anywhere}.meta{color:var(--ink-2);margin:0;overflow-wrap:anywhere}.theme{flex:none;border:1px solid var(--ring);background:var(--surface);border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--ink-2)}.theme:hover{background:var(--hover)}.card{background:var(--surface);border:1px solid var(--ring);border-radius:12px;padding:16px;margin-top:16px}.total{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px;margin-bottom:12px}.total .value{font-size:28px;font-weight:600;font-variant-numeric:tabular-nums}.total .sub{color:var(--ink-2)}.stack{display:flex;gap:2px;height:18px;width:100%}.stack span{height:100%;min-width:2px}.stack span:first-child{border-radius:4px 0 0 4px}.stack span:last-child{border-radius:0 4px 4px 0}.stack span:only-child{border-radius:4px}.legend{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0;padding:0;list-style:none}.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--ring);background:var(--raised);border-radius:999px;padding:4px 10px 4px 8px;cursor:pointer;min-height:30px;text-align:left}.chip:hover{background:var(--hover)}.chip[aria-pressed=true]{border-color:var(--ink-2);box-shadow:inset 0 0 0 1px var(--ink-2)}.chip.dim{opacity:.5}.sw{display:inline-block;width:10px;height:10px;border-radius:3px;flex:none}.chip .num{color:var(--ink-2);font-variant-numeric:tabular-nums}.counts{display:flex;flex-wrap:wrap;gap:4px 18px;margin:14px 0 0;color:var(--ink-2)}.counts b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}.why{margin:12px 0 0;padding:0 0 0 18px}.why li{margin:5px 0}.why b{font-weight:600}.link{border:0;background:none;color:var(--link);cursor:pointer;padding:2px 0;text-align:left}.link:hover{text-decoration:underline}.link code{margin:0 3px;color:var(--ink)}details.table{margin-top:12px}details.table summary{cursor:pointer;color:var(--ink-2)}details.table table{border-collapse:collapse;margin-top:8px;width:100%;max-width:680px}details.table th,details.table td{text-align:left;padding:4px 8px;border-bottom:1px solid var(--grid);font-variant-numeric:tabular-nums}details.table th{color:var(--muted);font-weight:500}details.table .n{text-align:right}details.table .sum td{font-weight:600;border-bottom:0}.filters{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin:20px 0 10px}.filters label{display:inline-flex;align-items:center;gap:6px;cursor:pointer;min-height:32px}.filters input[type=search]{border:1px solid var(--ring);background:var(--surface);border-radius:8px;padding:6px 10px;flex:1 1 240px;max-width:360px;min-height:34px}.filters .count{color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums}.fall{background:var(--surface);border:1px solid var(--ring);border-radius:12px;overflow:clip}.head{position:sticky;top:0;z-index:3;display:grid;grid-template-columns:var(--label) 1fr;background:var(--surface);border-bottom:1px solid var(--grid)}.hl{padding:6px 12px 0;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hl.sub{padding:2px 12px 8px}.axis{position:relative;height:26px;margin-right:var(--pad)}.tick{position:absolute;top:6px;transform:translate(-50%);font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}.tick.start{transform:none}.tick.end{transform:translate(-100%)}.brk{position:absolute;top:4px;bottom:2px;background:repeating-linear-gradient(135deg,transparent 0 3px,var(--axis) 3px 4px);border-radius:2px}.strip{position:relative;height:10px;margin:4px var(--pad) 10px 0;border-radius:3px;overflow:hidden;background:var(--grid)}.strip span{position:absolute;top:0;bottom:0}.body{position:relative}.lines{position:absolute;top:0;bottom:0;left:var(--label);right:var(--pad);pointer-events:none}.lines i{position:absolute;top:0;bottom:0;width:1px;background:var(--grid)}.lines i.gap{background:repeating-linear-gradient(135deg,transparent 0 5px,var(--grid) 5px 6px)}.rows{position:relative}.row{display:grid;grid-template-columns:var(--label) 1fr;align-items:center;cursor:pointer}.row:hover{background:var(--hover)}.row.sel{background:var(--selected)}.name{display:flex;align-items:center;gap:4px;min-width:0;min-height:var(--row);padding-right:8px}.tw{width:18px;height:22px;flex:none;color:var(--muted);text-align:center;font-size:11px;border:0;background:none;padding:0;border-radius:4px;cursor:pointer}button.tw:hover{background:var(--hover);color:var(--ink)}.pick{display:flex;align-items:center;gap:6px;min-width:0;flex:1 1 auto;border:0;background:none;padding:2px 0;text-align:left;cursor:pointer;white-space:nowrap;border-radius:4px}.dot{width:8px;height:8px;border-radius:2px;flex:none}.kind{flex:0 0 auto;max-width:60%;overflow:hidden;text-overflow:ellipsis}.text{flex:0 1 auto;min-width:0;color:var(--ink-2);font-family:var(--mono);font-size:12px;overflow:hidden;text-overflow:ellipsis}.row.group .kind{font-weight:600}.row.idle .kind{color:var(--muted)}.fail{flex:none;color:var(--critical-ink);font-weight:600;font-size:12.5px}.badge{flex:none;border:1px solid var(--ring);background:var(--raised);color:var(--ink);border-radius:999px;font-size:10.5px;padding:0 6px;line-height:16px}.badge.soft{color:var(--ink-2);background:none}.track{position:relative;height:var(--row);margin-right:var(--pad)}.bar,.mix{position:absolute;top:calc(50% - 6px);height:12px;min-width:2px;border-radius:3px}.row.group .bar{top:calc(50% - 2px);height:4px;background:var(--container);border-radius:2px}.mix{top:calc(50% - 4px);height:8px;overflow:hidden;background:var(--grid);border-radius:2px}.mix span{position:absolute;top:0;bottom:0}.gapl{position:absolute;top:5px;transform:translate(-50%);font-size:11px;color:var(--ink-2);background:var(--surface);border:1px solid var(--grid);border-radius:4px;padding:0 4px;white-space:nowrap}.made{margin:6px 0 0;padding-left:18px}.dur{position:absolute;top:calc(50% - 9px);font-size:11.5px;line-height:18px;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums;pointer-events:none}.dur .x{color:var(--critical-ink);font-weight:600}.dur.in{background:var(--surface);border-radius:4px;padding:0 4px}.empty{padding:24px 16px;margin:0;color:var(--muted)}.more{grid-column:1 / -1;position:relative;z-index:1;margin:2px 12px 10px;background:var(--raised);border:1px solid var(--ring);border-radius:10px;padding:12px 14px;cursor:auto}.more dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:0}.more dt{color:var(--muted)}.more dd{margin:0;overflow-wrap:anywhere}.more dd .sw{margin-right:6px;vertical-align:-1px}.more h3{font-size:12.5px;font-weight:600;margin:14px 0 0;color:var(--ink-2)}.more pre{font-family:var(--mono);font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--surface);border:1px solid var(--ring);border-radius:8px;padding:8px 10px;margin:6px 0 0;max-height:360px;overflow:auto}.status-failed{color:var(--critical-ink);font-weight:600}.note,.foot{color:var(--muted);font-size:12.5px;margin:10px 0 0}.foot{margin-top:20px}.tip{position:fixed;z-index:20;pointer-events:none;display:flex;flex-direction:column;gap:2px;background:var(--raised);border:1px solid var(--ring);border-radius:8px;padding:6px 9px;box-shadow:0 6px 20px #00000024;font-size:12.5px;max-width:360px}.tip span{color:var(--ink-2)}.tip code{align-self:flex-start}@media(max-width:760px){:root{--label: 44%;--pad: 52px;--indent: 8px;--row: 36px}.wrap{padding:14px 16px 40px}h1{font-size:17px}.top{flex-direction:column-reverse;gap:10px}.theme{align-self:flex-end}.pick{flex-wrap:wrap;row-gap:0;padding:4px 0}.text{flex:1 0 100%;order:10;padding-left:14px;font-size:11.5px}.badge.soft,.fail .w{display:none}.filters input[type=search]{max-width:none;flex-basis:100%}.filters .count{margin-left:0}.more{margin:2px 6px 10px}.legend{display:grid;grid-template-columns:1fr 1fr}.chip{display:grid;grid-template-columns:auto 1fr;column-gap:6px;align-items:center;width:100%;height:100%;border-radius:10px;padding:5px 8px;font-size:13px}.chip .num{grid-column:2;font-size:12px}.more dl{grid-template-columns:1fr;gap:0}.more dd{margin-bottom:6px}}@media print{.filters,.theme{display:none}.row{break-inside:avoid}}';
+var CLIENT_JS = '"use strict";(()=>{function f(e){if(!Number.isFinite(e)||e<0)return"\\u2013";if(e<1e3)return`${Math.round(e)} ms`;if(e<1e4)return`${(e/1e3).toFixed(1)}s`;let t=Math.round(e/1e3),s=Math.floor(t/3600),a=Math.floor(t%3600/60),o=t%60;return s>0?`${s}h ${pe(a)}m ${pe(o)}s`:a>0?`${a}m ${pe(o)}s`:`${o}s`}function pe(e){return String(e).padStart(2,"0")}var Ee="0.1.0";var Je=performance.now(),c=JSON.parse(document.getElementById("awf-data")?.textContent??"null"),b=c.steps,$=Math.max(1,c.session.totalMs),oe=b.map(()=>[]);for(let e of b)e.p>=0&&oe[e.p]?.push(e.i);var Ae=new Map(c.phases.map(e=>[e.id,e.label])),Qe=new Map(c.slowest.map((e,t)=>[e,t])),he=b.filter(e=>!e.container).length;function n(e,t={},...s){let a=document.createElement(e);for(let[o,i]of Object.entries(t))i===void 0||i===!1||(o==="class"?a.className=String(i):o==="text"?a.textContent=String(i):a.setAttribute(o,i===!0?"":String(i)));for(let o of s)o&&a.append(o);return a}var M=e=>String(e).padStart(2,"0"),O=e=>e.replace(/\\s+/g," ").trim(),j=(e,t)=>e.length>t?e.slice(0,t-1)+"\\u2026":e,P=(e,t,s=`${t}s`)=>`${e.toLocaleString("en-US")} ${e===1?t:s}`,_=e=>`var(--c-${e})`,H=e=>e?Ae.get(e)??e:"",T=e=>e.e-e.s;function v(e){return e>0&&e<.005?"<1%":`${Math.round(e*100)}%`}function S(e,t=!0){let s=Math.max(0,Math.round(e/1e3)),a=Math.floor(s/3600),o=Math.floor(s%3600/60);return $>=36e5?`${a}:${M(o)}${t?`:${M(s%60)}`:""}`:`${Math.floor(s/60)}:${M(s%60)}`}function ge(e,t=!1){let s=new Date(e),a=`${M(s.getHours())}:${M(s.getMinutes())}:${M(s.getSeconds())}`;return t?`${s.getFullYear()}-${M(s.getMonth()+1)}-${M(s.getDate())} ${a.slice(0,5)}`:a}function G(e){return e>=1e6?`${(e/1e6).toFixed(e>=1e7?0:1)}M`:e>=1e3?`${(e/1e3).toFixed(e>=1e4?0:1)}k`:String(e)}function D(e){if(e.text)return e.text;if(e.description)return e.description;if(e.kind==="turn"&&e.flags.includes("notification"))return"started by a notice, not a prompt"}var Ze=[...[1,2,5,10,15,30].map(e=>e*1e3),...[1,2,5,10,15,30].map(e=>e*6e4),...[1,2,3,6,12,24].map(e=>e*36e5)];function et(){let e=b.filter(o=>o.kind!=="idle"&&o.e>o.s).map(o=>[o.s,o.e]).sort((o,i)=>o[0]-i[0]),t=Math.max(6e4,$*.03),s=[],a=0;for(let[o,i]of e)o-a>=t&&s.push({s:a,e:o}),a=Math.max(a,i);return $-a>=t&&s.push({s:a,e:$}),s}var xe=et();function Ie(e){let t=e?xe:[],s=t.reduce((x,h)=>x+h.e-h.s,0),a=$-s,o=t.length&&a>0?Math.min(1.5,12/t.length):0,i=o?t:[],d=(100-i.length*o)/(o?a:$),u=[[0,0]],m=[],p=0,w=0;for(let x of i)p+=(x.s-w)*d,u.push([x.s,p]),m.push({s:x.s,e:x.e,x0:p,x1:p+o}),p+=o,u.push([x.e,p]),w=x.e;return u.push([$,100]),{x:x=>{if(x<=0)return 0;if(x>=$)return 100;let h=0,A=u.length-1;for(;A-h>1;){let ue=h+A>>1;u[ue][0]<=x?h=ue:A=ue}let[ce,de]=u[h],[ve,Xe]=u[A];return ve===ce?de:de+(x-ce)/(ve-ce)*(Xe-de)},gaps:m,k:d}}function tt(e){let t=Math.round(e/6e4);return t>=60?`${Math.floor(t/60)}h ${M(t%60)}m`:t>=1?`${t}m`:`${Math.round(e/1e3)}s`}var Re=e=>`${tt(e.e-e.s)} idle`;function nt(e){let t=d=>{let u=(me(d)+22)/Math.max(e,1)*100,m=u/g.k,p=Ze.find(w=>w>=m)??Math.ceil(m/864e5)*864e5;return{minPct:u,step:p}},{minPct:s,step:a}=t($>=36e5?"0:00":"00:00");$>=36e5&&a<6e4&&({minPct:s,step:a}=t("0:00:00"));let o=[],i=-1/0;for(let d=0;d<=$;d+=a){if(g.gaps.some(p=>d>p.s&&d<p.e))continue;let u=g.x(d);if(u-i<s)continue;let m=g.gaps.some(p=>{let w=(me(Re(p))/2+12)/Math.max(e,1)*100;return Math.abs(u-(p.x0+p.x1)/2)<w+s/2});d>0&&m||(o.push({x:u,text:S(d,a<6e4)}),i=u)}let r=$>=36e5?a<6e4?"h:mm:ss":"h:mm":"m:ss";return{ticks:o,unit:r}}var l={collapsed:new Set,filterCollapsed:new Set,phases:new Set,failedOnly:!1,query:"",open:-1,focus:-1,squeeze:xe.length>0};for(let e of b)e.container&&(e.kind==="subagent"||he>250&&e.kind==="turn")&&l.collapsed.add(e.i);var g=Ie(l.squeeze),E=()=>l.phases.size>0||l.failedOnly||l.query!=="";function Pe(e){return!(l.phases.size>0&&!(e.phase&&l.phases.has(e.phase))||l.failedOnly&&!e.failed||l.query&&![e.label,e.text,e.tool,e.agentType,e.description,...e.checks.map(s=>s.key)].filter(Boolean).join(`\n`).toLowerCase().includes(l.query))}function _e(){let e=E(),t,s=new Set;if(e){t=new Set;for(let r of b)if(Pe(r)){t.add(r.i);for(let d=r.p;d>=0&&!s.has(d);d=b[d]?.p??-1)t.add(d),s.add(d)}}else for(let r of b)r.container&&s.add(r.i);let a=e?l.filterCollapsed:l.collapsed,o=[],i=1/0;for(let r of b)r.depth>i||(i=1/0,!(t&&!t.has(r.i))&&(o.push(r),s.has(r.i)&&a.has(r.i)&&(i=r.depth)));return{rows:o,parents:s}}var k=_e(),st=document.getElementById("app"),V=n("div",{class:"wrap"});st.append(V);var R=c.session.totalMs,ee=c.session.activeMs,at=c.share?`Shared session ${c.session.id.slice(0,8)}`:c.session.title??`Session ${c.session.id.slice(0,8)}`,te=n("button",{class:"theme",type:"button"});function ot(){try{let e=localStorage.getItem("awf-theme");return e==="light"||e==="dark"?e:"auto"}catch{return"auto"}}function He(e){e==="auto"?delete document.documentElement.dataset.theme:document.documentElement.dataset.theme=e,te.textContent=`Theme: ${e[0]?.toUpperCase()}${e.slice(1)}`,te.setAttribute("aria-label",`Color theme: ${e}. Change theme`)}var I=ot();He(I);te.addEventListener("click",()=>{I=I==="auto"?"light":I==="light"?"dark":"auto",He(I);try{I==="auto"?localStorage.removeItem("awf-theme"):localStorage.setItem("awf-theme",I)}catch{}});var it={"claude-code":"Claude Code",codex:"Codex CLI",gemini:"Gemini CLI",opencode:"OpenCode"},rt=it[c.session.agent]??c.session.agent,lt=[ge(c.session.startMs,!0),ee<R?`${f(R)} (active ${f(ee)})`:f(R),c.session.cwd,`${rt}${c.session.agentVersion?` ${c.session.agentVersion}`:""}`].filter(e=>!!e);V.append(n("header",{class:"top"},n("div",{},n("p",{class:"brand",text:"awf \\xB7 agent waterfall"}),n("h1",{text:j(O(at),220)}),n("p",{class:"meta",text:lt.join(" \\xB7 ")})),te));var ie=c.phases.filter(e=>e.ms>0),F=n("section",{class:"card","aria-label":"Where the time went"});F.append(n("div",{class:"total"},n("span",{class:"value",text:f(R)}),n("span",{class:"sub",text:ee<R?`total, ${f(ee)} active (the rest is idle time between turns)`:"total"})));var ke=n("div",{class:"stack",role:"img","aria-label":ie.map(e=>`${e.label} ${v(e.share)}`).join(", ")});for(let e of ie){let t=n("span",{"data-phase":e.id});t.style.background=_(e.id),t.style.flex=`${e.ms} 1 0`,ke.append(t)}F.append(ke);var Fe=n("ul",{class:"legend","aria-label":"Phases. Pick one or more to filter steps"}),Be=new Map;for(let e of ie){let t=n("button",{class:"chip",type:"button","aria-pressed":"false",title:e.detail?`${e.label}: ${e.detail}`:e.label},n("span",{class:"sw","aria-hidden":"true"}),n("span",{class:"name",text:e.label}),n("span",{class:"num",text:`${f(e.ms)} \\xB7 ${v(e.share)}`}));t.firstChild.style.background=_(e.id),t.addEventListener("click",()=>{l.phases.has(e.id)?l.phases.delete(e.id):l.phases.add(e.id),le()}),Be.set(e.id,t),Fe.append(n("li",{},t))}F.append(Fe);var B=c.counts,ct=[[B.modelCalls,"model call"],[B.toolCalls,"tool call"],...B.subagents?[[B.subagents,"subagent"]]:[],[B.failures,"failed check"],[B.reworkLoops,"rework loop"]],$e=n("p",{class:"counts"});for(let[e,t]of ct){let[s,...a]=P(e,t).split(" ");$e.append(n("span",{},n("b",{text:s??""}),` ${a.join(" ")}`))}if(c.tokens){let e=c.tokens.input+c.tokens.cacheRead+c.tokens.cacheWrite,t=e>0?c.tokens.cacheRead/e:0;$e.append(n("span",{},n("b",{text:G(e)}),` tokens in (${v(t)} from cache), `,n("b",{text:G(c.tokens.output)})," out"))}F.append($e);var W=n("ul",{class:"why"}),dt=[...ie].sort((e,t)=>t.ms-e.ms),[N,Y,X]=dt;N&&W.append(n("li",{},"Most time went to ",n("b",{text:N.label}),`: ${f(N.ms)} (${v(N.share)})${N.detail?`, ${N.detail}`:""}.`,Y?` Then ${Y.label} ${f(Y.ms)} (${v(Y.share)})${X?` and ${X.label} ${f(X.ms)} (${v(X.share)})`:""}.`:""));if(c.slowest.length){let e=n("li",{},"Slowest steps: ");c.slowest.forEach((t,s)=>{let a=b[t];if(!a)return;let o=a.kind==="model"?b[a.produces?.[0]??-1]:void 0,i=o?D(o):a.kind==="model"?void 0:D(a),r=n("button",{class:"link",type:"button",title:"Show this step"},o?`${a.label} ${f(T(a))}, writing ${o.label}`:a.label,i?n("code",{text:j(O(i),60)}):null,o?"":` ${f(T(a))}`,a.failed?" \\u2715 failed":"");r.addEventListener("click",()=>Ye(t)),e.append(s>0?", ":"",r)}),e.append("."),W.append(e)}if(c.rework.length){let e=c.rework.filter(s=>s.edits>0),t=n("li",{},e.length?"Rework: ":"Rework: none. ");e.slice(0,3).forEach((s,a)=>{t.append(a>0?"; ":"",n("code",{text:s.check}),` failed at ${S(s.failedAt)}`,s.passedAt!==void 0?` and passed at ${S(s.passedAt)} after ${P(s.edits,"edit")}`:` and hadn\'t passed by the end (${P(s.edits,"edit")})`)}),e.length>3&&t.append(`; ${e.length-3} more`),e.length?t.append("."):t.append("checks failed, but no edits followed before they ran again."),W.append(t)}else W.append(n("li",{text:"No rework: no check failed and then got fixed."}));var J=c.phases.find(e=>e.id==="unclassified");J&&J.share>=.05&&c.unclassified.length&&W.append(n("li",{},`Unclassified ${f(J.ms)} (${v(J.share)}): `,...c.unclassified.slice(0,3).flatMap((e,t)=>[t>0?", ":"",n("code",{text:e.name}),` ${f(e.ms)}`]),c.unclassifiedModelMs>=1e3?`, and ${f(c.unclassifiedModelMs)} of model time writing those calls`:"",". Rules in ",n("code",{text:".awf/rules.yaml"})," can sort them."));F.append(W);var we=n("table",{},n("caption",{class:"sr",text:"Time by phase"}));we.append(n("thead",{},n("tr",{},n("th",{scope:"col",text:"Phase"}),n("th",{scope:"col",class:"n",text:"Time"}),n("th",{scope:"col",class:"n",text:"Share"}),n("th",{scope:"col",text:"Detail"}))));var ye=n("tbody");for(let e of c.phases)ye.append(n("tr",{},n("td",{text:e.label}),n("td",{class:"n",text:f(e.ms)}),n("td",{class:"n",text:v(e.share)}),n("td",{text:e.detail})));ye.append(n("tr",{class:"sum"},n("td",{text:"Total"}),n("td",{class:"n",text:f(R)}),n("td",{class:"n",text:"100%"}),n("td",{})));we.append(ye);F.append(n("details",{class:"table"},n("summary",{text:"Phase table"}),we));V.append(F);var ne=n("input",{type:"checkbox"}),se=n("input",{type:"search",placeholder:c.share?"Search tools and phases":"Search commands, files, tools","aria-label":"Search steps"}),ae=n("input",{type:"checkbox"});ae.checked=l.squeeze;var Ne=n("span",{class:"count","aria-live":"polite"}),re=n("button",{class:"link",type:"button",text:"Clear filters"}),qe=n("button",{class:"link",type:"button",text:"Expand all"}),De=n("button",{class:"link",type:"button",text:"Collapse all"}),ut=n("div",{class:"filters"},se,n("label",{},ne,"Failed only"),xe.length?n("label",{title:"Squeeze long idle stretches to a sliver"},ae,"Squeeze idle gaps"):null,qe,De,re,Ne);V.append(ut);ne.addEventListener("change",()=>{l.failedOnly=ne.checked,le()});var Ce=0;se.addEventListener("input",()=>{clearTimeout(Ce),Ce=window.setTimeout(()=>{l.query=se.value.trim().toLowerCase(),le()},120)});ae.addEventListener("change",()=>{l.squeeze=ae.checked,g=Ie(l.squeeze),je(),C()});re.addEventListener("click",()=>{l.phases.clear(),l.failedOnly=!1,l.query="",ne.checked=!1,se.value="",le()});qe.addEventListener("click",()=>{(E()?l.filterCollapsed:l.collapsed).clear(),C()});De.addEventListener("click",()=>{let e=E()?l.filterCollapsed:l.collapsed;for(let t of k.parents)e.add(t);C()});function le(){l.filterCollapsed.clear();for(let[e,t]of Be)t.setAttribute("aria-pressed",String(l.phases.has(e))),t.classList.toggle("dim",l.phases.size>0&&!l.phases.has(e));for(let e of ke.children){let t=e.dataset.phase;e.style.opacity=l.phases.size>0&&!l.phases.has(t)?"0.3":""}C()}var Me=n("section",{class:"fall","aria-label":"Waterfall of every step"}),q=n("div",{class:"axis","aria-hidden":"true"}),Q=n("div",{class:"strip",role:"img"}),We=n("div",{class:"hl"});Me.append(n("div",{class:"head"},We,q,n("div",{class:"hl sub",text:"Phase at each moment"}),Q));var Z=n("div",{class:"lines","aria-hidden":"true"}),L=n("div",{class:"rows",role:"list","aria-label":"Steps"});Me.append(n("div",{class:"body"},Z,L));V.append(Me);function Se(e,t,s){let a=g.x(t);e.style.left=`${a}%`,e.style.width=`${Math.max(0,g.x(s)-a)}%`}var K=0,ze=64,fe=document.createElement("canvas").getContext("2d"),Te=new Map;function me(e){let t=Te.get(e);return t===void 0&&(fe?(fe.font=`11.5px ${getComputedStyle(document.body).fontFamily}`,t=fe.measureText(e).width):t=e.length*7,Te.set(e,t)),t}function Oe(){K=q.clientWidth,ze=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--pad"))||64;let{ticks:e,unit:t}=nt(K||800);We.textContent=`Step \\xB7 elapsed ${t}`,q.replaceChildren(),Z.replaceChildren();for(let s of e){let a=n("span",{class:`tick${s.x===0?" start":s.x>94?" end":""}`,text:s.text});a.style.left=`${s.x}%`,q.append(a);let o=n("i");o.style.left=`${s.x}%`,Z.append(o)}for(let s of g.gaps){let a=n("span",{class:"brk",title:`${f(s.e-s.s)} idle, squeezed`});a.style.left=`${s.x0}%`,a.style.width=`${s.x1-s.x0}%`;let o=n("span",{class:"gapl",text:Re(s)});o.style.left=`${(s.x0+s.x1)/2}%`,q.append(a,o);let i=n("i",{class:"gap"});i.style.left=`${s.x0}%`,i.style.width=`${s.x1-s.x0}%`,Z.append(i)}}function je(){Oe(),Q.replaceChildren(),c.timeline.forEach(([e,t,s],a)=>{if(g.x(t)-g.x(e)<.02)return;let o=n("span",{"data-seg":a});o.style.background=_(s),Se(o,e,t),Q.append(o)}),Q.setAttribute("aria-label",`Phase over time, from 0 to ${f(R)}. The phase table lists the totals.`)}function Ve(e){let t=[];if(e.kind==="turn")for(let[s,a,o]of c.timeline)a>e.s&&s<e.e&&t.push([Math.max(s,e.s),Math.min(a,e.e),o]);else{let s=a=>{for(let o of oe[a]??[]){let i=b[o];i&&(i.container?s(o):i.phase&&i.e>i.s&&t.push([i.s,i.e,i.phase]))}};s(e.i)}return t}function pt(e){let t=new Map;for(let[s,a,o]of Ve(e))t.set(o,(t.get(o)??0)+a-s);return[...t].sort((s,a)=>a[1]-s[1])}var Ge=(e,t=3)=>pt(e).slice(0,t).map(([s,a])=>`${H(s)} ${f(a)}`).join(" \\xB7 ");function ft(e){let t=n("span",{class:"mix"});Se(t,e.s,e.e);let s=g.x(e.e)-g.x(e.s);if(s<=0)return t;let a=Ve(e),o=g.x(e.s);for(let[i,r,d]of a){let u=(g.x(i)-o)/s*100,m=(g.x(r)-o)/s*100;if(m-u<.05)continue;let p=n("span");p.style.left=`${u}%`,p.style.width=`${m-u}%`,p.style.background=_(d),t.append(p)}return t}var Ke={approval:"approval",denied:"denied",interrupted:"interrupted",background:"background","api-error":"API error",unfinished:"no end seen"};function ht(e){let t=D(e);return[e.label,t?j(O(t),120):"",H(e.phase),f(T(e)),e.failed?"failed":""].filter(Boolean).join(", ")}function mt(e){let t=E(),s=k.parents.has(e.i),a=(t?l.filterCollapsed:l.collapsed).has(e.i),o=n("div",{class:`row${e.container&&!e.phase?" group":""}${e.kind==="idle"?" idle":""}${e.kind==="build-task"?" task":""}${l.open===e.i?" sel":""}`,role:"listitem","data-i":e.i}),i=n("div",{class:"name"});if(i.style.paddingLeft=`calc(6px + ${e.depth} * var(--indent))`,s){let h=oe[e.i]?.length??0;i.append(n("button",{class:"tw",type:"button",tabindex:-1,"aria-expanded":String(!a),"aria-label":`${a?"Show":"Hide"} ${P(h,"step")} inside ${e.label}`,text:a?"\\u25B8":"\\u25BE"}))}else i.append(n("span",{class:"tw","aria-hidden":"true"}));let r=n("button",{class:"pick",type:"button",tabindex:l.focus===e.i?0:-1,"aria-expanded":String(l.open===e.i),"aria-label":ht(e)});if(e.phase&&!e.container){let h=n("span",{class:"dot","aria-hidden":"true"});h.style.background=_(e.phase),r.append(h)}r.append(n("span",{class:"kind",text:e.label}));let d=D(e);d&&r.append(n("span",{class:"text",text:j(O(d),300)})),e.failed&&r.append(n("span",{class:"fail"},"\\u2715",n("span",{class:"w",text:" failed"})));let u=Qe.get(e.i);u!==void 0&&r.append(n("span",{class:"badge",text:u===0?"slowest":`#${u+1} slowest`}));for(let h of e.flags){let A=Ke[h];A&&!(h==="background"&&e.kind==="background")&&r.append(n("span",{class:"badge soft",text:A}))}i.append(r),o.append(i);let m=n("div",{class:"track","aria-hidden":"true"});if(e.container&&a)m.append(ft(e));else{let h=n("span",{class:`bar${e.failed?" failed":""}`});e.failed?h.style.background="var(--critical)":e.phase&&(h.style.background=_(e.phase)),e.started===!1&&h.classList.add("unstarted"),Se(h,e.s,e.e),m.append(h)}let p=n("span",{class:"dur"},e.failed?n("span",{class:"x",text:"\\u2715 "}):null,f(T(e))),w=g.x(e.s),U=g.x(e.e),x=me(p.textContent??"")+6;return(100-U)/100*K+ze>=x+4?p.style.left=`calc(${U}% + 6px)`:w/100*K>=x+4?p.style.right=`calc(${100-w}% + 6px)`:(p.classList.add("in"),p.style.right=`calc(${100-U}% + 4px)`),m.append(p),o.append(m),l.open===e.i&&o.append(gt(e)),o}function bt(e){let t=e.indexOf(":"),s=t>0?e.slice(0,t):e,a=t>0?e.slice(t+1):"";switch(s){case"script":return`runs the package script "${a}"`;case"make":return`runs the make target "${a}"`;case"task":return`runs the task "${a}"`;case"hook":return`runs the git hook ${a}`;case"file":return`runs the script ${a}`;case"via":return`through ${a}`;case"unmatched":return`no rule for "${a}"`;case"was":return`was ${H(a)||a} before a check failed`}let o={"by-name":"phase guessed from a script or task name",install:"installs dependencies",polling:"waits in a loop",neutral:"only commands that say nothing about the phase","failure-unattributed":"the failure could not be pinned on one check","background-task":"waits on a background task",compaction:"context compaction",subagent:"ran a subagent","no-command":"no command recorded"};return o[e]?o[e]:Ae.has(e)?`also ${H(e)}`:e}function gt(e){let t=n("div",{class:"more",role:"region","aria-label":`Details: ${e.label}`}),s=n("dl"),a=(r,...d)=>s.append(n("dt",{text:r}),n("dd",{},...d));if(e.phase){let r=n("span",{class:"sw","aria-hidden":"true"});r.style.background=_(e.phase),a("Phase",r,H(e.phase),e.reworkFor?` (after ${e.reworkFor} failed)`:"")}if(a("When",`${S(e.s)} \\u2192 ${S(e.e)} \\xB7 ${f(T(e))} \\xB7 ${ge(c.session.startMs+e.s)}`),e.waitMs&&a("Waited for you",f(e.waitMs)),e.runMs!==void 0&&e.waitMs&&a("Ran",f(e.runMs)),e.kind==="tool"||e.kind==="background"){let r=e.failed?n("span",{class:"status-failed",text:"\\u2715 Failed"}):e.ok===!0?"OK":e.ok===!1?"Error":"Unknown";a("Result",r,e.exitCode!==void 0?` \\xB7 exit code ${e.exitCode}`:"")}if(e.tool&&a("Tool",e.tool),e.agentType&&a("Agent type",e.agentType),e.model&&a("Model",e.model),e.tokens){let r=e.tokens,d=T(e)/1e3;a("Tokens",`${G(r.input+r.cacheRead+r.cacheWrite)} in (${G(r.cacheRead)} cached) \\xB7 ${G(r.output)} out`,e.kind==="model"&&d>=1&&r.output>0?` \\xB7 ${Math.round(r.output/d)} tokens/s out`:"")}e.checks.length&&a("Checks",e.checks.map(r=>`${r.key} ${r.failed?"failed":"passed"}`).join(", ")),e.flags.length&&a("Flags",e.flags.map(r=>Ke[r]??r).join(", "));let o=e.tags.map(bt).filter(Boolean);if(o.length&&a("Notes",o.join("; ")),e.kind==="build-task"&&(a("Build tool",e.tool??""),e.started===!1&&a("Start",`not recorded by ${e.tool}: drawn from the build\'s start. Tasks may have run in parallel.`)),e.container){a("Inside",P(oe[e.i]?.length??0,e.kind==="tool"?"build task":"step"));let r=Ge(e,5);r&&a("By phase",r)}e.kind==="tool"&&!c.session.sources.includes("recorder")&&!e.waitMs&&a("Note","May include waiting for your approval: only the recorder (the plugin) sees approvals."),t.append(s);let i=(r,d)=>t.append(n("h3",{text:r}),n("pre",{text:d}));if(e.kind==="model"&&e.produces?.length){t.append(n("h3",{text:"Wrote these calls"}));let r=n("ul",{class:"made"});for(let d of e.produces){let u=b[d];if(!u)continue;let m=D(u),p=n("button",{class:"link",type:"button"},u.label,m?n("code",{text:j(O(m),100)}):null,` ${f(T(u))}`);p.addEventListener("click",w=>{w.stopPropagation(),Ye(d)}),r.append(n("li",{},p))}t.append(r)}else e.text&&e.tool==="Bash"&&i("Command",e.text);return e.files?.length&&i(e.files.length===1?"File":"Files",e.files.join(`\n`)),e.description&&e.description!==e.text&&i("Description",e.description),e.output&&i(`Output (secrets masked${e.output.length>=4e3?", first 4,000 characters":""})`,e.output),c.share&&t.append(n("p",{class:"note",text:"Shared report: commands, files and output are left out."})),t}function C(){let e=L.contains(document.activeElement);k=_e(),k.rows.some(a=>a.i===l.focus)||(l.focus=k.rows[0]?.i??-1);let t=document.createDocumentFragment();for(let a of k.rows)t.append(mt(a));k.rows.length||t.append(n("p",{class:"empty",text:b.length?"No steps match these filters.":"This session has no steps."})),L.replaceChildren(t);let s=k.rows.filter(a=>!a.container).length;Ne.textContent=E()?`${P(s,"step")} match, of ${he.toLocaleString("en-US")}`:P(he,"step"),re.hidden=!E(),e&&z(l.focus)}function z(e){l.focus=e;for(let s of L.querySelectorAll(".pick"))s.tabIndex=-1;let t=L.querySelector(`.row[data-i="${e}"] .pick`);t&&(t.tabIndex=0,t.focus({preventScroll:!1}))}function be(e){let t=E()?l.filterCollapsed:l.collapsed;t.has(e)?t.delete(e):t.add(e),l.focus=e,C(),z(e)}function Ue(e){l.open=l.open===e?-1:e,l.focus=e,C(),z(e)}function Ye(e){let t=b[e];if(t){E()&&!Pe(t)&&re.click();for(let s=t.p;s>=0;s=b[s]?.p??-1)l.collapsed.delete(s),l.filterCollapsed.delete(s);l.open=e,l.focus=e,C(),z(e),L.querySelector(`.row[data-i="${e}"]`)?.scrollIntoView({block:"center"})}}L.addEventListener("click",e=>{let t=e.target;if(t.closest(".more"))return;let s=t.closest(".row");if(!s)return;let a=Number(s.getAttribute("data-i"));t.closest(".tw")?be(a):Ue(a)});L.addEventListener("keydown",e=>{let t=e.target.closest(".row");if(!t||!e.target.closest(".pick"))return;let s=Number(t.getAttribute("data-i")),a=k.rows.findIndex(d=>d.i===s),o=b[s];if(!o)return;let i=(E()?l.filterCollapsed:l.collapsed).has(s),r=d=>{let u=k.rows[Math.max(0,Math.min(k.rows.length-1,d))];u&&z(u.i)};switch(e.key){case"ArrowDown":r(a+1);break;case"ArrowUp":r(a-1);break;case"Home":r(0);break;case"End":r(k.rows.length-1);break;case"ArrowRight":k.parents.has(s)&&i?be(s):k.parents.has(s)&&r(a+1);break;case"ArrowLeft":k.parents.has(s)&&!i?be(s):o.p>=0&&z(o.p);break;case"Escape":l.open>=0&&Ue(l.open);break;default:return}e.preventDefault()});var y=n("div",{class:"tip",role:"tooltip",hidden:!0});document.body.append(y);var xt=window.matchMedia("(hover: hover)").matches;function kt(e){let t=e.closest("[data-phase]");if(t){let i=c.phases.find(r=>r.id===t.dataset.phase);if(i)return[n("b",{text:i.label}),n("span",{text:`${f(i.ms)} \\xB7 ${v(i.share)}${i.detail?` \\xB7 ${i.detail}`:""}`})]}let s=e.closest("[data-seg]");if(s){let i=c.timeline[Number(s.dataset.seg)];if(i)return[n("b",{text:H(i[2])}),n("span",{text:`${S(i[0])} \\u2192 ${S(i[1])} \\xB7 ${f(i[1]-i[0])}`})]}let o=e.closest(".track")?.closest(".row");if(o){let i=b[Number(o.getAttribute("data-i"))];if(!i)return;let r=D(i);return[n("b",{text:i.label}),r?n("code",{text:j(O(r),160)}):null,n("span",{text:[H(i.phase),f(T(i)),`${S(i.s)} \\u2192 ${S(i.e)}`,i.failed?"\\u2715 failed":""].filter(Boolean).join(" \\xB7 ")}),i.container?n("span",{text:Ge(i)}):null]}}xt&&(document.addEventListener("mousemove",e=>{let t=e.target instanceof Element?kt(e.target):void 0;if(!t){y.hidden=!0;return}y.replaceChildren(...t.filter(r=>!!r)),y.hidden=!1;let s=y.offsetWidth,a=y.offsetHeight,o=Math.min(e.clientX+14,window.innerWidth-s-8),i=e.clientY+18+a>window.innerHeight?e.clientY-a-12:e.clientY+18;y.style.left=`${Math.max(8,o)}px`,y.style.top=`${Math.max(8,i)}px`}),document.addEventListener("mouseleave",()=>y.hidden=!0));V.append(n("footer",{class:"foot"},`Made by awf ${Ee} on ${ge(c.generatedAt,!0)}. `,c.share?"Shared report: phases, durations and tool names only.":"This file holds commands, file paths and tool output from the session, with secrets masked. Make a version without them with --share."));je();C();var Le=0;window.addEventListener("resize",()=>{cancelAnimationFrame(Le),Le=requestAnimationFrame(()=>{q.clientWidth!==K&&(Oe(),C())})});document.body.dataset.ready="1";document.body.dataset.renderMs=String(Math.round(performance.now()-Je));})();';
+var CLIENT_CSS = ':root{color-scheme:light;--page: #f9f9f7;--surface: #fcfcfb;--raised: #ffffff;--ink: #0b0b0b;--ink-2: #52514e;--muted: #6f6d68;--grid: #e8e7e1;--axis: #c3c2b7;--ring: rgba(11, 11, 11, .12);--hover: rgba(11, 11, 11, .04);--selected: rgba(42, 120, 214, .08);--focus: #2a78d6;--link: #1f63b5;--critical: #d03b3b;--critical-ink: #b42323;--container: #a3a29b;--c-writing-code: #2a78d6;--c-writing-tests: #eb6834;--c-lint: #1baf7a;--c-tests: #eda100;--c-build: #e87ba4;--c-rework: #6250d6;--c-exploring: #008300;--c-planning: #7b8494;--c-waiting: repeating-linear-gradient(135deg, #a9a8a0 0 2px, #e2e1da 2px 5px);--c-unclassified: #a5a49d;--mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;--sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;--label: 34%;--pad: 64px;--indent: 14px;--row: 28px}@media(prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;--page: #0d0d0d;--surface: #1a1a19;--raised: #222220;--ink: #f0efec;--ink-2: #c3c2b7;--muted: #9c9a92;--grid: #2a2a28;--axis: #383835;--ring: rgba(255, 255, 255, .12);--hover: rgba(255, 255, 255, .05);--selected: rgba(57, 135, 229, .14);--focus: #3987e5;--link: #7fb1ef;--critical: #e05252;--critical-ink: #f08080;--container: #6e6d68;--c-writing-code: #3987e5;--c-writing-tests: #d95926;--c-lint: #199e70;--c-tests: #c98500;--c-build: #d55181;--c-rework: #9085e9;--c-exploring: #008300;--c-planning: #8a93a3;--c-waiting: repeating-linear-gradient(135deg, #7a7973 0 2px, #33332f 2px 5px);--c-unclassified: #6e6d68}}:root[data-theme=dark]{color-scheme:dark;--page: #0d0d0d;--surface: #1a1a19;--raised: #222220;--ink: #f0efec;--ink-2: #c3c2b7;--muted: #9c9a92;--grid: #2a2a28;--axis: #383835;--ring: rgba(255, 255, 255, .12);--hover: rgba(255, 255, 255, .05);--selected: rgba(57, 135, 229, .14);--focus: #3987e5;--link: #7fb1ef;--critical: #e05252;--critical-ink: #f08080;--container: #6e6d68;--c-writing-code: #3987e5;--c-writing-tests: #d95926;--c-lint: #199e70;--c-tests: #c98500;--c-build: #d55181;--c-rework: #9085e9;--c-exploring: #008300;--c-planning: #8a93a3;--c-waiting: repeating-linear-gradient(135deg, #7a7973 0 2px, #33332f 2px 5px);--c-unclassified: #6e6d68}*{box-sizing:border-box}html,body{margin:0;background:var(--page);color:var(--ink);font:14px/1.45 var(--sans);-webkit-text-size-adjust:100%}button,input{font:inherit;color:inherit}:focus-visible{outline:2px solid var(--focus);outline-offset:2px}[hidden]{display:none!important}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}.wrap{max-width:1440px;margin:0 auto;padding:20px 24px 48px}code{font-family:var(--mono);font-size:12.5px;background:var(--hover);border-radius:4px;padding:1px 4px;overflow-wrap:anywhere}.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.brand{font-size:12px;color:var(--muted);letter-spacing:.02em;margin:0 0 6px}h1{font-size:20px;line-height:1.3;font-weight:600;margin:0 0 6px;overflow-wrap:anywhere}.meta{color:var(--ink-2);margin:0;overflow-wrap:anywhere}.theme{flex:none;border:1px solid var(--ring);background:var(--surface);border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--ink-2)}.theme:hover{background:var(--hover)}.card{background:var(--surface);border:1px solid var(--ring);border-radius:12px;padding:16px;margin-top:16px}.total{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px;margin-bottom:12px}.total .value{font-size:28px;font-weight:600;font-variant-numeric:tabular-nums}.total .sub{color:var(--ink-2)}.stack{display:flex;gap:2px;height:18px;width:100%}.stack span{height:100%;min-width:2px}.stack span:first-child{border-radius:4px 0 0 4px}.stack span:last-child{border-radius:0 4px 4px 0}.stack span:only-child{border-radius:4px}.legend{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0;padding:0;list-style:none}.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--ring);background:var(--raised);border-radius:999px;padding:4px 10px 4px 8px;cursor:pointer;min-height:30px;text-align:left}.chip:hover{background:var(--hover)}.chip[aria-pressed=true]{border-color:var(--ink-2);box-shadow:inset 0 0 0 1px var(--ink-2)}.chip.dim{opacity:.5}.sw{display:inline-block;width:10px;height:10px;border-radius:3px;flex:none}.chip .num{color:var(--ink-2);font-variant-numeric:tabular-nums}.counts{display:flex;flex-wrap:wrap;gap:4px 18px;margin:14px 0 0;color:var(--ink-2)}.counts b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}.why{margin:12px 0 0;padding:0 0 0 18px}.why li{margin:5px 0}.why b{font-weight:600}.link{border:0;background:none;color:var(--link);cursor:pointer;padding:2px 0;text-align:left}.link:hover{text-decoration:underline}.link code{margin:0 3px;color:var(--ink)}details.table{margin-top:12px}details.table summary{cursor:pointer;color:var(--ink-2)}details.table table{border-collapse:collapse;margin-top:8px;width:100%;max-width:680px}details.table th,details.table td{text-align:left;padding:4px 8px;border-bottom:1px solid var(--grid);font-variant-numeric:tabular-nums}details.table th{color:var(--muted);font-weight:500}details.table .n{text-align:right}details.table .sum td{font-weight:600;border-bottom:0}.filters{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin:20px 0 10px}.filters label{display:inline-flex;align-items:center;gap:6px;cursor:pointer;min-height:32px}.filters input[type=search]{border:1px solid var(--ring);background:var(--surface);border-radius:8px;padding:6px 10px;flex:1 1 240px;max-width:360px;min-height:34px}.filters .count{color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums}.fall{background:var(--surface);border:1px solid var(--ring);border-radius:12px;overflow:clip}.head{position:sticky;top:0;z-index:3;display:grid;grid-template-columns:var(--label) 1fr;background:var(--surface);border-bottom:1px solid var(--grid)}.hl{padding:6px 12px 0;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hl.sub{padding:2px 12px 8px}.axis{position:relative;height:26px;margin-right:var(--pad)}.tick{position:absolute;top:6px;transform:translate(-50%);font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}.tick.start{transform:none}.tick.end{transform:translate(-100%)}.brk{position:absolute;top:4px;bottom:2px;background:repeating-linear-gradient(135deg,transparent 0 3px,var(--axis) 3px 4px);border-radius:2px}.strip{position:relative;height:10px;margin:4px var(--pad) 10px 0;border-radius:3px;overflow:hidden;background:var(--grid)}.strip span{position:absolute;top:0;bottom:0}.body{position:relative}.lines{position:absolute;top:0;bottom:0;left:var(--label);right:var(--pad);pointer-events:none}.lines i{position:absolute;top:0;bottom:0;width:1px;background:var(--grid)}.lines i.gap{background:repeating-linear-gradient(135deg,transparent 0 5px,var(--grid) 5px 6px)}.rows{position:relative}.row{display:grid;grid-template-columns:var(--label) 1fr;align-items:center;cursor:pointer}.row:hover{background:var(--hover)}.row.sel{background:var(--selected)}.name{display:flex;align-items:center;gap:4px;min-width:0;min-height:var(--row);padding-right:8px}.tw{width:18px;height:22px;flex:none;color:var(--muted);text-align:center;font-size:11px;border:0;background:none;padding:0;border-radius:4px;cursor:pointer}button.tw:hover{background:var(--hover);color:var(--ink)}.pick{display:flex;align-items:center;gap:6px;min-width:0;flex:1 1 auto;border:0;background:none;padding:2px 0;text-align:left;cursor:pointer;white-space:nowrap;border-radius:4px}.dot{width:8px;height:8px;border-radius:2px;flex:none}.kind{flex:0 0 auto;max-width:60%;overflow:hidden;text-overflow:ellipsis}.text{flex:0 1 auto;min-width:0;color:var(--ink-2);font-family:var(--mono);font-size:12px;overflow:hidden;text-overflow:ellipsis}.row.group .kind{font-weight:600}.row.idle .kind{color:var(--muted)}.fail{flex:none;color:var(--critical-ink);font-weight:600;font-size:12.5px}.badge{flex:none;border:1px solid var(--ring);background:var(--raised);color:var(--ink);border-radius:999px;font-size:10.5px;padding:0 6px;line-height:16px}.badge.soft{color:var(--ink-2);background:none}.track{position:relative;height:var(--row);margin-right:var(--pad)}.bar,.mix{position:absolute;top:calc(50% - 6px);height:12px;min-width:2px;border-radius:3px}.row.group .bar{top:calc(50% - 2px);height:4px;background:var(--container);border-radius:2px}.mix{top:calc(50% - 4px);height:8px;overflow:hidden;background:var(--grid);border-radius:2px}.mix span{position:absolute;top:0;bottom:0}.row.task .bar{top:calc(50% - 4px);height:8px;opacity:.85}.row.task .bar.unstarted{background-image:repeating-linear-gradient(90deg,transparent 0 6px,var(--surface) 6px 7px)!important}.row.task .kind{font-family:var(--mono);font-size:12px;color:var(--ink-2)}.gapl{position:absolute;top:5px;transform:translate(-50%);font-size:11px;color:var(--ink-2);background:var(--surface);border:1px solid var(--grid);border-radius:4px;padding:0 4px;white-space:nowrap}.made{margin:6px 0 0;padding-left:18px}.dur{position:absolute;top:calc(50% - 9px);font-size:11.5px;line-height:18px;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums;pointer-events:none}.dur .x{color:var(--critical-ink);font-weight:600}.dur.in{background:var(--surface);border-radius:4px;padding:0 4px}.empty{padding:24px 16px;margin:0;color:var(--muted)}.more{grid-column:1 / -1;position:relative;z-index:1;margin:2px 12px 10px;background:var(--raised);border:1px solid var(--ring);border-radius:10px;padding:12px 14px;cursor:auto}.more dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:0}.more dt{color:var(--muted)}.more dd{margin:0;overflow-wrap:anywhere}.more dd .sw{margin-right:6px;vertical-align:-1px}.more h3{font-size:12.5px;font-weight:600;margin:14px 0 0;color:var(--ink-2)}.more pre{font-family:var(--mono);font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--surface);border:1px solid var(--ring);border-radius:8px;padding:8px 10px;margin:6px 0 0;max-height:360px;overflow:auto}.status-failed{color:var(--critical-ink);font-weight:600}.note,.foot{color:var(--muted);font-size:12.5px;margin:10px 0 0}.foot{margin-top:20px}.tip{position:fixed;z-index:20;pointer-events:none;display:flex;flex-direction:column;gap:2px;background:var(--raised);border:1px solid var(--ring);border-radius:8px;padding:6px 9px;box-shadow:0 6px 20px #00000024;font-size:12.5px;max-width:360px}.tip span{color:var(--ink-2)}.tip code{align-self:flex-start}@media(max-width:760px){:root{--label: 44%;--pad: 52px;--indent: 8px;--row: 36px}.wrap{padding:14px 16px 40px}h1{font-size:17px}.top{flex-direction:column-reverse;gap:10px}.theme{align-self:flex-end}.pick{flex-wrap:wrap;row-gap:0;padding:4px 0}.text{flex:1 0 100%;order:10;padding-left:14px;font-size:11.5px}.badge.soft,.fail .w{display:none}.filters input[type=search]{max-width:none;flex-basis:100%}.filters .count{margin-left:0}.more{margin:2px 6px 10px}.legend{display:grid;grid-template-columns:1fr 1fr}.chip{display:grid;grid-template-columns:auto 1fr;column-gap:6px;align-items:center;width:100%;height:100%;border-radius:10px;padding:5px 8px;font-size:13px}.chip .num{grid-column:2;font-size:12px}.more dl{grid-template-columns:1fr;gap:0}.more dd{margin-bottom:6px}}@media print{.filters,.theme{display:none}.row{break-inside:avoid}}';
 
 // src/report/html.ts
 function escapeHtml(text) {
@@ -11734,18 +13631,19 @@ inside the file, and it makes no network requests. <session> is an ID or its fir
   run(ctx, args, options) {
     const share = options.share === true;
     const session = loadOne(ctx, args[0], options, !share);
-    const home = ctx.env.HOME ?? os7.homedir();
+    if (!share) attachBuildTimings(session);
+    const home = ctx.env.HOME ?? os8.homedir();
     const data = buildReportData(summarize(classifier()(session)), { share, home, now: ctx.now });
     if (options.json) {
       ctx.io.out(JSON.stringify(data, null, 2));
       return 0;
     }
-    const out = typeof options.out === "string" ? path13.resolve(ctx.cwd, options.out) : path13.join(
+    const out = typeof options.out === "string" ? path18.resolve(ctx.cwd, options.out) : path18.join(
       awfHome(ctx.env),
       "reports",
       `${safeId(session.id)}${share ? "-share" : ""}.html`
     );
-    mkdirSync2(path13.dirname(out), { recursive: true });
+    mkdirSync2(path18.dirname(out), { recursive: true });
     writeFileSync2(out, renderReportHtml(data));
     ctx.io.out(
       `Wrote ${homeRelative(out, home)}${share ? " (shareable: no commands, files or output)" : ""}`
@@ -11770,8 +13668,8 @@ function openInBrowser(file, ctx) {
 }
 
 // src/cli/commands/sample.ts
-import { readFileSync as readFileSync5 } from "node:fs";
-import path14 from "node:path";
+import { readFileSync as readFileSync10 } from "node:fs";
+import path19 from "node:path";
 function random(seed) {
   let s = seed >>> 0 || 1;
   return () => {
@@ -11885,12 +13783,12 @@ Re-classifies each labelled command with the current rules and reports agreement
   run(ctx, args, options) {
     const file = args[0];
     if (!file) throw new Error("give the labels file, for example fixtures/labels.csv");
-    const rows = parseCsv(readFileSync5(path14.resolve(ctx.cwd, file), "utf8"));
+    const rows = parseCsv(readFileSync10(path19.resolve(ctx.cwd, file), "utf8"));
     const header = rows.shift() ?? [];
     const col = (name) => header.indexOf(name);
     const [ci, wi, yi] = [col("command"), col("cwd"), col("your_phase")];
     if (ci < 0 || yi < 0) throw new Error('the CSV needs "command" and "your_phase" columns');
-    const files = diskFiles();
+    const files2 = diskFiles();
     const perPhase = /* @__PURE__ */ new Map();
     const misses = [];
     let total = 0;
@@ -11901,7 +13799,7 @@ Re-classifies each labelled command with the current rules and reports agreement
       if (!PHASE_IDS.has(yours))
         throw new Error(`unknown phase "${yours}"; use one of ${[...PHASE_IDS].join(", ")}`);
       const cwd = (wi >= 0 ? row[wi] : "") || ctx.cwd;
-      const awf = new Classifier(loadRules(cwd, files), files).command(row[ci] ?? "", cwd).phase;
+      const awf = new Classifier(loadRules(cwd, files2), files2).command(row[ci] ?? "", cwd).phase;
       const entry = perPhase.get(yours) ?? { total: 0, agree: 0 };
       entry.total++;
       total++;
@@ -11950,8 +13848,8 @@ Re-classifies each labelled command with the current rules and reports agreement
 };
 
 // src/cli/commands/sessions.ts
-import os8 from "node:os";
-import path15 from "node:path";
+import os9 from "node:os";
+import path20 from "node:path";
 function sessionRow(session) {
   const idleMs = session.steps.filter((s) => s.kind === "idle").reduce((sum, s) => sum + (s.endMs - s.startMs), 0);
   const durationMs = Math.max(0, session.endMs - session.startMs);
@@ -11970,7 +13868,7 @@ function sessionRow(session) {
 }
 function inFolder(cwd, dir) {
   if (!dir) return true;
-  return !!cwd && (cwd === dir || cwd.startsWith(dir + path15.sep));
+  return !!cwd && (cwd === dir || cwd.startsWith(dir + path20.sep));
 }
 function listSessionRows(env) {
   const rows = [];
@@ -12001,7 +13899,7 @@ Lists sessions newest first: those the recorder captured and those "awf import" 
   },
   run(ctx, _args, options) {
     const since = typeof options.since === "string" ? ctx.now - parseSince(options.since) : -Infinity;
-    const project = typeof options.project === "string" ? path15.resolve(ctx.cwd, options.project) : void 0;
+    const project = typeof options.project === "string" ? path20.resolve(ctx.cwd, options.project) : void 0;
     const rows = listSessionRows(ctx.env).filter(
       (row) => row.startMs >= since && inFolder(row.cwd, project)
     );
@@ -12015,7 +13913,7 @@ Lists sessions newest first: those the recorder captured and those "awf import" 
       );
       return 0;
     }
-    const home = ctx.env.HOME ?? os8.homedir();
+    const home = ctx.env.HOME ?? os9.homedir();
     ctx.io.out(
       table(
         ["SESSION", "STARTED", "DURATION", "ACTIVE", "TURNS", "TOOLS", "SOURCE", "PROJECT"],
@@ -12203,7 +14101,7 @@ the share left unclassified, and the programs behind that time, to show which ru
 };
 
 // src/cli/commands/summary.ts
-import os9 from "node:os";
+import os10 from "node:os";
 var summaryCommand = {
   summary: "One line per phase: time, share, runs and failures",
   usage: `Usage: awf summary <session> [--json] [--share]
@@ -12231,7 +14129,7 @@ or a transcript or events file.
       ctx.io.out(JSON.stringify(summary, null, 2));
       return 0;
     }
-    const home = ctx.env.HOME ?? os9.homedir();
+    const home = ctx.env.HOME ?? os10.homedir();
     const header = [
       `Session ${summary.id.slice(0, 8)}`,
       formatClock(summary.startMs),
@@ -12257,6 +14155,7 @@ var COMMANDS = {
   classify: classifyCommand,
   summary: summaryCommand,
   report: reportCommand,
+  compare: compareCommand,
   stats: statsCommand,
   sample: sampleCommand,
   accuracy: accuracyCommand,
@@ -12296,7 +14195,7 @@ async function main(argv, io = defaultIo, env = process.env, cwd = process.cwd()
   }
   let parsed;
   try {
-    parsed = parseArgs({
+    parsed = parseArgs2({
       args: rest,
       options: { ...command.options, help: { type: "boolean", short: "h" } },
       allowPositionals: true,

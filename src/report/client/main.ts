@@ -76,7 +76,7 @@ function stepText(step: ReportStep): string | undefined {
   if (step.text) return step.text;
   if (step.description) return step.description;
   if (step.kind === 'turn' && step.flags.includes('notification'))
-    return 'started by a background task';
+    return 'started by a notice, not a prompt';
   return undefined;
 }
 
@@ -323,7 +323,13 @@ themeButton.addEventListener('click', () => {
   }
 });
 
-const agent = data.session.agent === 'claude-code' ? 'Claude Code' : data.session.agent;
+const AGENTS: Record<string, string> = {
+  'claude-code': 'Claude Code',
+  codex: 'Codex CLI',
+  gemini: 'Gemini CLI',
+  opencode: 'OpenCode',
+};
+const agent = AGENTS[data.session.agent] ?? data.session.agent;
 const meta = [
   clock(data.session.startMs, true),
   active < total
@@ -827,7 +833,7 @@ function row(step: ReportStep): HTMLElement {
   const unfoldable = view.parents.has(step.i);
   const closed = (filter ? state.filterCollapsed : state.collapsed).has(step.i);
   const el = h('div', {
-    class: `row${step.container ? ' group' : ''}${step.kind === 'idle' ? ' idle' : ''}${state.open === step.i ? ' sel' : ''}`,
+    class: `row${step.container && !step.phase ? ' group' : ''}${step.kind === 'idle' ? ' idle' : ''}${step.kind === 'build-task' ? ' task' : ''}${state.open === step.i ? ' sel' : ''}`,
     role: 'listitem',
     'data-i': step.i,
   });
@@ -884,7 +890,8 @@ function row(step: ReportStep): HTMLElement {
   } else {
     const bar = h('span', { class: `bar${step.failed ? ' failed' : ''}` });
     if (step.failed) bar.style.background = 'var(--critical)';
-    else if (!step.container && step.phase) bar.style.background = color(step.phase);
+    else if (step.phase) bar.style.background = color(step.phase);
+    if (step.started === false) bar.classList.add('unstarted');
     place(bar, step.s, step.e);
     track.append(bar);
   }
@@ -1001,8 +1008,16 @@ function details(step: ReportStep): HTMLElement {
   if (step.flags.length) add('Flags', step.flags.map((f) => BADGES[f] ?? f).join(', '));
   const notes = step.tags.map(describeTag).filter(Boolean);
   if (notes.length) add('Notes', notes.join('; '));
+  if (step.kind === 'build-task') {
+    add('Build tool', step.tool ?? '');
+    if (step.started === false)
+      add(
+        'Start',
+        `not recorded by ${step.tool}: drawn from the build's start. Tasks may have run in parallel.`,
+      );
+  }
   if (step.container) {
-    add('Inside', plural(kids[step.i]?.length ?? 0, 'step'));
+    add('Inside', plural(kids[step.i]?.length ?? 0, step.kind === 'tool' ? 'build task' : 'step'));
     const split = splitText(step, 5);
     if (split) add('By phase', split);
   }

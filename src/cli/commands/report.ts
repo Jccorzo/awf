@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { summarize } from '../../analyze/summary';
+import { attachBuildTimings } from '../../build/drilldown';
 import { buildReportData } from '../../report/data';
 import { renderReportHtml } from '../../report/html';
 import { awfHome, safeId } from '../../store/paths';
@@ -33,6 +34,8 @@ inside the file, and it makes no network requests. <session> is an ID or its fir
   run(ctx, args, options) {
     const share = options.share === true;
     const session = loadOne(ctx, args[0], options, !share);
+    // Builds run with timing output on show their slowest tasks (not in shared reports).
+    if (!share) attachBuildTimings(session);
     const home = ctx.env.HOME ?? os.homedir();
     const data = buildReportData(summarize(classifier()(session)), { share, home, now: ctx.now });
     if (options.json) {

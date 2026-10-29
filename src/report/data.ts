@@ -51,6 +51,8 @@ export interface ReportStep {
   container: boolean;
   /** Model steps: display indexes of the calls this model time wrote. */
   produces?: number[];
+  /** Build tasks: false when the tool doesn't record start times (drawn from the build's start). */
+  started?: boolean;
 }
 
 export interface ReportData {
@@ -223,6 +225,42 @@ export function buildReportData(
     }
     steps.push(out);
     displayIndex.set(step.id, i);
+    // A build's slowest tasks, from its own timing output, nest under it. Not shared: task names
+    // are the project's.
+    if (step.build && !share) {
+      out.container = true;
+      out.description = `Slowest ${step.build.tasks.length} of ${step.build.total} tasks, from ${
+        step.build.source === 'output'
+          ? `${step.build.tool}'s output`
+          : shortPath(step.build.source, session.cwd, options.home)
+      }`;
+      for (const task of step.build.tasks) {
+        const started = task.startMs !== undefined;
+        const s0 = started ? (task.startMs as number) - t0 : step.startMs - t0;
+        steps.push({
+          i: steps.length,
+          p: i,
+          depth: depth + 1,
+          kind: 'build-task',
+          ...(step.phase ? { phase: step.phase } : {}),
+          s: s0,
+          e: s0 + task.ms,
+          label: task.name,
+          ...(task.count && task.count > 1
+            ? { text: `${task.count} ${step.build.tool === 'msbuild' ? 'calls' : 'tasks'}` }
+            : task.result
+              ? { text: task.result }
+              : {}),
+          tool: step.build.tool,
+          failed: false,
+          flags: [],
+          tags: [],
+          checks: [],
+          container: false,
+          started,
+        });
+      }
+    }
     for (const kid of kids) visit(kid, i, depth + 1);
   };
   for (const top of children.get(null) ?? []) visit(top, -1, 0);
@@ -234,9 +272,11 @@ export function buildReportData(
   }
 
   // Background work doesn't hold the agent up, so it can't be the slow step.
+  // A build with its tasks nested under it is still one step.
   const leaves = steps.filter(
     (s) =>
-      !s.container &&
+      (!s.container || steps[s.i + 1]?.kind === 'build-task') &&
+      s.kind !== 'build-task' &&
       s.kind !== 'idle' &&
       s.kind !== 'turn' &&
       s.kind !== 'background' &&

@@ -88,6 +88,8 @@ class TranscriptReader {
   private turnStart = 0;
   private lastActivity = 0;
   private turnEndMark: number | undefined;
+  /** A message after the turn ended that wasn't a prompt (an app notice, a `!` command). */
+  private pendingPrompt: number | undefined;
   private cwd: string | undefined;
   private version: string | undefined;
   private title: string | undefined;
@@ -193,9 +195,14 @@ class TranscriptReader {
     }
     const kind = promptKind(entry);
     if (kind === 'none') {
-      // "[Request interrupted by user]": the turn ends here.
-      if (messageText(entry).startsWith('[Request interrupted'))
-        this.lastActivity = Math.max(this.lastActivity, ms);
+      const ended = !this.turnOpen || this.turnEndMark !== undefined;
+      if (messageText(entry).startsWith('[Request interrupted')) {
+        // "[Request interrupted by user]": the turn ends here, unless it had ended already.
+        if (!ended) this.lastActivity = Math.max(this.lastActivity, ms);
+      } else if (ended && !contentBlocks(entry).some((b) => b.type === 'tool_result')) {
+        // Sent after the turn ended, but not a prompt: if the model answers it, a turn starts here.
+        this.pendingPrompt ??= ms;
+      }
       this.toolResults(entry, ms, undefined);
       return;
     }
@@ -207,15 +214,16 @@ class TranscriptReader {
     } else if (this.options.detail && !this.title) {
       this.title = oneLine(text);
     }
-    this.emit({
-      e: 'UserPromptSubmit',
-      t: ms,
-      ...(kind === 'notification' ? { src: 'task-notification' } : {}),
-    });
+    this.startTurn(ms, kind === 'notification' ? 'task-notification' : undefined);
+  }
+
+  private startTurn(ms: number, src: string | undefined): void {
+    this.emit({ e: 'UserPromptSubmit', t: ms, ...(src ? { src } : {}) });
     this.turnOpen = true;
     this.turnStart = ms;
     this.lastActivity = ms;
     this.turnEndMark = undefined;
+    this.pendingPrompt = undefined;
   }
 
   private closeTurn(): void {
@@ -306,6 +314,12 @@ class TranscriptReader {
   private assistant(entry: Entry, ms: number, agentId: string | undefined): void {
     const message = obj(entry.message) ?? {};
     const messageId = str(message.id) ?? str(entry.uuid);
+    if (!agentId && (!this.turnOpen || (this.turnEndMark !== undefined && ms > this.turnEndMark))) {
+      // The model works again after its turn ended with no prompt in between (it answered an app
+      // notice or a reminder): that's a turn of its own, from the message it answered.
+      if (this.turnOpen) this.closeTurn();
+      this.startTurn(Math.min(this.pendingPrompt ?? ms, ms), 'system');
+    }
     if (!agentId) this.lastActivity = Math.max(this.lastActivity, ms);
     if (messageId) {
       const known = this.messages.get(messageId);

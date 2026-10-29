@@ -231,7 +231,8 @@ class Builder {
       this.closeOpenTools(this.main, e.t, 'interrupted');
       this.closeTurn(e.t);
     }
-    this.openTurn(e.t, e.src === 'task-notification' ? ['notification'] : []);
+    // Started by a background task's notice, or a notice from the app: not by your prompt.
+    this.openTurn(e.t, e.src ? ['notification'] : []);
     this.main.modelStart = e.t;
   }
 
