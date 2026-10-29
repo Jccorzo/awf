@@ -1,0 +1,245 @@
+import { describe, expect, it } from 'vitest';
+import type { Step } from '../../src/model/types';
+import type { RecorderEvent } from '../../src/recorder/event';
+import { eventsToSession } from '../../src/recorder/steps';
+
+function ev(e: string, t: number, extra: Partial<RecorderEvent> = {}): RecorderEvent {
+  return { v: 1, e, t, sid: 's', ...extra };
+}
+
+function span(step: Step | undefined): [number, number] | undefined {
+  return step ? [step.startMs, step.endMs] : undefined;
+}
+
+function models(steps: Step[]): Step[] {
+  return steps.filter((s) => s.kind === 'model');
+}
+
+describe('eventsToSession', () => {
+  it('splits a turn into model time and a tool call', () => {
+    const session = eventsToSession('s', [
+      ev('SessionStart', 0, { cwd: '/repo' }),
+      ev('UserPromptSubmit', 1000, { cwd: '/repo' }),
+      ev('PreToolUse', 3000, { tool: 'Bash', tuid: 't1', cmd: 'pnpm test' }),
+      ev('PostToolUse', 8000, { tool: 'Bash', tuid: 't1', ok: true, dur: 4900 }),
+      ev('PostToolBatch', 8010, { ids: ['t1'] }),
+      ev('Stop', 10000),
+      ev('SessionEnd', 20000),
+    ]);
+    expect(session).toMatchObject({ startMs: 1000, endMs: 10000, cwd: '/repo' });
+    const turn = session.steps.find((s) => s.kind === 'turn');
+    const tool = session.steps.find((s) => s.id === 't1');
+    const [first, last] = models(session.steps);
+    expect(span(turn)).toEqual([1000, 10000]);
+    expect(span(first)).toEqual([1000, 3000]);
+    expect(first?.produces).toEqual(['t1']);
+    expect(tool).toMatchObject({
+      startMs: 3000,
+      endMs: 8000,
+      ok: true,
+      runMs: 4900,
+      command: 'pnpm test',
+      parentId: turn?.id,
+    });
+    expect(span(last)).toEqual([8000, 10000]);
+    expect(last?.flags).toContain('answer');
+  });
+
+  it('links one model step to a whole parallel batch', () => {
+    const session = eventsToSession('s', [
+      ev('UserPromptSubmit', 1000),
+      ev('PreToolUse', 2000, { tool: 'Read', tuid: 'r1', files: ['/a'] }),
+      ev('PreToolUse', 2001, { tool: 'Read', tuid: 'r2', files: ['/b'] }),
+      ev('PostToolUse', 2100, { tuid: 'r1', ok: true }),
+      ev('PostToolUse', 2150, { tuid: 'r2', ok: true }),
+      ev('PostToolBatch', 2160, { ids: ['r1', 'r2'] }),
+      ev('Stop', 5000),
+    ]);
+    const [first, last] = models(session.steps);
+    expect(first?.produces).toEqual(['r1', 'r2']);
+    expect(session.steps.find((s) => s.id === 'r2')?.flags).toContain('parallel');
+    expect(span(last)).toEqual([2150, 5000]);
+    expect(models(session.steps)).toHaveLength(2);
+  });
+
+  it('splits an approval wait from the run using duration_ms', () => {
+    const session = eventsToSession('s', [
+      ev('UserPromptSubmit', 1000),
+      ev('PreToolUse', 2000, { tool: 'Bash', tuid: 't1', ih: 'h1' }),
+      ev('PreToolUse', 2001, { tool: 'Bash', tuid: 't0', ih: 'h0' }),
+      ev('PermissionRequest', 2005, { tool: 'Bash', ih: 'h1' }),
+      ev('PostToolUse', 2500, { tuid: 't0', ok: true }),
+      ev('PostToolUse', 12000, { tuid: 't1', ok: true, dur: 3000 }),
+      ev('Stop', 13000),
+    ]);
+    const call = session.steps.find((s) => s.id === 't1');
+    expect(call?.flags).toContain('approval');
+    expect(call).toMatchObject({ waitMs: 7000, runMs: 3000 });
+    expect(session.steps.find((s) => s.id === 't0')?.flags).not.toContain('approval');
+  });
+
+  it('nests a subagent and its own model time under the Agent call', () => {
+    const session = eventsToSession('s', [
+      ev('UserPromptSubmit', 1000),
+      ev('PreToolUse', 2000, { tool: 'Agent', tuid: 'a1', sub: 'Explore' }),
+      ev('SubagentStart', 2050, { aid: 'x1', at: 'Explore' }),
+      ev('PreToolUse', 3000, { tool: 'Grep', tuid: 'g1', aid: 'x1', at: 'Explore' }),
+      ev('PostToolUse', 3100, { tuid: 'g1', ok: true, aid: 'x1' }),
+      ev('PostToolBatch', 3110, { ids: ['g1'], aid: 'x1' }),
+      ev('SubagentStop', 6000, { aid: 'x1', at: 'Explore' }),
+      ev('PostToolUse', 6010, { tuid: 'a1', ok: true, child: 'x1' }),
+      ev('PostToolBatch', 6020, { ids: ['a1'] }),
+      ev('Stop', 8000),
+    ]);
+    const sub = session.steps.find((s) => s.kind === 'subagent');
+    expect(sub).toMatchObject({
+      id: 'agent:x1',
+      parentId: 'a1',
+      startMs: 2050,
+      endMs: 6000,
+      agentType: 'Explore',
+    });
+    const grep = session.steps.find((s) => s.id === 'g1');
+    expect(grep).toMatchObject({ parentId: 'agent:x1', agentId: 'x1' });
+    const subModels = models(session.steps).filter((s) => s.agentId === 'x1');
+    expect(subModels.map(span)).toEqual([
+      [2050, 3000],
+      [3100, 6000],
+    ]);
+    expect(subModels[0]?.produces).toEqual(['g1']);
+    const mainModels = models(session.steps).filter((s) => !s.agentId);
+    expect(mainModels.map(span)).toEqual([
+      [1000, 2000],
+      [6010, 8000],
+    ]);
+  });
+
+  it('cuts model time around a compaction and links both parts to the next call', () => {
+    const session = eventsToSession('s', [
+      ev('UserPromptSubmit', 1000),
+      ev('PreCompact', 5000, { trigger: 'auto' }),
+      ev('PostCompact', 9000, { trigger: 'auto' }),
+      ev('PreToolUse', 10000, { tool: 'Edit', tuid: 'e1', files: ['/repo/a.ts'] }),
+      ev('PostToolUse', 11000, { tuid: 'e1', ok: true }),
+      ev('Stop', 12000),
+    ]);
+    const compaction = session.steps.find((s) => s.kind === 'compact');
+    expect(span(compaction)).toEqual([5000, 9000]);
+    const [a, b] = models(session.steps);
+    expect([span(a), span(b)]).toEqual([
+      [1000, 5000],
+      [9000, 10000],
+    ]);
+    expect(a?.produces).toEqual(['e1']);
+    expect(b?.produces).toEqual(['e1']);
+  });
+
+  it('closes an interrupted turn when the next prompt arrives', () => {
+    const session = eventsToSession('s', [
+      ev('UserPromptSubmit', 1000),
+      ev('PreToolUse', 2000, { tool: 'Bash', tuid: 't1' }),
+      ev('UserPromptSubmit', 5000),
+      ev('Stop', 7000),
+    ]);
+    const turns = session.steps.filter((s) => s.kind === 'turn');
+    expect(turns.map(span)).toEqual([
+      [1000, 5000],
+      [5000, 7000],
+    ]);
+    expect(session.steps.find((s) => s.id === 't1')).toMatchObject({ endMs: 5000 });
+    expect(session.steps.find((s) => s.id === 't1')?.flags).toContain('interrupted');
+    expect(session.steps.some((s) => s.kind === 'idle')).toBe(false);
+  });
+
+  it('counts the gap between turns as idle', () => {
+    const session = eventsToSession('s', [
+      ev('UserPromptSubmit', 1000),
+      ev('Stop', 10000),
+      ev('UserPromptSubmit', 40000),
+      ev('Stop', 41000),
+    ]);
+    expect(span(session.steps.find((s) => s.kind === 'idle'))).toEqual([10000, 40000]);
+    expect(session.endMs - session.startMs).toBe(40000);
+  });
+
+  it('starts model time when the last call ends on versions without PostToolBatch', () => {
+    const session = eventsToSession('s', [
+      ev('UserPromptSubmit', 1000),
+      ev('PreToolUse', 2000, { tool: 'Bash', tuid: 't1' }),
+      ev('PostToolUse', 3000, { tuid: 't1', ok: true }),
+      ev('PreToolUse', 4000, { tool: 'Bash', tuid: 't2' }),
+      ev('PostToolUseFailure', 5000, { tuid: 't2', ok: false, code: 2 }),
+      ev('Stop', 6000),
+    ]);
+    expect(models(session.steps).map(span)).toEqual([
+      [1000, 2000],
+      [3000, 4000],
+      [5000, 6000],
+    ]);
+    expect(session.steps.find((s) => s.id === 't2')).toMatchObject({ ok: false, exitCode: 2 });
+  });
+
+  it('counts the gap between calls of a batch as model time writing the next call', () => {
+    const session = eventsToSession('s', [
+      ev('UserPromptSubmit', 1000),
+      ev('PreToolUse', 2000, { tool: 'Edit', tuid: 't1' }),
+      ev('PostToolUse', 2010, { tuid: 't1', ok: true }),
+      ev('PreToolUse', 2600, { tool: 'Bash', tuid: 't2' }),
+      ev('PostToolUse', 4000, { tuid: 't2', ok: true }),
+      ev('PostToolBatch', 4010, { ids: ['t1', 't2'] }),
+      ev('Stop', 6000),
+    ]);
+    expect(models(session.steps).map(span)).toEqual([
+      [1000, 2000],
+      [2010, 2600],
+      [4000, 6000],
+    ]);
+    expect(models(session.steps)[1]?.produces).toEqual(['t2']);
+  });
+
+  it('flags a subagent whose Agent call returned at once as background', () => {
+    const session = eventsToSession('s', [
+      ev('UserPromptSubmit', 1000),
+      ev('PreToolUse', 2000, { tool: 'Agent', tuid: 'a1', sub: 'Explore' }),
+      ev('SubagentStart', 2010, { aid: 'x1', at: 'Explore' }),
+      ev('PostToolUse', 2020, { tuid: 'a1', ok: true, child: 'x1' }),
+      ev('SubagentStop', 9000, { aid: 'x1' }),
+      ev('Stop', 9500),
+      ev('UserPromptSubmit', 9510, { src: 'task-notification' }),
+      ev('Stop', 11000),
+    ]);
+    expect(session.steps.find((s) => s.kind === 'subagent')?.flags).toContain('background');
+    const turns = session.steps.filter((s) => s.kind === 'turn');
+    expect(turns[1]?.flags).toEqual(['notification']);
+  });
+
+  it('gives the same steps when async hooks wrote lines out of order', () => {
+    const events = [
+      ev('UserPromptSubmit', 1000),
+      ev('PreToolUse', 2000, { tool: 'Read', tuid: 'r1' }),
+      ev('PreToolUse', 2001, { tool: 'Read', tuid: 'r2' }),
+      ev('PostToolUse', 2100, { tuid: 'r1', ok: true }),
+      ev('PostToolUse', 2150, { tuid: 'r2', ok: true }),
+      ev('PostToolBatch', 2160, { ids: ['r1', 'r2'] }),
+      ev('Stop', 5000),
+    ];
+    const shuffled = [
+      events[3],
+      events[0],
+      events[6],
+      events[2],
+      events[5],
+      events[1],
+      events[4],
+    ] as RecorderEvent[];
+    expect(eventsToSession('s', shuffled)).toEqual(eventsToSession('s', events));
+  });
+
+  it('flags a turn that ended on an API error', () => {
+    const session = eventsToSession('s', [
+      ev('UserPromptSubmit', 1000),
+      ev('StopFailure', 4000, { err: 'rate_limit' }),
+    ]);
+    expect(models(session.steps)[0]?.flags).toEqual(['answer', 'api-error']);
+  });
+});

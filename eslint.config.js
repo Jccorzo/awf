@@ -91,4 +91,9 @@ export default [
     files: ['src/report/client/**/*.ts'],
     languageOptions: { globals: { ...globals.browser } },
   },
+  {
+    files: ['**/*.cjs'],
+    languageOptions: { sourceType: 'commonjs' },
+    rules: { '@typescript-eslint/no-require-imports': 'off' },
+  },
 ];
