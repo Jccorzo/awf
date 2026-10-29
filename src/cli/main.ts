@@ -1,5 +1,7 @@
 import { parseArgs, type ParseArgsConfig } from 'node:util';
 import { VERSION } from '../version';
+import { doctorCommand } from './commands/doctor';
+import { importCommand } from './commands/import';
 import { sessionsCommand } from './commands/sessions';
 
 export interface Io {
@@ -30,6 +32,8 @@ const defaultIo: Io = {
 
 export const COMMANDS: Record<string, Command> = {
   sessions: sessionsCommand,
+  import: importCommand,
+  doctor: doctorCommand,
 };
 
 function usage(): string {
