@@ -730,6 +730,90 @@ describe('tool calls', () => {
   });
 });
 
+describe('browser and computer-use calls', () => {
+  const call = (id: string, name: string, actions?: string[]): Step => ({
+    id,
+    parentId: null,
+    kind: 'tool',
+    tool: name,
+    startMs: 0,
+    endMs: 1,
+    flags: [],
+    ...(actions ? { actions } : {}),
+  });
+  const classified = classifier.session({
+    id: 's',
+    agent: 'claude-code',
+    sources: ['transcript'],
+    startMs: 0,
+    endMs: 1,
+    steps: [
+      call('navigate', 'mcp__claude-in-chrome__navigate'),
+      call('text', 'mcp__remote-devices__Claude_Browser__get_page_text'),
+      call('screenshot', 'mcp__Claude_Browser__computer', ['computer:screenshot']),
+      call('click', 'mcp__Claude_Browser__computer', ['computer:left_click']),
+      call('wait', 'mcp__Claude_Browser__computer', ['computer:wait']),
+      call('js', 'mcp__claude-in-chrome__javascript_tool', ['javascript_tool:javascript_exec']),
+      call('server', 'mcp__Claude_Browser__preview_start'),
+      call('look', 'mcp__claude-in-chrome__browser_batch', [
+        'navigate',
+        'computer:wait',
+        'computer:screenshot',
+      ]),
+      call('act', 'mcp__claude-in-chrome__browser_batch', [
+        'find',
+        'computer:left_click',
+        'computer:wait',
+        'computer:screenshot',
+      ]),
+      call('waits', 'mcp__Claude_Browser__browser_batch', ['computer:wait', 'computer:wait']),
+      call('unknown-batch', 'mcp__Claude_Browser__browser_batch'),
+      call('access', 'mcp__computer-use__request_access'),
+      call('cu-screenshot', 'mcp__computer-use__screenshot'),
+      call('cu-wait', 'mcp__computer-use__wait'),
+      call('cu-click', 'mcp__computer-use__left_click'),
+      call('cu-act', 'mcp__computer-use__computer_batch', ['zoom', 'wait', 'type']),
+      call('cu-look', 'mcp__computer-use__computer_batch', ['screenshot', 'wait', 'zoom']),
+      call('other', 'mcp__Claude_Code_iOS_Simulator__control', ['control:tap']),
+    ],
+  });
+  const step = (id: string) => classified.steps.find((s) => s.id === id);
+
+  it('counts looking at a page as Exploring and acting on it as Running scripts', () => {
+    for (const s of classified.steps) if (s.rule) hit.add(s.rule);
+    expect(Object.fromEntries(classified.steps.map((s) => [s.id, s.phase]))).toEqual({
+      navigate: 'exploring',
+      text: 'exploring',
+      screenshot: 'exploring',
+      click: 'running',
+      wait: 'running',
+      js: 'running',
+      server: 'running',
+      look: 'exploring',
+      act: 'running',
+      waits: 'running',
+      'unknown-batch': 'running',
+      access: 'waiting',
+      'cu-screenshot': 'exploring',
+      'cu-wait': 'running',
+      'cu-click': 'running',
+      'cu-act': 'running',
+      'cu-look': 'exploring',
+      other: 'unclassified',
+    });
+  });
+
+  it('gives a batch its highest-ranked call, keeping the others as tags', () => {
+    expect(step('act')?.tags).toEqual(['exploring']);
+    expect(step('cu-act')?.tags).toEqual(['exploring']);
+    expect(step('look')?.tags).toEqual([]);
+  });
+
+  it('counts a call that only waits for the page as polling', () => {
+    for (const id of ['wait', 'waits', 'cu-wait']) expect(step(id)?.tags).toEqual(['polling']);
+  });
+});
+
 describe('coverage', () => {
   it('has a fixture for every rule in default-rules.yaml', () => {
     const rules = defaultRules();

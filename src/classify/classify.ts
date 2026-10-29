@@ -4,7 +4,7 @@ import { AGENT_TOOLS } from '../recorder/steps';
 import { matchesAny } from './glob';
 import { type CheckPhase, isCheckPhase, type PhaseId, RANK, topPhase } from './phases';
 import { diskFiles, type Files, resolve, resolvePath } from './resolve';
-import { type CommandRule, loadRules, type RulePhase, type Rules } from './rules';
+import { type CommandRule, loadRules, type RulePhase, type Rules, type ToolRule } from './rules';
 import {
   programName,
   shellString,
@@ -744,25 +744,55 @@ export class Classifier {
       step.tags = ['background-task'];
       return;
     }
-    const rule = this.rules.tools.find((r) => r.names?.has(name) || r.match?.test(name));
-    if (!rule || rule.phase === 'neutral') {
-      step.phase = 'unclassified';
+    // A call's action, or each call of a browser batch, by its own rule. As in a compound command
+    // (rule 2), the step takes the highest-ranked phase. Waiting for a page doesn't count; a call
+    // that only waits is polling.
+    const prefix = name.includes('__') ? name.slice(0, name.lastIndexOf('__') + 2) : '';
+    const calls = step.actions?.length
+      ? step.actions.map((entry) => {
+          const colon = entry.indexOf(':');
+          const tool = colon < 0 ? entry : entry.slice(0, colon);
+          const action = colon < 0 ? undefined : entry.slice(colon + 1);
+          return { rule: this.toolRule(prefix + tool, action), wait: (action ?? tool) === 'wait' };
+        })
+      : [{ rule: this.toolRule(name), wait: name.slice(prefix.length) === 'wait' }];
+    const counted = calls.filter((c) => c.rule?.phase !== 'neutral');
+    if (counted.length === 0) {
+      const waits = calls.every((c) => c.wait);
+      step.phase = waits ? 'running' : 'unclassified';
+      step.tags = [waits ? 'polling' : 'neutral'];
+      if (calls[0]?.rule) step.rule = calls[0].rule.id;
       return;
     }
+    const phases = counted.map(({ rule }): PhaseId => {
+      if (!rule) return 'unclassified';
+      if (rule.phase !== 'writing') return rule.phase as PhaseId;
+      return (step.files ?? []).some((f) => this.isTestFile(f)) ? 'writing-tests' : 'writing-code';
+    });
+    let best = 0;
+    phases.forEach((phase, i) => {
+      if (COMPOUND_RANK[phase] > COMPOUND_RANK[phases[best] as PhaseId]) best = i;
+    });
+    const primary = phases[best] as PhaseId;
+    const others = unique(phases.filter((p) => p !== primary && p !== 'unclassified'));
+    if (others.length > 0) step.tags = others;
+    step.phase = primary;
+    const rule = counted[best]?.rule;
+    if (!rule) return;
     step.rule = rule.id;
-    if (rule.phase === 'writing') {
-      step.phase = (step.files ?? []).some((f) => this.isTestFile(f))
-        ? 'writing-tests'
-        : 'writing-code';
-    } else {
-      step.phase = rule.phase as PhaseId;
-      if (isCheckPhase(rule.phase)) {
-        step.checks = [
-          { key: `${rule.phase}:${name}`, phase: rule.phase, tool: name, failed: false },
-        ];
-        this.markFailures(step);
-      }
+    if (isCheckPhase(primary)) {
+      step.checks = [{ key: `${primary}:${name}`, phase: primary, tool: name, failed: false }];
+      this.markFailures(step);
     }
+  }
+
+  /** The first tool rule for a call. A rule with `action` matches only calls with one of those. */
+  private toolRule(name: string, action?: string): ToolRule | undefined {
+    return this.rules.tools.find(
+      (r) =>
+        (r.names?.has(name) || r.match?.test(name)) &&
+        (!r.actions || (action !== undefined && r.actions.has(action))),
+    );
   }
 
   /**

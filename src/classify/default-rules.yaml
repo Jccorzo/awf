@@ -268,7 +268,9 @@ scripts:
   - { phase: build, match: '^(build|build:.*|.*:build|compile|bundle|dist|prepare|prepack|package|generate|codegen|install|deps|all)$' }
   - { phase: running, match: '^(dev|develop|start|serve|server|preview|watch|storybook|seed|migrate|db|deploy|release|publish|up|down|ios|android|web|tauri|electron)$' }
 
-# Tool calls other than Bash, by name: exact names, or a regex in match.
+# Tool calls other than Bash, by name: exact names, or a regex in match. action: the call's action
+# ("a|b" for either), like a browser computer call's screenshot. A batch's calls are matched one by
+# one, and the batch takes the highest-ranked phase, as a compound command does.
 tools:
   - { phase: exploring, name: [Read, Grep, Glob, LS, WebSearch, WebFetch, NotebookRead, LSP, ToolSearch, Skill, ListMcpResourcesTool, ReadMcpResourceTool, ListAgents] }
   - { phase: writing, name: [Edit, Write, MultiEdit, NotebookEdit] }
@@ -277,6 +279,17 @@ tools:
   - { phase: waiting, name: [AskUserQuestion] }
   - { phase: running, name: [Monitor] }
   - { phase: lint, name: [mcp__ide__getDiagnostics] }
+  # Browsers (Claude in Chrome, the desktop app's built-in browser): looking at a page is Exploring,
+  # acting on it Running scripts. Waiting for the page doesn't count next to other calls.
+  - { phase: exploring, match: '^mcp__(.+__)?(claude-in-chrome|Claude_Browser)__(navigate|get_page_text|read_page|find|tabs_context|tabs_context_mcp|read_console_messages|read_network_requests|preview_logs|preview_list|list_connected_browsers|shortcuts_list)$' }
+  - { phase: exploring, match: '^mcp__(.+__)?(claude-in-chrome|Claude_Browser)__computer$', action: 'screenshot|zoom|scroll|scroll_to' }
+  - { phase: neutral, match: '^mcp__(.+__)?(claude-in-chrome|Claude_Browser)__computer$', action: wait }
+  - { phase: running, match: '^mcp__(.+__)?(claude-in-chrome|Claude_Browser)__' }
+  # Computer use: the same on the whole screen. Asking you for access to an app waits on you.
+  - { phase: waiting, name: [mcp__computer-use__request_access] }
+  - { phase: exploring, match: '^mcp__computer-use__(screenshot|zoom|scroll|cursor_position|list_granted_applications|read_clipboard)$' }
+  - { phase: neutral, name: [mcp__computer-use__wait] }
+  - { phase: running, match: '^mcp__computer-use__' }
 
 # Files whose edits count as Writing tests rather than Writing code.
 testFiles:

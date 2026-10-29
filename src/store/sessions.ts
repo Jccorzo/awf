@@ -148,6 +148,7 @@ export function mergeSessions(recorded: Session, transcript: Session): Session {
         merged.exitCode = twin.exitCode;
       if (merged.ok === undefined && twin.ok !== undefined) merged.ok = twin.ok;
       if (!merged.command && twin.command) merged.command = twin.command;
+      if (!merged.actions && twin.actions) merged.actions = twin.actions;
       if (!merged.backgroundId && twin.backgroundId) merged.backgroundId = twin.backgroundId;
     }
     if (step.kind === 'model') {

@@ -316,6 +316,27 @@ describe('Claude Code importer edge cases', () => {
     );
   });
 
+  it('keeps the names of what a browser call did, not its URLs or text', () => {
+    const file = writeTranscript('browser', [
+      prompt(0, 'check the login page'),
+      toolUse(1, 'm1', 'toolu_b1', 'mcp__Claude_Browser__browser_batch', {
+        actions: [
+          { name: 'navigate', input: { url: 'http://localhost:3000/login' } },
+          { name: 'computer', input: { action: 'type', text: 'secret words' } },
+        ],
+      }),
+      result(3, 'toolu_b1'),
+      toolUse(4, 'm2', 'toolu_b2', 'mcp__Claude_Browser__computer', { action: 'screenshot' }),
+      result(5, 'toolu_b2'),
+      text(6, 'm3'),
+    ]);
+    const session = importClaudeCodeTranscript(file);
+    const step = (id: string) => session.steps.find((s) => s.id === id);
+    expect(step('toolu_b1')?.actions).toEqual(['navigate', 'computer:type']);
+    expect(step('toolu_b2')?.actions).toEqual(['computer:screenshot']);
+    expect(JSON.stringify(session.steps)).not.toMatch(/localhost:3000|secret words/);
+  });
+
   it('counts unknown entries and bad lines without crashing', () => {
     const file = writeTranscript('s9', [
       prompt(0, 'hi'),

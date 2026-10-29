@@ -32,6 +32,34 @@ describe('toEvent', () => {
     expect(JSON.stringify(event)).not.toContain('Run tests');
   });
 
+  it('records what a browser or computer-use call did, by name only', () => {
+    const pre = (tool_name: string, tool_input: Record<string, unknown>) =>
+      toEvent(
+        { ...base, hook_event_name: 'PreToolUse', tool_name, tool_use_id: 'toolu_9', tool_input },
+        1,
+      );
+    const batch = pre('mcp__claude-in-chrome__browser_batch', {
+      actions: [
+        { name: 'navigate', input: { url: 'https://bank.example/account?id=42' } },
+        { name: 'computer', input: { action: 'left_click', coordinate: [10, 20] } },
+        { name: 'computer', input: { action: 'type', text: 'hunter2' } },
+      ],
+    });
+    expect(batch?.act).toEqual(['navigate', 'computer:left_click', 'computer:type']);
+    expect(JSON.stringify(batch)).not.toMatch(/bank\.example|hunter2/);
+    expect(pre('mcp__Claude_Browser__computer', { action: 'screenshot' })?.act).toEqual([
+      'computer:screenshot',
+    ]);
+    expect(
+      pre('mcp__computer-use__computer_batch', {
+        actions: [{ action: 'left_click', coordinate: [1, 2] }, { action: 'wait' }],
+      })?.act,
+    ).toEqual(['left_click', 'wait']);
+    // Free text where a name belongs, and tools that aren't MCP, record nothing.
+    expect(pre('mcp__notes__edit', { action: 'add a line to my diary' })?.act).toBeUndefined();
+    expect(pre('Bash', { command: 'ls', action: 'list' })?.act).toBeUndefined();
+  });
+
   it('never stores the prompt', () => {
     const event = toEvent(
       {

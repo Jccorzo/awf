@@ -39,6 +39,13 @@ describe('scrubber', () => {
       content: 'Command running in background with ID: bgA1. Output is being written to: /tmp/o',
       toolUseResult: { backgroundTaskId: 'bgA1' },
     }),
+    toolUse(7.5, 'm5', 'br1', 'mcp__claude-in-chrome__browser_batch', {
+      actions: [
+        { name: 'navigate', input: { url: 'https://Initech.example/payroll' } },
+        { name: 'computer', input: { action: 'type', text: 'the roadmap' } },
+      ],
+    }),
+    result(7.8, 'br1'),
     text(8, 'm4', 'I fixed the secretCode for Initech'),
     notification(20, 'bgA1', 'completed'),
   ];
@@ -55,8 +62,9 @@ describe('scrubber', () => {
     }
   });
 
-  it('keeps commands, paths, exit codes and task IDs', () => {
+  it('keeps commands, paths, exit codes, task IDs and browser actions', () => {
     expect(all).toContain('pnpm test');
+    expect(all).toContain('{"name":"computer","input":{"action":"type","text":"‹text›"}}');
     expect(all).toContain('/Users/user/x.ts');
     expect(all).toContain('Exit code 1');
     expect(all).toContain('bgA1');
@@ -67,7 +75,16 @@ describe('scrubber', () => {
     const before = importClaudeCodeTranscript(raw);
     const after = importClaudeCodeTranscript(scrubbed);
     const shape = (s: typeof before) =>
-      s.steps.map((x) => [x.kind, x.tool, x.startMs, x.endMs, x.ok, x.exitCode, x.flags.join(',')]);
+      s.steps.map((x) => [
+        x.kind,
+        x.tool,
+        x.actions?.join(','),
+        x.startMs,
+        x.endMs,
+        x.ok,
+        x.exitCode,
+        x.flags.join(','),
+      ]);
     expect(shape(after)).toEqual(shape(before));
   });
 });

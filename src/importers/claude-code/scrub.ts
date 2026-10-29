@@ -1,8 +1,10 @@
 // Scrubs Claude Code transcripts into fixtures that are safe to commit.
-// Keeps structure, timestamps, IDs, tool names and commands. Replaces prompts, assistant text,
-// thinking, file contents and tool output with placeholders, and masks anything like a secret.
+// Keeps structure, timestamps, IDs, tool names, commands and browser action names. Replaces prompts,
+// assistant text, thinking, file contents and tool output with placeholders, and masks anything
+// like a secret.
 // Strings are dropped unless their key is on the keep list: a new field is scrubbed by default.
 import { cleanCommand, maskSecrets } from '../../model/mask';
+import { ACTION_NAME } from '../../recorder/event';
 import { EXIT_CODE } from './format';
 
 export interface ScrubOptions {
@@ -168,9 +170,19 @@ export function makeScrubber(options: ScrubOptions) {
       if (typeof v === 'string') {
         if (k === 'command') out[k] = keep(cleanCommand(v));
         else if (INPUT_KEEP.has(k)) out[k] = keep(v);
+        else if (k === 'action' && ACTION_NAME.test(v)) out[k] = v;
         else out[k] = TEXT;
       } else if (typeof v === 'boolean' || typeof v === 'number') {
         out[k] = v;
+      } else if (k === 'actions' && Array.isArray(v)) {
+        // A browser batch: each call's name and action.
+        out[k] = v.map((item) => {
+          const call = (item ?? {}) as Record<string, unknown>;
+          const kept = scrubInput(call) as Record<string, unknown>;
+          if (typeof call.name === 'string' && ACTION_NAME.test(call.name)) kept.name = call.name;
+          if (call.input !== undefined) kept.input = scrubInput(call.input);
+          return kept;
+        });
       } else {
         out[k] = TEXT;
       }
