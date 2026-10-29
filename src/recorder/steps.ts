@@ -296,6 +296,7 @@ class Builder {
     if (e.cmd) step.command = e.cmd;
     if (e.files) step.files = e.files;
     if (e.sub) step.agentType = e.sub;
+    if (e.bgid) step.backgroundId = e.bgid;
     if (ctx.agentId) step.agentId = ctx.agentId;
     for (const producer of producers) (producer.produces ??= []).push(step.id);
     if (producers.length > 0) ctx.lastModel = producers[producers.length - 1] ?? null;

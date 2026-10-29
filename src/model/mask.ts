@@ -18,10 +18,12 @@ const PATTERNS: Array<[RegExp, string]> = [
     `$1$2$3 ${MASK}`,
   ],
   [/\b(x-api-key|api-key|x-auth-token|x-access-token)(\s*:\s*)(?!‹)[^\s"']+/gi, `$1$2${MASK}`],
-  // NAME=value and NAME: value for secret-looking names, in env assignments, exports and config lines
+  // NAME=value and NAME: value for secret-looking names, in env assignments, exports and config lines.
+  // A value that is a variable or a command substitution ($TOKEN, $(gh auth token)) holds no secret
+  // in the text, and masking it would break the command.
   [
     new RegExp(
-      `\\b(${SECRET_NAME})(\\s*[=:]\\s*)(?!‹|(?:Bearer|Basic|Token|Bot)\\s+‹)("[^"]*"|'[^']*'|[^\\s"';&|]+)`,
+      `\\b(${SECRET_NAME})(\\s*[=:]\\s*)(?!‹|(?:Bearer|Basic|Token|Bot)\\s+‹|["']?[$\`])("[^"]*"|'[^']*'|[^\\s"';&|]+)`,
       'gi',
     ),
     `$1$2${MASK}`,

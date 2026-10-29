@@ -38,7 +38,7 @@ export interface RecorderEvent {
   ids?: string[];
   /** Agent/Task PostToolUse: agentId of the subagent the call ran. */
   child?: string;
-  /** Background Bash PostToolUse: backgroundTaskId. */
+  /** Background task: the one a background Bash call started (PostToolUse), or the one a call reads (PreToolUse). */
   bgid?: string;
   /** SessionStart source, or 'task-notification' on a UserPromptSubmit a background task's notice sent */
   src?: string;
@@ -118,6 +118,9 @@ export function toEvent(input: Json, t: number): RecorderEvent | null {
     if (toolInput.run_in_background === true) ev.bg = true;
     const sub = str(toolInput.subagent_type);
     if (sub) ev.sub = sub;
+    // TaskOutput, BashOutput, TaskStop: the background task they read or stop.
+    const ref = str(toolInput.task_id) ?? str(toolInput.bash_id) ?? str(toolInput.shell_id);
+    if (ref) ev.bgid = ref;
   }
 
   switch (e) {

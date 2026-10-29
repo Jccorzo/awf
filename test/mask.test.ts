@@ -29,6 +29,9 @@ describe('maskSecrets', () => {
     'NODE_ENV=production pnpm build',
     'cargo build --release',
     'grep -rn "token" src/',
+    'GH_TOKEN=$(gh auth token) gh run view 1',
+    'export API_KEY="$OTHER_KEY" && pnpm test',
+    'TOKEN=`cat .token` curl x',
   ])('leaves %s alone', (input) => {
     expect(maskSecrets(input)).toBe(input);
   });

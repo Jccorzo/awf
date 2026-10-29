@@ -4,8 +4,24 @@ import { fileURLToPath } from 'node:url';
 
 export const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
+/** `import text from './file.yaml?raw'`, as Vite (and so Vitest) does. */
+export const rawPlugin = {
+  name: 'raw',
+  setup(build) {
+    build.onResolve({ filter: /\?raw$/ }, (args) => ({
+      path: path.resolve(args.resolveDir, args.path.slice(0, -'?raw'.length)),
+      namespace: 'raw',
+    }));
+    build.onLoad({ filter: /.*/, namespace: 'raw' }, async (args) => ({
+      contents: (await import('node:fs')).readFileSync(args.path, 'utf8'),
+      loader: 'text',
+    }));
+  },
+};
+
 const common = {
   bundle: true,
+  plugins: [rawPlugin],
   platform: 'node',
   legalComments: 'none',
   absWorkingDir: root,

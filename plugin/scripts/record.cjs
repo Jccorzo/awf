@@ -55,10 +55,12 @@ var PATTERNS = [
     `$1$2$3 ${MASK}`
   ],
   [/\b(x-api-key|api-key|x-auth-token|x-access-token)(\s*:\s*)(?!‹)[^\s"']+/gi, `$1$2${MASK}`],
-  // NAME=value and NAME: value for secret-looking names, in env assignments, exports and config lines
+  // NAME=value and NAME: value for secret-looking names, in env assignments, exports and config lines.
+  // A value that is a variable or a command substitution ($TOKEN, $(gh auth token)) holds no secret
+  // in the text, and masking it would break the command.
   [
     new RegExp(
-      `\\b(${SECRET_NAME})(\\s*[=:]\\s*)(?!\u2039|(?:Bearer|Basic|Token|Bot)\\s+\u2039)("[^"]*"|'[^']*'|[^\\s"';&|]+)`,
+      `\\b(${SECRET_NAME})(\\s*[=:]\\s*)(?!\u2039|(?:Bearer|Basic|Token|Bot)\\s+\u2039|["']?[$\`])("[^"]*"|'[^']*'|[^\\s"';&|]+)`,
       "gi"
     ),
     `$1$2${MASK}`
@@ -165,6 +167,8 @@ function toEvent(input, t) {
     if (toolInput.run_in_background === true) ev.bg = true;
     const sub = str(toolInput.subagent_type);
     if (sub) ev.sub = sub;
+    const ref = str(toolInput.task_id) ?? str(toolInput.bash_id) ?? str(toolInput.shell_id);
+    if (ref) ev.bgid = ref;
   }
   switch (e) {
     case "UserPromptSubmit": {

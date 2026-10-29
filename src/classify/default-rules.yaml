@@ -1,0 +1,249 @@
+# awf phase rules. See docs/phases.md.
+#
+# A repo extends these in .awf/rules.yaml, in the same format. Its rules are tried first, so it can
+# also override these. Within a section the first matching rule wins: specific rules go first.
+#
+# Phases: lint, tests, build, exploring, writing (Writing code or Writing tests, by file), planning,
+# waiting, neutral (changes nothing and doesn't count, like cd or echo).
+
+version: 1
+
+# Bash commands. A compound command (&&, ||, ;, |, newlines, subshells, sh -c) is split into simple
+# commands. Each one is matched after wrappers (env FOO=1, sudo, time, timeout, npx, pnpm exec,
+# uv run, poetry run, bundle exec, python -m, ...) are removed, and after npm/pnpm/yarn/bun scripts,
+# make targets, Gradle tasks, Maven goals and git commit hooks are resolved to what they run.
+#
+#   program   the command's name, without its path (string or list)
+#   args      leading arguments that must follow, in order, options skipped ("a|b" for either)
+#   with      arguments that must all appear anywhere (--flag also matches --flag=value)
+#   without   arguments that must not appear
+#   only      every argument must be one of these
+#   match     instead of program: a regex tested on the simple command
+#   tag       an extra tag on the step, like install
+#   tool      the check's name, when it isn't the program (go test is "go test")
+commands:
+  # --version, --help and friends only read.
+  - { phase: exploring, match: '^\S+\s+(--version|-v|-V|--help|-h|version|help|-version|--usage)$' }
+
+  # Lint and format
+  - { phase: exploring, program: eslint, with: [--print-config] }
+  - phase: lint
+    program: [eslint, prettier, oxlint, standard, xo, stylelint, markdownlint, markdownlint-cli2, htmlhint, jsonlint, yamllint, hadolint, shellcheck, shfmt, actionlint, editorconfig-checker, eclint, lint-staged, commitlint, knip, depcheck, sort-package-json, syncpack, cspell]
+  - { phase: lint, program: biome, args: ['check|lint|format|ci'] }
+  - { phase: lint, program: ruff, args: ['check|format'] }
+  - { phase: lint, program: [black, isort, flake8, pylint, mypy, pyright, basedpyright, pyflakes, pycodestyle, pydocstyle, bandit, autopep8, yapf, pyre, pytype, vulture] }
+  - { phase: lint, program: [golangci-lint, gofmt, goimports, gofumpt, staticcheck, revive, errcheck, govulncheck] }
+  - { phase: lint, program: go, args: ['vet|fmt'], tool: go vet }
+  - { phase: lint, program: cargo, args: ['clippy|fmt|check|audit|deny|udeps'], tool: cargo clippy }
+  - { phase: lint, program: [rustfmt, clippy-driver] }
+  - { phase: lint, program: [ktlint, detekt, ktfmt, swiftlint, swiftformat, clang-format, clang-tidy, cpplint, cppcheck] }
+  - { phase: lint, program: swift, args: ['format'], tool: swift format }
+  - { phase: lint, program: dotnet, args: ['format'], tool: dotnet format }
+  - { phase: lint, program: [rubocop, standardrb, erb_lint, reek, brakeman] }
+  - { phase: lint, program: [phpcs, phpcbf, phpstan, psalm, php-cs-fixer, pint] }
+  - { phase: lint, program: [tsc, vue-tsc], with: [--noEmit], tool: tsc --noEmit }
+  - { phase: lint, program: [svelte-check, tflint, sqlfluff, checkov, ansible-lint, credo] }
+  - { phase: lint, program: buf, args: ['lint|format|breaking'] }
+  - { phase: lint, program: astro, args: ['check'] }
+  - { phase: lint, program: terraform, args: ['fmt|validate'] }
+  - { phase: lint, program: deno, args: ['lint|fmt|check'] }
+  - { phase: lint, program: [flutter, dart], args: ['analyze|format'] }
+  - { phase: lint, program: mix, args: ['format|credo|dialyzer'] }
+  - { phase: lint, program: pre-commit, args: ['run'] }
+  - { phase: lint, program: xcrun, args: ['swift-format|swiftlint'] }
+
+  # Running tests (before Build, so a few build-like commands with test flags land here)
+  - { phase: exploring, program: [jest, vitest], with: [--listTests] }
+  - { phase: exploring, program: [pytest, py.test], with: [--collect-only] }
+  - { phase: build, program: go, args: [test], with: [-c], tool: go test -c }
+  - { phase: build, program: cargo, args: ['test|nextest'], with: [--no-run] }
+  - { phase: tests, program: [jest, vitest, mocha, ava, tap, jasmine, karma, uvu, cucumber-js, wdio, testcafe, nightwatch] }
+  - { phase: tests, program: playwright, args: ['test'] }
+  - { phase: tests, program: cypress, args: ['run'] }
+  - { phase: tests, program: node, with: [--test] }
+  - { phase: tests, program: [bun, deno], args: ['test'] }
+  - { phase: tests, program: [pytest, py.test, tox, nox, nose2, ward, behave] }
+  - { phase: tests, program: unittest }
+  - { phase: tests, program: go, args: [test], tool: go test }
+  - { phase: tests, program: [gotestsum, ginkgo] }
+  - { phase: tests, program: cargo, args: ['test|nextest|bench|miri'], tool: cargo test }
+  - { phase: tests, program: dotnet, args: ['test|vstest'], tool: dotnet test }
+  - { phase: tests, program: xcodebuild, with: [test], tool: xcodebuild test }
+  - { phase: tests, program: xcodebuild, with: [test-without-building], tool: xcodebuild test }
+  - { phase: tests, program: swift, args: [test], tool: swift test }
+  - { phase: tests, program: [bazel, bazelisk], args: [test], tool: bazel test }
+  - { phase: tests, program: [rspec, phpunit, pest, ctest, busted, prove] }
+  - { phase: tests, program: rails, args: ['test|spec'] }
+  - { phase: tests, program: rake, args: ['test|spec|test:*|spec:*'] }
+  - { phase: tests, program: mix, args: ['test'] }
+  - { phase: tests, program: [flutter, dart], args: ['test'] }
+  - { phase: tests, program: [k6, artillery], args: ['run'] }
+  # Waiting on CI: the remote run of the same checks
+  - { phase: tests, program: gh, args: ['run', 'watch'], tool: ci }
+  - { phase: tests, program: gh, args: ['pr', 'checks'], with: [--watch], tool: ci }
+
+  # Build
+  - { phase: build, program: [tsc, vue-tsc, tsup, unbuild, swc, babel, rollup, webpack, esbuild, parcel, rspack, rolldown, microbundle, ncc, pkg] }
+  - { phase: build, program: [vite, next, nuxt, astro, remix, svelte-kit, react-router, gatsby, ng, react-scripts, vue-cli-service, electron-builder, expo], args: [build] }
+  - { phase: build, program: vite, args: ['optimize'] }
+  - { phase: build, program: go, args: ['build|install|generate'], tool: go build }
+  - { phase: build, program: cargo, args: ['build|install|doc'], tool: cargo build }
+  - { phase: build, program: dotnet, args: ['build|publish|pack|msbuild'], tool: dotnet build }
+  - { phase: build, program: [msbuild, xbuild] }
+  - { phase: build, program: xcodebuild, without: [-list, -showsdks, -version, -showBuildSettings], tool: xcodebuild build }
+  - { phase: exploring, program: xcodebuild }
+  - { phase: build, program: swift, args: ['build'], tool: swift build }
+  - { phase: build, program: [bazel, bazelisk, buck, buck2, pants], args: ['build'], tool: bazel build }
+  - { phase: build, program: [cmake, ninja, meson, scons, xmake, premake5, autoreconf, configure] }
+  - { phase: build, program: [docker, podman], args: ['build'], tool: docker build }
+  - { phase: build, program: [docker, podman], args: ['buildx|compose|image', 'build'], tool: docker build }
+  - { phase: build, program: [protoc, flatc, thrift, graphql-codegen, openapi-generator, openapi-generator-cli, sqlc, wire, mockgen, stringer] }
+  - { phase: build, program: buf, args: ['generate'] }
+  - { phase: build, program: prisma, args: ['generate'] }
+  - { phase: build, program: flutter, args: ['build|pub'] }
+  - { phase: build, program: mix, args: ['compile|deps.get|release'] }
+  - { phase: build, program: [pod, carthage], args: ['install|update|bootstrap'], tag: install }
+  - { phase: build, program: [tuist, xcodegen], args: ['generate|install|fetch|build'] }
+  - { phase: build, program: deno, args: ['compile'] }
+  - { phase: build, program: bun, args: ['build'] }
+
+  # Installing dependencies counts as Build, tagged install
+  - { phase: build, program: [npm, pnpm, bun], args: ['install|i|ci|add|remove|rm|uninstall|update|up|upgrade|link|rebuild|prune|dedupe'], tag: install, tool: install }
+  - { phase: build, program: yarn, only: [], tag: install, tool: install }
+  - { phase: build, program: yarn, args: ['install|add|remove|upgrade|up|dedupe'], tag: install, tool: install }
+  - { phase: build, program: [pip, pip3, pipx, uv, poetry, pipenv, pdm, conda, mamba, micromamba], args: ['install|sync|add|lock|update|uninstall|remove|venv|create'], tag: install, tool: install }
+  - { phase: build, program: uv, args: ['pip', 'install|sync|compile'], tag: install, tool: install }
+  - { phase: build, program: [bundle, gem, composer], args: ['install|update|add|require'], tag: install, tool: install }
+  - { phase: build, program: go, args: ['mod|get'], tag: install, tool: install }
+  - { phase: build, program: cargo, args: ['fetch|update|add|vendor'], tag: install, tool: install }
+  - { phase: build, program: dotnet, args: ['restore|add|tool'], tag: install, tool: install }
+  - { phase: build, program: [brew, apt, apt-get, dnf, yum, apk, port], args: ['install|upgrade|reinstall'], tag: install, tool: install }
+  - { phase: build, program: playwright, args: ['install'], tag: install, tool: install }
+  - { phase: build, program: [docker, podman], args: ['pull'], tag: install, tool: install }
+  - { phase: build, program: [rustup, nvm, fnm, volta, pyenv, rbenv, asdf, mise, sdk], args: ['install|add|use|toolchain|target|component'], tag: install, tool: install }
+
+  # Shell commands that only read
+  - phase: exploring
+    program: [ls, ll, la, lsd, eza, exa, tree, cat, bat, batcat, head, tail, less, more, grep, egrep, fgrep, rg, ag, ack, find, fd, fzf, wc, file, stat, du, df, which, whereis, type, pwd, realpath, readlink, basename, dirname, diff, colordiff, cmp, comm, jq, yq, gron, sort, uniq, cut, column, strings, xxd, hexdump, od, nl, tac, md5, md5sum, shasum, sha1sum, sha256sum, cksum, lsof, ps, pgrep, env, printenv, uname, sw_vers, whoami, id, hostname, date, man, tldr, history, tokei, cloc, scc, ldd, otool, nm, objdump, plutil, defaults, mdfind, xmllint, pdftotext, identify, exiftool, codesign, security, ioreg, system_profiler, vm_stat, sysctl, netstat, ifconfig, lsblk, free, top, htop, uptime, w, last, journalctl, dmesg, tput]
+  - { phase: exploring, program: [tr, base64, fold, paste, rev, iconv, expand, unexpand, fmt, seq, tsort, numfmt, look, uuidgen] }
+  - { phase: exploring, program: command, with: [-v] }
+  - { phase: exploring, program: [make, gmake], with: [-n] }
+  - { phase: exploring, match: '^(gcloud|aws|az|doctl|flyctl|heroku|vercel|netlify)\s(\S+\s)*(list|describe|read|get|show|status|logs|print-access-token|print-identity-token|info|get-[a-z-]+|describe-[a-z-]+|list-[a-z-]+)(\s|$)' }
+  - { phase: writing, match: '^(sed|gsed)(\s.*)?\s(-i\S*|--in-place\S*)(\s|$)' }
+  - { phase: writing, match: '^perl(\s.*)?\s-[a-zA-Z]*i' }
+  - { phase: exploring, program: [sed, gsed, awk, gawk, nawk, mawk, perl] }
+  - phase: exploring
+    program: git
+    args: ['status|log|diff|show|blame|annotate|rev-parse|ls-files|ls-tree|ls-remote|grep|describe|shortlog|reflog|cat-file|whatchanged|range-diff|merge-base|name-rev|rev-list|count-objects|check-ignore|show-ref|for-each-ref|var|help|version|fetch']
+  - { phase: exploring, program: git, args: ['stash|worktree|submodule|notes', 'list|show|status'] }
+  - { phase: exploring, program: git, args: ['config'], with: [--get] }
+  - { phase: exploring, program: git, args: ['config'], with: [--list] }
+  - { phase: exploring, program: git, args: ['tag'], with: [-l] }
+  - { phase: exploring, match: '^git (branch|tag|remote)( -[a-zA-Z-]+)*$' }
+  - { phase: exploring, program: gh, args: ['pr|issue|run|repo|release|workflow|search|api|gist|label|cache', 'view|list|diff|checks|status|watch|search|download'] }
+  - { phase: exploring, program: gh, args: ['api'] }
+  - { phase: exploring, program: gh, args: ['auth', 'status|token'] }
+  - { phase: exploring, program: [npm, pnpm, yarn, bun], args: ['ls|list|why|view|info|show|outdated|audit|explain|query|search|config|bin|root|prefix|pkg|licenses|doctor'] }
+  - { phase: exploring, program: [pip, pip3, uv, poetry, conda], args: ['list|show|freeze|check|tree|info|search|env'] }
+  - { phase: exploring, program: go, args: ['list|env|doc|version|tool'] }
+  - { phase: exploring, program: cargo, args: ['tree|metadata|search|locate-project|pkgid|info'] }
+  - { phase: exploring, program: [docker, podman], args: ['ps|images|logs|inspect|stats|top|port|history|version|info|context'] }
+  - { phase: exploring, program: [docker, podman], args: ['compose', 'ps|logs|config|images|ls'] }
+  - { phase: exploring, program: kubectl, args: ['get|describe|logs|top|explain|version|api-resources|config|auth|events'] }
+  - { phase: exploring, program: xcrun, args: ['simctl', 'list'] }
+  - { phase: exploring, program: [terraform, tofu], args: ['show|output|state|providers|version|graph'] }
+  - { phase: exploring, program: coverage, args: ['report|html|xml|json'] }
+  - { phase: exploring, match: '^tar\s+-?[a-zA-Z]*t' }
+
+  # Shell commands that change files
+  - { phase: writing, program: [mkdir, touch, cp, mv, rm, rmdir, ln, chmod, chown, chgrp, truncate, tee, patch, install, rsync, unzip, ditto] }
+  - { phase: writing, program: tar }
+  - phase: writing
+    program: git
+    args: ['add|commit|checkout|switch|restore|reset|stash|merge|rebase|cherry-pick|revert|mv|rm|tag|apply|am|init|clean|branch|worktree|submodule|notes|config|remote']
+    tool: git
+
+  # Changes nothing on its own, or takes no time worth a phase
+  - phase: neutral
+    program: [cd, pushd, popd, echo, printf, export, unset, set, source, '.', 'true', 'false', ':', sleep, wait, exit, return, read, alias, unalias, trap, shift, local, declare, typeset, readonly, ulimit, umask, '[', '[[', test, clear, reset, hash, shopt, setopt, bindkey, eval, let, break, continue, osascript, say, afplay, notify-send, terminal-notifier, kill, pkill, killall, disown, jobs, fg, bg]
+
+# Gradle tasks, Maven goals, and task names given to turbo, nx, sbt and similar runners.
+# Tested against each task name, and against its last part for qualified names like :app:testDebug.
+tasks:
+  - { phase: exploring, match: '^(tasks|help|dependencies|dependencyInsight|properties|projects|buildEnvironment|outgoingVariants|resolvableConfigurations|javaToolchains|model|dependency:tree|dependency:list|help:effective-pom|versions:display-dependency-updates)$' }
+  - { phase: lint, match: '^(lint[A-Za-z]*|ktlint[A-Za-z]*|detekt[A-Za-z]*|spotless[A-Za-z]*|spotless:(check|apply)|checkstyle[A-Za-z]*|checkstyle:check|pmd[A-Za-z]*|pmd:check|spotbugs[A-Za-z]*|spotbugs:check|ktfmt[A-Za-z]*|format[A-Za-z]*|typecheck|type-check|tsc|check-types|checkTypes|prettier|eslint|fmt)$' }
+  - { phase: build, match: '^(build[A-Za-z]*|assemble[A-Za-z]*|bundle[A-Za-z]*|compile[A-Za-z]*|jar|bootJar|shadowJar|war|ear|dist[A-Za-z]*|install[A-Za-z]*|publish[A-Za-z]*|package|deploy|generate[A-Za-z]*|kapt[A-Za-z]*|ksp[A-Za-z]*|nativeCompile|clean|prepare|test-compile|process-resources|codegen)$' }
+  - { phase: tests, match: '^(test|tests|check|verify|connectedCheck|integration-test|e2e|spec|coverage|test[A-Z][A-Za-z]*|test:.*|[a-z][A-Za-z]*Test|[a-z][A-Za-z]*Tests|connected[A-Za-z]*Test|jacoco[A-Za-z]*|kover[A-Za-z]*|surefire:test|failsafe:integration-test|failsafe:verify)$' }
+
+# Names of npm/pnpm/yarn/bun scripts and make targets, used only when the file that defines them
+# can't be read. Steps decided this way are tagged by-name.
+scripts:
+  - { phase: lint, match: '^(lint|lint:.*|.*:lint|format|format:.*|fmt|prettier|eslint|typecheck|type-check|types|tsc|check-types|check:types|stylelint|biome)$' }
+  - { phase: tests, match: '^(test|tests|test:.*|.*:test|spec|e2e|e2e:.*|unit|integration|coverage|cy:run|vitest|jest)$' }
+  - { phase: build, match: '^(build|build:.*|.*:build|compile|bundle|dist|prepare|prepack|package|generate|codegen|install|deps|all)$' }
+
+# Tool calls other than Bash, by name: exact names, or a regex in match.
+tools:
+  - { phase: exploring, name: [Read, Grep, Glob, LS, WebSearch, WebFetch, NotebookRead, LSP, ToolSearch, Skill, ListMcpResourcesTool, ReadMcpResourceTool, ListAgents] }
+  - { phase: writing, name: [Edit, Write, MultiEdit, NotebookEdit] }
+  - { phase: planning, name: [TodoWrite, TodoRead, TaskCreate, TaskUpdate, TaskList, TaskGet, EnterPlanMode, ExitPlanMode, StructuredOutput, SubagentHandback, SendMessage, SendUserMessage, SendUserFile, Workflow] }
+  - { phase: planning, match: '^mcp__ccd_turn__' }
+  - { phase: waiting, name: [AskUserQuestion] }
+  - { phase: lint, name: [mcp__ide__getDiagnostics] }
+
+# Files whose edits count as Writing tests rather than Writing code.
+testFiles:
+  - '**/*_test.go'
+  - '**/*.{test,spec}.{ts,tsx,mts,cts,js,jsx,mjs,cjs}'
+  - '**/*.{test,spec}-d.ts'
+  - '**/__tests__/**'
+  - '**/__mocks__/**'
+  - '**/test_*.py'
+  - '**/*_test.py'
+  - '**/conftest.py'
+  - '**/src/test/**'
+  - '**/src/androidTest/**'
+  - '**/src/*Test/**'
+  - '**/*{Test,Tests,IT,Spec}.{java,kt,scala,groovy}'
+  - '**/Tests/**'
+  - '**/*Tests/**'
+  - '**/*{Test,Tests}.swift'
+  - '**/*.Tests/**'
+  - '**/*.UnitTests/**'
+  - '**/*{Test,Tests}.cs'
+  - '**/*_spec.rb'
+  - '**/*_test.rb'
+  - '**/test/**'
+  - '**/tests/**'
+  - '**/spec/**'
+  - '**/e2e/**'
+  - '**/*_test.{c,cc,cpp,rs,exs,dart}'
+  - '**/*.test.{c,cc,cpp}'
+
+# Failure patterns, matched against a check's output when the transcript has it, to catch failures
+# a pipe hid (pnpm test | tail). tool names a check (program or rule tool); * applies to every check.
+failurePatterns:
+  - { tool: vitest, pattern: '(Test Files|Tests)\s+(\d+ failed|.*\b\d+ failed)' }
+  - { tool: jest, pattern: 'Tests:\s+\d+ failed' }
+  - { tool: mocha, pattern: '\b\d+ failing\b' }
+  - { tool: node, pattern: '(?m)^# fail [1-9]' }
+  - { tool: pytest, pattern: '(?m)^(=+ .*\b\d+ (failed|error)|FAILED |ERROR )' }
+  - { tool: go test, pattern: '(?m)^(FAIL|--- FAIL)\b' }
+  - { tool: cargo test, pattern: 'test result: FAILED' }
+  - { tool: cargo build, pattern: 'error(\[E\d{4}\])?: ' }
+  - { tool: cargo clippy, pattern: '(?m)^error(\[|:)' }
+  - { tool: tsc, pattern: 'error TS\d+' }
+  - { tool: tsc --noEmit, pattern: 'error TS\d+' }
+  - { tool: eslint, pattern: '\d+ problems? \(\d+ errors?' }
+  - { tool: prettier, pattern: 'Code style issues found|\[error\]' }
+  - { tool: ruff, pattern: 'Found \d+ errors?|Would reformat' }
+  - { tool: mypy, pattern: 'Found \d+ errors?' }
+  - { tool: gradle, pattern: 'BUILD FAILED|FAILURE: Build failed' }
+  - { tool: mvn, pattern: 'BUILD FAILURE' }
+  - { tool: xcodebuild test, pattern: '\*\* TEST FAILED \*\*|Testing failed' }
+  - { tool: xcodebuild build, pattern: '\*\* BUILD FAILED \*\*' }
+  - { tool: dotnet build, pattern: 'Build FAILED|error [A-Z]{2,}\d+' }
+  - { tool: dotnet test, pattern: 'Failed!\s+-\s+Failed:\s+[1-9]' }
+  - { tool: swift test, pattern: 'error: |Test Suite .* failed' }
+  - { tool: ci, pattern: 'completed with .failure.|X .* failed|run failed' }
+  - { tool: '*', pattern: 'ELIFECYCLE\s+(Command|Test) failed|npm ERR! (code|Test failed)|\bFAILED\b|BUILD FAILED|error\[' }
