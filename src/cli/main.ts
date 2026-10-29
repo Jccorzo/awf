@@ -1,8 +1,11 @@
 import { parseArgs, type ParseArgsConfig } from 'node:util';
 import { VERSION } from '../version';
+import { classifyCommand } from './commands/classify';
 import { doctorCommand } from './commands/doctor';
 import { importCommand } from './commands/import';
+import { accuracyCommand, sampleCommand } from './commands/sample';
 import { sessionsCommand } from './commands/sessions';
+import { statsCommand } from './commands/stats';
 
 export interface Io {
   out: (text: string) => void;
@@ -33,6 +36,10 @@ const defaultIo: Io = {
 export const COMMANDS: Record<string, Command> = {
   sessions: sessionsCommand,
   import: importCommand,
+  classify: classifyCommand,
+  stats: statsCommand,
+  sample: sampleCommand,
+  accuracy: accuracyCommand,
   doctor: doctorCommand,
 };
 

@@ -344,6 +344,8 @@ class TranscriptReader {
       if (input.run_in_background === true) event.bg = true;
       const sub = str(input.subagent_type);
       if (sub) event.sub = sub;
+      const ref = str(input.task_id) ?? str(input.bash_id) ?? str(input.shell_id);
+      if (ref) event.bgid = ref;
       if (agentId) event.aid = agentId;
       this.emit(event);
       this.startEvents.set(tuid, this.events[this.events.length - 1] as RecorderEvent);

@@ -1,0 +1,75 @@
+import path from 'node:path';
+import { type ClassifiedSession, Classifier } from '../classify/classify';
+import { diskFiles, type Files } from '../classify/resolve';
+import { loadRules } from '../classify/rules';
+import type { Session } from '../model/types';
+import { parseSince } from '../model/time';
+import { eventsToSession } from '../recorder/steps';
+import { readEvents } from '../store/events';
+import { readImported } from '../store/imported';
+import {
+  loadSession,
+  projectKey,
+  resolveSession,
+  sessionIndex,
+  type SessionRef,
+} from '../store/sessions';
+import type { Ctx, Options } from './main';
+
+/** One session, from its ID, prefix, `last` or a file path, with transcript details when asked. */
+export function loadOne(
+  ctx: Ctx,
+  ref: string | undefined,
+  options: Options,
+  detail: boolean,
+): Session {
+  if (!ref)
+    throw new Error('which session? Give an ID (or its first characters), "last", or a file path.');
+  const project =
+    typeof options.project === 'string'
+      ? projectKey(path.resolve(ctx.cwd, options.project))
+      : undefined;
+  return loadSession(resolveSession(ref, ctx.env, project), { detail, env: ctx.env });
+}
+
+/** Classifies with the project's rules; files are read once across sessions. */
+export function classifier(files: Files = diskFiles()) {
+  const cache = new Map<string, Classifier>();
+  return (session: Session): ClassifiedSession => {
+    const key = session.cwd ?? '';
+    let c = cache.get(key);
+    if (!c) cache.set(key, (c = new Classifier(loadRules(session.cwd, files), files)));
+    return c.session(session);
+  };
+}
+
+/** Every session with timings, cheaply: recorder events or the import cache, no transcript parsing. */
+export function loadMany(ctx: Ctx, options: Options): Session[] {
+  const since = typeof options.since === 'string' ? ctx.now - parseSince(options.since) : -Infinity;
+  const project =
+    typeof options.project === 'string' ? path.resolve(ctx.cwd, options.project) : undefined;
+  const sessions: Session[] = [];
+  for (const ref of sessionIndex(ctx.env).values()) {
+    const session = quick(ref, ctx.env);
+    if (!session || session.steps.length === 0 || session.startMs < since) continue;
+    if (
+      project &&
+      !(session.cwd && (session.cwd === project || session.cwd.startsWith(project + path.sep)))
+    )
+      continue;
+    sessions.push(session);
+  }
+  return sessions.sort((a, b) => a.startMs - b.startMs);
+}
+
+function quick(ref: SessionRef, env: Record<string, string | undefined>): Session | undefined {
+  if (ref.events) {
+    const recorded = eventsToSession(ref.id, readEvents(ref.events.path));
+    if (!recorded.cwd) {
+      const cached = ref.imported ? readImported(ref.id, env)?.session : undefined;
+      if (cached?.cwd) recorded.cwd = cached.cwd;
+    }
+    return recorded;
+  }
+  return ref.imported ? readImported(ref.id, env)?.session : undefined;
+}
