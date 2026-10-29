@@ -5,7 +5,15 @@ import { globToRegExp } from './glob';
 import type { Files } from './resolve';
 
 export type RulePhase =
-  'lint' | 'tests' | 'build' | 'exploring' | 'writing' | 'planning' | 'waiting' | 'neutral';
+  | 'lint'
+  | 'tests'
+  | 'build'
+  | 'exploring'
+  | 'writing'
+  | 'running'
+  | 'planning'
+  | 'waiting'
+  | 'neutral';
 
 const RULE_PHASES = new Set<RulePhase>([
   'lint',
@@ -13,6 +21,7 @@ const RULE_PHASES = new Set<RulePhase>([
   'build',
   'exploring',
   'writing',
+  'running',
   'planning',
   'waiting',
   'neutral',

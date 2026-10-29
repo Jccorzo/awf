@@ -470,18 +470,120 @@ const REVIEW_CASES: Array<[PhaseId, string[]]> = [
       'git config user.email me@example.com',
     ],
   ],
-  // A script called by path isn't the shell's builtin; one awf can't read stays unclassified.
   [
     'unclassified',
     [
-      'script/test',
-      'bin/test',
       'bundle exec rake',
       'pushd web',
       'nvm use 20',
       'sdk use java 21.0.2-tem',
+      'gh auth switch -u someone',
+      'eval "$(fnm env --shell bash)"',
+      'print -- done',
     ],
   ],
+  // Running scripts: running something that isn't a check, an edit or a read.
+  [
+    'running',
+    [
+      'python3 gen.py',
+      'python3 -c "print(1)"',
+      'python3.12 tools/x.py',
+      '.venv/bin/python manage.py runserver',
+      'node scripts/size.js',
+      'tsx scripts/seed.ts',
+      'deno run -A main.ts',
+      'ruby script.rb',
+      'php artisan serve',
+      'java -jar app.jar',
+      'swift run',
+      'dotnet run --project api',
+      'bash scripts/missing.sh',
+      'go run ./cmd/server',
+      'cargo run --release',
+      'mix phx.server',
+      'next dev',
+      'npx next start -p 3000',
+      'vite preview',
+      'ng serve',
+      'expo start',
+      'react-native run-ios',
+      'flutter run',
+      'npx webpack serve --mode development',
+      'npx vite',
+      'vite --port 5173',
+      'nodemon server.js',
+      'uvicorn app:app --reload',
+      'python -m http.server 8000',
+      'npx wait-on http://localhost:3000',
+      'bin/rails server',
+      'rails db:migrate',
+      'curl -s localhost:3000/health',
+      'wget https://example.com/a.tgz',
+      'ssh host uptime',
+      'dig example.com',
+      'whois example.com',
+      'openssl rand -hex 16',
+      'psql -h localhost -c "select 1"',
+      'pg_ctl -D pgdata start',
+      'sqlite3 app.db ".tables"',
+      'redis-cli ping',
+      'alembic upgrade head',
+      'npx prisma migrate dev',
+      'npx drizzle-kit push',
+      'docker run --rm node:22 npm test',
+      'docker compose up -d',
+      'kubectl apply -f k8s/',
+      'terraform apply',
+      'helm upgrade --install api ./chart',
+      'gcloud run deploy api --source .',
+      'aws s3 cp a.txt s3://bucket/a.txt',
+      'vercel deploy --prod',
+      'fastlane beta',
+      'xcrun simctl boot "iPhone 17"',
+      'xcrun devicectl device install app --device X App.app',
+      'adb install app.apk',
+      'npm publish --access public',
+      'cargo publish',
+      'poetry publish --build',
+      'twine upload dist/*',
+      'git push origin main',
+      'fnm exec --using=22 git push -u origin feature',
+      'gh pr create --fill',
+      'gh pr merge 12 --squash',
+      'gh api -X POST repos/o/r/issues/1/comments -f body=hi',
+      'gh api --method=DELETE repos/o/r/git/refs/heads/x',
+      'glab mr create --fill',
+      'npx playwright screenshot http://localhost:3000 a.png',
+      'ffmpeg -i a.mov a.gif',
+      './scripts/release.py',
+      '$SP/verify.sh wt d2',
+      './run.sh',
+      'script/test',
+      'bin/test',
+      '.build/release/app install',
+      './gradlew bootRun',
+      'mvn spring-boot:run',
+      'mkdir -p out && python3 gen.py',
+      'cat > probe.py <<EOF\nprint(1)\nEOF\npython3 probe.py',
+      'curl -s localhost:3000/api | python3 -m json.tool',
+    ],
+  ],
+  // Reads, edits and checks of the same programs keep their phases.
+  [
+    'exploring',
+    [
+      'xcrun devicectl list devices',
+      'glab mr list',
+      'glab ci trace 123',
+      'glab api projects/1/jobs/2/trace',
+      'gh auth switch -u someone && gh pr list',
+      'git clone https://github.com/o/r.git /tmp/r',
+      'cat data.json | python3 -c "import json,sys; print(json.load(sys.stdin))"',
+    ],
+  ],
+  ['writing-code', ['git pull --rebase', 'scp build.tgz host:/srv/']],
+  ['tests', ['tsx --test test/a.test.ts']],
 ];
 
 describe('rules', () => {
@@ -509,7 +611,13 @@ describe('rules', () => {
     });
     expect(byName('yarn build')).toMatchObject({ phase: 'build' });
     expect(byName('make')).toMatchObject({ phase: 'build', tags: ['by-default'] });
-    expect(byName('pnpm dev')).toMatchObject({ phase: 'unclassified' });
+    expect(byName('pnpm dev')).toMatchObject({
+      phase: 'running',
+      tags: expect.arrayContaining(['by-name']),
+    });
+    expect(byName('make deploy-staging')).toMatchObject({ phase: 'running' });
+    expect(byName('just dev')).toMatchObject({ phase: 'running' });
+    expect(byName('make frobnicate')).toMatchObject({ phase: 'unclassified' });
   });
 });
 
@@ -523,10 +631,10 @@ describe('known false positives', () => {
     ['ls test/', 'exploring'],
     ['jest --version', 'exploring'],
     ['pnpm vitest --version', 'exploring'],
-    ['docker run --rm node:22 npm test', 'unclassified'],
+    ['docker run --rm node:22 npm test', 'running'],
     ['open coverage/index.html', 'unclassified'],
     ['tsc', 'build'],
-    ['git push origin main', 'unclassified'],
+    ['git push origin main', 'running'],
   ] as Array<[string, PhaseId]>)('%s is %s', (command, phase) => {
     check(command, phase);
   });
@@ -560,7 +668,7 @@ describe('compound commands', () => {
   });
 
   it('ignores heredoc bodies', () => {
-    check("python3 - <<'PY'\nimport subprocess\nsubprocess.run(['pytest'])\nPY", 'unclassified');
+    check("python3 - <<'PY'\nimport subprocess\nsubprocess.run(['pytest'])\nPY", 'running');
   });
 });
 
@@ -590,6 +698,7 @@ describe('tool calls', () => {
       tool('q', 'AskUserQuestion'),
       tool('d', 'mcp__ide__getDiagnostics'),
       tool('u', 'mcp__browser__click'),
+      tool('m', 'Monitor'),
     ],
   };
   const classified = classifier.session(session);
@@ -606,6 +715,7 @@ describe('tool calls', () => {
       phase('q'),
       phase('d'),
       phase('u'),
+      phase('m'),
     ]).toEqual([
       'exploring',
       'writing-code',
@@ -615,6 +725,7 @@ describe('tool calls', () => {
       'waiting',
       'lint',
       'unclassified',
+      'running',
     ]);
   });
 });
@@ -631,29 +742,34 @@ describe('coverage', () => {
 });
 
 describe('unknown parts, polling and tricky syntax', () => {
-  it('lets an unknown part outrank the near-instant phases, but not a check', () => {
-    check('mkdir -p out && python3 gen.py', 'unclassified');
-    check('ls dist && node scripts/size.js', 'unclassified');
+  it('lets a script or an unknown part outrank the near-instant phases, but not a check', () => {
+    check('ls dist && node scripts/size.js', 'running');
+    check('python3 report.py | grep total', 'running');
     check('python3 gen.py && pnpm exec vitest run', 'tests');
-    check('python3 report.py | grep total', 'unclassified');
     check('cat data.json | python3 -m json.tool', 'exploring');
+    check('mkdir -p out && frobnicate --all', 'unclassified');
+    check('frobnicate --all | grep total', 'unclassified');
+    // A program awf can't name could have been the slow part: it stays unclassified.
+    check('python3 gen.py && frobnicate --all', 'unclassified');
   });
 
-  it('treats waiting loops and long sleeps as polling, unless a check runs', () => {
-    expect(check('until curl -sf localhost:3000; do sleep 2; done', 'unclassified').tags).toContain(
-      'polling',
-    );
-    expect(check('while ! grep -q ready app.log; do sleep 1; done', 'unclassified').tags).toContain(
-      'polling',
-    );
-    expect(check('sleep 30 && gh run view 123', 'unclassified').tags).toContain('polling');
+  it('treats waiting loops and long sleeps as polling, Running scripts, unless a check runs', () => {
+    const polling = (command: string) => {
+      const info = check(command, 'running');
+      expect(info.tags).toContain('polling');
+      expect(info.rule).toBe('polling');
+    };
+    polling('until curl -sf localhost:3000; do sleep 2; done');
+    polling('while ! grep -q ready app.log; do sleep 1; done');
+    polling('sleep 30 && gh run view 123');
+    polling('until frobnicate --ready; do sleep 5; done');
     check('sleep 1 && ls', 'exploring');
     check('for i in 1 2 3; do sleep 5; pnpm exec vitest run; done', 'tests');
   });
 
   it('skips case patterns and calls of functions defined in the same line', () => {
     check('case "$s" in done|ok) echo yes;; *) ls -la;; esac', 'exploring');
-    check('q() { psql -h db -c "$1"; }; q "select 1"', 'unclassified');
+    check('q() { psql -h db -c "$1"; }; q "select 1"', 'running');
     check('f() { npx eslint "$@"; }; f src && f test', 'lint');
   });
 
