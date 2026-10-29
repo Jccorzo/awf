@@ -4,7 +4,6 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
-// @ts-expect-error: plain ESM build script without types
 import { hookOptions, root } from '../../scripts/build-options.mjs';
 
 const tmp = mkdtempSync(path.join(os.tmpdir(), 'awf-hook-'));

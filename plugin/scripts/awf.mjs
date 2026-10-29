@@ -114,17 +114,17 @@ var require_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP;
     visit.REMOVE = REMOVE;
-    function visit_(key, node, visitor, path14) {
-      const ctrl = callVisitor(key, node, visitor, path14);
+    function visit_(key, node, visitor, path16) {
+      const ctrl = callVisitor(key, node, visitor, path16);
       if (identity.isNode(ctrl) || identity.isPair(ctrl)) {
-        replaceNode(key, path14, ctrl);
-        return visit_(key, ctrl, visitor, path14);
+        replaceNode(key, path16, ctrl);
+        return visit_(key, ctrl, visitor, path16);
       }
       if (typeof ctrl !== "symbol") {
         if (identity.isCollection(node)) {
-          path14 = Object.freeze(path14.concat(node));
+          path16 = Object.freeze(path16.concat(node));
           for (let i = 0; i < node.items.length; ++i) {
-            const ci = visit_(i, node.items[i], visitor, path14);
+            const ci = visit_(i, node.items[i], visitor, path16);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -135,13 +135,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity.isPair(node)) {
-          path14 = Object.freeze(path14.concat(node));
-          const ck = visit_("key", node.key, visitor, path14);
+          path16 = Object.freeze(path16.concat(node));
+          const ck = visit_("key", node.key, visitor, path16);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = visit_("value", node.value, visitor, path14);
+          const cv = visit_("value", node.value, visitor, path16);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -162,17 +162,17 @@ var require_visit = __commonJS({
     visitAsync.BREAK = BREAK;
     visitAsync.SKIP = SKIP;
     visitAsync.REMOVE = REMOVE;
-    async function visitAsync_(key, node, visitor, path14) {
-      const ctrl = await callVisitor(key, node, visitor, path14);
+    async function visitAsync_(key, node, visitor, path16) {
+      const ctrl = await callVisitor(key, node, visitor, path16);
       if (identity.isNode(ctrl) || identity.isPair(ctrl)) {
-        replaceNode(key, path14, ctrl);
-        return visitAsync_(key, ctrl, visitor, path14);
+        replaceNode(key, path16, ctrl);
+        return visitAsync_(key, ctrl, visitor, path16);
       }
       if (typeof ctrl !== "symbol") {
         if (identity.isCollection(node)) {
-          path14 = Object.freeze(path14.concat(node));
+          path16 = Object.freeze(path16.concat(node));
           for (let i = 0; i < node.items.length; ++i) {
-            const ci = await visitAsync_(i, node.items[i], visitor, path14);
+            const ci = await visitAsync_(i, node.items[i], visitor, path16);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -183,13 +183,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity.isPair(node)) {
-          path14 = Object.freeze(path14.concat(node));
-          const ck = await visitAsync_("key", node.key, visitor, path14);
+          path16 = Object.freeze(path16.concat(node));
+          const ck = await visitAsync_("key", node.key, visitor, path16);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = await visitAsync_("value", node.value, visitor, path14);
+          const cv = await visitAsync_("value", node.value, visitor, path16);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -216,23 +216,23 @@ var require_visit = __commonJS({
       }
       return visitor;
     }
-    function callVisitor(key, node, visitor, path14) {
+    function callVisitor(key, node, visitor, path16) {
       if (typeof visitor === "function")
-        return visitor(key, node, path14);
+        return visitor(key, node, path16);
       if (identity.isMap(node))
-        return visitor.Map?.(key, node, path14);
+        return visitor.Map?.(key, node, path16);
       if (identity.isSeq(node))
-        return visitor.Seq?.(key, node, path14);
+        return visitor.Seq?.(key, node, path16);
       if (identity.isPair(node))
-        return visitor.Pair?.(key, node, path14);
+        return visitor.Pair?.(key, node, path16);
       if (identity.isScalar(node))
-        return visitor.Scalar?.(key, node, path14);
+        return visitor.Scalar?.(key, node, path16);
       if (identity.isAlias(node))
-        return visitor.Alias?.(key, node, path14);
+        return visitor.Alias?.(key, node, path16);
       return void 0;
     }
-    function replaceNode(key, path14, node) {
-      const parent = path14[path14.length - 1];
+    function replaceNode(key, path16, node) {
+      const parent = path16[path16.length - 1];
       if (identity.isCollection(parent)) {
         parent.items[key] = node;
       } else if (identity.isPair(parent)) {
@@ -844,10 +844,10 @@ var require_Collection = __commonJS({
     var createNode = require_createNode();
     var identity = require_identity();
     var Node = require_Node();
-    function collectionFromPath(schema, path14, value) {
+    function collectionFromPath(schema, path16, value) {
       let v = value;
-      for (let i = path14.length - 1; i >= 0; --i) {
-        const k = path14[i];
+      for (let i = path16.length - 1; i >= 0; --i) {
+        const k = path16[i];
         if (typeof k === "number" && Number.isInteger(k) && k >= 0) {
           const a = [];
           a[k] = v;
@@ -866,7 +866,7 @@ var require_Collection = __commonJS({
         sourceObjects: /* @__PURE__ */ new Map()
       });
     }
-    var isEmptyPath = (path14) => path14 == null || typeof path14 === "object" && !!path14[Symbol.iterator]().next().done;
+    var isEmptyPath = (path16) => path16 == null || typeof path16 === "object" && !!path16[Symbol.iterator]().next().done;
     var Collection = class extends Node.NodeBase {
       constructor(type, schema) {
         super(type);
@@ -896,11 +896,11 @@ var require_Collection = __commonJS({
        * be a Pair instance or a `{ key, value }` object, which may not have a key
        * that already exists in the map.
        */
-      addIn(path14, value) {
-        if (isEmptyPath(path14))
+      addIn(path16, value) {
+        if (isEmptyPath(path16))
           this.add(value);
         else {
-          const [key, ...rest] = path14;
+          const [key, ...rest] = path16;
           const node = this.get(key, true);
           if (identity.isCollection(node))
             node.addIn(rest, value);
@@ -914,8 +914,8 @@ var require_Collection = __commonJS({
        * Removes a value from the collection.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path14) {
-        const [key, ...rest] = path14;
+      deleteIn(path16) {
+        const [key, ...rest] = path16;
         if (rest.length === 0)
           return this.delete(key);
         const node = this.get(key, true);
@@ -929,8 +929,8 @@ var require_Collection = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path14, keepScalar) {
-        const [key, ...rest] = path14;
+      getIn(path16, keepScalar) {
+        const [key, ...rest] = path16;
         const node = this.get(key, true);
         if (rest.length === 0)
           return !keepScalar && identity.isScalar(node) ? node.value : node;
@@ -948,8 +948,8 @@ var require_Collection = __commonJS({
       /**
        * Checks if the collection includes a value with the key `key`.
        */
-      hasIn(path14) {
-        const [key, ...rest] = path14;
+      hasIn(path16) {
+        const [key, ...rest] = path16;
         if (rest.length === 0)
           return this.has(key);
         const node = this.get(key, true);
@@ -959,8 +959,8 @@ var require_Collection = __commonJS({
        * Sets a value in this collection. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path14, value) {
-        const [key, ...rest] = path14;
+      setIn(path16, value) {
+        const [key, ...rest] = path16;
         if (rest.length === 0) {
           this.set(key, value);
         } else {
@@ -3475,9 +3475,9 @@ var require_Document = __commonJS({
           this.contents.add(value);
       }
       /** Adds a value to the document. */
-      addIn(path14, value) {
+      addIn(path16, value) {
         if (assertCollection(this.contents))
-          this.contents.addIn(path14, value);
+          this.contents.addIn(path16, value);
       }
       /**
        * Create a new `Alias` node, ensuring that the target `node` has the required anchor.
@@ -3552,14 +3552,14 @@ var require_Document = __commonJS({
        * Removes a value from the document.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path14) {
-        if (Collection.isEmptyPath(path14)) {
+      deleteIn(path16) {
+        if (Collection.isEmptyPath(path16)) {
           if (this.contents == null)
             return false;
           this.contents = null;
           return true;
         }
-        return assertCollection(this.contents) ? this.contents.deleteIn(path14) : false;
+        return assertCollection(this.contents) ? this.contents.deleteIn(path16) : false;
       }
       /**
        * Returns item at `key`, or `undefined` if not found. By default unwraps
@@ -3574,10 +3574,10 @@ var require_Document = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path14, keepScalar) {
-        if (Collection.isEmptyPath(path14))
+      getIn(path16, keepScalar) {
+        if (Collection.isEmptyPath(path16))
           return !keepScalar && identity.isScalar(this.contents) ? this.contents.value : this.contents;
-        return identity.isCollection(this.contents) ? this.contents.getIn(path14, keepScalar) : void 0;
+        return identity.isCollection(this.contents) ? this.contents.getIn(path16, keepScalar) : void 0;
       }
       /**
        * Checks if the document includes a value with the key `key`.
@@ -3588,10 +3588,10 @@ var require_Document = __commonJS({
       /**
        * Checks if the document includes a value at `path`.
        */
-      hasIn(path14) {
-        if (Collection.isEmptyPath(path14))
+      hasIn(path16) {
+        if (Collection.isEmptyPath(path16))
           return this.contents !== void 0;
-        return identity.isCollection(this.contents) ? this.contents.hasIn(path14) : false;
+        return identity.isCollection(this.contents) ? this.contents.hasIn(path16) : false;
       }
       /**
        * Sets a value in this document. For `!!set`, `value` needs to be a
@@ -3608,13 +3608,13 @@ var require_Document = __commonJS({
        * Sets a value in this document. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path14, value) {
-        if (Collection.isEmptyPath(path14)) {
+      setIn(path16, value) {
+        if (Collection.isEmptyPath(path16)) {
           this.contents = value;
         } else if (this.contents == null) {
-          this.contents = Collection.collectionFromPath(this.schema, Array.from(path14), value);
+          this.contents = Collection.collectionFromPath(this.schema, Array.from(path16), value);
         } else if (assertCollection(this.contents)) {
-          this.contents.setIn(path14, value);
+          this.contents.setIn(path16, value);
         }
       }
       /**
@@ -5357,10 +5357,10 @@ var require_cst_scalar = __commonJS({
         case "|":
         case ">": {
           const he = source.indexOf("\n");
-          const head = source.substring(0, he);
+          const head2 = source.substring(0, he);
           const body = source.substring(he + 1) + "\n";
           const props = [
-            { type: "block-scalar-header", offset: offset2, indent, source: head }
+            { type: "block-scalar-header", offset: offset2, indent, source: head2 }
           ];
           if (!addEndtoBlockProps(props, end))
             props.push({ type: "newline", offset: -1, indent, source: "\n" });
@@ -5420,19 +5420,19 @@ var require_cst_scalar = __commonJS({
     }
     function setBlockScalarValue(token, source) {
       const he = source.indexOf("\n");
-      const head = source.substring(0, he);
+      const head2 = source.substring(0, he);
       const body = source.substring(he + 1) + "\n";
       if (token.type === "block-scalar") {
         const header = token.props[0];
         if (header.type !== "block-scalar-header")
           throw new Error("Invalid block scalar header");
-        header.source = head;
+        header.source = head2;
         token.source = body;
       } else {
         const { offset: offset2 } = token;
         const indent = "indent" in token ? token.indent : -1;
         const props = [
-          { type: "block-scalar-header", offset: offset2, indent, source: head }
+          { type: "block-scalar-header", offset: offset2, indent, source: head2 }
         ];
         if (!addEndtoBlockProps(props, "end" in token ? token.end : void 0))
           props.push({ type: "newline", offset: -1, indent, source: "\n" });
@@ -5575,9 +5575,9 @@ var require_cst_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP;
     visit.REMOVE = REMOVE;
-    visit.itemAtPath = (cst, path14) => {
+    visit.itemAtPath = (cst, path16) => {
       let item = cst;
-      for (const [field, index] of path14) {
+      for (const [field, index] of path16) {
         const tok = item?.[field];
         if (tok && "items" in tok) {
           item = tok.items[index];
@@ -5586,23 +5586,23 @@ var require_cst_visit = __commonJS({
       }
       return item;
     };
-    visit.parentCollection = (cst, path14) => {
-      const parent = visit.itemAtPath(cst, path14.slice(0, -1));
-      const field = path14[path14.length - 1][0];
+    visit.parentCollection = (cst, path16) => {
+      const parent = visit.itemAtPath(cst, path16.slice(0, -1));
+      const field = path16[path16.length - 1][0];
       const coll = parent?.[field];
       if (coll && "items" in coll)
         return coll;
       throw new Error("Parent collection not found");
     };
-    function _visit(path14, item, visitor) {
-      let ctrl = visitor(item, path14);
+    function _visit(path16, item, visitor) {
+      let ctrl = visitor(item, path16);
       if (typeof ctrl === "symbol")
         return ctrl;
       for (const field of ["key", "value"]) {
         const token = item[field];
         if (token && "items" in token) {
           for (let i = 0; i < token.items.length; ++i) {
-            const ci = _visit(Object.freeze(path14.concat([[field, i]])), token.items[i], visitor);
+            const ci = _visit(Object.freeze(path16.concat([[field, i]])), token.items[i], visitor);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -5613,10 +5613,10 @@ var require_cst_visit = __commonJS({
             }
           }
           if (typeof ctrl === "function" && field === "key")
-            ctrl = ctrl(item, path14);
+            ctrl = ctrl(item, path16);
         }
       }
-      return typeof ctrl === "function" ? ctrl(item, path14) : ctrl;
+      return typeof ctrl === "function" ? ctrl(item, path16) : ctrl;
     }
     exports.visit = visit;
   }
@@ -8147,8 +8147,8 @@ function clean(words) {
   while (start < words.length && !at(start)?.quoted && LEADING_KEYWORDS.has(at(start)?.value ?? "")) {
     start++;
   }
-  const head = at(start);
-  if (head && !head.quoted && SKIPPED_HEADS.has(head.value)) return [];
+  const head2 = at(start);
+  if (head2 && !head2.quoted && SKIPPED_HEADS.has(head2.value)) return [];
   while (start < words.length && ASSIGNMENT.test(at(start)?.value ?? "")) {
     start++;
   }
@@ -10564,10 +10564,10 @@ function oneLine(text) {
 }
 function clip(text) {
   if (text.length <= MAX_OUTPUT) return text;
-  const head = text.slice(0, 1500);
+  const head2 = text.slice(0, 1500);
   const tail = text.slice(-2400);
-  return `${head}
-\u2026 ${text.length - head.length - tail.length} characters cut \u2026
+  return `${head2}
+\u2026 ${text.length - head2.length - tail.length} characters cut \u2026
 ${tail}`;
 }
 function compareVersions(a, b) {
@@ -11117,441 +11117,70 @@ and any transcript entries awf doesn't recognise.
   }
 };
 
-// src/cli/commands/sample.ts
-import { readFileSync as readFileSync5 } from "node:fs";
-import path12 from "node:path";
-function random(seed) {
-  let s = seed >>> 0 || 1;
-  return () => {
-    s = Math.imul(s, 1664525) + 1013904223 >>> 0;
-    return s / 2 ** 32;
-  };
-}
-var PHASE_IDS = new Set(PHASES.map((p) => p.id));
-function csvCell(value) {
-  return /[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
-}
-function parseCsv(text) {
-  const rows = [];
-  let row = [];
-  let cell = "";
-  let quoted = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (quoted) {
-      if (c === '"' && text[i + 1] === '"') {
-        cell += '"';
-        i++;
-      } else if (c === '"') quoted = false;
-      else cell += c;
-    } else if (c === '"') quoted = true;
-    else if (c === ",") {
-      row.push(cell);
-      cell = "";
-    } else if (c === "\n" || c === "\r") {
-      if (c === "\r" && text[i + 1] === "\n") i++;
-      row.push(cell);
-      rows.push(row);
-      row = [];
-      cell = "";
-    } else cell += c;
-  }
-  if (cell || row.length > 0) {
-    row.push(cell);
-    rows.push(row);
-  }
-  return rows.filter((r) => r.some((c) => c.trim()));
-}
-var sampleCommand = {
-  summary: "Pick random Bash steps to check by hand, or to label as a CSV",
-  usage: `Usage: awf sample [--n 50] [--seed 1] [--since 30d] [--project <dir>] [--csv]
-
-Prints random Bash calls from your sessions with the phase awf gave each, for a hand check.
-With --csv it writes "command,cwd,awf_phase,your_phase": fill in your_phase with a phase id
-(${PHASES.map((p) => p.id).join(", ")}) and run "awf accuracy <file>".`,
-  options: {
-    n: { type: "string" },
-    seed: { type: "string" },
-    since: { type: "string" },
-    project: { type: "string" },
-    csv: { type: "boolean" }
-  },
-  run(ctx, _args, options) {
-    const n = typeof options.n === "string" ? Number.parseInt(options.n, 10) || 50 : 50;
-    const next = random(
-      typeof options.seed === "string" ? Number.parseInt(options.seed, 10) || 1 : 1
-    );
-    const classify = classifier();
-    const pool = [];
-    const seen = /* @__PURE__ */ new Set();
-    for (const session of loadMany(ctx, options).map(classify)) {
-      for (const step of session.steps) {
-        if (step.kind !== "tool" || step.tool !== "Bash" || !step.command || seen.has(step.command))
-          continue;
-        seen.add(step.command);
-        pool.push({
-          command: step.command,
-          cwd: session.cwd ?? "",
-          phase: step.phase ?? "unclassified"
-        });
-      }
-    }
-    const picked = [];
-    while (picked.length < n && pool.length > 0)
-      picked.push(...pool.splice(Math.floor(next() * pool.length), 1));
-    if (options.csv) {
-      ctx.io.out("command,cwd,awf_phase,your_phase");
-      for (const p of picked) ctx.io.out([p.command, p.cwd, p.phase, ""].map(csvCell).join(","));
-      return 0;
-    }
-    ctx.io.out(
-      table(
-        ["#", "AWF SAYS", "COMMAND"],
-        picked.map((p, i) => {
-          const line = p.command.replace(/\s+/g, " ");
-          return [
-            String(i + 1),
-            PHASE_LABEL[p.phase],
-            line.length > 110 ? line.slice(0, 109) + "\u2026" : line
-          ];
-        })
-      )
-    );
-    ctx.io.out(
-      `
-${picked.length} of ${seen.size} distinct Bash commands. Count the ones you disagree with.`
-    );
-    return 0;
-  }
-};
-var accuracyCommand = {
-  summary: 'Compare awf with your own labels from "awf sample --csv"',
-  usage: `Usage: awf accuracy <labels.csv> [--json]
-
-Re-classifies each labelled command with the current rules and reports agreement per phase.`,
-  options: { json: { type: "boolean" } },
-  run(ctx, args, options) {
-    const file = args[0];
-    if (!file) throw new Error("give the labels file, for example fixtures/labels.csv");
-    const rows = parseCsv(readFileSync5(path12.resolve(ctx.cwd, file), "utf8"));
-    const header = rows.shift() ?? [];
-    const col = (name) => header.indexOf(name);
-    const [ci, wi, yi] = [col("command"), col("cwd"), col("your_phase")];
-    if (ci < 0 || yi < 0) throw new Error('the CSV needs "command" and "your_phase" columns');
-    const files = diskFiles();
-    const perPhase = /* @__PURE__ */ new Map();
-    const misses = [];
-    let total = 0;
-    let agree = 0;
-    for (const row of rows) {
-      const yours = (row[yi] ?? "").trim();
-      if (!yours) continue;
-      if (!PHASE_IDS.has(yours))
-        throw new Error(`unknown phase "${yours}"; use one of ${[...PHASE_IDS].join(", ")}`);
-      const cwd = (wi >= 0 ? row[wi] : "") || ctx.cwd;
-      const awf = new Classifier(loadRules(cwd, files), files).command(row[ci] ?? "", cwd).phase;
-      const entry = perPhase.get(yours) ?? { total: 0, agree: 0 };
-      entry.total++;
-      total++;
-      if (awf === yours) {
-        entry.agree++;
-        agree++;
-      } else misses.push({ command: row[ci] ?? "", yours, awf });
-      perPhase.set(yours, entry);
-    }
-    const report = {
-      labelled: total,
-      agree,
-      accuracy: total > 0 ? agree / total : 0,
-      perPhase: Object.fromEntries(
-        [...perPhase].map(([p, v]) => [p, { ...v, accuracy: v.agree / v.total }])
-      ),
-      misses
-    };
-    if (options.json) {
-      ctx.io.out(JSON.stringify(report, null, 2));
-      return 0;
-    }
-    ctx.io.out(
-      `awf agrees with ${agree} of ${total} labels (${((report.accuracy || 0) * 100).toFixed(1)}%).
-`
-    );
-    ctx.io.out(
-      table(
-        ["YOUR PHASE", "LABELS", "AGREE", "ACCURACY"],
-        [...perPhase].map(([p, v]) => [
-          PHASE_LABEL[p] ?? p,
-          String(v.total),
-          String(v.agree),
-          `${(v.agree / v.total * 100).toFixed(0)}%`
-        ]),
-        [1, 2, 3]
-      )
-    );
-    if (misses.length > 0) {
-      ctx.io.out("\nDisagreements:");
-      for (const m of misses.slice(0, 30))
-        ctx.io.out(`  ${m.yours} (awf: ${m.awf})  ${m.command.replace(/\s+/g, " ").slice(0, 100)}`);
-    }
-    return 0;
-  }
-};
-
-// src/cli/commands/sessions.ts
+// src/cli/commands/purge.ts
+import { existsSync as existsSync7, readdirSync as readdirSync5, rmSync, statSync as statSync5 } from "node:fs";
 import os6 from "node:os";
-import path13 from "node:path";
-function sessionRow(session) {
-  const idleMs = session.steps.filter((s) => s.kind === "idle").reduce((sum, s) => sum + (s.endMs - s.startMs), 0);
-  const durationMs = Math.max(0, session.endMs - session.startMs);
-  const row = {
-    id: session.id,
-    startMs: session.startMs,
-    endMs: session.endMs,
-    durationMs,
-    activeMs: Math.max(0, durationMs - idleMs),
-    turns: session.steps.filter((s) => s.kind === "turn").length,
-    toolCalls: session.steps.filter((s) => s.kind === "tool").length,
-    sources: session.sources
-  };
-  if (session.cwd) row.cwd = session.cwd;
-  return row;
+import path12 from "node:path";
+var OURS = /* @__PURE__ */ new Set(["events", "imported", "reports", ".DS_Store"]);
+function size(target) {
+  const stat = statSync5(target, { throwIfNoEntry: false });
+  if (!stat) return 0;
+  if (!stat.isDirectory()) return stat.size;
+  return readdirSync5(target).reduce((n, name) => n + size(path12.join(target, name)), 0);
 }
-function inFolder(cwd, dir) {
-  if (!dir) return true;
-  return !!cwd && (cwd === dir || cwd.startsWith(dir + path13.sep));
+function human(bytes) {
+  if (bytes >= 1e9) return `${(bytes / 1e9).toFixed(1)} GB`;
+  if (bytes >= 1e6) return `${(bytes / 1e6).toFixed(1)} MB`;
+  if (bytes >= 1e3) return `${(bytes / 1e3).toFixed(0)} kB`;
+  return `${bytes} B`;
 }
-function listSessionRows(env) {
-  const rows = [];
-  for (const ref of sessionIndex(env).values()) {
-    const recorded = ref.events ? eventsToSession(ref.id, readEvents(ref.events.path)) : void 0;
-    const imported = ref.imported ? readImported(ref.id, env)?.session : void 0;
-    const base = recorded ?? imported;
-    if (!base || base.steps.length === 0) continue;
-    const row = sessionRow(base);
-    row.sources = [...recorded ? ["hooks"] : [], ...imported ? ["transcript"] : []];
-    if (!row.cwd && imported?.cwd) row.cwd = imported.cwd;
-    rows.push(row);
-  }
-  return rows.sort((a, b) => b.startMs - a.startMs);
-}
-var sessionsCommand = {
-  summary: "List sessions with start time and duration",
-  usage: `Usage: awf sessions [--since 30d] [--project <dir>] [--json]
+var purgeCommand = {
+  summary: "Delete everything awf stored (~/.awf); Claude Code's own files stay",
+  usage: `Usage: awf purge [--yes]
 
-Lists sessions newest first: those the recorder captured and those "awf import" read from transcripts.
-  --since <age>     only sessions that started within this age (30d, 12h)
-  --project <dir>   only sessions started in this folder or below it
-  --json            print JSON`,
-  options: {
-    since: { type: "string" },
-    project: { type: "string" },
-    json: { type: "boolean" }
-  },
+Deletes awf's folder (~/.awf, or $AWF_HOME): recorded timings, the import cache and reports.
+Claude Code's transcripts are never touched. Without --yes it only lists what it would delete.
+  --yes   delete it`,
+  options: { yes: { type: "boolean" }, json: { type: "boolean" } },
   run(ctx, _args, options) {
-    const since = typeof options.since === "string" ? ctx.now - parseSince(options.since) : -Infinity;
-    const project = typeof options.project === "string" ? path13.resolve(ctx.cwd, options.project) : void 0;
-    const rows = listSessionRows(ctx.env).filter(
-      (row) => row.startMs >= since && inFolder(row.cwd, project)
-    );
-    if (options.json) {
-      ctx.io.out(JSON.stringify(rows, null, 2));
-      return 0;
-    }
-    if (rows.length === 0) {
-      ctx.io.out(
-        'No sessions yet. Install the awf plugin to record new sessions, or run "awf import" to read past ones.'
-      );
-      return 0;
-    }
     const home = ctx.env.HOME ?? os6.homedir();
-    ctx.io.out(
-      table(
-        ["SESSION", "STARTED", "DURATION", "ACTIVE", "TURNS", "TOOLS", "SOURCE", "PROJECT"],
-        rows.map((r) => [
-          r.id.slice(0, 8),
-          formatClock(r.startMs),
-          formatDuration(r.durationMs),
-          formatDuration(r.activeMs),
-          String(r.turns),
-          String(r.toolCalls),
-          r.sources.join("+"),
-          homeRelative(r.cwd, home)
-        ]),
-        [2, 3, 4, 5]
-      )
-    );
-    return 0;
-  }
-};
-
-// src/cli/commands/stats.ts
-function runMs(step) {
-  return Math.max(0, step.endMs - step.startMs - (step.waitMs ?? 0));
-}
-var NEUTRAL_HEADS = /* @__PURE__ */ new Set([
-  "cd",
-  "export",
-  "echo",
-  "printf",
-  "set",
-  "source",
-  ".",
-  "true",
-  "false",
-  ":",
-  "sleep",
-  "[",
-  "[[",
-  "test",
-  "unset",
-  "local",
-  "eval",
-  "pushd",
-  "popd",
-  "wait"
-]);
-function commandHead(command) {
-  const simple = splitCommand(command).map((c) => unwrap(c.argv).argv).filter((argv2) => argv2.length > 0);
-  const argv = simple.find((a) => !NEUTRAL_HEADS.has(programName(a[0] ?? ""))) ?? simple[0];
-  if (!argv) return "(empty)";
-  const program = programName(argv[0] ?? "");
-  const sub = argv[1];
-  return sub && /^[a-z][a-z-]{1,20}$/.test(sub) ? `${program} ${sub}` : program;
-}
-function bashStats(sessions, top = 10, focus = "unclassified") {
-  const byPhase = /* @__PURE__ */ new Map();
-  const heads = /* @__PURE__ */ new Map();
-  const others = /* @__PURE__ */ new Map();
-  let bashMs = 0;
-  let bashCalls = 0;
-  for (const session of sessions) {
-    for (const step of session.steps) {
-      if (step.kind !== "tool" || step.flags.includes("background")) continue;
-      const ms = runMs(step);
-      if (step.tool !== "Bash") {
-        if (step.phase === "unclassified") {
-          const tool = step.tool?.startsWith("mcp__") ? `mcp__${step.tool.split("__")[1] ?? ""}` : step.tool ?? "?";
-          const entry2 = others.get(tool) ?? { ms: 0, calls: 0 };
-          entry2.ms += ms;
-          entry2.calls++;
-          others.set(tool, entry2);
-        }
-        continue;
-      }
-      const phase = step.phase ?? "unclassified";
-      bashMs += ms;
-      bashCalls++;
-      const entry = byPhase.get(phase) ?? { ms: 0, calls: 0 };
-      entry.ms += ms;
-      entry.calls++;
-      byPhase.set(phase, entry);
-      if (phase === focus) {
-        const unmatched = step.tags.find((t) => t.startsWith("unmatched:"))?.slice("unmatched:".length);
-        const head = focus === "unclassified" && step.tags.includes("polling") ? "(polling: sleep in a loop, or a long sleep)" : focus === "unclassified" && unmatched ? unmatched : step.command ? commandHead(step.command) : "(no command)";
-        const h = heads.get(head) ?? { ms: 0, calls: 0 };
-        h.ms += ms;
-        h.calls++;
-        heads.set(head, h);
-      }
+    const dir = awfHome(ctx.env);
+    const shown = homeRelative(dir, home);
+    if (!existsSync7(dir)) {
+      ctx.io.out(`Nothing to delete: ${shown} doesn't exist.`);
+      return 0;
     }
-  }
-  const unclassifiedMs = byPhase.get("unclassified")?.ms ?? 0;
-  const sorted = (map, key) => [...map].sort((a, b) => b[1].ms - a[1].ms).slice(0, top).map(
-    ([name, v]) => ({ [key]: name, ...v })
-  );
-  return {
-    sessions: sessions.length,
-    bashMs,
-    bashCalls,
-    unclassifiedMs,
-    unclassifiedShare: bashMs > 0 ? unclassifiedMs / bashMs : 0,
-    byPhase: PHASES.filter((p) => byPhase.has(p.id)).map((p) => {
-      const v = byPhase.get(p.id);
-      return { phase: p.id, ...v, share: bashMs > 0 ? v.ms / bashMs : 0 };
-    }),
-    topUnclassified: sorted(heads, "program"),
-    otherUnclassified: sorted(others, "tool")
-  };
-}
-var pct = (x) => `${(x * 100).toFixed(1)}%`;
-var statsCommand = {
-  summary: "Share of Bash time each phase got, and what is left unclassified",
-  usage: `Usage: awf stats [--since 30d] [--project <dir>] [--top 10] [--phase <id>] [--json]
-
-Classifies the Bash calls of every recorded or imported session and shows the time per phase,
-the share left unclassified, and the programs behind that time, to show which rules are missing.
-  --phase <id>   break this phase down by program instead of unclassified (tests, build, exploring, ...)`,
-  options: {
-    since: { type: "string" },
-    project: { type: "string" },
-    top: { type: "string" },
-    phase: { type: "string" },
-    json: { type: "boolean" }
-  },
-  run(ctx, _args, options) {
-    const classify = classifier();
-    const sessions = loadMany(ctx, options).map(classify);
-    const top = typeof options.top === "string" ? Number.parseInt(options.top, 10) || 10 : 10;
-    const focus = typeof options.phase === "string" ? options.phase : "unclassified";
-    if (!PHASES.some((p) => p.id === focus))
-      throw new Error(`unknown phase "${focus}"; use one of ${PHASES.map((p) => p.id).join(", ")}`);
-    const stats = bashStats(sessions, top, focus);
+    const entries2 = readdirSync5(dir);
+    const foreign = entries2.filter((name) => !OURS.has(name));
+    const parts = entries2.filter((name) => OURS.has(name) && name !== ".DS_Store").map((name) => ({ name, bytes: size(path12.join(dir, name)) }));
     if (options.json) {
-      ctx.io.out(JSON.stringify(stats, null, 2));
+      ctx.io.out(JSON.stringify({ dir, parts, foreign, deleted: false }, null, 2));
+      if (!options.yes) return 0;
+    }
+    if (foreign.length) {
+      ctx.io.err(
+        `${shown} holds files awf didn't make (${foreign.slice(0, 5).join(", ")}${foreign.length > 5 ? ", \u2026" : ""}), so awf won't delete it. Remove them first, or delete the folder yourself.`
+      );
+      return 1;
+    }
+    if (!options.yes) {
+      ctx.io.out(`Would delete ${shown}:`);
+      for (const part of parts) ctx.io.out(`  ${part.name.padEnd(9)} ${human(part.bytes)}`);
+      ctx.io.out(`Run "awf purge --yes" to delete it. Claude Code's transcripts are not touched.`);
       return 0;
     }
-    if (stats.bashCalls === 0) {
-      ctx.io.out(
-        'No Bash calls found. Run "awf import" first, or record a session with the plugin.'
-      );
-      return 0;
-    }
-    ctx.io.out(
-      `Bash time: ${formatDuration(stats.bashMs)} in ${stats.bashCalls.toLocaleString("en-US")} calls across ${stats.sessions} sessions. Unclassified: ${pct(stats.unclassifiedShare)}.`
-    );
-    ctx.io.out("");
-    ctx.io.out(
-      table(
-        ["PHASE", "TIME", "SHARE", "CALLS"],
-        stats.byPhase.map((p) => [
-          PHASE_LABEL[p.phase],
-          formatDuration(p.ms),
-          pct(p.share),
-          p.calls.toLocaleString("en-US")
-        ]),
-        [1, 2, 3]
-      )
-    );
-    if (stats.topUnclassified.length > 0) {
-      ctx.io.out("");
-      ctx.io.out(
-        focus === "unclassified" ? "Unclassified Bash time by program (add rules for these in .awf/rules.yaml):" : `${PHASE_LABEL[focus]} Bash time by program:`
-      );
-      ctx.io.out(
-        table(
-          ["PROGRAM", "TIME", "CALLS"],
-          stats.topUnclassified.map((h) => [h.program, formatDuration(h.ms), String(h.calls)]),
-          [1, 2]
-        )
-      );
-    }
-    if (stats.otherUnclassified.length > 0) {
-      ctx.io.out("");
-      ctx.io.out("Unclassified time of other tools:");
-      ctx.io.out(
-        table(
-          ["TOOL", "TIME", "CALLS"],
-          stats.otherUnclassified.map((h) => [h.tool, formatDuration(h.ms), String(h.calls)]),
-          [1, 2]
-        )
-      );
-    }
+    rmSync(dir, { recursive: true, force: true });
+    if (!options.json) ctx.io.out(`Deleted ${shown}.`);
     return 0;
   }
 };
 
-// src/cli/commands/summary.ts
+// src/cli/commands/report.ts
+import { spawn } from "node:child_process";
+import { mkdirSync as mkdirSync2, writeFileSync as writeFileSync2 } from "node:fs";
 import os7 from "node:os";
+import path13 from "node:path";
+import { pathToFileURL } from "node:url";
 
 // src/analyze/rework.ts
 var EDIT_PHASES = /* @__PURE__ */ new Set(["writing-code", "writing-tests"]);
@@ -11659,8 +11288,7 @@ function intervals(session) {
   return out;
 }
 var PHASE_INDEX = new Map(PHASES.map((p, i) => [p.id, i]));
-function phaseTotals(session) {
-  const byPhase = Object.fromEntries(PHASES.map((p) => [p.id, 0]));
+function phaseSegments(session) {
   const start = session.startMs;
   const end = Math.max(session.endMs, start);
   const events = [];
@@ -11673,8 +11301,8 @@ function phaseTotals(session) {
   }
   events.sort((x, y) => x.t - y.t || x.delta - y.delta);
   const active = /* @__PURE__ */ new Map();
+  const segments = [];
   let cursor = start;
-  let uncoveredMs = 0;
   const best = () => {
     let chosen;
     for (const [key, count] of active) {
@@ -11690,10 +11318,12 @@ function phaseTotals(session) {
   const credit = (until) => {
     if (until <= cursor) return;
     const phase = best();
-    if (phase) byPhase[phase] += until - cursor;
-    else {
-      byPhase.unclassified += until - cursor;
-      uncoveredMs += until - cursor;
+    const covered = phase !== void 0;
+    const last = segments.at(-1);
+    if (last && last.end === cursor && last.phase === (phase ?? "unclassified") && last.covered === covered) {
+      last.end = until;
+    } else {
+      segments.push({ start: cursor, end: until, phase: phase ?? "unclassified", covered });
     }
     cursor = until;
   };
@@ -11702,7 +11332,17 @@ function phaseTotals(session) {
     active.set(event.key, (active.get(event.key) ?? 0) + event.delta);
   }
   credit(end);
-  return { totalMs: end - start, byPhase, uncoveredMs };
+  return segments;
+}
+function phaseTotals(session) {
+  const byPhase = Object.fromEntries(PHASES.map((p) => [p.id, 0]));
+  let uncoveredMs = 0;
+  for (const segment of phaseSegments(session)) {
+    byPhase[segment.phase] += segment.end - segment.start;
+    if (!segment.covered) uncoveredMs += segment.end - segment.start;
+  }
+  const start = session.startMs;
+  return { totalMs: Math.max(session.endMs, start) - start, byPhase, uncoveredMs };
 }
 
 // src/analyze/summary.ts
@@ -11828,7 +11468,742 @@ function formatSummaryLines(summary) {
   return out;
 }
 
+// src/report/data.ts
+var MAX_OUTPUT_STEP = 4e3;
+var MAX_OUTPUT_TOTAL = 25e5;
+function shareCheck(key) {
+  return key.replace(/:(npm|pnpm|yarn|bun|deno|make) .*/, ":$1");
+}
+function stepLabel(step, turnNumber, share) {
+  switch (step.kind) {
+    case "turn":
+      return `Turn ${turnNumber.get(step.id) ?? ""}`.trim();
+    case "subagent":
+      return step.agentType ? `Subagent \xB7 ${step.agentType}` : "Subagent";
+    case "model":
+      return "Model";
+    case "idle":
+      return "Idle";
+    case "compact":
+      return "Compacting context";
+    case "background":
+      return "Background";
+    default:
+      if (step.tool?.startsWith("mcp__")) {
+        const [, id = "", ...name] = step.tool.split("__");
+        const server = /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(id) ? `${id.slice(0, 8)}\u2026` : id;
+        return share ? server : [server, ...name].join(" \xB7 ");
+      }
+      return step.tool ?? "Tool";
+  }
+}
+function shortPath(file, cwd, home) {
+  if (cwd && (file === cwd || file.startsWith(cwd + "/"))) return file.slice(cwd.length + 1) || ".";
+  if (home && file.startsWith(home + "/")) return "~" + file.slice(home.length);
+  return file;
+}
+function head(command) {
+  const argv = splitCommand(command).map((c) => unwrap(c.argv).argv).find(
+    (a) => a.length > 0 && !["cd", "export", "echo", "set", "source"].includes(programName(a[0] ?? ""))
+  );
+  return argv ? programName(argv[0] ?? "") : "shell";
+}
+function buildReportData(analysis, options = {}) {
+  const { session, summary } = analysis;
+  const share = options.share ?? false;
+  const t0 = session.startMs;
+  const byId = new Map(session.steps.map((s) => [s.id, s]));
+  const children = /* @__PURE__ */ new Map();
+  for (const step of session.steps) {
+    const parent = step.parentId && byId.has(step.parentId) ? step.parentId : null;
+    children.set(parent, [...children.get(parent) ?? [], step]);
+  }
+  for (const list2 of children.values())
+    list2.sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs);
+  const turnNumber = /* @__PURE__ */ new Map();
+  for (const step of session.steps.filter((s) => s.kind === "turn").sort((a, b) => a.startMs - b.startMs)) {
+    turnNumber.set(step.id, turnNumber.size + 1);
+  }
+  const steps = [];
+  const displayIndex = /* @__PURE__ */ new Map();
+  let outputBudget = MAX_OUTPUT_TOTAL;
+  const visit = (step, parent, depth) => {
+    const i = steps.length;
+    const kids = children.get(step.id) ?? [];
+    const out = {
+      i,
+      p: parent,
+      depth,
+      kind: step.kind,
+      s: step.startMs - t0,
+      e: step.endMs - t0,
+      label: stepLabel(step, turnNumber, share),
+      failed: step.failed,
+      flags: step.flags,
+      tags: share ? step.tags.filter((t) => !/^(script|make|task|file|hook|via|unmatched):/.test(t)) : step.tags,
+      checks: step.checks.map((c) => ({
+        key: share ? shareCheck(c.key) : c.key,
+        failed: c.failed
+      })),
+      container: kids.length > 0
+    };
+    if (step.phase) out.phase = step.phase;
+    if (step.tool)
+      out.tool = step.tool.startsWith("mcp__") && share ? `mcp__${step.tool.split("__")[1] ?? ""}` : step.tool;
+    if (step.ok !== void 0) out.ok = step.ok;
+    if (step.reworkFor) out.reworkFor = share ? shareCheck(step.reworkFor) : step.reworkFor;
+    if (step.runMs !== void 0) out.runMs = step.runMs;
+    if (step.waitMs !== void 0) out.waitMs = step.waitMs;
+    if (step.exitCode !== void 0) out.exitCode = step.exitCode;
+    if (step.model) out.model = step.model;
+    if (step.tokens) out.tokens = step.tokens;
+    if (step.agentType) out.agentType = step.agentType;
+    if (step.kind === "model" && step.produces?.length) {
+      const produced = step.produces.map((id) => byId.get(id)).filter((s) => !!s);
+      out.text = "\u2192 " + produced.map((s) => stepLabel(s, turnNumber, share)).join(", ");
+    }
+    if (!share) {
+      if (step.command) out.text = step.command;
+      else if (step.files?.length && step.kind === "tool")
+        out.text = step.files.map((f) => shortPath(f, session.cwd, options.home)).join(" ");
+      if (step.files?.length)
+        out.files = step.files.map((f) => shortPath(f, session.cwd, options.home));
+      if (step.detail?.description) out.description = step.detail.description;
+      if (step.detail?.output && outputBudget > 0) {
+        const text = maskSecrets(step.detail.output).slice(0, MAX_OUTPUT_STEP);
+        out.output = text;
+        outputBudget -= text.length;
+      }
+    }
+    steps.push(out);
+    displayIndex.set(step.id, i);
+    for (const kid of kids) visit(kid, i, depth + 1);
+  };
+  for (const top of children.get(null) ?? []) visit(top, -1, 0);
+  for (const step of session.steps) {
+    const target = displayIndex.get(step.id);
+    if (step.kind !== "model" || !step.produces?.length || target === void 0) continue;
+    const made = step.produces.map((id) => displayIndex.get(id)).filter((i) => i !== void 0);
+    if (made.length) steps[target].produces = made;
+  }
+  const leaves = steps.filter(
+    (s) => !s.container && s.kind !== "idle" && s.kind !== "turn" && s.kind !== "background" && !s.flags.includes("background")
+  );
+  const slowest = [...leaves].sort((a, b) => b.e - b.s - (a.e - a.s)).slice(0, 3).map((s) => s.i);
+  const MODEL = "\0model";
+  const unclassifiedName = (step) => {
+    if (step.kind === "compact") return "compaction";
+    if (step.tags.includes("polling")) return "polling";
+    if (step.kind === "model") return MODEL;
+    if (step.command && !share) return head(step.command);
+    if (step.tool?.startsWith("mcp__")) return stepLabel(step, turnNumber, share);
+    return step.tool ?? step.kind;
+  };
+  const segments = phaseSegments(session);
+  const owners = session.steps.filter((s) => s.phase === "unclassified" && s.kind !== "turn" && s.endMs > s.startMs).sort((a, b) => a.startMs - b.startMs);
+  const unclassified = /* @__PURE__ */ new Map();
+  const add = (name, ms) => unclassified.set(name, (unclassified.get(name) ?? 0) + ms);
+  for (const segment of segments) {
+    if (segment.phase !== "unclassified") continue;
+    if (!segment.covered) {
+      add("time between steps", segment.end - segment.start);
+      continue;
+    }
+    const running = owners.filter((o) => o.startMs < segment.end && o.endMs > segment.start);
+    const cuts = [
+      .../* @__PURE__ */ new Set([
+        segment.start,
+        segment.end,
+        ...running.flatMap((o) => [o.startMs, o.endMs]).filter((t) => t > segment.start && t < segment.end)
+      ])
+    ].sort((a, b) => a - b);
+    for (let k = 0; k + 1 < cuts.length; k++) {
+      const a = cuts[k];
+      const b = cuts[k + 1];
+      let owner;
+      for (const step of running) {
+        if (step.startMs >= b || step.endMs <= a) continue;
+        const background = step.kind === "background" || step.flags.includes("background");
+        const ownerBackground = owner && (owner.kind === "background" || owner.flags.includes("background"));
+        if (!owner || ownerBackground && !background || ownerBackground === background && step.startMs >= owner.startMs)
+          owner = step;
+      }
+      add(owner ? unclassifiedName(owner) : "time between steps", b - a);
+    }
+  }
+  const data = {
+    v: 1,
+    generatedAt: options.now ?? Date.now(),
+    share,
+    session: {
+      id: share ? session.id.slice(0, 8) : session.id,
+      agent: session.agent,
+      sources: session.sources,
+      startMs: t0,
+      totalMs: summary.totalMs,
+      activeMs: summary.activeMs
+    },
+    phases: summary.phases.map((p) => ({
+      id: p.phase,
+      label: p.label,
+      ms: p.ms,
+      share: p.share,
+      detail: phaseDetail(p)
+    })),
+    counts: {
+      modelCalls: summary.modelCalls,
+      toolCalls: summary.toolCalls,
+      subagents: summary.subagents,
+      failures: summary.failures,
+      reworkLoops: summary.rework.filter((w) => w.edits > 0).length
+    },
+    rework: summary.rework.map((w) => ({
+      check: share ? shareCheck(w.check) : w.check,
+      failedAt: w.failedAtMs - t0,
+      ...w.passedAtMs !== void 0 ? { passedAt: w.passedAtMs - t0 } : {},
+      edits: w.edits
+    })),
+    steps,
+    slowest,
+    unclassified: [...unclassified].filter(([name]) => name !== MODEL).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name, ms]) => ({ name, ms })),
+    unclassifiedModelMs: unclassified.get(MODEL) ?? 0,
+    timeline: segments.map((g) => [g.start - t0, g.end - t0, g.phase])
+  };
+  if (session.agentVersion) data.session.agentVersion = session.agentVersion;
+  if (!share && session.title) data.session.title = session.title;
+  if (!share && session.cwd) data.session.cwd = shortPath(session.cwd, void 0, options.home);
+  if (summary.tokens) data.tokens = summary.tokens;
+  return data;
+}
+
+// report-assets:report-assets
+var CLIENT_JS = '"use strict";(()=>{function f(e){if(!Number.isFinite(e)||e<0)return"\\u2013";if(e<1e3)return`${Math.round(e)} ms`;if(e<1e4)return`${(e/1e3).toFixed(1)}s`;let t=Math.round(e/1e3),s=Math.floor(t/3600),a=Math.floor(t%3600/60),o=t%60;return s>0?`${s}h ${pe(a)}m ${pe(o)}s`:a>0?`${a}m ${pe(o)}s`:`${o}s`}function pe(e){return String(e).padStart(2,"0")}var Ee="0.1.0";var Je=performance.now(),c=JSON.parse(document.getElementById("awf-data")?.textContent??"null"),b=c.steps,$=Math.max(1,c.session.totalMs),oe=b.map(()=>[]);for(let e of b)e.p>=0&&oe[e.p]?.push(e.i);var Ae=new Map(c.phases.map(e=>[e.id,e.label])),Qe=new Map(c.slowest.map((e,t)=>[e,t])),he=b.filter(e=>!e.container).length;function n(e,t={},...s){let a=document.createElement(e);for(let[o,i]of Object.entries(t))i===void 0||i===!1||(o==="class"?a.className=String(i):o==="text"?a.textContent=String(i):a.setAttribute(o,i===!0?"":String(i)));for(let o of s)o&&a.append(o);return a}var M=e=>String(e).padStart(2,"0"),O=e=>e.replace(/\\s+/g," ").trim(),j=(e,t)=>e.length>t?e.slice(0,t-1)+"\\u2026":e,R=(e,t,s=`${t}s`)=>`${e.toLocaleString("en-US")} ${e===1?t:s}`,_=e=>`var(--c-${e})`,H=e=>e?Ae.get(e)??e:"",T=e=>e.e-e.s;function v(e){return e>0&&e<.005?"<1%":`${Math.round(e*100)}%`}function S(e,t=!0){let s=Math.max(0,Math.round(e/1e3)),a=Math.floor(s/3600),o=Math.floor(s%3600/60);return $>=36e5?`${a}:${M(o)}${t?`:${M(s%60)}`:""}`:`${Math.floor(s/60)}:${M(s%60)}`}function ge(e,t=!1){let s=new Date(e),a=`${M(s.getHours())}:${M(s.getMinutes())}:${M(s.getSeconds())}`;return t?`${s.getFullYear()}-${M(s.getMonth()+1)}-${M(s.getDate())} ${a.slice(0,5)}`:a}function G(e){return e>=1e6?`${(e/1e6).toFixed(e>=1e7?0:1)}M`:e>=1e3?`${(e/1e3).toFixed(e>=1e4?0:1)}k`:String(e)}function D(e){if(e.text)return e.text;if(e.description)return e.description;if(e.kind==="turn"&&e.flags.includes("notification"))return"started by a background task"}var Ze=[...[1,2,5,10,15,30].map(e=>e*1e3),...[1,2,5,10,15,30].map(e=>e*6e4),...[1,2,3,6,12,24].map(e=>e*36e5)];function et(){let e=b.filter(o=>o.kind!=="idle"&&o.e>o.s).map(o=>[o.s,o.e]).sort((o,i)=>o[0]-i[0]),t=Math.max(6e4,$*.03),s=[],a=0;for(let[o,i]of e)o-a>=t&&s.push({s:a,e:o}),a=Math.max(a,i);return $-a>=t&&s.push({s:a,e:$}),s}var xe=et();function Ie(e){let t=e?xe:[],s=t.reduce((x,h)=>x+h.e-h.s,0),a=$-s,o=t.length&&a>0?Math.min(1.5,12/t.length):0,i=o?t:[],d=(100-i.length*o)/(o?a:$),u=[[0,0]],m=[],p=0,w=0;for(let x of i)p+=(x.s-w)*d,u.push([x.s,p]),m.push({s:x.s,e:x.e,x0:p,x1:p+o}),p+=o,u.push([x.e,p]),w=x.e;return u.push([$,100]),{x:x=>{if(x<=0)return 0;if(x>=$)return 100;let h=0,A=u.length-1;for(;A-h>1;){let ue=h+A>>1;u[ue][0]<=x?h=ue:A=ue}let[ce,de]=u[h],[ve,Xe]=u[A];return ve===ce?de:de+(x-ce)/(ve-ce)*(Xe-de)},gaps:m,k:d}}function tt(e){let t=Math.round(e/6e4);return t>=60?`${Math.floor(t/60)}h ${M(t%60)}m`:t>=1?`${t}m`:`${Math.round(e/1e3)}s`}var Pe=e=>`${tt(e.e-e.s)} idle`;function nt(e){let t=d=>{let u=(me(d)+22)/Math.max(e,1)*100,m=u/g.k,p=Ze.find(w=>w>=m)??Math.ceil(m/864e5)*864e5;return{minPct:u,step:p}},{minPct:s,step:a}=t($>=36e5?"0:00":"00:00");$>=36e5&&a<6e4&&({minPct:s,step:a}=t("0:00:00"));let o=[],i=-1/0;for(let d=0;d<=$;d+=a){if(g.gaps.some(p=>d>p.s&&d<p.e))continue;let u=g.x(d);if(u-i<s)continue;let m=g.gaps.some(p=>{let w=(me(Pe(p))/2+12)/Math.max(e,1)*100;return Math.abs(u-(p.x0+p.x1)/2)<w+s/2});d>0&&m||(o.push({x:u,text:S(d,a<6e4)}),i=u)}let r=$>=36e5?a<6e4?"h:mm:ss":"h:mm":"m:ss";return{ticks:o,unit:r}}var l={collapsed:new Set,filterCollapsed:new Set,phases:new Set,failedOnly:!1,query:"",open:-1,focus:-1,squeeze:xe.length>0};for(let e of b)e.container&&(e.kind==="subagent"||he>250&&e.kind==="turn")&&l.collapsed.add(e.i);var g=Ie(l.squeeze),E=()=>l.phases.size>0||l.failedOnly||l.query!=="";function Re(e){return!(l.phases.size>0&&!(e.phase&&l.phases.has(e.phase))||l.failedOnly&&!e.failed||l.query&&![e.label,e.text,e.tool,e.agentType,e.description,...e.checks.map(s=>s.key)].filter(Boolean).join(`\n`).toLowerCase().includes(l.query))}function _e(){let e=E(),t,s=new Set;if(e){t=new Set;for(let r of b)if(Re(r)){t.add(r.i);for(let d=r.p;d>=0&&!s.has(d);d=b[d]?.p??-1)t.add(d),s.add(d)}}else for(let r of b)r.container&&s.add(r.i);let a=e?l.filterCollapsed:l.collapsed,o=[],i=1/0;for(let r of b)r.depth>i||(i=1/0,!(t&&!t.has(r.i))&&(o.push(r),s.has(r.i)&&a.has(r.i)&&(i=r.depth)));return{rows:o,parents:s}}var k=_e(),st=document.getElementById("app"),V=n("div",{class:"wrap"});st.append(V);var P=c.session.totalMs,ee=c.session.activeMs,at=c.share?`Shared session ${c.session.id.slice(0,8)}`:c.session.title??`Session ${c.session.id.slice(0,8)}`,te=n("button",{class:"theme",type:"button"});function ot(){try{let e=localStorage.getItem("awf-theme");return e==="light"||e==="dark"?e:"auto"}catch{return"auto"}}function He(e){e==="auto"?delete document.documentElement.dataset.theme:document.documentElement.dataset.theme=e,te.textContent=`Theme: ${e[0]?.toUpperCase()}${e.slice(1)}`,te.setAttribute("aria-label",`Color theme: ${e}. Change theme`)}var I=ot();He(I);te.addEventListener("click",()=>{I=I==="auto"?"light":I==="light"?"dark":"auto",He(I);try{I==="auto"?localStorage.removeItem("awf-theme"):localStorage.setItem("awf-theme",I)}catch{}});var it=c.session.agent==="claude-code"?"Claude Code":c.session.agent,rt=[ge(c.session.startMs,!0),ee<P?`${f(P)} (active ${f(ee)})`:f(P),c.session.cwd,`${it}${c.session.agentVersion?` ${c.session.agentVersion}`:""}`].filter(e=>!!e);V.append(n("header",{class:"top"},n("div",{},n("p",{class:"brand",text:"awf \\xB7 agent waterfall"}),n("h1",{text:j(O(at),220)}),n("p",{class:"meta",text:rt.join(" \\xB7 ")})),te));var ie=c.phases.filter(e=>e.ms>0),F=n("section",{class:"card","aria-label":"Where the time went"});F.append(n("div",{class:"total"},n("span",{class:"value",text:f(P)}),n("span",{class:"sub",text:ee<P?`total, ${f(ee)} active (the rest is idle time between turns)`:"total"})));var ke=n("div",{class:"stack",role:"img","aria-label":ie.map(e=>`${e.label} ${v(e.share)}`).join(", ")});for(let e of ie){let t=n("span",{"data-phase":e.id});t.style.background=_(e.id),t.style.flex=`${e.ms} 1 0`,ke.append(t)}F.append(ke);var Fe=n("ul",{class:"legend","aria-label":"Phases. Pick one or more to filter steps"}),qe=new Map;for(let e of ie){let t=n("button",{class:"chip",type:"button","aria-pressed":"false",title:e.detail?`${e.label}: ${e.detail}`:e.label},n("span",{class:"sw","aria-hidden":"true"}),n("span",{class:"name",text:e.label}),n("span",{class:"num",text:`${f(e.ms)} \\xB7 ${v(e.share)}`}));t.firstChild.style.background=_(e.id),t.addEventListener("click",()=>{l.phases.has(e.id)?l.phases.delete(e.id):l.phases.add(e.id),le()}),qe.set(e.id,t),Fe.append(n("li",{},t))}F.append(Fe);var q=c.counts,lt=[[q.modelCalls,"model call"],[q.toolCalls,"tool call"],...q.subagents?[[q.subagents,"subagent"]]:[],[q.failures,"failed check"],[q.reworkLoops,"rework loop"]],$e=n("p",{class:"counts"});for(let[e,t]of lt){let[s,...a]=R(e,t).split(" ");$e.append(n("span",{},n("b",{text:s??""}),` ${a.join(" ")}`))}if(c.tokens){let e=c.tokens.input+c.tokens.cacheRead+c.tokens.cacheWrite,t=e>0?c.tokens.cacheRead/e:0;$e.append(n("span",{},n("b",{text:G(e)}),` tokens in (${v(t)} from cache), `,n("b",{text:G(c.tokens.output)})," out"))}F.append($e);var W=n("ul",{class:"why"}),ct=[...ie].sort((e,t)=>t.ms-e.ms),[B,Y,X]=ct;B&&W.append(n("li",{},"Most time went to ",n("b",{text:B.label}),`: ${f(B.ms)} (${v(B.share)})${B.detail?`, ${B.detail}`:""}.`,Y?` Then ${Y.label} ${f(Y.ms)} (${v(Y.share)})${X?` and ${X.label} ${f(X.ms)} (${v(X.share)})`:""}.`:""));if(c.slowest.length){let e=n("li",{},"Slowest steps: ");c.slowest.forEach((t,s)=>{let a=b[t];if(!a)return;let o=a.kind==="model"?b[a.produces?.[0]??-1]:void 0,i=o?D(o):a.kind==="model"?void 0:D(a),r=n("button",{class:"link",type:"button",title:"Show this step"},o?`${a.label} ${f(T(a))}, writing ${o.label}`:a.label,i?n("code",{text:j(O(i),60)}):null,o?"":` ${f(T(a))}`,a.failed?" \\u2715 failed":"");r.addEventListener("click",()=>Ye(t)),e.append(s>0?", ":"",r)}),e.append("."),W.append(e)}if(c.rework.length){let e=c.rework.filter(s=>s.edits>0),t=n("li",{},e.length?"Rework: ":"Rework: none. ");e.slice(0,3).forEach((s,a)=>{t.append(a>0?"; ":"",n("code",{text:s.check}),` failed at ${S(s.failedAt)}`,s.passedAt!==void 0?` and passed at ${S(s.passedAt)} after ${R(s.edits,"edit")}`:` and hadn\'t passed by the end (${R(s.edits,"edit")})`)}),e.length>3&&t.append(`; ${e.length-3} more`),e.length?t.append("."):t.append("checks failed, but no edits followed before they ran again."),W.append(t)}else W.append(n("li",{text:"No rework: no check failed and then got fixed."}));var J=c.phases.find(e=>e.id==="unclassified");J&&J.share>=.05&&c.unclassified.length&&W.append(n("li",{},`Unclassified ${f(J.ms)} (${v(J.share)}): `,...c.unclassified.slice(0,3).flatMap((e,t)=>[t>0?", ":"",n("code",{text:e.name}),` ${f(e.ms)}`]),c.unclassifiedModelMs>=1e3?`, and ${f(c.unclassifiedModelMs)} of model time writing those calls`:"",". Rules in ",n("code",{text:".awf/rules.yaml"})," can sort them."));F.append(W);var we=n("table",{},n("caption",{class:"sr",text:"Time by phase"}));we.append(n("thead",{},n("tr",{},n("th",{scope:"col",text:"Phase"}),n("th",{scope:"col",class:"n",text:"Time"}),n("th",{scope:"col",class:"n",text:"Share"}),n("th",{scope:"col",text:"Detail"}))));var ye=n("tbody");for(let e of c.phases)ye.append(n("tr",{},n("td",{text:e.label}),n("td",{class:"n",text:f(e.ms)}),n("td",{class:"n",text:v(e.share)}),n("td",{text:e.detail})));ye.append(n("tr",{class:"sum"},n("td",{text:"Total"}),n("td",{class:"n",text:f(P)}),n("td",{class:"n",text:"100%"}),n("td",{})));we.append(ye);F.append(n("details",{class:"table"},n("summary",{text:"Phase table"}),we));V.append(F);var ne=n("input",{type:"checkbox"}),se=n("input",{type:"search",placeholder:c.share?"Search tools and phases":"Search commands, files, tools","aria-label":"Search steps"}),ae=n("input",{type:"checkbox"});ae.checked=l.squeeze;var Be=n("span",{class:"count","aria-live":"polite"}),re=n("button",{class:"link",type:"button",text:"Clear filters"}),Ne=n("button",{class:"link",type:"button",text:"Expand all"}),De=n("button",{class:"link",type:"button",text:"Collapse all"}),dt=n("div",{class:"filters"},se,n("label",{},ne,"Failed only"),xe.length?n("label",{title:"Squeeze long idle stretches to a sliver"},ae,"Squeeze idle gaps"):null,Ne,De,re,Be);V.append(dt);ne.addEventListener("change",()=>{l.failedOnly=ne.checked,le()});var Ce=0;se.addEventListener("input",()=>{clearTimeout(Ce),Ce=window.setTimeout(()=>{l.query=se.value.trim().toLowerCase(),le()},120)});ae.addEventListener("change",()=>{l.squeeze=ae.checked,g=Ie(l.squeeze),je(),C()});re.addEventListener("click",()=>{l.phases.clear(),l.failedOnly=!1,l.query="",ne.checked=!1,se.value="",le()});Ne.addEventListener("click",()=>{(E()?l.filterCollapsed:l.collapsed).clear(),C()});De.addEventListener("click",()=>{let e=E()?l.filterCollapsed:l.collapsed;for(let t of k.parents)e.add(t);C()});function le(){l.filterCollapsed.clear();for(let[e,t]of qe)t.setAttribute("aria-pressed",String(l.phases.has(e))),t.classList.toggle("dim",l.phases.size>0&&!l.phases.has(e));for(let e of ke.children){let t=e.dataset.phase;e.style.opacity=l.phases.size>0&&!l.phases.has(t)?"0.3":""}C()}var Me=n("section",{class:"fall","aria-label":"Waterfall of every step"}),N=n("div",{class:"axis","aria-hidden":"true"}),Q=n("div",{class:"strip",role:"img"}),We=n("div",{class:"hl"});Me.append(n("div",{class:"head"},We,N,n("div",{class:"hl sub",text:"Phase at each moment"}),Q));var Z=n("div",{class:"lines","aria-hidden":"true"}),L=n("div",{class:"rows",role:"list","aria-label":"Steps"});Me.append(n("div",{class:"body"},Z,L));V.append(Me);function Se(e,t,s){let a=g.x(t);e.style.left=`${a}%`,e.style.width=`${Math.max(0,g.x(s)-a)}%`}var K=0,ze=64,fe=document.createElement("canvas").getContext("2d"),Te=new Map;function me(e){let t=Te.get(e);return t===void 0&&(fe?(fe.font=`11.5px ${getComputedStyle(document.body).fontFamily}`,t=fe.measureText(e).width):t=e.length*7,Te.set(e,t)),t}function Oe(){K=N.clientWidth,ze=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--pad"))||64;let{ticks:e,unit:t}=nt(K||800);We.textContent=`Step \\xB7 elapsed ${t}`,N.replaceChildren(),Z.replaceChildren();for(let s of e){let a=n("span",{class:`tick${s.x===0?" start":s.x>94?" end":""}`,text:s.text});a.style.left=`${s.x}%`,N.append(a);let o=n("i");o.style.left=`${s.x}%`,Z.append(o)}for(let s of g.gaps){let a=n("span",{class:"brk",title:`${f(s.e-s.s)} idle, squeezed`});a.style.left=`${s.x0}%`,a.style.width=`${s.x1-s.x0}%`;let o=n("span",{class:"gapl",text:Pe(s)});o.style.left=`${(s.x0+s.x1)/2}%`,N.append(a,o);let i=n("i",{class:"gap"});i.style.left=`${s.x0}%`,i.style.width=`${s.x1-s.x0}%`,Z.append(i)}}function je(){Oe(),Q.replaceChildren(),c.timeline.forEach(([e,t,s],a)=>{if(g.x(t)-g.x(e)<.02)return;let o=n("span",{"data-seg":a});o.style.background=_(s),Se(o,e,t),Q.append(o)}),Q.setAttribute("aria-label",`Phase over time, from 0 to ${f(P)}. The phase table lists the totals.`)}function Ve(e){let t=[];if(e.kind==="turn")for(let[s,a,o]of c.timeline)a>e.s&&s<e.e&&t.push([Math.max(s,e.s),Math.min(a,e.e),o]);else{let s=a=>{for(let o of oe[a]??[]){let i=b[o];i&&(i.container?s(o):i.phase&&i.e>i.s&&t.push([i.s,i.e,i.phase]))}};s(e.i)}return t}function ut(e){let t=new Map;for(let[s,a,o]of Ve(e))t.set(o,(t.get(o)??0)+a-s);return[...t].sort((s,a)=>a[1]-s[1])}var Ge=(e,t=3)=>ut(e).slice(0,t).map(([s,a])=>`${H(s)} ${f(a)}`).join(" \\xB7 ");function pt(e){let t=n("span",{class:"mix"});Se(t,e.s,e.e);let s=g.x(e.e)-g.x(e.s);if(s<=0)return t;let a=Ve(e),o=g.x(e.s);for(let[i,r,d]of a){let u=(g.x(i)-o)/s*100,m=(g.x(r)-o)/s*100;if(m-u<.05)continue;let p=n("span");p.style.left=`${u}%`,p.style.width=`${m-u}%`,p.style.background=_(d),t.append(p)}return t}var Ke={approval:"approval",denied:"denied",interrupted:"interrupted",background:"background","api-error":"API error",unfinished:"no end seen"};function ft(e){let t=D(e);return[e.label,t?j(O(t),120):"",H(e.phase),f(T(e)),e.failed?"failed":""].filter(Boolean).join(", ")}function ht(e){let t=E(),s=k.parents.has(e.i),a=(t?l.filterCollapsed:l.collapsed).has(e.i),o=n("div",{class:`row${e.container?" group":""}${e.kind==="idle"?" idle":""}${l.open===e.i?" sel":""}`,role:"listitem","data-i":e.i}),i=n("div",{class:"name"});if(i.style.paddingLeft=`calc(6px + ${e.depth} * var(--indent))`,s){let h=oe[e.i]?.length??0;i.append(n("button",{class:"tw",type:"button",tabindex:-1,"aria-expanded":String(!a),"aria-label":`${a?"Show":"Hide"} ${R(h,"step")} inside ${e.label}`,text:a?"\\u25B8":"\\u25BE"}))}else i.append(n("span",{class:"tw","aria-hidden":"true"}));let r=n("button",{class:"pick",type:"button",tabindex:l.focus===e.i?0:-1,"aria-expanded":String(l.open===e.i),"aria-label":ft(e)});if(e.phase&&!e.container){let h=n("span",{class:"dot","aria-hidden":"true"});h.style.background=_(e.phase),r.append(h)}r.append(n("span",{class:"kind",text:e.label}));let d=D(e);d&&r.append(n("span",{class:"text",text:j(O(d),300)})),e.failed&&r.append(n("span",{class:"fail"},"\\u2715",n("span",{class:"w",text:" failed"})));let u=Qe.get(e.i);u!==void 0&&r.append(n("span",{class:"badge",text:u===0?"slowest":`#${u+1} slowest`}));for(let h of e.flags){let A=Ke[h];A&&!(h==="background"&&e.kind==="background")&&r.append(n("span",{class:"badge soft",text:A}))}i.append(r),o.append(i);let m=n("div",{class:"track","aria-hidden":"true"});if(e.container&&a)m.append(pt(e));else{let h=n("span",{class:`bar${e.failed?" failed":""}`});e.failed?h.style.background="var(--critical)":!e.container&&e.phase&&(h.style.background=_(e.phase)),Se(h,e.s,e.e),m.append(h)}let p=n("span",{class:"dur"},e.failed?n("span",{class:"x",text:"\\u2715 "}):null,f(T(e))),w=g.x(e.s),U=g.x(e.e),x=me(p.textContent??"")+6;return(100-U)/100*K+ze>=x+4?p.style.left=`calc(${U}% + 6px)`:w/100*K>=x+4?p.style.right=`calc(${100-w}% + 6px)`:(p.classList.add("in"),p.style.right=`calc(${100-U}% + 4px)`),m.append(p),o.append(m),l.open===e.i&&o.append(bt(e)),o}function mt(e){let t=e.indexOf(":"),s=t>0?e.slice(0,t):e,a=t>0?e.slice(t+1):"";switch(s){case"script":return`runs the package script "${a}"`;case"make":return`runs the make target "${a}"`;case"task":return`runs the task "${a}"`;case"hook":return`runs the git hook ${a}`;case"file":return`runs the script ${a}`;case"via":return`through ${a}`;case"unmatched":return`no rule for "${a}"`;case"was":return`was ${H(a)||a} before a check failed`}let o={"by-name":"phase guessed from a script or task name",install:"installs dependencies",polling:"waits in a loop",neutral:"only commands that say nothing about the phase","failure-unattributed":"the failure could not be pinned on one check","background-task":"waits on a background task",compaction:"context compaction",subagent:"ran a subagent","no-command":"no command recorded"};return o[e]?o[e]:Ae.has(e)?`also ${H(e)}`:e}function bt(e){let t=n("div",{class:"more",role:"region","aria-label":`Details: ${e.label}`}),s=n("dl"),a=(r,...d)=>s.append(n("dt",{text:r}),n("dd",{},...d));if(e.phase){let r=n("span",{class:"sw","aria-hidden":"true"});r.style.background=_(e.phase),a("Phase",r,H(e.phase),e.reworkFor?` (after ${e.reworkFor} failed)`:"")}if(a("When",`${S(e.s)} \\u2192 ${S(e.e)} \\xB7 ${f(T(e))} \\xB7 ${ge(c.session.startMs+e.s)}`),e.waitMs&&a("Waited for you",f(e.waitMs)),e.runMs!==void 0&&e.waitMs&&a("Ran",f(e.runMs)),e.kind==="tool"||e.kind==="background"){let r=e.failed?n("span",{class:"status-failed",text:"\\u2715 Failed"}):e.ok===!0?"OK":e.ok===!1?"Error":"Unknown";a("Result",r,e.exitCode!==void 0?` \\xB7 exit code ${e.exitCode}`:"")}if(e.tool&&a("Tool",e.tool),e.agentType&&a("Agent type",e.agentType),e.model&&a("Model",e.model),e.tokens){let r=e.tokens,d=T(e)/1e3;a("Tokens",`${G(r.input+r.cacheRead+r.cacheWrite)} in (${G(r.cacheRead)} cached) \\xB7 ${G(r.output)} out`,e.kind==="model"&&d>=1&&r.output>0?` \\xB7 ${Math.round(r.output/d)} tokens/s out`:"")}e.checks.length&&a("Checks",e.checks.map(r=>`${r.key} ${r.failed?"failed":"passed"}`).join(", ")),e.flags.length&&a("Flags",e.flags.map(r=>Ke[r]??r).join(", "));let o=e.tags.map(mt).filter(Boolean);if(o.length&&a("Notes",o.join("; ")),e.container){a("Inside",R(oe[e.i]?.length??0,"step"));let r=Ge(e,5);r&&a("By phase",r)}e.kind==="tool"&&!c.session.sources.includes("recorder")&&!e.waitMs&&a("Note","May include waiting for your approval: only the recorder (the plugin) sees approvals."),t.append(s);let i=(r,d)=>t.append(n("h3",{text:r}),n("pre",{text:d}));if(e.kind==="model"&&e.produces?.length){t.append(n("h3",{text:"Wrote these calls"}));let r=n("ul",{class:"made"});for(let d of e.produces){let u=b[d];if(!u)continue;let m=D(u),p=n("button",{class:"link",type:"button"},u.label,m?n("code",{text:j(O(m),100)}):null,` ${f(T(u))}`);p.addEventListener("click",w=>{w.stopPropagation(),Ye(d)}),r.append(n("li",{},p))}t.append(r)}else e.text&&e.tool==="Bash"&&i("Command",e.text);return e.files?.length&&i(e.files.length===1?"File":"Files",e.files.join(`\n`)),e.description&&e.description!==e.text&&i("Description",e.description),e.output&&i(`Output (secrets masked${e.output.length>=4e3?", first 4,000 characters":""})`,e.output),c.share&&t.append(n("p",{class:"note",text:"Shared report: commands, files and output are left out."})),t}function C(){let e=L.contains(document.activeElement);k=_e(),k.rows.some(a=>a.i===l.focus)||(l.focus=k.rows[0]?.i??-1);let t=document.createDocumentFragment();for(let a of k.rows)t.append(ht(a));k.rows.length||t.append(n("p",{class:"empty",text:b.length?"No steps match these filters.":"This session has no steps."})),L.replaceChildren(t);let s=k.rows.filter(a=>!a.container).length;Be.textContent=E()?`${R(s,"step")} match, of ${he.toLocaleString("en-US")}`:R(he,"step"),re.hidden=!E(),e&&z(l.focus)}function z(e){l.focus=e;for(let s of L.querySelectorAll(".pick"))s.tabIndex=-1;let t=L.querySelector(`.row[data-i="${e}"] .pick`);t&&(t.tabIndex=0,t.focus({preventScroll:!1}))}function be(e){let t=E()?l.filterCollapsed:l.collapsed;t.has(e)?t.delete(e):t.add(e),l.focus=e,C(),z(e)}function Ue(e){l.open=l.open===e?-1:e,l.focus=e,C(),z(e)}function Ye(e){let t=b[e];if(t){E()&&!Re(t)&&re.click();for(let s=t.p;s>=0;s=b[s]?.p??-1)l.collapsed.delete(s),l.filterCollapsed.delete(s);l.open=e,l.focus=e,C(),z(e),L.querySelector(`.row[data-i="${e}"]`)?.scrollIntoView({block:"center"})}}L.addEventListener("click",e=>{let t=e.target;if(t.closest(".more"))return;let s=t.closest(".row");if(!s)return;let a=Number(s.getAttribute("data-i"));t.closest(".tw")?be(a):Ue(a)});L.addEventListener("keydown",e=>{let t=e.target.closest(".row");if(!t||!e.target.closest(".pick"))return;let s=Number(t.getAttribute("data-i")),a=k.rows.findIndex(d=>d.i===s),o=b[s];if(!o)return;let i=(E()?l.filterCollapsed:l.collapsed).has(s),r=d=>{let u=k.rows[Math.max(0,Math.min(k.rows.length-1,d))];u&&z(u.i)};switch(e.key){case"ArrowDown":r(a+1);break;case"ArrowUp":r(a-1);break;case"Home":r(0);break;case"End":r(k.rows.length-1);break;case"ArrowRight":k.parents.has(s)&&i?be(s):k.parents.has(s)&&r(a+1);break;case"ArrowLeft":k.parents.has(s)&&!i?be(s):o.p>=0&&z(o.p);break;case"Escape":l.open>=0&&Ue(l.open);break;default:return}e.preventDefault()});var y=n("div",{class:"tip",role:"tooltip",hidden:!0});document.body.append(y);var gt=window.matchMedia("(hover: hover)").matches;function xt(e){let t=e.closest("[data-phase]");if(t){let i=c.phases.find(r=>r.id===t.dataset.phase);if(i)return[n("b",{text:i.label}),n("span",{text:`${f(i.ms)} \\xB7 ${v(i.share)}${i.detail?` \\xB7 ${i.detail}`:""}`})]}let s=e.closest("[data-seg]");if(s){let i=c.timeline[Number(s.dataset.seg)];if(i)return[n("b",{text:H(i[2])}),n("span",{text:`${S(i[0])} \\u2192 ${S(i[1])} \\xB7 ${f(i[1]-i[0])}`})]}let o=e.closest(".track")?.closest(".row");if(o){let i=b[Number(o.getAttribute("data-i"))];if(!i)return;let r=D(i);return[n("b",{text:i.label}),r?n("code",{text:j(O(r),160)}):null,n("span",{text:[H(i.phase),f(T(i)),`${S(i.s)} \\u2192 ${S(i.e)}`,i.failed?"\\u2715 failed":""].filter(Boolean).join(" \\xB7 ")}),i.container?n("span",{text:Ge(i)}):null]}}gt&&(document.addEventListener("mousemove",e=>{let t=e.target instanceof Element?xt(e.target):void 0;if(!t){y.hidden=!0;return}y.replaceChildren(...t.filter(r=>!!r)),y.hidden=!1;let s=y.offsetWidth,a=y.offsetHeight,o=Math.min(e.clientX+14,window.innerWidth-s-8),i=e.clientY+18+a>window.innerHeight?e.clientY-a-12:e.clientY+18;y.style.left=`${Math.max(8,o)}px`,y.style.top=`${Math.max(8,i)}px`}),document.addEventListener("mouseleave",()=>y.hidden=!0));V.append(n("footer",{class:"foot"},`Made by awf ${Ee} on ${ge(c.generatedAt,!0)}. `,c.share?"Shared report: phases, durations and tool names only.":"This file holds commands, file paths and tool output from the session, with secrets masked. Make a version without them with --share."));je();C();var Le=0;window.addEventListener("resize",()=>{cancelAnimationFrame(Le),Le=requestAnimationFrame(()=>{N.clientWidth!==K&&(Oe(),C())})});document.body.dataset.ready="1";document.body.dataset.renderMs=String(Math.round(performance.now()-Je));})();';
+var CLIENT_CSS = ':root{color-scheme:light;--page: #f9f9f7;--surface: #fcfcfb;--raised: #ffffff;--ink: #0b0b0b;--ink-2: #52514e;--muted: #6f6d68;--grid: #e8e7e1;--axis: #c3c2b7;--ring: rgba(11, 11, 11, .12);--hover: rgba(11, 11, 11, .04);--selected: rgba(42, 120, 214, .08);--focus: #2a78d6;--link: #1f63b5;--critical: #d03b3b;--critical-ink: #b42323;--container: #a3a29b;--c-writing-code: #2a78d6;--c-writing-tests: #eb6834;--c-lint: #1baf7a;--c-tests: #eda100;--c-build: #e87ba4;--c-rework: #6250d6;--c-exploring: #008300;--c-planning: #7b8494;--c-waiting: repeating-linear-gradient(135deg, #a9a8a0 0 2px, #e2e1da 2px 5px);--c-unclassified: #a5a49d;--mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;--sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;--label: 34%;--pad: 64px;--indent: 14px;--row: 28px}@media(prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;--page: #0d0d0d;--surface: #1a1a19;--raised: #222220;--ink: #f0efec;--ink-2: #c3c2b7;--muted: #9c9a92;--grid: #2a2a28;--axis: #383835;--ring: rgba(255, 255, 255, .12);--hover: rgba(255, 255, 255, .05);--selected: rgba(57, 135, 229, .14);--focus: #3987e5;--link: #7fb1ef;--critical: #e05252;--critical-ink: #f08080;--container: #6e6d68;--c-writing-code: #3987e5;--c-writing-tests: #d95926;--c-lint: #199e70;--c-tests: #c98500;--c-build: #d55181;--c-rework: #9085e9;--c-exploring: #008300;--c-planning: #8a93a3;--c-waiting: repeating-linear-gradient(135deg, #7a7973 0 2px, #33332f 2px 5px);--c-unclassified: #6e6d68}}:root[data-theme=dark]{color-scheme:dark;--page: #0d0d0d;--surface: #1a1a19;--raised: #222220;--ink: #f0efec;--ink-2: #c3c2b7;--muted: #9c9a92;--grid: #2a2a28;--axis: #383835;--ring: rgba(255, 255, 255, .12);--hover: rgba(255, 255, 255, .05);--selected: rgba(57, 135, 229, .14);--focus: #3987e5;--link: #7fb1ef;--critical: #e05252;--critical-ink: #f08080;--container: #6e6d68;--c-writing-code: #3987e5;--c-writing-tests: #d95926;--c-lint: #199e70;--c-tests: #c98500;--c-build: #d55181;--c-rework: #9085e9;--c-exploring: #008300;--c-planning: #8a93a3;--c-waiting: repeating-linear-gradient(135deg, #7a7973 0 2px, #33332f 2px 5px);--c-unclassified: #6e6d68}*{box-sizing:border-box}html,body{margin:0;background:var(--page);color:var(--ink);font:14px/1.45 var(--sans);-webkit-text-size-adjust:100%}button,input{font:inherit;color:inherit}:focus-visible{outline:2px solid var(--focus);outline-offset:2px}[hidden]{display:none!important}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}.wrap{max-width:1440px;margin:0 auto;padding:20px 24px 48px}code{font-family:var(--mono);font-size:12.5px;background:var(--hover);border-radius:4px;padding:1px 4px;overflow-wrap:anywhere}.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.brand{font-size:12px;color:var(--muted);letter-spacing:.02em;margin:0 0 6px}h1{font-size:20px;line-height:1.3;font-weight:600;margin:0 0 6px;overflow-wrap:anywhere}.meta{color:var(--ink-2);margin:0;overflow-wrap:anywhere}.theme{flex:none;border:1px solid var(--ring);background:var(--surface);border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--ink-2)}.theme:hover{background:var(--hover)}.card{background:var(--surface);border:1px solid var(--ring);border-radius:12px;padding:16px;margin-top:16px}.total{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px;margin-bottom:12px}.total .value{font-size:28px;font-weight:600;font-variant-numeric:tabular-nums}.total .sub{color:var(--ink-2)}.stack{display:flex;gap:2px;height:18px;width:100%}.stack span{height:100%;min-width:2px}.stack span:first-child{border-radius:4px 0 0 4px}.stack span:last-child{border-radius:0 4px 4px 0}.stack span:only-child{border-radius:4px}.legend{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0;padding:0;list-style:none}.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--ring);background:var(--raised);border-radius:999px;padding:4px 10px 4px 8px;cursor:pointer;min-height:30px;text-align:left}.chip:hover{background:var(--hover)}.chip[aria-pressed=true]{border-color:var(--ink-2);box-shadow:inset 0 0 0 1px var(--ink-2)}.chip.dim{opacity:.5}.sw{display:inline-block;width:10px;height:10px;border-radius:3px;flex:none}.chip .num{color:var(--ink-2);font-variant-numeric:tabular-nums}.counts{display:flex;flex-wrap:wrap;gap:4px 18px;margin:14px 0 0;color:var(--ink-2)}.counts b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}.why{margin:12px 0 0;padding:0 0 0 18px}.why li{margin:5px 0}.why b{font-weight:600}.link{border:0;background:none;color:var(--link);cursor:pointer;padding:2px 0;text-align:left}.link:hover{text-decoration:underline}.link code{margin:0 3px;color:var(--ink)}details.table{margin-top:12px}details.table summary{cursor:pointer;color:var(--ink-2)}details.table table{border-collapse:collapse;margin-top:8px;width:100%;max-width:680px}details.table th,details.table td{text-align:left;padding:4px 8px;border-bottom:1px solid var(--grid);font-variant-numeric:tabular-nums}details.table th{color:var(--muted);font-weight:500}details.table .n{text-align:right}details.table .sum td{font-weight:600;border-bottom:0}.filters{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin:20px 0 10px}.filters label{display:inline-flex;align-items:center;gap:6px;cursor:pointer;min-height:32px}.filters input[type=search]{border:1px solid var(--ring);background:var(--surface);border-radius:8px;padding:6px 10px;flex:1 1 240px;max-width:360px;min-height:34px}.filters .count{color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums}.fall{background:var(--surface);border:1px solid var(--ring);border-radius:12px;overflow:clip}.head{position:sticky;top:0;z-index:3;display:grid;grid-template-columns:var(--label) 1fr;background:var(--surface);border-bottom:1px solid var(--grid)}.hl{padding:6px 12px 0;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hl.sub{padding:2px 12px 8px}.axis{position:relative;height:26px;margin-right:var(--pad)}.tick{position:absolute;top:6px;transform:translate(-50%);font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}.tick.start{transform:none}.tick.end{transform:translate(-100%)}.brk{position:absolute;top:4px;bottom:2px;background:repeating-linear-gradient(135deg,transparent 0 3px,var(--axis) 3px 4px);border-radius:2px}.strip{position:relative;height:10px;margin:4px var(--pad) 10px 0;border-radius:3px;overflow:hidden;background:var(--grid)}.strip span{position:absolute;top:0;bottom:0}.body{position:relative}.lines{position:absolute;top:0;bottom:0;left:var(--label);right:var(--pad);pointer-events:none}.lines i{position:absolute;top:0;bottom:0;width:1px;background:var(--grid)}.lines i.gap{background:repeating-linear-gradient(135deg,transparent 0 5px,var(--grid) 5px 6px)}.rows{position:relative}.row{display:grid;grid-template-columns:var(--label) 1fr;align-items:center;cursor:pointer}.row:hover{background:var(--hover)}.row.sel{background:var(--selected)}.name{display:flex;align-items:center;gap:4px;min-width:0;min-height:var(--row);padding-right:8px}.tw{width:18px;height:22px;flex:none;color:var(--muted);text-align:center;font-size:11px;border:0;background:none;padding:0;border-radius:4px;cursor:pointer}button.tw:hover{background:var(--hover);color:var(--ink)}.pick{display:flex;align-items:center;gap:6px;min-width:0;flex:1 1 auto;border:0;background:none;padding:2px 0;text-align:left;cursor:pointer;white-space:nowrap;border-radius:4px}.dot{width:8px;height:8px;border-radius:2px;flex:none}.kind{flex:0 0 auto;max-width:60%;overflow:hidden;text-overflow:ellipsis}.text{flex:0 1 auto;min-width:0;color:var(--ink-2);font-family:var(--mono);font-size:12px;overflow:hidden;text-overflow:ellipsis}.row.group .kind{font-weight:600}.row.idle .kind{color:var(--muted)}.fail{flex:none;color:var(--critical-ink);font-weight:600;font-size:12.5px}.badge{flex:none;border:1px solid var(--ring);background:var(--raised);color:var(--ink);border-radius:999px;font-size:10.5px;padding:0 6px;line-height:16px}.badge.soft{color:var(--ink-2);background:none}.track{position:relative;height:var(--row);margin-right:var(--pad)}.bar,.mix{position:absolute;top:calc(50% - 6px);height:12px;min-width:2px;border-radius:3px}.row.group .bar{top:calc(50% - 2px);height:4px;background:var(--container);border-radius:2px}.mix{top:calc(50% - 4px);height:8px;overflow:hidden;background:var(--grid);border-radius:2px}.mix span{position:absolute;top:0;bottom:0}.gapl{position:absolute;top:5px;transform:translate(-50%);font-size:11px;color:var(--ink-2);background:var(--surface);border:1px solid var(--grid);border-radius:4px;padding:0 4px;white-space:nowrap}.made{margin:6px 0 0;padding-left:18px}.dur{position:absolute;top:calc(50% - 9px);font-size:11.5px;line-height:18px;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums;pointer-events:none}.dur .x{color:var(--critical-ink);font-weight:600}.dur.in{background:var(--surface);border-radius:4px;padding:0 4px}.empty{padding:24px 16px;margin:0;color:var(--muted)}.more{grid-column:1 / -1;position:relative;z-index:1;margin:2px 12px 10px;background:var(--raised);border:1px solid var(--ring);border-radius:10px;padding:12px 14px;cursor:auto}.more dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:0}.more dt{color:var(--muted)}.more dd{margin:0;overflow-wrap:anywhere}.more dd .sw{margin-right:6px;vertical-align:-1px}.more h3{font-size:12.5px;font-weight:600;margin:14px 0 0;color:var(--ink-2)}.more pre{font-family:var(--mono);font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--surface);border:1px solid var(--ring);border-radius:8px;padding:8px 10px;margin:6px 0 0;max-height:360px;overflow:auto}.status-failed{color:var(--critical-ink);font-weight:600}.note,.foot{color:var(--muted);font-size:12.5px;margin:10px 0 0}.foot{margin-top:20px}.tip{position:fixed;z-index:20;pointer-events:none;display:flex;flex-direction:column;gap:2px;background:var(--raised);border:1px solid var(--ring);border-radius:8px;padding:6px 9px;box-shadow:0 6px 20px #00000024;font-size:12.5px;max-width:360px}.tip span{color:var(--ink-2)}.tip code{align-self:flex-start}@media(max-width:760px){:root{--label: 44%;--pad: 52px;--indent: 8px;--row: 36px}.wrap{padding:14px 16px 40px}h1{font-size:17px}.top{flex-direction:column-reverse;gap:10px}.theme{align-self:flex-end}.pick{flex-wrap:wrap;row-gap:0;padding:4px 0}.text{flex:1 0 100%;order:10;padding-left:14px;font-size:11.5px}.badge.soft,.fail .w{display:none}.filters input[type=search]{max-width:none;flex-basis:100%}.filters .count{margin-left:0}.more{margin:2px 6px 10px}.legend{display:grid;grid-template-columns:1fr 1fr}.chip{display:grid;grid-template-columns:auto 1fr;column-gap:6px;align-items:center;width:100%;height:100%;border-radius:10px;padding:5px 8px;font-size:13px}.chip .num{grid-column:2;font-size:12px}.more dl{grid-template-columns:1fr;gap:0}.more dd{margin-bottom:6px}}@media print{.filters,.theme{display:none}.row{break-inside:avoid}}';
+
+// src/report/html.ts
+function escapeHtml(text) {
+  return text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+}
+function scriptJson(value) {
+  return JSON.stringify(value).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
+}
+function renderReportHtml(data) {
+  const title = data.share ? `awf \xB7 session ${data.session.id}` : `awf \xB7 ${data.session.title ?? `session ${data.session.id.slice(0, 8)}`}`;
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="generator" content="awf">
+<title>${escapeHtml(title.length > 90 ? title.slice(0, 89) + "\u2026" : title)}</title>
+<style>${CLIENT_CSS}</style>
+</head>
+<body>
+<noscript>This report draws itself with JavaScript; turn it on to see the waterfall.</noscript>
+<div id="app"></div>
+<script type="application/json" id="awf-data">${scriptJson(data)}</script>
+<script>${CLIENT_JS}</script>
+</body>
+</html>
+`;
+}
+
+// src/cli/commands/report.ts
+var reportCommand = {
+  summary: "Write a session as one self-contained HTML waterfall",
+  usage: `Usage: awf report <session> [--out <file.html>] [--share] [--open] [--json]
+
+Writes one HTML file that draws the session: time by phase, the phase at each moment, and every
+step on a waterfall, with failures, rework and the slowest steps marked. Styles and script are
+inside the file, and it makes no network requests. <session> is an ID or its first characters,
+"last", or a transcript or events file.
+  --out <file>  where to write it (default: ~/.awf/reports/<session>.html)
+  --share       phases, durations and tool names only: no task, folder, commands, files or output
+  --open        open it in your browser
+  --json        print the report's data as JSON instead`,
+  options: {
+    out: { type: "string", short: "o" },
+    share: { type: "boolean" },
+    open: { type: "boolean" },
+    json: { type: "boolean" },
+    project: { type: "string" }
+  },
+  run(ctx, args, options) {
+    const share = options.share === true;
+    const session = loadOne(ctx, args[0], options, !share);
+    const home = ctx.env.HOME ?? os7.homedir();
+    const data = buildReportData(summarize(classifier()(session)), { share, home, now: ctx.now });
+    if (options.json) {
+      ctx.io.out(JSON.stringify(data, null, 2));
+      return 0;
+    }
+    const out = typeof options.out === "string" ? path13.resolve(ctx.cwd, options.out) : path13.join(
+      awfHome(ctx.env),
+      "reports",
+      `${safeId(session.id)}${share ? "-share" : ""}.html`
+    );
+    mkdirSync2(path13.dirname(out), { recursive: true });
+    writeFileSync2(out, renderReportHtml(data));
+    ctx.io.out(
+      `Wrote ${homeRelative(out, home)}${share ? " (shareable: no commands, files or output)" : ""}`
+    );
+    ctx.io.out(pathToFileURL(out).href);
+    if (options.open) openInBrowser(out, ctx);
+    return 0;
+  }
+};
+function openInBrowser(file, ctx) {
+  const [command, args] = process.platform === "darwin" ? ["open", [file]] : process.platform === "win32" ? ["explorer", [file]] : ["xdg-open", [file]];
+  try {
+    const child = spawn(command, args, { stdio: "ignore", detached: true });
+    child.on(
+      "error",
+      () => ctx.io.err(`awf report: couldn't open a browser; open the file above.`)
+    );
+    child.unref();
+  } catch {
+    ctx.io.err(`awf report: couldn't open a browser; open the file above.`);
+  }
+}
+
+// src/cli/commands/sample.ts
+import { readFileSync as readFileSync5 } from "node:fs";
+import path14 from "node:path";
+function random(seed) {
+  let s = seed >>> 0 || 1;
+  return () => {
+    s = Math.imul(s, 1664525) + 1013904223 >>> 0;
+    return s / 2 ** 32;
+  };
+}
+var PHASE_IDS = new Set(PHASES.map((p) => p.id));
+function csvCell(value) {
+  return /[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
+}
+function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let cell = "";
+  let quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (quoted) {
+      if (c === '"' && text[i + 1] === '"') {
+        cell += '"';
+        i++;
+      } else if (c === '"') quoted = false;
+      else cell += c;
+    } else if (c === '"') quoted = true;
+    else if (c === ",") {
+      row.push(cell);
+      cell = "";
+    } else if (c === "\n" || c === "\r") {
+      if (c === "\r" && text[i + 1] === "\n") i++;
+      row.push(cell);
+      rows.push(row);
+      row = [];
+      cell = "";
+    } else cell += c;
+  }
+  if (cell || row.length > 0) {
+    row.push(cell);
+    rows.push(row);
+  }
+  return rows.filter((r) => r.some((c) => c.trim()));
+}
+var sampleCommand = {
+  summary: "Pick random Bash steps to check by hand, or to label as a CSV",
+  usage: `Usage: awf sample [--n 50] [--seed 1] [--since 30d] [--project <dir>] [--csv]
+
+Prints random Bash calls from your sessions with the phase awf gave each, for a hand check.
+With --csv it writes "command,cwd,awf_phase,your_phase": fill in your_phase with a phase id
+(${PHASES.map((p) => p.id).join(", ")}) and run "awf accuracy <file>".`,
+  options: {
+    n: { type: "string" },
+    seed: { type: "string" },
+    since: { type: "string" },
+    project: { type: "string" },
+    csv: { type: "boolean" }
+  },
+  run(ctx, _args, options) {
+    const n = typeof options.n === "string" ? Number.parseInt(options.n, 10) || 50 : 50;
+    const next = random(
+      typeof options.seed === "string" ? Number.parseInt(options.seed, 10) || 1 : 1
+    );
+    const classify = classifier();
+    const pool = [];
+    const seen = /* @__PURE__ */ new Set();
+    for (const session of loadMany(ctx, options).map(classify)) {
+      for (const step of session.steps) {
+        if (step.kind !== "tool" || step.tool !== "Bash" || !step.command || seen.has(step.command))
+          continue;
+        seen.add(step.command);
+        pool.push({
+          command: step.command,
+          cwd: session.cwd ?? "",
+          phase: step.phase ?? "unclassified"
+        });
+      }
+    }
+    const picked = [];
+    while (picked.length < n && pool.length > 0)
+      picked.push(...pool.splice(Math.floor(next() * pool.length), 1));
+    if (options.csv) {
+      ctx.io.out("command,cwd,awf_phase,your_phase");
+      for (const p of picked) ctx.io.out([p.command, p.cwd, p.phase, ""].map(csvCell).join(","));
+      return 0;
+    }
+    ctx.io.out(
+      table(
+        ["#", "AWF SAYS", "COMMAND"],
+        picked.map((p, i) => {
+          const line = p.command.replace(/\s+/g, " ");
+          return [
+            String(i + 1),
+            PHASE_LABEL[p.phase],
+            line.length > 110 ? line.slice(0, 109) + "\u2026" : line
+          ];
+        })
+      )
+    );
+    ctx.io.out(
+      `
+${picked.length} of ${seen.size} distinct Bash commands. Count the ones you disagree with.`
+    );
+    return 0;
+  }
+};
+var accuracyCommand = {
+  summary: 'Compare awf with your own labels from "awf sample --csv"',
+  usage: `Usage: awf accuracy <labels.csv> [--json]
+
+Re-classifies each labelled command with the current rules and reports agreement per phase.`,
+  options: { json: { type: "boolean" } },
+  run(ctx, args, options) {
+    const file = args[0];
+    if (!file) throw new Error("give the labels file, for example fixtures/labels.csv");
+    const rows = parseCsv(readFileSync5(path14.resolve(ctx.cwd, file), "utf8"));
+    const header = rows.shift() ?? [];
+    const col = (name) => header.indexOf(name);
+    const [ci, wi, yi] = [col("command"), col("cwd"), col("your_phase")];
+    if (ci < 0 || yi < 0) throw new Error('the CSV needs "command" and "your_phase" columns');
+    const files = diskFiles();
+    const perPhase = /* @__PURE__ */ new Map();
+    const misses = [];
+    let total = 0;
+    let agree = 0;
+    for (const row of rows) {
+      const yours = (row[yi] ?? "").trim();
+      if (!yours) continue;
+      if (!PHASE_IDS.has(yours))
+        throw new Error(`unknown phase "${yours}"; use one of ${[...PHASE_IDS].join(", ")}`);
+      const cwd = (wi >= 0 ? row[wi] : "") || ctx.cwd;
+      const awf = new Classifier(loadRules(cwd, files), files).command(row[ci] ?? "", cwd).phase;
+      const entry = perPhase.get(yours) ?? { total: 0, agree: 0 };
+      entry.total++;
+      total++;
+      if (awf === yours) {
+        entry.agree++;
+        agree++;
+      } else misses.push({ command: row[ci] ?? "", yours, awf });
+      perPhase.set(yours, entry);
+    }
+    const report = {
+      labelled: total,
+      agree,
+      accuracy: total > 0 ? agree / total : 0,
+      perPhase: Object.fromEntries(
+        [...perPhase].map(([p, v]) => [p, { ...v, accuracy: v.agree / v.total }])
+      ),
+      misses
+    };
+    if (options.json) {
+      ctx.io.out(JSON.stringify(report, null, 2));
+      return 0;
+    }
+    ctx.io.out(
+      `awf agrees with ${agree} of ${total} labels (${((report.accuracy || 0) * 100).toFixed(1)}%).
+`
+    );
+    ctx.io.out(
+      table(
+        ["YOUR PHASE", "LABELS", "AGREE", "ACCURACY"],
+        [...perPhase].map(([p, v]) => [
+          PHASE_LABEL[p] ?? p,
+          String(v.total),
+          String(v.agree),
+          `${(v.agree / v.total * 100).toFixed(0)}%`
+        ]),
+        [1, 2, 3]
+      )
+    );
+    if (misses.length > 0) {
+      ctx.io.out("\nDisagreements:");
+      for (const m of misses.slice(0, 30))
+        ctx.io.out(`  ${m.yours} (awf: ${m.awf})  ${m.command.replace(/\s+/g, " ").slice(0, 100)}`);
+    }
+    return 0;
+  }
+};
+
+// src/cli/commands/sessions.ts
+import os8 from "node:os";
+import path15 from "node:path";
+function sessionRow(session) {
+  const idleMs = session.steps.filter((s) => s.kind === "idle").reduce((sum, s) => sum + (s.endMs - s.startMs), 0);
+  const durationMs = Math.max(0, session.endMs - session.startMs);
+  const row = {
+    id: session.id,
+    startMs: session.startMs,
+    endMs: session.endMs,
+    durationMs,
+    activeMs: Math.max(0, durationMs - idleMs),
+    turns: session.steps.filter((s) => s.kind === "turn").length,
+    toolCalls: session.steps.filter((s) => s.kind === "tool").length,
+    sources: session.sources
+  };
+  if (session.cwd) row.cwd = session.cwd;
+  return row;
+}
+function inFolder(cwd, dir) {
+  if (!dir) return true;
+  return !!cwd && (cwd === dir || cwd.startsWith(dir + path15.sep));
+}
+function listSessionRows(env) {
+  const rows = [];
+  for (const ref of sessionIndex(env).values()) {
+    const recorded = ref.events ? eventsToSession(ref.id, readEvents(ref.events.path)) : void 0;
+    const imported = ref.imported ? readImported(ref.id, env)?.session : void 0;
+    const base = recorded ?? imported;
+    if (!base || base.steps.length === 0) continue;
+    const row = sessionRow(base);
+    row.sources = [...recorded ? ["hooks"] : [], ...imported ? ["transcript"] : []];
+    if (!row.cwd && imported?.cwd) row.cwd = imported.cwd;
+    rows.push(row);
+  }
+  return rows.sort((a, b) => b.startMs - a.startMs);
+}
+var sessionsCommand = {
+  summary: "List sessions with start time and duration",
+  usage: `Usage: awf sessions [--since 30d] [--project <dir>] [--json]
+
+Lists sessions newest first: those the recorder captured and those "awf import" read from transcripts.
+  --since <age>     only sessions that started within this age (30d, 12h)
+  --project <dir>   only sessions started in this folder or below it
+  --json            print JSON`,
+  options: {
+    since: { type: "string" },
+    project: { type: "string" },
+    json: { type: "boolean" }
+  },
+  run(ctx, _args, options) {
+    const since = typeof options.since === "string" ? ctx.now - parseSince(options.since) : -Infinity;
+    const project = typeof options.project === "string" ? path15.resolve(ctx.cwd, options.project) : void 0;
+    const rows = listSessionRows(ctx.env).filter(
+      (row) => row.startMs >= since && inFolder(row.cwd, project)
+    );
+    if (options.json) {
+      ctx.io.out(JSON.stringify(rows, null, 2));
+      return 0;
+    }
+    if (rows.length === 0) {
+      ctx.io.out(
+        'No sessions yet. Install the awf plugin to record new sessions, or run "awf import" to read past ones.'
+      );
+      return 0;
+    }
+    const home = ctx.env.HOME ?? os8.homedir();
+    ctx.io.out(
+      table(
+        ["SESSION", "STARTED", "DURATION", "ACTIVE", "TURNS", "TOOLS", "SOURCE", "PROJECT"],
+        rows.map((r) => [
+          r.id.slice(0, 8),
+          formatClock(r.startMs),
+          formatDuration(r.durationMs),
+          formatDuration(r.activeMs),
+          String(r.turns),
+          String(r.toolCalls),
+          r.sources.join("+"),
+          homeRelative(r.cwd, home)
+        ]),
+        [2, 3, 4, 5]
+      )
+    );
+    return 0;
+  }
+};
+
+// src/cli/commands/stats.ts
+function runMs(step) {
+  return Math.max(0, step.endMs - step.startMs - (step.waitMs ?? 0));
+}
+var NEUTRAL_HEADS = /* @__PURE__ */ new Set([
+  "cd",
+  "export",
+  "echo",
+  "printf",
+  "set",
+  "source",
+  ".",
+  "true",
+  "false",
+  ":",
+  "sleep",
+  "[",
+  "[[",
+  "test",
+  "unset",
+  "local",
+  "eval",
+  "pushd",
+  "popd",
+  "wait"
+]);
+function commandHead(command) {
+  const simple = splitCommand(command).map((c) => unwrap(c.argv).argv).filter((argv2) => argv2.length > 0);
+  const argv = simple.find((a) => !NEUTRAL_HEADS.has(programName(a[0] ?? ""))) ?? simple[0];
+  if (!argv) return "(empty)";
+  const program = programName(argv[0] ?? "");
+  const sub = argv[1];
+  return sub && /^[a-z][a-z-]{1,20}$/.test(sub) ? `${program} ${sub}` : program;
+}
+function bashStats(sessions, top = 10, focus = "unclassified") {
+  const byPhase = /* @__PURE__ */ new Map();
+  const heads = /* @__PURE__ */ new Map();
+  const others = /* @__PURE__ */ new Map();
+  let bashMs = 0;
+  let bashCalls = 0;
+  for (const session of sessions) {
+    for (const step of session.steps) {
+      if (step.kind !== "tool" || step.flags.includes("background")) continue;
+      const ms = runMs(step);
+      if (step.tool !== "Bash") {
+        if (step.phase === "unclassified") {
+          const tool = step.tool?.startsWith("mcp__") ? `mcp__${step.tool.split("__")[1] ?? ""}` : step.tool ?? "?";
+          const entry2 = others.get(tool) ?? { ms: 0, calls: 0 };
+          entry2.ms += ms;
+          entry2.calls++;
+          others.set(tool, entry2);
+        }
+        continue;
+      }
+      const phase = step.phase ?? "unclassified";
+      bashMs += ms;
+      bashCalls++;
+      const entry = byPhase.get(phase) ?? { ms: 0, calls: 0 };
+      entry.ms += ms;
+      entry.calls++;
+      byPhase.set(phase, entry);
+      if (phase === focus) {
+        const unmatched = step.tags.find((t) => t.startsWith("unmatched:"))?.slice("unmatched:".length);
+        const head2 = focus === "unclassified" && step.tags.includes("polling") ? "(polling: sleep in a loop, or a long sleep)" : focus === "unclassified" && unmatched ? unmatched : step.command ? commandHead(step.command) : "(no command)";
+        const h = heads.get(head2) ?? { ms: 0, calls: 0 };
+        h.ms += ms;
+        h.calls++;
+        heads.set(head2, h);
+      }
+    }
+  }
+  const unclassifiedMs = byPhase.get("unclassified")?.ms ?? 0;
+  const sorted = (map, key) => [...map].sort((a, b) => b[1].ms - a[1].ms).slice(0, top).map(
+    ([name, v]) => ({ [key]: name, ...v })
+  );
+  return {
+    sessions: sessions.length,
+    bashMs,
+    bashCalls,
+    unclassifiedMs,
+    unclassifiedShare: bashMs > 0 ? unclassifiedMs / bashMs : 0,
+    byPhase: PHASES.filter((p) => byPhase.has(p.id)).map((p) => {
+      const v = byPhase.get(p.id);
+      return { phase: p.id, ...v, share: bashMs > 0 ? v.ms / bashMs : 0 };
+    }),
+    topUnclassified: sorted(heads, "program"),
+    otherUnclassified: sorted(others, "tool")
+  };
+}
+var pct = (x) => `${(x * 100).toFixed(1)}%`;
+var statsCommand = {
+  summary: "Share of Bash time each phase got, and what is left unclassified",
+  usage: `Usage: awf stats [--since 30d] [--project <dir>] [--top 10] [--phase <id>] [--json]
+
+Classifies the Bash calls of every recorded or imported session and shows the time per phase,
+the share left unclassified, and the programs behind that time, to show which rules are missing.
+  --phase <id>   break this phase down by program instead of unclassified (tests, build, exploring, ...)`,
+  options: {
+    since: { type: "string" },
+    project: { type: "string" },
+    top: { type: "string" },
+    phase: { type: "string" },
+    json: { type: "boolean" }
+  },
+  run(ctx, _args, options) {
+    const classify = classifier();
+    const sessions = loadMany(ctx, options).map(classify);
+    const top = typeof options.top === "string" ? Number.parseInt(options.top, 10) || 10 : 10;
+    const focus = typeof options.phase === "string" ? options.phase : "unclassified";
+    if (!PHASES.some((p) => p.id === focus))
+      throw new Error(`unknown phase "${focus}"; use one of ${PHASES.map((p) => p.id).join(", ")}`);
+    const stats = bashStats(sessions, top, focus);
+    if (options.json) {
+      ctx.io.out(JSON.stringify(stats, null, 2));
+      return 0;
+    }
+    if (stats.bashCalls === 0) {
+      ctx.io.out(
+        'No Bash calls found. Run "awf import" first, or record a session with the plugin.'
+      );
+      return 0;
+    }
+    ctx.io.out(
+      `Bash time: ${formatDuration(stats.bashMs)} in ${stats.bashCalls.toLocaleString("en-US")} calls across ${stats.sessions} sessions. Unclassified: ${pct(stats.unclassifiedShare)}.`
+    );
+    ctx.io.out("");
+    ctx.io.out(
+      table(
+        ["PHASE", "TIME", "SHARE", "CALLS"],
+        stats.byPhase.map((p) => [
+          PHASE_LABEL[p.phase],
+          formatDuration(p.ms),
+          pct(p.share),
+          p.calls.toLocaleString("en-US")
+        ]),
+        [1, 2, 3]
+      )
+    );
+    if (stats.topUnclassified.length > 0) {
+      ctx.io.out("");
+      ctx.io.out(
+        focus === "unclassified" ? "Unclassified Bash time by program (add rules for these in .awf/rules.yaml):" : `${PHASE_LABEL[focus]} Bash time by program:`
+      );
+      ctx.io.out(
+        table(
+          ["PROGRAM", "TIME", "CALLS"],
+          stats.topUnclassified.map((h) => [h.program, formatDuration(h.ms), String(h.calls)]),
+          [1, 2]
+        )
+      );
+    }
+    if (stats.otherUnclassified.length > 0) {
+      ctx.io.out("");
+      ctx.io.out("Unclassified time of other tools:");
+      ctx.io.out(
+        table(
+          ["TOOL", "TIME", "CALLS"],
+          stats.otherUnclassified.map((h) => [h.tool, formatDuration(h.ms), String(h.calls)]),
+          [1, 2]
+        )
+      );
+    }
+    return 0;
+  }
+};
+
 // src/cli/commands/summary.ts
+import os9 from "node:os";
 var summaryCommand = {
   summary: "One line per phase: time, share, runs and failures",
   usage: `Usage: awf summary <session> [--json] [--share]
@@ -11856,7 +12231,7 @@ or a transcript or events file.
       ctx.io.out(JSON.stringify(summary, null, 2));
       return 0;
     }
-    const home = ctx.env.HOME ?? os7.homedir();
+    const home = ctx.env.HOME ?? os9.homedir();
     const header = [
       `Session ${summary.id.slice(0, 8)}`,
       formatClock(summary.startMs),
@@ -11881,10 +12256,12 @@ var COMMANDS = {
   import: importCommand,
   classify: classifyCommand,
   summary: summaryCommand,
+  report: reportCommand,
   stats: statsCommand,
   sample: sampleCommand,
   accuracy: accuracyCommand,
-  doctor: doctorCommand
+  doctor: doctorCommand,
+  purge: purgeCommand
 };
 function usage() {
   const width = Math.max(...Object.keys(COMMANDS).map((name) => name.length));
