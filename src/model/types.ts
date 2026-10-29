@@ -36,7 +36,7 @@ export type StepFlag =
   | 'unfinished'
   /** Model time that ended without a tool call. */
   | 'answer'
-  /** A turn started by a background task's completion notice, not by you. */
+  /** A turn started by a background task's completion notice, or another notice, not by you. */
   | 'notification';
 
 export interface TokenUsage {

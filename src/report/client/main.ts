@@ -76,7 +76,7 @@ function stepText(step: ReportStep): string | undefined {
   if (step.text) return step.text;
   if (step.description) return step.description;
   if (step.kind === 'turn' && step.flags.includes('notification'))
-    return 'started by a background task';
+    return 'started by a notice, not a prompt';
   return undefined;
 }
 
