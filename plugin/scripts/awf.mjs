@@ -12452,6 +12452,8 @@ function detectRework(input) {
 var FOREGROUND = 0;
 var BACKGROUND = 1;
 var IDLE = 2;
+var SERVICE = 3;
+var isBackground = (step, background) => step.kind === "background" || background(step);
 function intervals(session) {
   const byId = new Map(session.steps.map((s) => [s.id, s]));
   const background = (step) => {
@@ -12467,7 +12469,7 @@ function intervals(session) {
   for (const step of session.steps) {
     if (!step.phase || step.endMs <= step.startMs) continue;
     if (step.kind === "turn" || step.kind === "subagent") continue;
-    const tier = step.kind === "idle" ? IDLE : background(step) ? BACKGROUND : FOREGROUND;
+    const tier = step.kind === "idle" ? IDLE : isBackground(step, background) ? step.phase === "unclassified" ? SERVICE : BACKGROUND : FOREGROUND;
     const wait = step.kind === "tool" && step.waitMs ? Math.min(step.waitMs, step.endMs - step.startMs) : 0;
     if (wait > 0) {
       out.push({
@@ -12495,7 +12497,7 @@ function intervals(session) {
 var PHASE_INDEX = new Map(PHASES.map((p, i) => [p.id, i]));
 function phaseSegments(session) {
   const start = session.startMs;
-  const end = Math.max(session.endMs, start);
+  const end = sessionEnd(session);
   const events = [];
   for (const iv of intervals(session)) {
     const a = Math.max(iv.start, start);
@@ -12539,6 +12541,18 @@ function phaseSegments(session) {
   credit(end);
   return segments;
 }
+function sessionEnd(session) {
+  const start = session.startMs;
+  const end = Math.max(session.endMs, start);
+  let lastService = -Infinity;
+  let lastOther = start;
+  for (const step of session.steps) {
+    const service = (step.kind === "background" || step.flags.includes("background")) && step.phase === "unclassified";
+    if (service) lastService = Math.max(lastService, step.endMs);
+    else lastOther = Math.max(lastOther, step.endMs);
+  }
+  return lastService > lastOther && end > lastOther && end <= lastService ? lastOther : end;
+}
 function phaseTotals(session) {
   const byPhase = Object.fromEntries(PHASES.map((p) => [p.id, 0]));
   let uncoveredMs = 0;
@@ -12546,8 +12560,7 @@ function phaseTotals(session) {
     byPhase[segment.phase] += segment.end - segment.start;
     if (!segment.covered) uncoveredMs += segment.end - segment.start;
   }
-  const start = session.startMs;
-  return { totalMs: Math.max(session.endMs, start) - start, byPhase, uncoveredMs };
+  return { totalMs: sessionEnd(session) - session.startMs, byPhase, uncoveredMs };
 }
 
 // src/analyze/summary.ts
@@ -12603,7 +12616,7 @@ function summarize(classified) {
     id: session.id,
     sources: session.sources,
     startMs: session.startMs,
-    endMs: session.endMs,
+    endMs: session.startMs + totals.totalMs,
     totalMs: totals.totalMs,
     activeMs: Math.max(0, totals.totalMs - idleMs),
     phases,
