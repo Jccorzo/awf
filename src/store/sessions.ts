@@ -1,5 +1,11 @@
 import { existsSync, statSync } from 'node:fs';
 import path from 'node:path';
+import {
+  type AgentFile,
+  detectAgentFile,
+  importAgentFile,
+  listAgentSessions,
+} from '../importers/agents';
 import { importClaudeCodeTranscript } from '../importers/claude-code/import';
 import { listTranscripts, type TranscriptFile } from '../importers/claude-code/locate';
 import type { Session, Step } from '../model/types';
@@ -14,6 +20,8 @@ export interface SessionRef {
   id: string;
   events?: EventsFile;
   transcript?: TranscriptFile;
+  /** A Codex, Gemini or OpenCode session file. */
+  external?: AgentFile;
   imported?: boolean;
 }
 
@@ -27,11 +35,16 @@ export function sessionIndex(env: Env = process.env): Map<string, SessionRef> {
   for (const file of listEventFiles(env)) entry(file.id).events = file;
   for (const id of listImportedIds(env)) entry(id).imported = true;
   for (const file of listTranscripts(env)) entry(file.id).transcript = file;
+  for (const file of listAgentSessions(env)) entry(file.id).external = file;
   return index;
 }
 
 function latestMs(ref: SessionRef): number {
-  return Math.max(ref.events?.mtimeMs ?? 0, ref.transcript?.mtimeMs ?? 0);
+  return Math.max(
+    ref.events?.mtimeMs ?? 0,
+    ref.transcript?.mtimeMs ?? 0,
+    ref.external?.mtimeMs ?? 0,
+  );
 }
 
 /**
@@ -43,6 +56,8 @@ export function resolveSession(
   env: Env = process.env,
   project?: string,
 ): SessionRef {
+  const external = existsSync(input) ? detectAgentFile(input) : undefined;
+  if (external) return { id: external.id, external };
   if (input.endsWith('.jsonl') && existsSync(input)) {
     const stat = statSync(input);
     const id = path.basename(input, '.jsonl');
@@ -102,6 +117,13 @@ export function loadSession(ref: SessionRef, options: LoadOptions = {}): Session
   if (recorded && transcript) return mergeSessions(recorded, transcript);
   if (recorded) return recorded;
   if (transcript) return transcript;
+  if (ref.external && existsSync(ref.external.path)) {
+    try {
+      return importAgentFile(ref.external, { detail: options.detail ?? false });
+    } catch {
+      // Unreadable now: the import cache may still have it.
+    }
+  }
   const imported = readImported(ref.id, env);
   if (imported) return { ...imported.session, sources: ['import-cache'] };
   throw new Error(`session ${ref.id} has no readable data`);

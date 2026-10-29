@@ -8,6 +8,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { chromium } from 'playwright-core';
 import { analyze } from '../src/analyze/summary';
+import { detectAgentFile } from '../src/importers/agents';
 import { memoryFiles } from '../src/classify/resolve';
 import { main } from '../src/cli/main';
 import { buildReportData } from '../src/report/data';
@@ -39,6 +40,20 @@ for (const name of readdirSync(fixtures).sort()) {
     if (code !== 0) throw new Error(`awf report failed for ${name}`);
     reports.push({ name: `${name}${share ? '-share' : ''}`, file });
   }
+}
+for (const fixture of [
+  'codex/codex-0.50-test-fix/rollout-2026-10-28T14-03-12-0199c8a1-7f2e-7b31-9a4d-3c2b1a0f9e8d.jsonl',
+  'gemini/gemini-0.11-test-fix/session-2026-10-28T14-03-5f1e2d3c.json',
+  'opencode/opencode-0.15-test-fix/storage/session/4b825dc642cb6eb9a060e54bf8d69288fbee4904/ses_5a1b2c3d4e5fXYZabcdefghij.json',
+]) {
+  const input = path.join(root, 'fixtures', fixture);
+  const agent = detectAgentFile(input);
+  if (!agent) throw new Error(`not an agent file: ${fixture}`);
+  const file = path.join(work, `${agent.agent}.html`);
+  const env = { ...process.env, AWF_HOME: path.join(work, 'home'), HOME: os.homedir() };
+  if ((await main(['report', input, '--out', file], silent, env, root)) !== 0)
+    throw new Error(`awf report failed for ${fixture}`);
+  reports.push({ name: path.dirname(fixture).split('/')[1] ?? agent.agent, file });
 }
 const synthetic = path.join(work, 'synthetic-1h.html');
 const analysis = analyze(syntheticSession(), { files: memoryFiles({}) });

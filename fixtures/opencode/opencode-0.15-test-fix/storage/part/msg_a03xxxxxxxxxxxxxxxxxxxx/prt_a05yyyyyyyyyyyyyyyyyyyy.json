@@ -1,0 +1,26 @@
+{
+  "id": "prt_a05yyyyyyyyyyyyyyyyyyyy",
+  "sessionID": "ses_5a1b2c3d4e5fXYZabcdefghij",
+  "messageID": "msg_a03xxxxxxxxxxxxxxxxxxxx",
+  "type": "tool",
+  "callID": "toolu_O1",
+  "tool": "bash",
+  "state": {
+    "status": "completed",
+    "input": {
+      "command": "npm test",
+      "description": "Run the tests"
+    },
+    "output": "\n> demo@1.0.0 test\n> node --test\n\n✖ adds two numbers (1.1ms)\n  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n  3 !== -1\n\nℹ tests 1\nℹ pass 0\nℹ fail 1\n",
+    "title": "",
+    "metadata": {
+      "output": "\n> demo@1.0.0 test\n> node --test\n\n✖ adds two numbers (1.1ms)\n  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n  3 !== -1\n\nℹ tests 1\nℹ pass 0\nℹ fail 1\n",
+      "exit": 1,
+      "description": "Run the tests"
+    },
+    "time": {
+      "start": 1793196204700,
+      "end": 1793196206500
+    }
+  }
+}

@@ -323,7 +323,13 @@ themeButton.addEventListener('click', () => {
   }
 });
 
-const agent = data.session.agent === 'claude-code' ? 'Claude Code' : data.session.agent;
+const AGENTS: Record<string, string> = {
+  'claude-code': 'Claude Code',
+  codex: 'Codex CLI',
+  gemini: 'Gemini CLI',
+  opencode: 'OpenCode',
+};
+const agent = AGENTS[data.session.agent] ?? data.session.agent;
 const meta = [
   clock(data.session.startMs, true),
   active < total
