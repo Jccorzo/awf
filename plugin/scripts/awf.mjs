@@ -114,17 +114,17 @@ var require_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP;
     visit.REMOVE = REMOVE;
-    function visit_(key, node, visitor, path22) {
-      const ctrl = callVisitor(key, node, visitor, path22);
+    function visit_(key, node, visitor, path24) {
+      const ctrl = callVisitor(key, node, visitor, path24);
       if (identity.isNode(ctrl) || identity.isPair(ctrl)) {
-        replaceNode(key, path22, ctrl);
-        return visit_(key, ctrl, visitor, path22);
+        replaceNode(key, path24, ctrl);
+        return visit_(key, ctrl, visitor, path24);
       }
       if (typeof ctrl !== "symbol") {
         if (identity.isCollection(node)) {
-          path22 = Object.freeze(path22.concat(node));
+          path24 = Object.freeze(path24.concat(node));
           for (let i = 0; i < node.items.length; ++i) {
-            const ci = visit_(i, node.items[i], visitor, path22);
+            const ci = visit_(i, node.items[i], visitor, path24);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -135,13 +135,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity.isPair(node)) {
-          path22 = Object.freeze(path22.concat(node));
-          const ck = visit_("key", node.key, visitor, path22);
+          path24 = Object.freeze(path24.concat(node));
+          const ck = visit_("key", node.key, visitor, path24);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = visit_("value", node.value, visitor, path22);
+          const cv = visit_("value", node.value, visitor, path24);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -162,17 +162,17 @@ var require_visit = __commonJS({
     visitAsync.BREAK = BREAK;
     visitAsync.SKIP = SKIP;
     visitAsync.REMOVE = REMOVE;
-    async function visitAsync_(key, node, visitor, path22) {
-      const ctrl = await callVisitor(key, node, visitor, path22);
+    async function visitAsync_(key, node, visitor, path24) {
+      const ctrl = await callVisitor(key, node, visitor, path24);
       if (identity.isNode(ctrl) || identity.isPair(ctrl)) {
-        replaceNode(key, path22, ctrl);
-        return visitAsync_(key, ctrl, visitor, path22);
+        replaceNode(key, path24, ctrl);
+        return visitAsync_(key, ctrl, visitor, path24);
       }
       if (typeof ctrl !== "symbol") {
         if (identity.isCollection(node)) {
-          path22 = Object.freeze(path22.concat(node));
+          path24 = Object.freeze(path24.concat(node));
           for (let i = 0; i < node.items.length; ++i) {
-            const ci = await visitAsync_(i, node.items[i], visitor, path22);
+            const ci = await visitAsync_(i, node.items[i], visitor, path24);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -183,13 +183,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity.isPair(node)) {
-          path22 = Object.freeze(path22.concat(node));
-          const ck = await visitAsync_("key", node.key, visitor, path22);
+          path24 = Object.freeze(path24.concat(node));
+          const ck = await visitAsync_("key", node.key, visitor, path24);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = await visitAsync_("value", node.value, visitor, path22);
+          const cv = await visitAsync_("value", node.value, visitor, path24);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -216,23 +216,23 @@ var require_visit = __commonJS({
       }
       return visitor;
     }
-    function callVisitor(key, node, visitor, path22) {
+    function callVisitor(key, node, visitor, path24) {
       if (typeof visitor === "function")
-        return visitor(key, node, path22);
+        return visitor(key, node, path24);
       if (identity.isMap(node))
-        return visitor.Map?.(key, node, path22);
+        return visitor.Map?.(key, node, path24);
       if (identity.isSeq(node))
-        return visitor.Seq?.(key, node, path22);
+        return visitor.Seq?.(key, node, path24);
       if (identity.isPair(node))
-        return visitor.Pair?.(key, node, path22);
+        return visitor.Pair?.(key, node, path24);
       if (identity.isScalar(node))
-        return visitor.Scalar?.(key, node, path22);
+        return visitor.Scalar?.(key, node, path24);
       if (identity.isAlias(node))
-        return visitor.Alias?.(key, node, path22);
+        return visitor.Alias?.(key, node, path24);
       return void 0;
     }
-    function replaceNode(key, path22, node) {
-      const parent = path22[path22.length - 1];
+    function replaceNode(key, path24, node) {
+      const parent = path24[path24.length - 1];
       if (identity.isCollection(parent)) {
         parent.items[key] = node;
       } else if (identity.isPair(parent)) {
@@ -844,10 +844,10 @@ var require_Collection = __commonJS({
     var createNode = require_createNode();
     var identity = require_identity();
     var Node = require_Node();
-    function collectionFromPath(schema, path22, value) {
+    function collectionFromPath(schema, path24, value) {
       let v = value;
-      for (let i = path22.length - 1; i >= 0; --i) {
-        const k = path22[i];
+      for (let i = path24.length - 1; i >= 0; --i) {
+        const k = path24[i];
         if (typeof k === "number" && Number.isInteger(k) && k >= 0) {
           const a = [];
           a[k] = v;
@@ -866,7 +866,7 @@ var require_Collection = __commonJS({
         sourceObjects: /* @__PURE__ */ new Map()
       });
     }
-    var isEmptyPath = (path22) => path22 == null || typeof path22 === "object" && !!path22[Symbol.iterator]().next().done;
+    var isEmptyPath = (path24) => path24 == null || typeof path24 === "object" && !!path24[Symbol.iterator]().next().done;
     var Collection = class extends Node.NodeBase {
       constructor(type, schema) {
         super(type);
@@ -896,11 +896,11 @@ var require_Collection = __commonJS({
        * be a Pair instance or a `{ key, value }` object, which may not have a key
        * that already exists in the map.
        */
-      addIn(path22, value) {
-        if (isEmptyPath(path22))
+      addIn(path24, value) {
+        if (isEmptyPath(path24))
           this.add(value);
         else {
-          const [key, ...rest] = path22;
+          const [key, ...rest] = path24;
           const node = this.get(key, true);
           if (identity.isCollection(node))
             node.addIn(rest, value);
@@ -914,8 +914,8 @@ var require_Collection = __commonJS({
        * Removes a value from the collection.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path22) {
-        const [key, ...rest] = path22;
+      deleteIn(path24) {
+        const [key, ...rest] = path24;
         if (rest.length === 0)
           return this.delete(key);
         const node = this.get(key, true);
@@ -929,8 +929,8 @@ var require_Collection = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path22, keepScalar) {
-        const [key, ...rest] = path22;
+      getIn(path24, keepScalar) {
+        const [key, ...rest] = path24;
         const node = this.get(key, true);
         if (rest.length === 0)
           return !keepScalar && identity.isScalar(node) ? node.value : node;
@@ -948,8 +948,8 @@ var require_Collection = __commonJS({
       /**
        * Checks if the collection includes a value with the key `key`.
        */
-      hasIn(path22) {
-        const [key, ...rest] = path22;
+      hasIn(path24) {
+        const [key, ...rest] = path24;
         if (rest.length === 0)
           return this.has(key);
         const node = this.get(key, true);
@@ -959,8 +959,8 @@ var require_Collection = __commonJS({
        * Sets a value in this collection. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path22, value) {
-        const [key, ...rest] = path22;
+      setIn(path24, value) {
+        const [key, ...rest] = path24;
         if (rest.length === 0) {
           this.set(key, value);
         } else {
@@ -1325,9 +1325,9 @@ ${indent}`) + "'";
         start = start.replace(/\n+/g, `$&${indent}`);
       }
       const indentSize = indent ? "2" : "1";
-      let header = (startWithSpace ? indentSize : "") + chomp;
+      let header2 = (startWithSpace ? indentSize : "") + chomp;
       if (comment) {
-        header += " " + commentString(comment.replace(/ ?[\r\n]+/g, " "));
+        header2 += " " + commentString(comment.replace(/ ?[\r\n]+/g, " "));
         if (onComment)
           onComment();
       }
@@ -1342,11 +1342,11 @@ ${indent}`) + "'";
         }
         const body = foldFlowLines.foldFlowLines(`${start}${foldedValue}${end}`, indent, foldFlowLines.FOLD_BLOCK, foldOptions);
         if (!literalFallback)
-          return `>${header}
+          return `>${header2}
 ${indent}${body}`;
       }
       value = value.replace(/\n+/g, `$&${indent}`);
-      return `|${header}
+      return `|${header2}
 ${indent}${start}${value}${end}`;
     }
     function plainString(item, ctx, onComment, onChompKeep) {
@@ -3475,9 +3475,9 @@ var require_Document = __commonJS({
           this.contents.add(value);
       }
       /** Adds a value to the document. */
-      addIn(path22, value) {
+      addIn(path24, value) {
         if (assertCollection(this.contents))
-          this.contents.addIn(path22, value);
+          this.contents.addIn(path24, value);
       }
       /**
        * Create a new `Alias` node, ensuring that the target `node` has the required anchor.
@@ -3552,14 +3552,14 @@ var require_Document = __commonJS({
        * Removes a value from the document.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path22) {
-        if (Collection.isEmptyPath(path22)) {
+      deleteIn(path24) {
+        if (Collection.isEmptyPath(path24)) {
           if (this.contents == null)
             return false;
           this.contents = null;
           return true;
         }
-        return assertCollection(this.contents) ? this.contents.deleteIn(path22) : false;
+        return assertCollection(this.contents) ? this.contents.deleteIn(path24) : false;
       }
       /**
        * Returns item at `key`, or `undefined` if not found. By default unwraps
@@ -3574,10 +3574,10 @@ var require_Document = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path22, keepScalar) {
-        if (Collection.isEmptyPath(path22))
+      getIn(path24, keepScalar) {
+        if (Collection.isEmptyPath(path24))
           return !keepScalar && identity.isScalar(this.contents) ? this.contents.value : this.contents;
-        return identity.isCollection(this.contents) ? this.contents.getIn(path22, keepScalar) : void 0;
+        return identity.isCollection(this.contents) ? this.contents.getIn(path24, keepScalar) : void 0;
       }
       /**
        * Checks if the document includes a value with the key `key`.
@@ -3588,10 +3588,10 @@ var require_Document = __commonJS({
       /**
        * Checks if the document includes a value at `path`.
        */
-      hasIn(path22) {
-        if (Collection.isEmptyPath(path22))
+      hasIn(path24) {
+        if (Collection.isEmptyPath(path24))
           return this.contents !== void 0;
-        return identity.isCollection(this.contents) ? this.contents.hasIn(path22) : false;
+        return identity.isCollection(this.contents) ? this.contents.hasIn(path24) : false;
       }
       /**
        * Sets a value in this document. For `!!set`, `value` needs to be a
@@ -3608,13 +3608,13 @@ var require_Document = __commonJS({
        * Sets a value in this document. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path22, value) {
-        if (Collection.isEmptyPath(path22)) {
+      setIn(path24, value) {
+        if (Collection.isEmptyPath(path24)) {
           this.contents = value;
         } else if (this.contents == null) {
-          this.contents = Collection.collectionFromPath(this.schema, Array.from(path22), value);
+          this.contents = Collection.collectionFromPath(this.schema, Array.from(path24), value);
         } else if (assertCollection(this.contents)) {
-          this.contents.setIn(path22, value);
+          this.contents.setIn(path24, value);
         }
       }
       /**
@@ -4449,10 +4449,10 @@ var require_resolve_block_scalar = __commonJS({
     var Scalar = require_Scalar();
     function resolveBlockScalar(ctx, scalar, onError) {
       const start = scalar.offset;
-      const header = parseBlockScalarHeader(scalar, ctx.options.strict, onError);
-      if (!header)
+      const header2 = parseBlockScalarHeader(scalar, ctx.options.strict, onError);
+      if (!header2)
         return { value: "", type: null, comment: "", range: [start, start, start] };
-      const type = header.mode === ">" ? Scalar.Scalar.BLOCK_FOLDED : Scalar.Scalar.BLOCK_LITERAL;
+      const type = header2.mode === ">" ? Scalar.Scalar.BLOCK_FOLDED : Scalar.Scalar.BLOCK_LITERAL;
       const lines = scalar.source ? splitLines(scalar.source) : [];
       let chompStart = lines.length;
       for (let i = lines.length - 1; i >= 0; --i) {
@@ -4463,26 +4463,26 @@ var require_resolve_block_scalar = __commonJS({
           break;
       }
       if (chompStart === 0) {
-        const value2 = header.chomp === "+" && lines.length > 0 ? "\n".repeat(Math.max(1, lines.length - 1)) : "";
-        let end2 = start + header.length;
+        const value2 = header2.chomp === "+" && lines.length > 0 ? "\n".repeat(Math.max(1, lines.length - 1)) : "";
+        let end2 = start + header2.length;
         if (scalar.source)
           end2 += scalar.source.length;
-        return { value: value2, type, comment: header.comment, range: [start, end2, end2] };
+        return { value: value2, type, comment: header2.comment, range: [start, end2, end2] };
       }
-      let trimIndent = scalar.indent + header.indent;
-      let offset2 = scalar.offset + header.length;
+      let trimIndent = scalar.indent + header2.indent;
+      let offset2 = scalar.offset + header2.length;
       let contentStart = 0;
       for (let i = 0; i < chompStart; ++i) {
         const [indent, content] = lines[i];
         if (content === "" || content === "\r") {
-          if (header.indent === 0 && indent.length > trimIndent)
+          if (header2.indent === 0 && indent.length > trimIndent)
             trimIndent = indent.length;
         } else {
           if (indent.length < trimIndent) {
             const message = "Block scalars with more-indented leading empty lines must use an explicit indentation indicator";
             onError(offset2 + indent.length, "MISSING_CHAR", message);
           }
-          if (header.indent === 0)
+          if (header2.indent === 0)
             trimIndent = indent.length;
           contentStart = i;
           if (trimIndent === 0 && !ctx.atRoot) {
@@ -4509,7 +4509,7 @@ var require_resolve_block_scalar = __commonJS({
         if (crlf)
           content = content.slice(0, -1);
         if (content && indent.length < trimIndent) {
-          const src = header.indent ? "explicit indentation indicator" : "first line";
+          const src = header2.indent ? "explicit indentation indicator" : "first line";
           const message = `Block scalar lines must not be less indented than their ${src}`;
           onError(offset2 - content.length - (crlf ? 2 : 1), "BAD_INDENT", message);
           indent = "";
@@ -4536,7 +4536,7 @@ var require_resolve_block_scalar = __commonJS({
           prevMoreIndented = false;
         }
       }
-      switch (header.chomp) {
+      switch (header2.chomp) {
         case "-":
           break;
         case "+":
@@ -4548,8 +4548,8 @@ var require_resolve_block_scalar = __commonJS({
         default:
           value += "\n";
       }
-      const end = start + header.length + scalar.source.length;
-      return { value, type, comment: header.comment, range: [start, end, end] };
+      const end = start + header2.length + scalar.source.length;
+      return { value, type, comment: header2.comment, range: [start, end, end] };
     }
     function parseBlockScalarHeader({ offset: offset2, props }, strict, onError) {
       if (props[0].type !== "block-scalar-header") {
@@ -5388,10 +5388,10 @@ var require_cst_scalar = __commonJS({
             type = "QUOTE_DOUBLE";
             break;
           case "block-scalar": {
-            const header = token.props[0];
-            if (header.type !== "block-scalar-header")
+            const header2 = token.props[0];
+            if (header2.type !== "block-scalar-header")
               throw new Error("Invalid block scalar header");
-            type = header.source[0] === ">" ? "BLOCK_FOLDED" : "BLOCK_LITERAL";
+            type = header2.source[0] === ">" ? "BLOCK_FOLDED" : "BLOCK_LITERAL";
             break;
           }
           default:
@@ -5423,10 +5423,10 @@ var require_cst_scalar = __commonJS({
       const head2 = source.substring(0, he);
       const body = source.substring(he + 1) + "\n";
       if (token.type === "block-scalar") {
-        const header = token.props[0];
-        if (header.type !== "block-scalar-header")
+        const header2 = token.props[0];
+        if (header2.type !== "block-scalar-header")
           throw new Error("Invalid block scalar header");
-        header.source = head2;
+        header2.source = head2;
         token.source = body;
       } else {
         const { offset: offset2 } = token;
@@ -5575,9 +5575,9 @@ var require_cst_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP;
     visit.REMOVE = REMOVE;
-    visit.itemAtPath = (cst, path22) => {
+    visit.itemAtPath = (cst, path24) => {
       let item = cst;
-      for (const [field, index] of path22) {
+      for (const [field, index] of path24) {
         const tok = item?.[field];
         if (tok && "items" in tok) {
           item = tok.items[index];
@@ -5586,23 +5586,23 @@ var require_cst_visit = __commonJS({
       }
       return item;
     };
-    visit.parentCollection = (cst, path22) => {
-      const parent = visit.itemAtPath(cst, path22.slice(0, -1));
-      const field = path22[path22.length - 1][0];
+    visit.parentCollection = (cst, path24) => {
+      const parent = visit.itemAtPath(cst, path24.slice(0, -1));
+      const field = path24[path24.length - 1][0];
       const coll = parent?.[field];
       if (coll && "items" in coll)
         return coll;
       throw new Error("Parent collection not found");
     };
-    function _visit(path22, item, visitor) {
-      let ctrl = visitor(item, path22);
+    function _visit(path24, item, visitor) {
+      let ctrl = visitor(item, path24);
       if (typeof ctrl === "symbol")
         return ctrl;
       for (const field of ["key", "value"]) {
         const token = item[field];
         if (token && "items" in token) {
           for (let i = 0; i < token.items.length; ++i) {
-            const ci = _visit(Object.freeze(path22.concat([[field, i]])), token.items[i], visitor);
+            const ci = _visit(Object.freeze(path24.concat([[field, i]])), token.items[i], visitor);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -5613,10 +5613,10 @@ var require_cst_visit = __commonJS({
             }
           }
           if (typeof ctrl === "function" && field === "key")
-            ctrl = ctrl(item, path22);
+            ctrl = ctrl(item, path24);
         }
       }
-      return typeof ctrl === "function" ? ctrl(item, path22) : ctrl;
+      return typeof ctrl === "function" ? ctrl(item, path24) : ctrl;
     }
     exports.visit = visit;
   }
@@ -7368,7 +7368,7 @@ var require_dist = __commonJS({
 });
 
 // src/cli/main.ts
-import { readFileSync as readFileSync12 } from "node:fs";
+import { readFileSync as readFileSync13 } from "node:fs";
 import { parseArgs as parseArgs2 } from "node:util";
 
 // src/version.ts
@@ -7517,7 +7517,7 @@ var Builder = class {
         this.stop(e);
         break;
       case "PreCompact":
-        this.compactStart(e.t);
+        this.compactStart(e.t, e.trigger);
         break;
       case "PostCompact":
         this.compactEnd(e.t);
@@ -7530,6 +7530,7 @@ var Builder = class {
   finish() {
     if (!Number.isFinite(this.startMs)) return this.session(0, 0);
     this.closeAll(this.endMs);
+    this.dropLateCompactions();
     for (const step of this.steps) {
       if (step.endMs < step.startMs) step.endMs = step.startMs;
     }
@@ -7601,10 +7602,15 @@ var Builder = class {
     this.main.batchOpen = false;
     this.main.lastToolEnd = null;
   }
-  /** Idle time between turns, with compactions carved out of it. */
+  /**
+   * Idle time between turns, with compactions you waited for (`/compact`) carved out of it. A
+   * compaction while you're away stays in it.
+   */
   addIdle(from, to) {
     let cursor = from;
-    const cuts = this.compactions.filter((c) => c.parentId === null && c.endMs > from && c.startMs < to).sort((a, b) => a.startMs - b.startMs);
+    const cuts = this.compactions.filter(
+      (c) => c.parentId === null && !c.flags.includes("background") && c.endMs > from && c.startMs < to
+    ).sort((a, b) => a.startMs - b.startMs);
     for (const cut of cuts) {
       if (cut.startMs > cursor) this.pushIdle(cursor, cut.startMs);
       cursor = Math.max(cursor, cut.endMs);
@@ -7825,26 +7831,55 @@ var Builder = class {
     this.closeOpenTools(this.main, e.t, "unfinished");
     this.closeTurn(e.t);
   }
-  compactStart(t) {
+  /**
+   * A compaction with no turn open that you didn't ask for is an idle compaction: Claude Code
+   * compacts a session left idle before its prompt cache expires. It runs while you're away and
+   * holds nothing up, so it's flagged background.
+   */
+  compactStart(t, trigger) {
     if (this.turn && this.main.modelStart !== null) {
       this.main.modelParts.push(this.modelStep(this.main, this.main.modelStart, t));
       this.main.modelStart = null;
     }
-    this.compaction = this.push({
+    this.compaction = this.newCompaction(t, !this.turn && trigger !== "manual");
+  }
+  newCompaction(t, idle) {
+    const step = this.push({
       id: this.id("compact"),
       parentId: this.turn?.id ?? null,
       kind: "compact",
       startMs: t,
       endMs: t,
-      flags: []
+      flags: idle ? ["background"] : []
     });
-    this.compactions.push(this.compaction);
+    this.compactions.push(step);
+    return step;
   }
   compactEnd(t) {
-    if (!this.compaction) return;
-    this.compaction.endMs = t;
+    const compaction = this.compaction;
+    if (!compaction) return;
+    compaction.endMs = t;
     this.compaction = null;
+    if (this.turn && compaction.flags.includes("background") && this.turn.startMs < t) {
+      compaction.endMs = Math.max(compaction.startMs, this.turn.startMs);
+      this.newCompaction(compaction.endMs, false).endMs = t;
+    }
     if (this.turn && this.main.open.size === 0) this.main.modelStart = t;
+  }
+  /**
+   * Time after the last turn isn't part of the session, and neither is a compaction while you were
+   * away then: it doesn't stretch the session.
+   */
+  dropLateCompactions() {
+    const lastTurnEnd = this.lastTurnEnd;
+    if (lastTurnEnd === null) return;
+    const late = new Set(
+      this.compactions.filter((c) => c.flags.includes("background") && c.startMs >= lastTurnEnd)
+    );
+    if (late.size === 0) return;
+    const kept = this.steps.filter((s) => !late.has(s));
+    this.steps.length = 0;
+    this.steps.push(...kept);
   }
   closeOpenTools(ctx, t, flag) {
     for (const step of ctx.open.values()) {
@@ -10341,10 +10376,12 @@ var Classifier = class {
     }
     for (const step of ordered) {
       if (step.kind !== "tool" || !step.tool || !BACKGROUND_TOOLS.has(step.tool)) continue;
-      const source = steps.find(
-        (s) => s !== step && s.backgroundId && s.backgroundId === step.backgroundId && s.phase && s.phase !== "unclassified"
+      if (!step.backgroundId) continue;
+      const sources = steps.filter(
+        (s) => s.backgroundId === step.backgroundId && s.phase && !(s.kind === "tool" && BACKGROUND_TOOLS.has(s.tool ?? ""))
       );
-      if (source?.phase) {
+      const source = sources.find((s) => s.kind === "background") ?? sources[0];
+      if (source?.phase && source.phase !== "unclassified") {
         step.phase = source.phase;
         step.tags = unique([...step.tags, "background-task"]);
       }
@@ -10353,7 +10390,7 @@ var Classifier = class {
       if (step.kind === "model") step.phase = this.modelPhase(step, byId);
       else if (step.kind === "idle") step.phase = "waiting";
       else if (step.kind === "compact") {
-        step.phase = "unclassified";
+        step.phase = step.flags.includes("background") ? "waiting" : "unclassified";
         step.tags = ["compaction"];
       }
     }
@@ -10622,7 +10659,7 @@ import {
   writeFileSync
 } from "node:fs";
 import path6 from "node:path";
-var IMPORT_VERSION = 3;
+var IMPORT_VERSION = 5;
 function cacheFile(id, env = process.env) {
   return path6.join(importedDir(env), `${safeId(id)}.json`);
 }
@@ -10631,7 +10668,7 @@ function readImported(id, env = process.env) {
   if (!existsSync3(file)) return void 0;
   try {
     const parsed = JSON.parse(readFileSync3(file, "utf8"));
-    return [1, 2, IMPORT_VERSION].includes(parsed.version) && parsed.session ? parsed : void 0;
+    return [1, 2, 3, 4, IMPORT_VERSION].includes(parsed.version) && parsed.session ? parsed : void 0;
   } catch {
     return void 0;
   }
@@ -10661,7 +10698,7 @@ function stripDetail(session) {
 }
 
 // src/store/sessions.ts
-import { existsSync as existsSync8, statSync as statSync5 } from "node:fs";
+import { existsSync as existsSync8, readdirSync as readdirSync7, statSync as statSync5 } from "node:fs";
 import path13 from "node:path";
 
 // src/importers/agents.ts
@@ -11699,6 +11736,10 @@ var FILE_KEYS = ["file_path", "notebook_path", "path"];
 var STOP_TOOLS = /* @__PURE__ */ new Set(["TaskStop", "KillShell", "KillBash"]);
 var TASK_REFS = /* @__PURE__ */ new Set([...STOP_TOOLS, "TaskOutput", "BashOutput"]);
 var MAX_OUTPUT2 = 4e3;
+var MONITOR_TIMEOUT_MS = 3e5;
+var MONITOR_MAX_TIMEOUT_MS = 18e5;
+var MONITOR_STARTED = /^Monitor started \(task ([\w-]+)/;
+var SHELL_STARTED = /^Command running in background with ID: ([\w-]+)/;
 function importClaudeCodeTranscript(file, options = {}) {
   const sessionId = path11.basename(file, ".jsonl");
   const reader = new TranscriptReader(options);
@@ -11739,6 +11780,10 @@ var TranscriptReader = class {
   requests = /* @__PURE__ */ new Map();
   /** Requests each agent ('' for the main one) sent since its last input, not yet answered. */
   sends = /* @__PURE__ */ new Map();
+  /** Monitor calls by tool_use_id: how long each may run before Claude Code kills it. */
+  monitors = /* @__PURE__ */ new Map();
+  /** The latest timestamp in the transcripts: Claude Code was still running then. */
+  lastMs = -Infinity;
   turnOpen = false;
   turnStart = 0;
   lastActivity = 0;
@@ -11787,6 +11832,7 @@ var TranscriptReader = class {
       if (!this.accept(entry)) continue;
       const ms = timestampMs(entry);
       if (ms === void 0) continue;
+      this.lastMs = Math.max(this.lastMs, ms);
       const agentId = entry.isSidechain === true ? str3(entry.agentId) ?? "sidechain" : void 0;
       switch (entry.type) {
         case "user":
@@ -11828,6 +11874,7 @@ var TranscriptReader = class {
     });
     for (const entry of entries2) {
       const ms = timestampMs(entry);
+      this.lastMs = Math.max(this.lastMs, ms);
       if (entry.type === "user") {
         this.sends.delete(agentId);
         this.toolResults(entry, ms, agentId);
@@ -11851,7 +11898,7 @@ var TranscriptReader = class {
       const ended = !this.turnOpen || this.turnEndMark !== void 0;
       if (messageText(entry).startsWith("[Request interrupted")) {
         if (!ended) this.lastActivity = Math.max(this.lastActivity, ms);
-      } else if (ended && !contentBlocks(entry).some((b) => b.type === "tool_result")) {
+      } else if (ended && entry.isCompactSummary !== true && !contentBlocks(entry).some((b) => b.type === "tool_result")) {
         this.pendingPrompt ??= ms;
       }
       this.toolResults(entry, ms, void 0);
@@ -11928,7 +11975,14 @@ var TranscriptReader = class {
         const type = str3(result2?.agentType);
         if (type && !this.agentTypes.has(child)) this.agentTypes.set(child, type);
       }
-      const bgid = str3(result2?.backgroundTaskId);
+      let bgid = str3(result2?.backgroundTaskId);
+      if (!bgid && !failed && use?.name === "Bash") bgid = SHELL_STARTED.exec(text)?.[1];
+      const monitor = this.monitors.get(tuid);
+      if (monitor && !failed) {
+        bgid ??= str3(result2?.taskId) ?? MONITOR_STARTED.exec(text)?.[1];
+        if (typeof result2?.timeoutMs === "number") monitor.timeoutMs = result2.timeoutMs;
+        if (result2?.persistent === true) monitor.persistent = true;
+      }
       if (bgid) event.bgid = bgid;
       this.emit(event);
       this.resolveBatch(use, tuid, ms);
@@ -12006,6 +12060,13 @@ var TranscriptReader = class {
       if (act) event.act = act;
       const ref = str3(input.task_id) ?? str3(input.bash_id) ?? str3(input.shell_id);
       if (ref) event.bgid = ref;
+      if (name === "Monitor") {
+        const asked = typeof input.timeout_ms === "number" ? input.timeout_ms : MONITOR_TIMEOUT_MS;
+        this.monitors.set(tuid, {
+          timeoutMs: Math.min(asked, MONITOR_MAX_TIMEOUT_MS),
+          persistent: input.persistent === true
+        });
+      }
       if (agentId) event.aid = agentId;
       this.emit(event);
       this.startEvents.set(tuid, this.events[this.events.length - 1]);
@@ -12091,7 +12152,8 @@ var TranscriptReader = class {
   }
   /**
    * A background shell runs from its call until its completion notice, or until a TaskStop or
-   * KillShell call stops it: a stopped task gets no notice.
+   * KillShell call stops it: a stopped task gets no notice. A Monitor's command runs the same way,
+   * and no longer than its timeout. A notice without a status (a Monitor's event) isn't an end.
    */
   addBackgroundSteps(session) {
     const stops = session.steps.filter(
@@ -12101,11 +12163,21 @@ var TranscriptReader = class {
       (s) => s.kind === "tool" && s.backgroundId && !TASK_REFS.has(s.tool ?? "")
     )) {
       const notice = this.notifications.filter(
-        (n) => (n.taskId === call.backgroundId || n.toolUseId === call.id) && n.ms >= call.startMs
+        (n) => n.status !== void 0 && (n.taskId === call.backgroundId || n.toolUseId === call.id) && n.ms >= call.startMs
       ).sort((a, b) => a.ms - b.ms)[0];
       const stop = stops.filter((s) => s.backgroundId === call.backgroundId && s.startMs >= call.endMs).sort((a, b) => a.endMs - b.endMs)[0];
       const stopped = stop !== void 0 && (!notice || stop.endMs < notice.ms);
-      const endMs = stopped ? stop.endMs : notice?.ms;
+      let endMs = stopped ? stop.endMs : notice?.ms;
+      let unfinished = false;
+      const monitor = this.monitors.get(call.id);
+      if (monitor) {
+        const deadline = Math.min(
+          monitor.persistent ? Infinity : call.endMs + monitor.timeoutMs,
+          this.lastMs
+        );
+        if (endMs === void 0) unfinished = true;
+        endMs = Math.min(endMs ?? Infinity, deadline);
+      }
       if (endMs === void 0 || endMs < call.startMs) continue;
       const step = {
         id: `bg:${call.backgroundId}`,
@@ -12113,7 +12185,7 @@ var TranscriptReader = class {
         kind: "background",
         startMs: call.startMs,
         endMs,
-        flags: stopped ? ["background", "interrupted"] : ["background"],
+        flags: stopped ? ["background", "interrupted"] : unfinished ? ["background", "unfinished"] : ["background"],
         backgroundId: call.backgroundId
       };
       if (call.tool) step.tool = call.tool;
@@ -12265,6 +12337,33 @@ function resolveSession(input, env = process.env, project) {
     throw new Error(`"${input}" matches ${matches.length} sessions; type more of the ID`);
   }
   throw new Error(`no session "${input}". Run "awf sessions" to list them, or "awf import" first.`);
+}
+function subagentFiles(transcript) {
+  const dir = path13.join(path13.dirname(transcript), path13.basename(transcript, ".jsonl"), "subagents");
+  let names;
+  try {
+    names = readdirSync7(dir);
+  } catch {
+    return void 0;
+  }
+  let size2 = 0;
+  let mtimeMs = 0;
+  for (const name of names) {
+    const stat2 = statSync5(path13.join(dir, name), { throwIfNoEntry: false });
+    if (!stat2) continue;
+    size2 += stat2.size;
+    mtimeMs = Math.max(mtimeMs, stat2.mtimeMs);
+  }
+  return { count: names.length, size: size2, mtimeMs };
+}
+function activeTranscripts(env, sinceMs) {
+  const active = [];
+  for (const file of listTranscripts(env)) {
+    const subagents = subagentFiles(file.path);
+    const activityMs = Math.max(file.mtimeMs, subagents?.mtimeMs ?? 0);
+    if (activityMs >= sinceMs) active.push({ ...file, activityMs });
+  }
+  return active.sort((a, b) => b.activityMs - a.activityMs);
 }
 function projectKey(dir) {
   return path13.resolve(dir).replace(/[^A-Za-z0-9]/g, "-");
@@ -12446,12 +12545,12 @@ function shareSession(session) {
 }
 
 // src/cli/table.ts
-function table(header, rows, right = []) {
-  const widths = header.map((h, i) => Math.max(h.length, ...rows.map((r) => (r[i] ?? "").length)));
+function table(header2, rows, right = []) {
+  const widths2 = header2.map((h, i) => Math.max(h.length, ...rows.map((r) => (r[i] ?? "").length)));
   const line = (cells) => cells.map(
-    (cell, i) => right.includes(i) ? cell.padStart(widths[i] ?? 0) : cell.padEnd(widths[i] ?? 0)
+    (cell, i) => right.includes(i) ? cell.padStart(widths2[i] ?? 0) : cell.padEnd(widths2[i] ?? 0)
   ).join("  ").trimEnd();
-  return [line(header), ...rows.map(line)].join("\n");
+  return [line(header2), ...rows.map(line)].join("\n");
 }
 function homeRelative(file, home) {
   if (!file) return "";
@@ -12613,7 +12712,7 @@ var BACKGROUND = 1;
 var IDLE = 2;
 var SERVICE = 3;
 var isBackground = (step, background) => step.kind === "background" || background(step);
-var isService = (step) => (step.kind === "background" || step.flags.includes("background")) && (step.phase === "running" || step.phase === "unclassified");
+var isService = (step) => (step.kind === "background" || step.flags.includes("background")) && (step.phase === "running" || step.phase === "unclassified" || step.kind === "background" && step.tool === "Monitor");
 function intervals(session) {
   const byId = new Map(session.steps.map((s) => [s.id, s]));
   const background = (step) => {
@@ -13234,16 +13333,1003 @@ deleting old logs. Prints the sessions, steps and any log entries awf doesn't re
   }
 };
 
-// src/cli/commands/purge.ts
-import { existsSync as existsSync9, readdirSync as readdirSync7, rmSync, statSync as statSync6 } from "node:fs";
+// src/cli/commands/live.ts
+import { readFileSync as readFileSync10, statSync as statSync7 } from "node:fs";
 import os7 from "node:os";
+import path18 from "node:path";
+
+// src/live/state.ts
+var QUESTION_TOOLS = /* @__PURE__ */ new Set([
+  "AskUserQuestion",
+  "ExitPlanMode",
+  "mcp__computer-use__request_access"
+]);
+var STOP_TOOLS2 = /* @__PURE__ */ new Set(["TaskStop", "KillShell", "KillBash"]);
+var TASK_REFS2 = /* @__PURE__ */ new Set([...STOP_TOOLS2, "TaskOutput", "BashOutput"]);
+var TASK_TOOLS = /* @__PURE__ */ new Set(["Monitor", "Workflow"]);
+var END_REASONS = /* @__PURE__ */ new Set(["end_turn", "stop_sequence"]);
+var IDLE_AFTER_MS = 5 * 6e4;
+var MAX_TITLE = 160;
+function transcriptFacts(text) {
+  let cwd;
+  let customTitle;
+  let aiTitle;
+  let firstPrompt;
+  let firstCommand;
+  let turnOpen = false;
+  let promptOnly = false;
+  let endedMs;
+  let lastMs;
+  const open = /* @__PURE__ */ new Map();
+  const tools = /* @__PURE__ */ new Map();
+  const background = /* @__PURE__ */ new Map();
+  const finished = /* @__PURE__ */ new Set();
+  const work = () => {
+    turnOpen = true;
+    promptOnly = false;
+    endedMs = void 0;
+  };
+  const end = (ms) => {
+    turnOpen = false;
+    endedMs = ms;
+    open.clear();
+  };
+  const finish = (taskId, callId) => {
+    if (taskId) {
+      finished.add(taskId);
+      background.delete(taskId);
+    }
+    if (callId) {
+      for (const [id, task] of background) if (task.id === callId) background.delete(id);
+    }
+  };
+  const notices = (text2) => {
+    for (const chunk of text2.split("<task-notification>").slice(1)) {
+      const tag = (name) => new RegExp(`<${name}>([^<]*)</${name}>`).exec(chunk)?.[1]?.trim() || void 0;
+      if (tag("status")) finish(tag("task-id"), tag("tool-use-id"));
+    }
+  };
+  for (const line of text.split("\n")) {
+    if (!line.trim()) continue;
+    let parsed;
+    try {
+      parsed = JSON.parse(line);
+    } catch {
+      continue;
+    }
+    const entry = obj3(parsed);
+    if (!entry) continue;
+    if (entry.type === "custom-title") customTitle = str3(entry.customTitle) ?? customTitle;
+    if (entry.type === "ai-title") aiTitle = str3(entry.aiTitle) ?? aiTitle;
+    if (entry.type === "cost-state") {
+      if (turnOpen && lastMs !== void 0) end(lastMs);
+      open.clear();
+      background.clear();
+      continue;
+    }
+    if (entry.isSidechain === true) continue;
+    const ms = timestampMs(entry);
+    if (ms === void 0) continue;
+    cwd ??= str3(entry.cwd);
+    lastMs = Math.max(lastMs ?? ms, ms);
+    switch (entry.type) {
+      case "user": {
+        const kind = promptKind(entry);
+        const text2 = messageText(entry);
+        if (kind !== "none") {
+          if (kind === "notification") notices(text2);
+          else if (!firstPrompt) {
+            const clean2 = oneLine3(text2);
+            if (clean2.startsWith("/")) firstCommand ??= clean2;
+            else if (clean2) firstPrompt = clean2;
+          }
+          work();
+          promptOnly = true;
+          break;
+        }
+        if (promptOnly && turnOpen && text2.trimStart().startsWith("<local-command-stdout>")) {
+          end(ms);
+          break;
+        }
+        const result2 = obj3(entry.toolUseResult);
+        for (const block of contentBlocks(entry)) {
+          if (block.type !== "tool_result") continue;
+          const id = str3(block.tool_use_id);
+          if (!id) continue;
+          if (open.delete(id)) work();
+          const tool = tools.get(id);
+          if (block.is_error === true || !result2 || !tool || TASK_REFS2.has(tool)) continue;
+          const taskId = str3(result2.backgroundTaskId) ?? (result2.isAsync === true || result2.status === "async_launched" ? str3(result2.agentId) : void 0) ?? (TASK_TOOLS.has(tool) ? str3(result2.taskId) : void 0);
+          if (taskId && !finished.has(taskId)) background.set(taskId, { id, tool, ms });
+        }
+        if (text2.trimStart().startsWith("[Request interrupted")) end(ms);
+        break;
+      }
+      case "assistant": {
+        work();
+        if (entry.isApiErrorMessage === true) {
+          end(ms);
+          break;
+        }
+        let calls = false;
+        for (const block of contentBlocks(entry)) {
+          if (block.type !== "tool_use") continue;
+          const id = str3(block.id);
+          const tool = str3(block.name);
+          if (!id || !tool) continue;
+          calls = true;
+          open.set(id, { id, tool, ms });
+          tools.set(id, tool);
+          if (STOP_TOOLS2.has(tool)) {
+            const input = obj3(block.input) ?? {};
+            finish(str3(input.task_id) ?? str3(input.bash_id) ?? str3(input.shell_id));
+          }
+        }
+        const reason = str3(obj3(entry.message)?.stop_reason);
+        if (!calls && reason && END_REASONS.has(reason) && open.size === 0) end(ms);
+        break;
+      }
+      case "api-request":
+        work();
+        break;
+      case "system": {
+        const subtype = str3(entry.subtype);
+        if (subtype === "turn_duration" || subtype === "stop_hook_summary") end(ms);
+        break;
+      }
+      case "queue-operation":
+        if (entry.operation === "enqueue") notices(str3(entry.content) ?? "");
+        break;
+      case "attachment":
+        notices(JSON.stringify(entry.attachment ?? ""));
+        break;
+    }
+  }
+  const facts = {
+    turnOpen,
+    openCalls: [...open.values()],
+    background: [...background.values()]
+  };
+  if (cwd) facts.cwd = cwd;
+  const title = oneLine3(customTitle ?? "") || oneLine3(aiTitle ?? "") || firstPrompt || firstCommand;
+  if (title) facts.title = title;
+  if (endedMs !== void 0) facts.endedMs = endedMs;
+  if (lastMs !== void 0) facts.lastMs = lastMs;
+  return facts;
+}
+function oneLine3(text) {
+  const plain = text.replace(/<(system-reminder|local-command-caveat|command-message)>[\s\S]*?<\/\1>/g, " ").replace(/<command-name>([^<]*)<\/command-name>/g, "$1 ").replace(/<\/?[a-z][a-z0-9_-]*(?:\s[^>]*)?>/gi, " ").replace(/[\u0000-\u001f\u007f-\u009f]/g, " ").replace(/\s+/g, " ").trim();
+  const masked = maskSecrets(plain);
+  return masked.length > MAX_TITLE ? masked.slice(0, MAX_TITLE - 1) + "\u2026" : masked;
+}
+function liveState(facts, now, events) {
+  const background = facts.background.length;
+  if (facts.turnOpen) {
+    const question = facts.openCalls.find((c) => QUESTION_TOOLS.has(c.tool));
+    if (question) return waiting(question.ms, now, background, question.tool);
+  }
+  if (facts.turnOpen || background > 0) {
+    if (events && approvalPending(events, facts)) return { kind: "approval", background };
+    return { kind: "working", why: facts.turnOpen ? "turn" : "background", background };
+  }
+  return waiting(facts.endedMs ?? facts.lastMs ?? now, now, background);
+}
+function waiting(sinceMs, now, background, question) {
+  const state = {
+    kind: now - sinceMs >= IDLE_AFTER_MS ? "idle" : "your-turn",
+    sinceMs,
+    background
+  };
+  if (question) state.question = question;
+  return state;
+}
+function approvalPending(events, facts) {
+  const calls = [];
+  const ended = /* @__PURE__ */ new Set();
+  const stopped = /* @__PURE__ */ new Set();
+  const requests = [];
+  for (const event of events) {
+    switch (event.e) {
+      case "PreToolUse":
+        if (event.tuid) calls.push(event);
+        break;
+      case "PostToolUse":
+      case "PostToolUseFailure":
+      case "PermissionDenied":
+        if (event.tuid) ended.add(event.tuid);
+        break;
+      case "SubagentStop":
+        if (event.aid) stopped.add(event.aid);
+        break;
+      case "PermissionRequest":
+        requests.push(event);
+        break;
+    }
+  }
+  const openInTranscript = new Set(facts.openCalls.map((c) => c.id));
+  return requests.some((request) => {
+    if (!request.ih) return false;
+    const call = calls.findLast(
+      (c) => c.ih === request.ih && c.tool === request.tool && c.aid === request.aid && !ended.has(c.tuid)
+    );
+    if (!call) return false;
+    return call.aid ? !stopped.has(call.aid) : openInTranscript.has(call.tuid);
+  });
+}
+function stateLabel(state, now) {
+  switch (state.kind) {
+    case "working":
+      return "working";
+    case "approval":
+      return "approval?";
+    case "your-turn":
+      return "your turn";
+    case "idle":
+      return `idle ${idleFor(now - (state.sinceMs ?? now))}`;
+  }
+}
+function idleFor(ms) {
+  const minutes = Math.max(0, Math.floor(ms / 6e4));
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h${String(minutes % 60).padStart(2, "0")}m`;
+  return `${Math.floor(hours / 24)}d`;
+}
+
+// src/cli/board.ts
+import path17 from "node:path";
+
+// src/cli/commands/statusline.ts
+import {
+  mkdirSync as mkdirSync2,
+  readdirSync as readdirSync8,
+  readFileSync as readFileSync9,
+  renameSync as renameSync2,
+  rmSync,
+  statSync as statSync6,
+  writeFileSync as writeFileSync2
+} from "node:fs";
 import path16 from "node:path";
+var FORMAT = 2;
+var MAX_WIDTH = 64;
+var KEEP_MS = 30 * 864e5;
+var SHORT_NAME = {
+  "writing-code": "code",
+  "writing-tests": "test code",
+  lint: "lint",
+  tests: "tests",
+  build: "build",
+  rework: "rework",
+  exploring: "explore",
+  running: "scripts",
+  planning: "plan",
+  waiting: "waiting",
+  unclassified: "unclassified"
+};
+var COLOR = {
+  "writing-code": "#2a78d6",
+  "writing-tests": "#d95926",
+  lint: "#199e70",
+  tests: "#c98500",
+  build: "#d55181",
+  rework: "#7a6ae0",
+  exploring: "#008300",
+  running: "#2a8ca3",
+  planning: "#7b8494",
+  waiting: "#a9a8a0",
+  unclassified: "#8c8b84"
+};
+var FAILED_COLOR = "#d03b3b";
+var DEFAULT_PIN = ["tests"];
+function parsePin(value) {
+  if (value === void 0) return DEFAULT_PIN;
+  const byName = /* @__PURE__ */ new Map();
+  for (const [id, name] of Object.entries(SHORT_NAME)) {
+    byName.set(id, id);
+    byName.set(name, id);
+  }
+  const pins = value.split(",").map((name) => byName.get(name.trim()));
+  return [...new Set(pins)].filter((p) => p !== void 0 && p !== "waiting");
+}
+function statusParts(summary, top = 3, pinned = DEFAULT_PIN) {
+  const working = summary.phases.filter((p) => p.phase !== "waiting");
+  const workingMs = working.reduce((n, p) => n + p.ms, 0);
+  const share = (ms) => workingMs > 0 ? ms / workingMs : 0;
+  const pins = pinned.map((phase) => {
+    const ms = working.find((p) => p.phase === phase)?.ms ?? 0;
+    return { phase, ms, share: share(ms), pinned: true };
+  });
+  const others = working.filter((p) => p.ms > 0 && !pinned.includes(p.phase)).sort((a, b) => b.ms - a.ms).slice(0, Math.max(0, top - pins.length)).map((p) => ({ phase: p.phase, ms: p.ms, share: share(p.ms) }));
+  return {
+    // Nothing worked yet: no line rather than "tests 0%".
+    phases: workingMs > 0 ? [...pins, ...others] : [],
+    failed: summary.phases.reduce((n, p) => n + (p.failed ?? 0), 0),
+    reworkMs: summary.phases.find((p) => p.phase === "rework")?.ms ?? 0,
+    workingMs
+  };
+}
+function shortDuration(ms) {
+  const s = Math.round(ms / 1e3);
+  if (s < 60) return `${s}s`;
+  const m = Math.round(s / 60);
+  if (m < 60) return `${m}m`;
+  return `${Math.floor(m / 60)}h${String(m % 60).padStart(2, "0")}m`;
+}
+function percent(share) {
+  if (share === 0) return "0%";
+  const n = Math.round(share * 100);
+  return n === 0 ? "<1%" : `${n}%`;
+}
+function colorMode(env) {
+  if (env.NO_COLOR) return "none";
+  return /truecolor|24bit/i.test(env.COLORTERM ?? "") ? "truecolor" : "256";
+}
+function xterm256(r, g, b) {
+  const levels = [0, 95, 135, 175, 215, 255];
+  const nearest2 = (v) => levels.reduce(
+    (best, level, i) => Math.abs(level - v) < Math.abs(levels[best] - v) ? i : best,
+    0
+  );
+  return 16 + 36 * nearest2(r) + 6 * nearest2(g) + nearest2(b);
+}
+function paint(text, hex, mode) {
+  if (mode === "none") return text;
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const code = mode === "truecolor" ? `38;2;${r};${g};${b}` : `38;5;${xterm256(r, g, b)}`;
+  return `\x1B[${code}m${text}\x1B[39m`;
+}
+function renderStatus(parts, mode) {
+  const phases = parts.phases.map((p) => ({
+    name: SHORT_NAME[p.phase],
+    color: COLOR[p.phase],
+    value: percent(p.share),
+    ...p.pinned ? { pinned: true } : {}
+  }));
+  if (phases.length === 0) return "";
+  const tail = [];
+  if (parts.failed > 0) tail.push({ name: `${parts.failed} failed`, color: FAILED_COLOR });
+  if (parts.reworkMs >= 1e3 && !parts.phases.some((p) => p.phase === "rework"))
+    tail.push({ name: "rework", color: COLOR.rework, value: shortDuration(parts.reworkMs) });
+  const text = (item) => item.value ? `${item.name} ${item.value}` : item.name;
+  const width = (items) => items.map(text).join(" \xB7 ").length;
+  while (phases.length > 1 && width([...phases, ...tail]) > MAX_WIDTH) {
+    const last = phases.map((p) => !p.pinned).lastIndexOf(true);
+    if (last < 0) break;
+    phases.splice(last, 1);
+  }
+  const separator = mode === "none" ? " \xB7 " : " \x1B[2m\xB7\x1B[22m ";
+  return [...phases, ...tail].map((item) => paint(item.name, item.color, mode) + (item.value ? ` ${item.value}` : "")).join(separator);
+}
+function stamp(stat2) {
+  return stat2 ? `${stat2.size}:${stat2.mtimeMs}` : "-";
+}
+function subagentStamp(transcript) {
+  const files2 = subagentFiles(transcript);
+  return files2 ? `${files2.count}:${files2.size}:${files2.mtimeMs}` : "-";
+}
+function readCache(file, key) {
+  try {
+    const cached = JSON.parse(readFileSync9(file, "utf8"));
+    return cached.key === key && typeof cached.line === "string" ? cached.line : void 0;
+  } catch {
+    return void 0;
+  }
+}
+function writeCache(file, key, line, now) {
+  try {
+    const dir = path16.dirname(file);
+    mkdirSync2(dir, { recursive: true });
+    const temp = `${file}.${process.pid}.tmp`;
+    writeFileSync2(temp, JSON.stringify({ key, line }));
+    renameSync2(temp, file);
+    for (const name of readdirSync8(dir)) {
+      const other = path16.join(dir, name);
+      const stat2 = statSync6(other, { throwIfNoEntry: false });
+      if (stat2 && now - stat2.mtimeMs > KEEP_MS) rmSync(other, { force: true });
+    }
+  } catch {
+  }
+}
+function lineSource(env, transcript, id) {
+  if (!transcript.endsWith(".jsonl")) return void 0;
+  const transcriptStat = statSync6(transcript, { throwIfNoEntry: false });
+  if (!transcriptStat?.isFile()) return void 0;
+  const events = path16.join(eventsDir(env), `${safeId(id)}.jsonl`);
+  const eventsStat = statSync6(events, { throwIfNoEntry: false });
+  return { id, transcript, transcriptStat, events, eventsStat };
+}
+function cacheKey(source, mode, pin) {
+  return [
+    FORMAT,
+    VERSION,
+    // A new importer reads the same transcript differently: lines cached before it are stale.
+    IMPORT_VERSION,
+    mode,
+    pin.join(","),
+    stamp(source.transcriptStat),
+    stamp(source.eventsStat),
+    subagentStamp(source.transcript)
+  ].join("|");
+}
+function cachePath(env, id) {
+  return path16.join(cacheDir(env), "statusline", `${safeId(id)}.json`);
+}
+function sessionSummary(env, source) {
+  const ref = resolveSession(source.transcript, env);
+  if (source.eventsStat?.isFile())
+    ref.events = {
+      id: source.id,
+      path: source.events,
+      mtimeMs: source.eventsStat.mtimeMs,
+      size: source.eventsStat.size
+    };
+  return summarize(classifier()(loadSession(ref, { detail: true, env }))).summary;
+}
+function phaseLine(ctx, transcript, id, options = {}) {
+  const source = lineSource(ctx.env, transcript, id);
+  if (!source) return void 0;
+  const mode = options.mode ?? colorMode(ctx.env);
+  const pin = options.pin ?? DEFAULT_PIN;
+  return cachedLine(ctx, source, mode, pin, options.cachedOnly ?? false);
+}
+function cachedLine(ctx, source, mode, pin, cachedOnly) {
+  const key = cacheKey(source, mode, pin);
+  const file = cachePath(ctx.env, source.id);
+  const cached = readCache(file, key);
+  if (cached !== void 0 || cachedOnly) return cached;
+  const line = renderStatus(statusParts(sessionSummary(ctx.env, source), 3, pin), mode);
+  writeCache(file, key, line, ctx.now);
+  return line;
+}
+function statusLine(ctx, input, json, pin) {
+  const payload = JSON.parse(input);
+  const transcript = payload?.transcript_path;
+  if (typeof transcript !== "string") return "";
+  const id = typeof payload?.session_id === "string" && payload.session_id ? payload.session_id : path16.basename(transcript, ".jsonl");
+  const source = lineSource(ctx.env, transcript, id);
+  if (!source) return "";
+  if (!json) return cachedLine(ctx, source, colorMode(ctx.env), pin, false) ?? "";
+  const summary = sessionSummary(ctx.env, source);
+  const parts = statusParts(summary, 3, pin);
+  return JSON.stringify(
+    {
+      id: summary.id,
+      sources: summary.sources,
+      workingMs: parts.workingMs,
+      phases: parts.phases.map((p) => ({
+        ...p,
+        label: PHASE_LABEL[p.phase],
+        name: SHORT_NAME[p.phase]
+      })),
+      failed: parts.failed,
+      reworkMs: parts.reworkMs,
+      line: renderStatus(parts, "none")
+    },
+    null,
+    2
+  );
+}
+var statuslineCommand = {
+  summary: "One short line for Claude Code's status line: the session's phase split so far",
+  usage: `Usage: awf statusline [--pin tests] [--json]
+
+For Claude Code's status line. Reads the JSON Claude Code sends on stdin (session_id,
+transcript_path), and prints one line: Running tests, always and first, then the phases that
+took the most time so far (three phases in all), then failed lint, test and build runs, and
+rework time when it isn't one of the phases shown:
+
+  tests 3% \xB7 build 32% \xB7 scripts 26% \xB7 9 failed \xB7 rework 9s
+
+Shares are of the time the agent worked, without Waiting on you, so they hold still while you're
+away. Phases are named code, test code, lint, tests, build, rework, explore, scripts, plan and
+unclassified. Colours follow the report; NO_COLOR turns them off.
+
+It never breaks the status line: on any error it prints nothing and exits 0 (AWF_DEBUG=1 prints
+the error on stderr). The line is kept in ~/.awf/cache/statusline/ until the transcript, the
+recorder's events or a subagent's transcript changes.
+
+Set it up in ~/.claude/settings.json:
+  "statusLine": { "type": "command", "command": "awf statusline", "padding": 0 }
+
+  --pin <phases>  the phases always shown, first: ids or short names, comma-separated
+                  (default tests; "tests,build"; "none" for only the top three)
+  --json          print the phases, failures and rework as JSON (not cached)`,
+  options: { json: { type: "boolean" }, pin: { type: "string" } },
+  run(ctx, _args, options) {
+    let input;
+    try {
+      input = ctx.io.input?.();
+    } catch {
+      return 0;
+    }
+    if (input === void 0) {
+      ctx.io.err(
+        'awf statusline reads the JSON Claude Code sends on stdin. Run "awf statusline --help".'
+      );
+      return 0;
+    }
+    try {
+      const pin = parsePin(typeof options.pin === "string" ? options.pin : void 0);
+      const line = statusLine(ctx, input, Boolean(options.json), pin);
+      if (line) ctx.io.out(line);
+    } catch (error) {
+      if (ctx.env.AWF_DEBUG)
+        ctx.io.err(`awf statusline: ${error instanceof Error ? error.message : String(error)}`);
+    }
+    return 0;
+  }
+};
+
+// src/cli/board.ts
+var CONTAINERS = /* @__PURE__ */ new Set([
+  "Documents",
+  "Developer",
+  "Projects",
+  "projects",
+  "Code",
+  "code",
+  "src",
+  "dev",
+  "Dev",
+  "repos",
+  "Repos",
+  "git",
+  "GitHub",
+  "github",
+  "workspace",
+  "Workspace",
+  "work",
+  "Work"
+]);
+var GAP = "   ";
+var MAX_PROJECT = 24;
+var MAX_TITLE2 = 26;
+var MIN_TITLE = 12;
+var MIN_LINE = 20;
+function projectName(cwd, home) {
+  const resolved = path17.resolve(cwd);
+  if (!home || resolved !== home && !resolved.startsWith(home + path17.sep)) return resolved;
+  const parts = path17.relative(home, resolved).split(path17.sep).filter(Boolean);
+  if (parts.length === 0) return "~";
+  if (parts.length > 1 && CONTAINERS.has(parts[0])) parts.shift();
+  return parts.join("/");
+}
+var ANSI = /\x1b\[[0-9;?]*[A-Za-z]/g;
+var WIDE = /[\u1100-\u115f\u2e80-\u303e\u3041-\u33ff\u3400-\u4dbf\u4e00-\u9fff\ua000-\ua4cf\uac00-\ud7a3\uf900-\ufaff\ufe30-\ufe4f\uff00-\uff60\uffe0-\uffe6\u{1f300}-\u{1f64f}\u{1f900}-\u{1f9ff}\u{20000}-\u{3fffd}]/u;
+var ZERO = /[\p{Mn}\p{Me}\p{Cf}]/u;
+function charWidth(char) {
+  if (ZERO.test(char)) return 0;
+  return WIDE.test(char) ? 2 : 1;
+}
+function textWidth(text) {
+  let width = 0;
+  for (const char of text.replace(ANSI, "")) width += charWidth(char);
+  return width;
+}
+function truncate(text, width) {
+  if (textWidth(text) <= width) return text;
+  if (width <= 0) return "";
+  let out = "";
+  let used = 0;
+  let styled = false;
+  for (const token of text.split(/(\x1b\[[0-9;?]*[A-Za-z])/)) {
+    if (token.startsWith("\x1B[")) {
+      out += token;
+      styled = true;
+      continue;
+    }
+    for (const char of token) {
+      const w = charWidth(char);
+      if (used + w > width - 1) return out.trimEnd() + "\u2026" + (styled ? "\x1B[0m" : "");
+      out += char;
+      used += w;
+    }
+  }
+  return out;
+}
+function pad2(text, width) {
+  return text + " ".repeat(Math.max(0, width - textWidth(text)));
+}
+var SEPARATOR = / \x1b\[2m·\x1b\[22m | · /;
+function fitLine(line, width) {
+  if (textWidth(line) <= width) return line;
+  const items = line.split(SEPARATOR);
+  const separators = line.match(new RegExp(SEPARATOR.source, "g")) ?? [];
+  while (items.length > 1) {
+    items.pop();
+    const joined = items.map((item, i) => i === 0 ? item : separators[i - 1] + item).join("");
+    if (textWidth(joined) <= width) return joined;
+  }
+  return truncate(items[0] ?? "", width);
+}
+function fitProject(name, width) {
+  if (textWidth(name) <= width) return name;
+  const parts = name.split("/");
+  for (let i = 1; i < parts.length; i++) {
+    const tail = "\u2026/" + parts.slice(i).join("/");
+    if (textWidth(tail) <= width) return tail;
+  }
+  return truncate(parts.at(-1) ?? name, width);
+}
+function style(text, code, mode) {
+  if (mode === "none") return text;
+  return code === "bold" ? `\x1B[1m${text}\x1B[22m` : `\x1B[2m${text}\x1B[22m`;
+}
+function paintState(label2, kind, mode) {
+  switch (kind) {
+    case "approval":
+      return style(paint(label2, FAILED_COLOR, mode), "bold", mode);
+    case "your-turn":
+      return style(label2, "bold", mode);
+    case "idle":
+      return style(label2, "dim", mode);
+    default:
+      return label2;
+  }
+}
+function widths(rows, columns) {
+  const most = (values) => Math.max(0, ...values.map((v) => textWidth(v ?? "")));
+  let project = Math.min(MAX_PROJECT, most(rows.map((r) => r.project)));
+  const state = most(rows.map((r) => r.label));
+  const fullTitle = Math.min(MAX_TITLE2, most(rows.map((r) => r.title)));
+  const fullLine = most(rows.map((r) => r.line));
+  if (columns === void 0) return { project, title: fullTitle, state, line: fullLine };
+  const gap = GAP.length;
+  let room = columns - project - gap - state;
+  if (room < 0) {
+    project = Math.max(1, project + room);
+    room = columns - project - gap - state;
+  }
+  const shortTitle = Math.min(MIN_TITLE, fullTitle);
+  const withTitle = shortTitle > 0 && room >= gap + shortTitle + gap + Math.min(MIN_LINE, fullLine);
+  let line = Math.min(fullLine, Math.max(0, room - gap - (withTitle ? gap + shortTitle : 0)));
+  if (line < Math.min(MIN_LINE, fullLine)) line = 0;
+  const used = line > 0 ? most(rows.map((r) => r.line ? fitLine(r.line, line) : "")) : 0;
+  const title = withTitle ? Math.min(fullTitle, room - gap - (used > 0 ? used + gap : 0)) : 0;
+  return { project, title, state, line };
+}
+function renderBoard(header2, rows, layout) {
+  const { mode, columns, height } = layout;
+  const w = widths(rows, columns);
+  let shown = rows;
+  let more = 0;
+  if (height !== void 0 && rows.length + 1 > height) {
+    shown = rows.slice(0, Math.max(0, height - 2));
+    more = rows.length - shown.length;
+  }
+  const lines = shown.map((row) => {
+    const cells = [pad2(fitProject(row.project, w.project), w.project)];
+    if (w.title > 0) cells.push(pad2(truncate(row.title ?? "", w.title), w.title));
+    cells.push(pad2(paintState(row.label, row.state, mode), w.state));
+    if (w.line > 0 && row.line) cells.push(fitLine(row.line, w.line));
+    return cells.join(GAP).trimEnd();
+  });
+  if (more > 0) lines.push(style(`\u2026 ${more} more`, "dim", mode));
+  const top = style(columns === void 0 ? header2 : truncate(header2, columns), "dim", mode);
+  return [top, ...lines].map((l) => columns === void 0 ? l : truncate(l, columns));
+}
+
+// src/cli/commands/live.ts
+function newMemo() {
+  return { facts: /* @__PURE__ */ new Map(), events: /* @__PURE__ */ new Map(), lines: /* @__PURE__ */ new Map() };
+}
+function readFacts(file, memo) {
+  const stamp2 = `${file.size}:${file.mtimeMs}`;
+  const known = memo.facts.get(file.path);
+  if (known?.stamp === stamp2) return known.facts;
+  const facts = transcriptFacts(readFileSync10(file.path, "utf8"));
+  memo.facts.set(file.path, { stamp: stamp2, facts });
+  return facts;
+}
+function readSessionEvents(env, id, memo) {
+  const file = path18.join(eventsDir(env), `${safeId(id)}.jsonl`);
+  const stat2 = statSync7(file, { throwIfNoEntry: false });
+  if (!stat2?.isFile()) return void 0;
+  const stamp2 = `${stat2.size}:${stat2.mtimeMs}`;
+  const known = memo.events.get(file);
+  if (known?.stamp === stamp2) return known.events;
+  const events = readEvents(file);
+  memo.events.set(file, { stamp: stamp2, events });
+  return events;
+}
+function scan(ctx, options, memo, now) {
+  const active = activeTranscripts(ctx.env, now - options.sinceMs);
+  const home = ctx.env.HOME || os7.homedir();
+  const rows = [];
+  let skipped = 0;
+  for (const file of active) {
+    if (rows.length >= options.limit) break;
+    let row;
+    try {
+      row = readRow(ctx, file, memo, now, home);
+    } catch {
+      row = void 0;
+    }
+    if (row) rows.push(row);
+    else skipped++;
+  }
+  const shown = new Set(rows.map((row) => row.id));
+  const files2 = new Set(active.map((file) => file.path));
+  for (const file of memo.facts.keys()) if (!files2.has(file)) memo.facts.delete(file);
+  for (const id of memo.lines.keys()) if (!shown.has(id)) memo.lines.delete(id);
+  for (const file of memo.events.keys())
+    if (!shown.has(path18.basename(file, ".jsonl"))) memo.events.delete(file);
+  return { rows, total: active.length - skipped };
+}
+function readRow(ctx, file, memo, now, home) {
+  const facts = readFacts(file, memo);
+  if (facts.lastMs === void 0) return void 0;
+  let events;
+  try {
+    events = readSessionEvents(ctx.env, file.id, memo);
+  } catch {
+    events = void 0;
+  }
+  const state = liveState(facts, now, events);
+  const row = {
+    id: file.id,
+    transcript: file.path,
+    project: facts.cwd ? projectName(facts.cwd, home) : file.project,
+    state,
+    label: stateLabel(state, now),
+    activityMs: file.activityMs
+  };
+  if (facts.cwd) row.cwd = facts.cwd;
+  if (facts.title) row.title = facts.title;
+  return row;
+}
+function fillLine(ctx, row, options, mode, now, cachedOnly) {
+  try {
+    const line = phaseLine({ env: ctx.env, now }, row.transcript, row.id, {
+      pin: options.pin,
+      mode,
+      cachedOnly
+    });
+    if (line === void 0) {
+      if (cachedOnly) return false;
+      row.error = "transcript not found";
+      return true;
+    }
+    row.line = line;
+    delete row.error;
+    return true;
+  } catch (error) {
+    row.error = error instanceof Error ? error.message : String(error);
+    delete row.line;
+    return true;
+  }
+}
+function clock(ms) {
+  const d = new Date(ms);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+function every(ms) {
+  return ms % 6e4 === 0 ? `${ms / 6e4}m` : `${Math.round(ms / 1e3)}s`;
+}
+function header(total, shown, options, now, live) {
+  const count2 = total === 0 ? `nothing active in the last ${options.since}` : shown < total ? `${total} active, ${shown} shown` : `${total} active`;
+  return ["awf live", count2, ...live ? [`every ${every(options.everyMs)}`] : [], clock(now)].join(
+    " \xB7 "
+  );
+}
+function boardRows(rows) {
+  return rows.map((row) => {
+    const board = { project: row.project, label: row.label, state: row.state.kind };
+    if (row.title) board.title = row.title;
+    if (row.line) board.line = row.line;
+    return board;
+  });
+}
+var ANSI2 = /\x1b\[[0-9;]*m/g;
+function jsonRow(row) {
+  return {
+    id: row.id,
+    project: row.project,
+    cwd: row.cwd,
+    title: row.title,
+    state: row.state.kind,
+    label: row.label,
+    ...row.state.sinceMs !== void 0 ? { sinceMs: row.state.sinceMs } : {},
+    ...row.state.question ? { question: row.state.question } : {},
+    background: row.state.background,
+    activityMs: row.activityMs,
+    line: row.line?.replace(ANSI2, ""),
+    ...row.error ? { error: row.error } : {},
+    transcript: row.transcript
+  };
+}
+var SHOW_CURSOR = "\x1B[?25h";
+var HIDE_CURSOR = "\x1B[?25l";
+var processTerminal = {
+  get isTTY() {
+    return Boolean(process.stdout.isTTY);
+  },
+  // A terminal that reports no size (0) has none to fit.
+  get columns() {
+    return process.stdout.isTTY && process.stdout.columns || void 0;
+  },
+  get rows() {
+    return process.stdout.isTTY && process.stdout.rows || void 0;
+  },
+  write: (text) => process.stdout.write(text),
+  onResize(listener) {
+    process.stdout.on("resize", listener);
+    return () => process.stdout.off("resize", listener);
+  },
+  onStop(listener) {
+    const signals = ["SIGINT", "SIGTERM", "SIGHUP"];
+    for (const signal of signals) process.on(signal, listener);
+    const restore = () => process.stdout.write(SHOW_CURSOR);
+    process.on("exit", restore);
+    return () => {
+      for (const signal of signals) process.off(signal, listener);
+      process.off("exit", restore);
+    };
+  }
+};
+function columnsOf(env, terminal, live) {
+  const fromEnv = Number(env.COLUMNS);
+  const set = Number.isInteger(fromEnv) && fromEnv > 0 ? fromEnv : void 0;
+  return live ? terminal.columns ?? set : set ?? terminal.columns;
+}
+function onePass(ctx, options, mode) {
+  const memo = newMemo();
+  const pass = scan(ctx, options, memo, ctx.now);
+  for (const row of pass.rows) {
+    fillLine(ctx, row, options, mode, ctx.now, false);
+    if (row.error && ctx.env.AWF_DEBUG) ctx.io.err(`awf live: ${row.id}: ${row.error}`);
+  }
+  return pass;
+}
+function liveLoop(ctx, options, terminal, now = Date.now) {
+  const mode = colorMode(ctx.env);
+  const memo = newMemo();
+  let frame;
+  let stopped = false;
+  let timer;
+  const draw = () => {
+    if (!frame || stopped) return;
+    const lines = renderBoard(frame.header, boardRows(frame.rows), {
+      mode,
+      columns: columnsOf(ctx.env, terminal, true),
+      height: terminal.rows
+    });
+    terminal.write("\x1B[H" + lines.map((line) => line + "\x1B[K").join("\n") + "\x1B[J");
+  };
+  return new Promise((resolve2) => {
+    const stop = () => {
+      if (stopped) return;
+      stopped = true;
+      if (timer) clearTimeout(timer);
+      offResize();
+      offStop();
+      terminal.write("\n" + SHOW_CURSOR);
+      resolve2(0);
+    };
+    const offStop = terminal.onStop(stop);
+    const offResize = terminal.onResize(draw);
+    terminal.write(HIDE_CURSOR + "\x1B[H\x1B[2J");
+    const pass = async () => {
+      const started = now();
+      try {
+        const { rows, total } = scan(ctx, options, memo, started);
+        const stale = [];
+        for (const row of rows) {
+          if (fillLine(ctx, row, options, mode, started, true)) continue;
+          const last = memo.lines.get(row.id);
+          if (last !== void 0) row.line = last;
+          stale.push(row);
+        }
+        frame = { header: header(total, rows.length, options, started, true), rows };
+        draw();
+        for (const row of stale) {
+          await new Promise((next) => setImmediate(next));
+          if (stopped) return;
+          fillLine(ctx, row, options, mode, started, false);
+          if (row.line !== void 0) memo.lines.set(row.id, row.line);
+          draw();
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        frame = { header: `awf live \xB7 ${message} \xB7 ${clock(started)}`, rows: [] };
+        draw();
+      }
+      if (stopped) return;
+      timer = setTimeout(pass, Math.max(1e3, options.everyMs - (now() - started)));
+    };
+    void pass();
+  });
+}
+function parseEvery(value) {
+  const match = /^(\d+(?:\.\d+)?)\s*(s|m)?$/.exec(value.trim());
+  if (!match) throw new Error(`can't read --every "${value}": use seconds, like 20 or 20s, or 1m`);
+  const ms = Number(match[1]) * (match[2] === "m" ? 6e4 : 1e3);
+  if (ms < 1e3) throw new Error("--every is at least 1s");
+  return ms;
+}
+function liveOptions(options) {
+  const since = typeof options.since === "string" ? options.since : "2h";
+  const limit = typeof options.limit === "string" ? Number(options.limit) : 10;
+  if (!Number.isInteger(limit) || limit < 1)
+    throw new Error(`--limit is a whole number of sessions, like 10`);
+  return {
+    since,
+    sinceMs: parseSince(since),
+    limit,
+    everyMs: typeof options.every === "string" ? parseEvery(options.every) : 2e4,
+    pin: parsePin(typeof options.pin === "string" ? options.pin : void 0)
+  };
+}
+var liveCommand = {
+  summary: "A board of every active Claude Code session: project, task, state and phase split",
+  usage: `Usage: awf live [--since 2h] [--limit 10] [--every 20s] [--pin tests] [--once] [--json]
+
+A board for a spare terminal tab: every Claude Code session whose transcript (or a subagent's
+transcript) changed recently, newest activity first, redrawn in place until Ctrl-C. It reads the
+transcripts, so it shows sessions of the desktop app too, where the status line never shows.
+
+  acme-billing/web   CI pipeline for demo-000\u2026   working     tests 35% \xB7 build 33% \xB7 explore 12%
+  deploys            Cache key rollout\u2026          your turn   tests 4% \xB7 scripts 57% \xB7 rework 14m
+
+Each row: the session's folder, its title or first prompt, its state, and the status line's
+phase split (see "awf statusline --help"). The state, from the end of the transcript:
+  working     a turn is under way (a model or tool call open), or background tasks or
+              subagents it started are still running
+  approval?   a permission prompt is waiting; only known when the awf plugin recorded the session
+  your turn   the turn ended, or a question waits for your answer
+  idle 12m    your turn for 5 minutes or more
+Without the plugin a call waiting for your approval reads as working. When the session's
+process exits, what it was running ends with it: your turn.
+
+Phase lines are kept in ~/.awf/cache/statusline/ with the status line's, so a pass reads only
+sessions that changed. Colours follow the status line; NO_COLOR turns them off.
+
+  --since <age>    sessions with a change this recent (default 2h; 30m, 1d)
+  --limit <n>      at most this many sessions (default 10)
+  --every <time>   redraw this often (default 20s; 5s, 1m)
+  --pin <phases>   the phases always shown, first, as in "awf statusline" (default tests)
+  --once           print one pass and exit (also when output isn't a terminal)
+  --json           print one pass as JSON`,
+  options: {
+    since: { type: "string" },
+    limit: { type: "string" },
+    every: { type: "string" },
+    pin: { type: "string" },
+    once: { type: "boolean" },
+    json: { type: "boolean" }
+  },
+  run(ctx, _args, options) {
+    const live = liveOptions(options);
+    const mode = colorMode(ctx.env);
+    if (options.json) {
+      const { rows } = onePass(ctx, live, mode);
+      ctx.io.out(JSON.stringify(rows.map(jsonRow), null, 2));
+      return 0;
+    }
+    const terminal = processTerminal;
+    if (options.once || !terminal.isTTY) {
+      const { rows, total } = onePass(ctx, live, mode);
+      const lines = renderBoard(header(total, rows.length, live, ctx.now, false), boardRows(rows), {
+        mode,
+        columns: columnsOf(ctx.env, terminal, false)
+      });
+      ctx.io.out(lines.join("\n"));
+      return 0;
+    }
+    return liveLoop(ctx, live, terminal);
+  }
+};
+
+// src/cli/commands/purge.ts
+import { existsSync as existsSync9, readdirSync as readdirSync9, rmSync as rmSync2, statSync as statSync8 } from "node:fs";
+import os8 from "node:os";
+import path19 from "node:path";
 var OURS = /* @__PURE__ */ new Set(["events", "imported", "reports", "cache", ".DS_Store"]);
 function size(target) {
-  const stat2 = statSync6(target, { throwIfNoEntry: false });
+  const stat2 = statSync8(target, { throwIfNoEntry: false });
   if (!stat2) return 0;
   if (!stat2.isDirectory()) return stat2.size;
-  return readdirSync7(target).reduce((n, name) => n + size(path16.join(target, name)), 0);
+  return readdirSync9(target).reduce((n, name) => n + size(path19.join(target, name)), 0);
 }
 function human(bytes) {
   if (bytes >= 1e9) return `${(bytes / 1e9).toFixed(1)} GB`;
@@ -13261,16 +14347,16 @@ Claude Code's transcripts are never touched. Without --yes it only lists what it
   --yes   delete it`,
   options: { yes: { type: "boolean" }, json: { type: "boolean" } },
   run(ctx, _args, options) {
-    const home = ctx.env.HOME ?? os7.homedir();
+    const home = ctx.env.HOME ?? os8.homedir();
     const dir = awfHome(ctx.env);
     const shown = homeRelative(dir, home);
     if (!existsSync9(dir)) {
       ctx.io.out(`Nothing to delete: ${shown} doesn't exist.`);
       return 0;
     }
-    const entries2 = readdirSync7(dir);
+    const entries2 = readdirSync9(dir);
     const foreign = entries2.filter((name) => !OURS.has(name));
-    const parts = entries2.filter((name) => OURS.has(name) && name !== ".DS_Store").map((name) => ({ name, bytes: size(path16.join(dir, name)) }));
+    const parts = entries2.filter((name) => OURS.has(name) && name !== ".DS_Store").map((name) => ({ name, bytes: size(path19.join(dir, name)) }));
     if (options.json) {
       ctx.io.out(JSON.stringify({ dir, parts, foreign, deleted: false }, null, 2));
       if (!options.yes) return 0;
@@ -13287,7 +14373,7 @@ Claude Code's transcripts are never touched. Without --yes it only lists what it
       ctx.io.out(`Run "awf purge --yes" to delete it. Claude Code's transcripts are not touched.`);
       return 0;
     }
-    rmSync(dir, { recursive: true, force: true });
+    rmSync2(dir, { recursive: true, force: true });
     if (!options.json) ctx.io.out(`Deleted ${shown}.`);
     return 0;
   }
@@ -13295,14 +14381,14 @@ Claude Code's transcripts are never touched. Without --yes it only lists what it
 
 // src/cli/commands/report.ts
 import { spawn } from "node:child_process";
-import { mkdirSync as mkdirSync2, writeFileSync as writeFileSync2 } from "node:fs";
-import os8 from "node:os";
-import path18 from "node:path";
+import { mkdirSync as mkdirSync3, writeFileSync as writeFileSync3 } from "node:fs";
+import os9 from "node:os";
+import path21 from "node:path";
 import { pathToFileURL } from "node:url";
 
 // src/build/drilldown.ts
-import { readdirSync as readdirSync8, readFileSync as readFileSync9 } from "node:fs";
-import path17 from "node:path";
+import { readdirSync as readdirSync10, readFileSync as readFileSync11 } from "node:fs";
+import path20 from "node:path";
 import { gunzipSync } from "node:zlib";
 
 // src/build/parsers.ts
@@ -13419,7 +14505,7 @@ function parseMsbuildSummary(output) {
 var diskBuildFiles = {
   read(file) {
     try {
-      const bytes = readFileSync9(file);
+      const bytes = readFileSync11(file);
       return file.endsWith(".gz") ? gunzipSync(bytes).toString("utf8") : bytes.toString("utf8");
     } catch {
       return void 0;
@@ -13427,7 +14513,7 @@ var diskBuildFiles = {
   },
   list(dir) {
     try {
-      return readdirSync8(dir);
+      return readdirSync10(dir);
     } catch {
       return [];
     }
@@ -13466,7 +14552,7 @@ function nearest(files2, dir, timeOf, step) {
     const t = timeOf(name);
     if (t === void 0 || t < step.startMs - WINDOW_MS || t > step.endMs + WINDOW_MS) continue;
     if (Math.abs(t - step.startMs) < distance) {
-      best = path17.join(dir, name);
+      best = path20.join(dir, name);
       distance = Math.abs(t - step.startMs);
     }
   }
@@ -13497,8 +14583,8 @@ function timingsFor(step, sessionCwd, files2) {
       case "cross": {
         if (!args.some((a) => a === "--timings" || a.startsWith("--timings="))) break;
         const manifest = optionValue2(args, ["--manifest-path"]);
-        const root = manifest ? path17.dirname(resolvePath(cwd, manifest)) : cwd;
-        const file = /Timing report saved to (\S+\.html)/.exec(output)?.[1] ?? nearest(files2, path17.join(root, "target", "cargo-timings"), cargoTimingTime, step);
+        const root = manifest ? path20.dirname(resolvePath(cwd, manifest)) : cwd;
+        const file = /Timing report saved to (\S+\.html)/.exec(output)?.[1] ?? nearest(files2, path20.join(root, "target", "cargo-timings"), cargoTimingTime, step);
         const html = file ? files2.read(file) : void 0;
         if (file && html)
           return { tool: "cargo", source: file, tasks: parseCargoTimings(html).tasks };
@@ -13508,7 +14594,7 @@ function timingsFor(step, sessionCwd, files2) {
         if (!args.includes("--profile")) break;
         const project = optionValue2(args, ["-p", "--project-dir"]);
         const root = project ? resolvePath(cwd, project) : cwd;
-        const file = /See the profiling report at: file:\/\/(\S+\.html)/.exec(output)?.[1] ?? nearest(files2, path17.join(root, "build", "reports", "profile"), gradleProfileTime, step);
+        const file = /See the profiling report at: file:\/\/(\S+\.html)/.exec(output)?.[1] ?? nearest(files2, path20.join(root, "build", "reports", "profile"), gradleProfileTime, step);
         const html = file ? files2.read(decodeURI(file)) : void 0;
         if (file && html)
           return { tool: "gradle", source: decodeURI(file), tasks: parseGradleProfile(html) };
@@ -13822,19 +14908,19 @@ inside the file, and it makes no network requests. <session> is an ID or its fir
     const share = options.share === true;
     const session = loadOne(ctx, args[0], options, !share);
     if (!share) attachBuildTimings(session);
-    const home = ctx.env.HOME ?? os8.homedir();
+    const home = ctx.env.HOME ?? os9.homedir();
     const data = buildReportData(summarize(classifier()(session)), { share, home, now: ctx.now });
     if (options.json) {
       ctx.io.out(JSON.stringify(data, null, 2));
       return 0;
     }
-    const out = typeof options.out === "string" ? path18.resolve(ctx.cwd, options.out) : path18.join(
+    const out = typeof options.out === "string" ? path21.resolve(ctx.cwd, options.out) : path21.join(
       awfHome(ctx.env),
       "reports",
       `${safeId(session.id)}${share ? "-share" : ""}.html`
     );
-    mkdirSync2(path18.dirname(out), { recursive: true });
-    writeFileSync2(out, renderReportHtml(data));
+    mkdirSync3(path21.dirname(out), { recursive: true });
+    writeFileSync3(out, renderReportHtml(data));
     ctx.io.out(
       `Wrote ${homeRelative(out, home)}${share ? " (shareable: no commands, files or output)" : ""}`
     );
@@ -13858,8 +14944,8 @@ function openInBrowser(file, ctx) {
 }
 
 // src/cli/commands/sample.ts
-import { readFileSync as readFileSync10 } from "node:fs";
-import path19 from "node:path";
+import { readFileSync as readFileSync12 } from "node:fs";
+import path22 from "node:path";
 function random(seed) {
   let s = seed >>> 0 || 1;
   return () => {
@@ -13973,9 +15059,9 @@ Re-classifies each labelled command with the current rules and reports agreement
   run(ctx, args, options) {
     const file = args[0];
     if (!file) throw new Error("give the labels file, for example fixtures/labels.csv");
-    const rows = parseCsv(readFileSync10(path19.resolve(ctx.cwd, file), "utf8"));
-    const header = rows.shift() ?? [];
-    const col = (name) => header.indexOf(name);
+    const rows = parseCsv(readFileSync12(path22.resolve(ctx.cwd, file), "utf8"));
+    const header2 = rows.shift() ?? [];
+    const col = (name) => header2.indexOf(name);
     const [ci, wi, yi] = [col("command"), col("cwd"), col("your_phase")];
     if (ci < 0 || yi < 0) throw new Error('the CSV needs "command" and "your_phase" columns');
     const files2 = diskFiles();
@@ -14038,8 +15124,8 @@ Re-classifies each labelled command with the current rules and reports agreement
 };
 
 // src/cli/commands/sessions.ts
-import os9 from "node:os";
-import path20 from "node:path";
+import os10 from "node:os";
+import path23 from "node:path";
 function sessionRow(session) {
   const idleMs = session.steps.filter((s) => s.kind === "idle").reduce((sum, s) => sum + (s.endMs - s.startMs), 0);
   const durationMs = Math.max(0, session.endMs - session.startMs);
@@ -14058,7 +15144,7 @@ function sessionRow(session) {
 }
 function inFolder(cwd, dir) {
   if (!dir) return true;
-  return !!cwd && (cwd === dir || cwd.startsWith(dir + path20.sep));
+  return !!cwd && (cwd === dir || cwd.startsWith(dir + path23.sep));
 }
 function listSessionRows(env) {
   const rows = [];
@@ -14092,7 +15178,7 @@ gaps between turns. Background work in those gaps (subagents, builds left runnin
   },
   run(ctx, _args, options) {
     const since = typeof options.since === "string" ? ctx.now - parseSince(options.since) : -Infinity;
-    const project = typeof options.project === "string" ? path20.resolve(ctx.cwd, options.project) : void 0;
+    const project = typeof options.project === "string" ? path23.resolve(ctx.cwd, options.project) : void 0;
     const rows = listSessionRows(ctx.env).filter(
       (row) => row.startMs >= since && inFolder(row.cwd, project)
     );
@@ -14106,7 +15192,7 @@ gaps between turns. Background work in those gaps (subagents, builds left runnin
       );
       return 0;
     }
-    const home = ctx.env.HOME ?? os9.homedir();
+    const home = ctx.env.HOME ?? os10.homedir();
     ctx.io.out(
       table(
         ["SESSION", "STARTED", "DURATION", "IN TURNS", "TURNS", "TOOLS", "SOURCE", "PROJECT"],
@@ -14296,276 +15382,8 @@ the share left unclassified, and the programs behind that time, to show which ru
   }
 };
 
-// src/cli/commands/statusline.ts
-import {
-  mkdirSync as mkdirSync3,
-  readdirSync as readdirSync9,
-  readFileSync as readFileSync11,
-  renameSync as renameSync2,
-  rmSync as rmSync2,
-  statSync as statSync7,
-  writeFileSync as writeFileSync3
-} from "node:fs";
-import path21 from "node:path";
-var FORMAT = 2;
-var MAX_WIDTH = 64;
-var KEEP_MS = 30 * 864e5;
-var SHORT_NAME = {
-  "writing-code": "code",
-  "writing-tests": "test code",
-  lint: "lint",
-  tests: "tests",
-  build: "build",
-  rework: "rework",
-  exploring: "explore",
-  running: "scripts",
-  planning: "plan",
-  waiting: "waiting",
-  unclassified: "unclassified"
-};
-var COLOR = {
-  "writing-code": "#2a78d6",
-  "writing-tests": "#d95926",
-  lint: "#199e70",
-  tests: "#c98500",
-  build: "#d55181",
-  rework: "#7a6ae0",
-  exploring: "#008300",
-  running: "#2a8ca3",
-  planning: "#7b8494",
-  waiting: "#a9a8a0",
-  unclassified: "#8c8b84"
-};
-var FAILED_COLOR = "#d03b3b";
-var DEFAULT_PIN = ["tests"];
-function parsePin(value) {
-  if (value === void 0) return DEFAULT_PIN;
-  const byName = /* @__PURE__ */ new Map();
-  for (const [id, name] of Object.entries(SHORT_NAME)) {
-    byName.set(id, id);
-    byName.set(name, id);
-  }
-  const pins = value.split(",").map((name) => byName.get(name.trim()));
-  return [...new Set(pins)].filter((p) => p !== void 0 && p !== "waiting");
-}
-function statusParts(summary, top = 3, pinned = DEFAULT_PIN) {
-  const working = summary.phases.filter((p) => p.phase !== "waiting");
-  const workingMs = working.reduce((n, p) => n + p.ms, 0);
-  const share = (ms) => workingMs > 0 ? ms / workingMs : 0;
-  const pins = pinned.map((phase) => {
-    const ms = working.find((p) => p.phase === phase)?.ms ?? 0;
-    return { phase, ms, share: share(ms), pinned: true };
-  });
-  const others = working.filter((p) => p.ms > 0 && !pinned.includes(p.phase)).sort((a, b) => b.ms - a.ms).slice(0, Math.max(0, top - pins.length)).map((p) => ({ phase: p.phase, ms: p.ms, share: share(p.ms) }));
-  return {
-    // Nothing worked yet: no line rather than "tests 0%".
-    phases: workingMs > 0 ? [...pins, ...others] : [],
-    failed: summary.phases.reduce((n, p) => n + (p.failed ?? 0), 0),
-    reworkMs: summary.phases.find((p) => p.phase === "rework")?.ms ?? 0,
-    workingMs
-  };
-}
-function shortDuration(ms) {
-  const s = Math.round(ms / 1e3);
-  if (s < 60) return `${s}s`;
-  const m = Math.round(s / 60);
-  if (m < 60) return `${m}m`;
-  return `${Math.floor(m / 60)}h${String(m % 60).padStart(2, "0")}m`;
-}
-function percent(share) {
-  if (share === 0) return "0%";
-  const n = Math.round(share * 100);
-  return n === 0 ? "<1%" : `${n}%`;
-}
-function colorMode(env) {
-  if (env.NO_COLOR) return "none";
-  return /truecolor|24bit/i.test(env.COLORTERM ?? "") ? "truecolor" : "256";
-}
-function xterm256(r, g, b) {
-  const levels = [0, 95, 135, 175, 215, 255];
-  const nearest2 = (v) => levels.reduce(
-    (best, level, i) => Math.abs(level - v) < Math.abs(levels[best] - v) ? i : best,
-    0
-  );
-  return 16 + 36 * nearest2(r) + 6 * nearest2(g) + nearest2(b);
-}
-function paint(text, hex, mode) {
-  if (mode === "none") return text;
-  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
-  const code = mode === "truecolor" ? `38;2;${r};${g};${b}` : `38;5;${xterm256(r, g, b)}`;
-  return `\x1B[${code}m${text}\x1B[39m`;
-}
-function renderStatus(parts, mode) {
-  const phases = parts.phases.map((p) => ({
-    name: SHORT_NAME[p.phase],
-    color: COLOR[p.phase],
-    value: percent(p.share),
-    ...p.pinned ? { pinned: true } : {}
-  }));
-  if (phases.length === 0) return "";
-  const tail = [];
-  if (parts.failed > 0) tail.push({ name: `${parts.failed} failed`, color: FAILED_COLOR });
-  if (parts.reworkMs >= 1e3 && !parts.phases.some((p) => p.phase === "rework"))
-    tail.push({ name: "rework", color: COLOR.rework, value: shortDuration(parts.reworkMs) });
-  const text = (item) => item.value ? `${item.name} ${item.value}` : item.name;
-  const width = (items) => items.map(text).join(" \xB7 ").length;
-  while (phases.length > 1 && width([...phases, ...tail]) > MAX_WIDTH) {
-    const last = phases.map((p) => !p.pinned).lastIndexOf(true);
-    if (last < 0) break;
-    phases.splice(last, 1);
-  }
-  const separator = mode === "none" ? " \xB7 " : " \x1B[2m\xB7\x1B[22m ";
-  return [...phases, ...tail].map((item) => paint(item.name, item.color, mode) + (item.value ? ` ${item.value}` : "")).join(separator);
-}
-function stamp(stat2) {
-  return stat2 ? `${stat2.size}:${stat2.mtimeMs}` : "-";
-}
-function subagentStamp(transcript) {
-  const dir = path21.join(path21.dirname(transcript), path21.basename(transcript, ".jsonl"), "subagents");
-  let names;
-  try {
-    names = readdirSync9(dir);
-  } catch {
-    return "-";
-  }
-  let size2 = 0;
-  let mtime = 0;
-  for (const name of names) {
-    const stat2 = statSync7(path21.join(dir, name), { throwIfNoEntry: false });
-    if (!stat2) continue;
-    size2 += stat2.size;
-    mtime = Math.max(mtime, stat2.mtimeMs);
-  }
-  return `${names.length}:${size2}:${mtime}`;
-}
-function readCache(file, key) {
-  try {
-    const cached = JSON.parse(readFileSync11(file, "utf8"));
-    return cached.key === key && typeof cached.line === "string" ? cached.line : void 0;
-  } catch {
-    return void 0;
-  }
-}
-function writeCache(file, key, line, now) {
-  try {
-    const dir = path21.dirname(file);
-    mkdirSync3(dir, { recursive: true });
-    const temp = `${file}.${process.pid}.tmp`;
-    writeFileSync3(temp, JSON.stringify({ key, line }));
-    renameSync2(temp, file);
-    for (const name of readdirSync9(dir)) {
-      const other = path21.join(dir, name);
-      const stat2 = statSync7(other, { throwIfNoEntry: false });
-      if (stat2 && now - stat2.mtimeMs > KEEP_MS) rmSync2(other, { force: true });
-    }
-  } catch {
-  }
-}
-function statusLine(ctx, input, json, pin) {
-  const payload = JSON.parse(input);
-  const transcript = payload?.transcript_path;
-  if (typeof transcript !== "string" || !transcript.endsWith(".jsonl")) return "";
-  const transcriptStat = statSync7(transcript, { throwIfNoEntry: false });
-  if (!transcriptStat?.isFile()) return "";
-  const id = typeof payload?.session_id === "string" && payload.session_id ? payload.session_id : path21.basename(transcript, ".jsonl");
-  const events = path21.join(eventsDir(ctx.env), `${safeId(id)}.jsonl`);
-  const eventsStat = statSync7(events, { throwIfNoEntry: false });
-  const mode = colorMode(ctx.env);
-  const key = [
-    FORMAT,
-    VERSION,
-    mode,
-    pin.join(","),
-    stamp(transcriptStat),
-    stamp(eventsStat),
-    subagentStamp(transcript)
-  ].join("|");
-  const cacheFile2 = path21.join(cacheDir(ctx.env), "statusline", `${safeId(id)}.json`);
-  if (!json) {
-    const cached = readCache(cacheFile2, key);
-    if (cached !== void 0) return cached;
-  }
-  const ref = resolveSession(transcript, ctx.env);
-  if (eventsStat?.isFile())
-    ref.events = { id, path: events, mtimeMs: eventsStat.mtimeMs, size: eventsStat.size };
-  const { summary } = summarize(classifier()(loadSession(ref, { detail: true, env: ctx.env })));
-  const parts = statusParts(summary, 3, pin);
-  if (json) {
-    return JSON.stringify(
-      {
-        id: summary.id,
-        sources: summary.sources,
-        workingMs: parts.workingMs,
-        phases: parts.phases.map((p) => ({
-          ...p,
-          label: PHASE_LABEL[p.phase],
-          name: SHORT_NAME[p.phase]
-        })),
-        failed: parts.failed,
-        reworkMs: parts.reworkMs,
-        line: renderStatus(parts, "none")
-      },
-      null,
-      2
-    );
-  }
-  const line = renderStatus(parts, mode);
-  writeCache(cacheFile2, key, line, ctx.now);
-  return line;
-}
-var statuslineCommand = {
-  summary: "One short line for Claude Code's status line: the session's phase split so far",
-  usage: `Usage: awf statusline [--pin tests] [--json]
-
-For Claude Code's status line. Reads the JSON Claude Code sends on stdin (session_id,
-transcript_path), and prints one line: Running tests, always and first, then the phases that
-took the most time so far (three phases in all), then failed lint, test and build runs, and
-rework time when it isn't one of the phases shown:
-
-  tests 3% \xB7 build 32% \xB7 scripts 26% \xB7 9 failed \xB7 rework 9s
-
-Shares are of the time the agent worked, without Waiting on you, so they hold still while you're
-away. Phases are named code, test code, lint, tests, build, rework, explore, scripts, plan and
-unclassified. Colours follow the report; NO_COLOR turns them off.
-
-It never breaks the status line: on any error it prints nothing and exits 0 (AWF_DEBUG=1 prints
-the error on stderr). The line is kept in ~/.awf/cache/statusline/ until the transcript, the
-recorder's events or a subagent's transcript changes.
-
-Set it up in ~/.claude/settings.json:
-  "statusLine": { "type": "command", "command": "awf statusline", "padding": 0 }
-
-  --pin <phases>  the phases always shown, first: ids or short names, comma-separated
-                  (default tests; "tests,build"; "none" for only the top three)
-  --json          print the phases, failures and rework as JSON (not cached)`,
-  options: { json: { type: "boolean" }, pin: { type: "string" } },
-  run(ctx, _args, options) {
-    let input;
-    try {
-      input = ctx.io.input?.();
-    } catch {
-      return 0;
-    }
-    if (input === void 0) {
-      ctx.io.err(
-        'awf statusline reads the JSON Claude Code sends on stdin. Run "awf statusline --help".'
-      );
-      return 0;
-    }
-    try {
-      const pin = parsePin(typeof options.pin === "string" ? options.pin : void 0);
-      const line = statusLine(ctx, input, Boolean(options.json), pin);
-      if (line) ctx.io.out(line);
-    } catch (error) {
-      if (ctx.env.AWF_DEBUG)
-        ctx.io.err(`awf statusline: ${error instanceof Error ? error.message : String(error)}`);
-    }
-    return 0;
-  }
-};
-
 // src/cli/commands/summary.ts
-import os10 from "node:os";
+import os11 from "node:os";
 var summaryCommand = {
   summary: "One line per phase: time, share, runs and failures",
   usage: `Usage: awf summary <session> [--json] [--share]
@@ -14593,14 +15411,14 @@ or a transcript or events file.
       ctx.io.out(JSON.stringify(summary, null, 2));
       return 0;
     }
-    const home = ctx.env.HOME ?? os10.homedir();
-    const header = [
+    const home = ctx.env.HOME ?? os11.homedir();
+    const header2 = [
       `Session ${summary.id.slice(0, 8)}`,
       formatClock(summary.startMs),
       formatDurationLine(summary),
       ...summary.cwd ? [homeRelative(summary.cwd, home)] : []
     ].join(" \xB7 ");
-    ctx.io.out(header);
+    ctx.io.out(header2);
     if (summary.title) ctx.io.out(`Task: ${summary.title}`);
     ctx.io.out("");
     for (const line of formatSummaryLines(summary)) ctx.io.out(line);
@@ -14612,7 +15430,7 @@ or a transcript or events file.
 var defaultIo = {
   out: (text) => process.stdout.write(text + "\n"),
   err: (text) => process.stderr.write(text + "\n"),
-  input: () => process.stdin.isTTY ? void 0 : readFileSync12(0, "utf8")
+  input: () => process.stdin.isTTY ? void 0 : readFileSync13(0, "utf8")
 };
 var COMMANDS = {
   sessions: sessionsCommand,
@@ -14623,6 +15441,7 @@ var COMMANDS = {
   compare: compareCommand,
   stats: statsCommand,
   statusline: statuslineCommand,
+  live: liveCommand,
   sample: sampleCommand,
   accuracy: accuracyCommand,
   doctor: doctorCommand,
