@@ -35,7 +35,7 @@ claude plugin marketplace add /path/to/awf
 claude plugin install awf@awf
 ```
 
-Claude Code installs a copy, so after rebuilding run `claude plugin marketplace update awf && claude plugin update awf@awf`. Sessions already running don't load it until they restart. Without the plugin, awf still reads past sessions from their transcripts.
+Claude Code runs it from this folder, so a rebuild takes effect at each session's next start, or at once with `/reload-plugins`. Sessions already running load it the same way. Without the plugin, awf still reads past sessions from their transcripts.
 
 ## Use
 
