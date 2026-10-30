@@ -18,7 +18,7 @@ import { classifier } from '../load';
 import type { Command, Ctx } from '../main';
 
 /** Bump when the line's format changes, so cached lines from an older format aren't shown. */
-const FORMAT = 1;
+const FORMAT = 2;
 /** Visible characters, about 60; the third phase is dropped to stay within it. */
 const MAX_WIDTH = 64;
 /** Cached lines of sessions untouched this long are deleted. */
@@ -61,8 +61,11 @@ const FAILED_COLOR = '#d03b3b';
 export type ColorMode = 'truecolor' | '256' | 'none';
 
 export interface StatusParts {
-  /** The phases that took the most time, without Waiting on you; share is of the working time. */
-  phases: Array<{ phase: PhaseId; ms: number; share: number }>;
+  /**
+   * The pinned phases first, then those that took the most time, without Waiting on you; share
+   * is of the working time.
+   */
+  phases: Array<{ phase: PhaseId; ms: number; share: number; pinned?: boolean }>;
   /** Lint, test and build runs that failed. */
   failed: number;
   reworkMs: number;
@@ -70,17 +73,41 @@ export interface StatusParts {
   workingMs: number;
 }
 
-/** What the line shows, from a session's summary. */
-export function statusParts(summary: Summary, top = 3): StatusParts {
+/** Phases the line always shows, first, even when they aren't among the top ones. */
+export const DEFAULT_PIN: PhaseId[] = ['tests'];
+
+/**
+ * `--pin`: phase ids or the line's short names, comma-separated ("tests,build"); "none" pins
+ * nothing. Unknown names are skipped, so a typo never breaks the status line.
+ */
+export function parsePin(value: string | undefined): PhaseId[] {
+  if (value === undefined) return DEFAULT_PIN;
+  const byName = new Map<string, PhaseId>();
+  for (const [id, name] of Object.entries(SHORT_NAME) as Array<[PhaseId, string]>) {
+    byName.set(id, id);
+    byName.set(name, id);
+  }
+  const pins = value.split(',').map((name) => byName.get(name.trim()));
+  return [...new Set(pins)].filter((p): p is PhaseId => p !== undefined && p !== 'waiting');
+}
+
+/** What the line shows, from a session's summary: `pinned` first, then the top phases. */
+export function statusParts(summary: Summary, top = 3, pinned = DEFAULT_PIN): StatusParts {
   const working = summary.phases.filter((p) => p.phase !== 'waiting');
   const workingMs = working.reduce((n, p) => n + p.ms, 0);
-  const phases = working
-    .filter((p) => p.ms > 0)
+  const share = (ms: number) => (workingMs > 0 ? ms / workingMs : 0);
+  const pins = pinned.map((phase) => {
+    const ms = working.find((p) => p.phase === phase)?.ms ?? 0;
+    return { phase, ms, share: share(ms), pinned: true };
+  });
+  const others = working
+    .filter((p) => p.ms > 0 && !pinned.includes(p.phase))
     .sort((a, b) => b.ms - a.ms)
-    .slice(0, top)
-    .map((p) => ({ phase: p.phase, ms: p.ms, share: workingMs > 0 ? p.ms / workingMs : 0 }));
+    .slice(0, Math.max(0, top - pins.length))
+    .map((p) => ({ phase: p.phase, ms: p.ms, share: share(p.ms) }));
   return {
-    phases,
+    // Nothing worked yet: no line rather than "tests 0%".
+    phases: workingMs > 0 ? [...pins, ...others] : [],
     failed: summary.phases.reduce((n, p) => n + (p.failed ?? 0), 0),
     reworkMs: summary.phases.find((p) => p.phase === 'rework')?.ms ?? 0,
     workingMs,
@@ -97,6 +124,7 @@ export function shortDuration(ms: number): string {
 }
 
 function percent(share: number): string {
+  if (share === 0) return '0%';
   const n = Math.round(share * 100);
   return n === 0 ? '<1%' : `${n}%`;
 }
@@ -133,6 +161,7 @@ interface Item {
   name: string;
   color: string;
   value?: string;
+  pinned?: boolean;
 }
 
 /** "tests 36% · explore 29% · scripts 15% · 15 failed · rework 2m", coloured unless mode is none. */
@@ -141,6 +170,7 @@ export function renderStatus(parts: StatusParts, mode: ColorMode): string {
     name: SHORT_NAME[p.phase],
     color: COLOR[p.phase],
     value: percent(p.share),
+    ...(p.pinned ? { pinned: true } : {}),
   }));
   if (phases.length === 0) return '';
   const tail: Item[] = [];
@@ -149,7 +179,12 @@ export function renderStatus(parts: StatusParts, mode: ColorMode): string {
     tail.push({ name: 'rework', color: COLOR.rework, value: shortDuration(parts.reworkMs) });
   const text = (item: Item) => (item.value ? `${item.name} ${item.value}` : item.name);
   const width = (items: Item[]) => items.map(text).join(' · ').length;
-  while (phases.length > 1 && width([...phases, ...tail]) > MAX_WIDTH) phases.pop();
+  // Too long: the last top phase goes first; pinned phases stay.
+  while (phases.length > 1 && width([...phases, ...tail]) > MAX_WIDTH) {
+    const last = phases.map((p) => !p.pinned).lastIndexOf(true);
+    if (last < 0) break;
+    phases.splice(last, 1);
+  }
   const separator = mode === 'none' ? ' · ' : ' \x1b[2m·\x1b[22m ';
   return [...phases, ...tail]
     .map((item) => paint(item.name, item.color, mode) + (item.value ? ` ${item.value}` : ''))
@@ -214,7 +249,7 @@ interface Payload {
 }
 
 /** The status line for Claude Code's JSON, or '' when there's nothing to show. Throws on bad input. */
-function statusLine(ctx: Ctx, input: string, json: boolean): string {
+function statusLine(ctx: Ctx, input: string, json: boolean, pin: PhaseId[]): string {
   const payload = JSON.parse(input) as Payload | null;
   const transcript = payload?.transcript_path;
   if (typeof transcript !== 'string' || !transcript.endsWith('.jsonl')) return '';
@@ -231,6 +266,7 @@ function statusLine(ctx: Ctx, input: string, json: boolean): string {
     FORMAT,
     VERSION,
     mode,
+    pin.join(','),
     stamp(transcriptStat),
     stamp(eventsStat),
     subagentStamp(transcript),
@@ -245,7 +281,7 @@ function statusLine(ctx: Ctx, input: string, json: boolean): string {
   if (eventsStat?.isFile())
     ref.events = { id, path: events, mtimeMs: eventsStat.mtimeMs, size: eventsStat.size };
   const { summary } = summarize(classifier()(loadSession(ref, { detail: true, env: ctx.env })));
-  const parts = statusParts(summary);
+  const parts = statusParts(summary, 3, pin);
   if (json) {
     return JSON.stringify(
       {
@@ -272,13 +308,14 @@ function statusLine(ctx: Ctx, input: string, json: boolean): string {
 
 export const statuslineCommand: Command = {
   summary: "One short line for Claude Code's status line: the session's phase split so far",
-  usage: `Usage: awf statusline [--json]
+  usage: `Usage: awf statusline [--pin tests] [--json]
 
 For Claude Code's status line. Reads the JSON Claude Code sends on stdin (session_id,
-transcript_path), and prints one line: the three phases that took the most time so far, then
-failed lint, test and build runs, and rework time when it isn't one of the three:
+transcript_path), and prints one line: Running tests, always and first, then the phases that
+took the most time so far (three phases in all), then failed lint, test and build runs, and
+rework time when it isn't one of the phases shown:
 
-  tests 36% · explore 29% · scripts 15% · 15 failed · rework 2m
+  tests 3% · build 32% · scripts 26% · 9 failed · rework 9s
 
 Shares are of the time the agent worked, without Waiting on you, so they hold still while you're
 away. Phases are named code, test code, lint, tests, build, rework, explore, scripts, plan and
@@ -291,8 +328,10 @@ recorder's events or a subagent's transcript changes.
 Set it up in ~/.claude/settings.json:
   "statusLine": { "type": "command", "command": "awf statusline", "padding": 0 }
 
-  --json   print the phases, failures and rework as JSON (not cached)`,
-  options: { json: { type: 'boolean' } },
+  --pin <phases>  the phases always shown, first: ids or short names, comma-separated
+                  (default tests; "tests,build"; "none" for only the top three)
+  --json          print the phases, failures and rework as JSON (not cached)`,
+  options: { json: { type: 'boolean' }, pin: { type: 'string' } },
   run(ctx, _args, options) {
     let input: string | undefined;
     try {
@@ -307,7 +346,8 @@ Set it up in ~/.claude/settings.json:
       return 0;
     }
     try {
-      const line = statusLine(ctx, input, Boolean(options.json));
+      const pin = parsePin(typeof options.pin === 'string' ? options.pin : undefined);
+      const line = statusLine(ctx, input, Boolean(options.json), pin);
       if (line) ctx.io.out(line);
     } catch (error) {
       if (ctx.env.AWF_DEBUG)

@@ -4,7 +4,14 @@ import { AGENT_TOOLS } from '../recorder/steps';
 import { matchesAny } from './glob';
 import { type CheckPhase, isCheckPhase, type PhaseId, RANK, topPhase } from './phases';
 import { diskFiles, type Files, resolve, resolvePath } from './resolve';
-import { type CommandRule, loadRules, type RulePhase, type Rules, type ToolRule } from './rules';
+import {
+  type CommandRule,
+  defaultRules,
+  repoRules,
+  type RulePhase,
+  type Rules,
+  type ToolRule,
+} from './rules';
 import {
   programName,
   scriptFile,
@@ -63,6 +70,8 @@ export interface CommandInfo {
   /** See ClassifiedStep.decidedBy. */
   decidedBy?: string;
   exit?: ExitTrust;
+  /** Failure patterns of other repos the command ran in, which apply next to the session's. */
+  failurePatterns?: Rules['failurePatterns'];
 }
 
 interface Part {
@@ -306,17 +315,52 @@ const WRITERS = new Set([
 ]);
 
 export class Classifier {
+  /** The rules in effect: the session's, or the repo's a command runs in while it's classified. */
+  rules: Rules;
+  private readonly sessionRules: Rules;
+  /** Rules of other repos the command being classified ran in. */
+  private visited = new Set<Rules>();
+
   constructor(
-    readonly rules: Rules,
+    rules: Rules,
     private readonly files: Files,
-  ) {}
+    /**
+     * The rules of the repo a directory is in (see `repoRules`), for commands that run outside
+     * the session's repo. Without it, or for a directory with no rules of its own, the session's
+     * rules apply.
+     */
+    private readonly rulesAt?: (dir: string) => Rules | undefined,
+  ) {
+    this.rules = rules;
+    this.sessionRules = rules;
+  }
 
   /** Classifies one Bash command run in `cwd`. */
   command(text: string, cwd: string): CommandInfo {
-    const parts = this.parts(text, cwd, 0);
-    const info = this.combine(parts, cwd);
-    if (info.checks.length > 0) info.exit = exitTrust(splitCommand(text), parts);
+    this.visited = new Set();
+    const info = this.within(cwd, () => {
+      const parts = this.parts(text, cwd, 0);
+      const combined = this.combine(parts, cwd);
+      if (combined.checks.length > 0) combined.exit = exitTrust(splitCommand(text), parts);
+      return combined;
+    });
+    if (this.visited.size > 0)
+      info.failurePatterns = [...this.visited].flatMap((r) => r.failurePatterns);
     return info;
+  }
+
+  /** Runs `classify` with the rules of the repo `dir` is in. */
+  private within<T>(dir: string, classify: () => T): T {
+    const rules = this.rulesAt?.(dir) ?? this.sessionRules;
+    if (rules === this.rules) return classify();
+    if (rules !== this.sessionRules) this.visited.add(rules);
+    const outer = this.rules;
+    this.rules = rules;
+    try {
+      return classify();
+    } finally {
+      this.rules = outer;
+    }
   }
 
   isTestFile(file: string): boolean {
@@ -329,7 +373,7 @@ export class Classifier {
     simples.forEach((simple, index) => {
       if (simple.argv[0] === 'cd') return;
       const where = simple.cd.reduce((dir, target) => resolvePath(dir, target), cwd);
-      const made = this.simple(simple, where, depth);
+      const made = this.within(where, () => this.simple(simple, where, depth));
       if (depth === 0) for (const part of made) part.index = index;
       parts.push(...made);
     });
@@ -783,7 +827,7 @@ export class Classifier {
         if (info.decidedBy) step.decidedBy = info.decidedBy;
         if (info.exit) step.exit = info.exit;
         if (step.kind === 'tool') shellCwd.set(ctx, nextCwd(step.command, cwd, home));
-        this.markFailures(step);
+        this.markFailures(step, info.failurePatterns);
       } else {
         this.tool(step, hasChildren);
       }
@@ -886,14 +930,15 @@ export class Classifier {
    * `;` or `|| true` hid it, or when a command chained after the checks may have failed instead.
    * A tool's own pattern names the check that failed.
    */
-  private markFailures(step: ClassifiedStep): void {
+  private markFailures(step: ClassifiedStep, others: Rules['failurePatterns'] = []): void {
     if (step.checks.length === 0) return;
     const exit = step.exit ?? 'full';
     const stopped = step.flags.includes('interrupted') || step.flags.includes('denied');
     const known = step.ok !== undefined && !stopped;
     const passed = known && step.ok === true && exit !== 'none';
     const output = step.detail?.output;
-    const byTool = (tool: string) => this.rules.failurePatterns.filter((p) => p.tool === tool);
+    const patterns = [...others, ...this.rules.failurePatterns];
+    const byTool = (tool: string) => patterns.filter((p) => p.tool === tool);
     const named = output
       ? step.checks.filter((c) => byTool(c.tool).some((p) => p.pattern.test(output)))
       : [];
@@ -1066,6 +1111,9 @@ export function classifySession(
   options: { files?: Files; rules?: Rules } = {},
 ): ClassifiedSession {
   const files = options.files ?? diskFiles();
-  const rules = options.rules ?? loadRules(session.cwd, files);
-  return new Classifier(rules, files).session(session);
+  // Rules given by the caller apply to every command; otherwise each repo's own.
+  if (options.rules) return new Classifier(options.rules, files).session(session);
+  const rulesAt = repoRules(files);
+  const rules = (session.cwd ? rulesAt(session.cwd) : undefined) ?? defaultRules();
+  return new Classifier(rules, files, rulesAt).session(session);
 }

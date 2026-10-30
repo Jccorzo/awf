@@ -57,8 +57,24 @@ describe('awf statusline', () => {
     const { home, payload } = setup();
     const run = await statusline(payload, { AWF_HOME: home, NO_COLOR: '1' });
     expect(run.code).toBe(0);
-    // Shares are of the working time; rework (1.8s) is fourth, so it comes as a time at the end.
-    expect(run.out).toEqual(['plan 35% · explore 27% · tests 20% · 1 failed · rework 2s']);
+    // Tests first, then the top phases; shares are of the working time. Rework (1.8s) isn't
+    // among the phases shown, so it comes as a time at the end.
+    expect(run.out).toEqual(['tests 20% · plan 35% · explore 27% · 1 failed · rework 2s']);
+  });
+
+  it('pins other phases with --pin, or none', async () => {
+    const { home, payload } = setup();
+    const env = { AWF_HOME: home, NO_COLOR: '1' };
+    expect((await statusline(payload, env, '--pin', 'none')).out).toEqual([
+      'plan 35% · explore 27% · tests 20% · 1 failed · rework 2s',
+    ]);
+    // Short names work too, a pinned phase with no time shows 0%, and unknown names are skipped.
+    expect((await statusline(payload, env, '--pin', 'build,tests,nope')).out).toEqual([
+      'build 0% · tests 20% · plan 35% · 1 failed · rework 2s',
+    ]);
+    expect((await statusline(payload, env, '--pin', 'explore')).out).toEqual([
+      'explore 27% · plan 35% · tests 20% · 1 failed · rework 2s',
+    ]);
   });
 
   it("doesn't repeat rework at the end when it is one of the top three", async () => {
@@ -73,7 +89,7 @@ describe('awf statusline', () => {
       }),
       { AWF_HOME: home, NO_COLOR: '1' },
     );
-    expect(run.out).toEqual(['plan 67% · rework 11% · tests 11% · 1 failed']);
+    expect(run.out).toEqual(['tests 11% · plan 67% · rework 11% · 1 failed']);
   });
 
   it('colours phase names like the report, in 24-bit or 256 colours', async () => {
@@ -96,7 +112,8 @@ describe('awf statusline', () => {
     const merged = JSON.parse((await statusline(payload, { AWF_HOME: home }, '--json')).out[0]!);
     expect(merged.sources).toEqual(['recorder', 'transcript']);
     expect(merged).toMatchObject({ id: ID, failed: 1, line: expect.stringContaining('tests') });
-    expect(merged.phases[0]).toMatchObject({ phase: 'planning', name: 'plan' });
+    expect(merged.phases[0]).toMatchObject({ phase: 'tests', name: 'tests', pinned: true });
+    expect(merged.phases[1]).toMatchObject({ phase: 'planning', name: 'plan' });
   });
 
   it('caches the line until the transcript or the events change', async () => {
@@ -220,6 +237,21 @@ describe('the status line format', () => {
     );
     expect(renderStatus(parts({ phases: [long.phases[2]!], failed: 0 }), 'none')).toBe(
       'explore <1% · rework 2m',
+    );
+  });
+
+  it('keeps pinned phases when the line runs long, dropping the last top phase', () => {
+    const long = parts({
+      phases: [
+        { phase: 'tests', ms: 0, share: 0, pinned: true },
+        { phase: 'unclassified', ms: 3, share: 0.34 },
+        { phase: 'writing-tests', ms: 2, share: 0.33 },
+      ],
+      failed: 120,
+      reworkMs: 3_540_000,
+    });
+    expect(renderStatus(long, 'none')).toBe(
+      'tests 0% · unclassified 34% · 120 failed · rework 59m',
     );
   });
 
