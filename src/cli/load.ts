@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { type ClassifiedSession, Classifier } from '../classify/classify';
 import { diskFiles, type Files } from '../classify/resolve';
-import { loadRules } from '../classify/rules';
+import { defaultRules, repoRules } from '../classify/rules';
 import type { Session } from '../model/types';
 import { parseSince } from '../model/time';
 import { eventsToSession } from '../recorder/steps';
@@ -32,13 +32,20 @@ export function loadOne(
   return loadSession(resolveSession(ref, ctx.env, project), { detail, env: ctx.env });
 }
 
-/** Classifies with the project's rules; files are read once across sessions. */
+/**
+ * Classifies with the rules of each repo a command runs in, falling back to the session's
+ * project; files are read and rules compiled once across sessions.
+ */
 export function classifier(files: Files = diskFiles()) {
   const cache = new Map<string, Classifier>();
+  const rulesAt = repoRules(files);
   return (session: Session): ClassifiedSession => {
     const key = session.cwd ?? '';
     let c = cache.get(key);
-    if (!c) cache.set(key, (c = new Classifier(loadRules(session.cwd, files), files)));
+    if (!c) {
+      const rules = (session.cwd ? rulesAt(session.cwd) : undefined) ?? defaultRules();
+      cache.set(key, (c = new Classifier(rules, files, rulesAt)));
+    }
     return c.session(session);
   };
 }

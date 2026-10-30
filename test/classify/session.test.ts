@@ -325,6 +325,62 @@ describe('rules files', () => {
     expect(result.steps.map((s) => s.phase)).toEqual(['build', 'writing-tests']);
   });
 
+  it('classifies a command by the rules of the repo it runs in, not only the session’s', () => {
+    // A session started in one folder runs another repo's script (subagents in worktrees do).
+    const repos = memoryFiles({
+      '/ios/scripts/test.sh':
+        '#!/bin/bash\nxcodebuild build-for-testing -scheme App\nxcodebuild test-without-building -scheme App\n',
+      '/ios/.awf/rules.yaml': [
+        'commands:',
+        '  - { phase: build, program: test.sh, with: [--build] }',
+        '  - { phase: tests, program: test.sh }',
+        'failurePatterns:',
+        "  - { tool: test.sh, pattern: '(?m)^test\\.sh: .* FAILED in ' }",
+      ].join('\n'),
+      '/viz/.awf/rules.yaml': 'commands:\n  - { phase: tests, program: check.sh }',
+      '/viz/check.sh': '#!/bin/sh\nnode build.mjs\n',
+    });
+    const piped = 'cd /ios/.claude/worktrees/wt && ./scripts/test.sh --only A | tail -3';
+    const result = classifySession(
+      session(
+        [
+          step({ kind: 'tool', tool: 'Bash', command: 'cd /ios && ./scripts/test.sh --only A' }),
+          step({ kind: 'tool', tool: 'Bash', command: 'cd /ios && scripts/test.sh --build' }),
+          step({
+            kind: 'tool',
+            tool: 'Bash',
+            command: piped,
+            ok: true,
+            detail: { output: 'test.sh: --only A FAILED in 12s (coverage gate: not run)' },
+          }),
+          // Back in the session's repo, its own rules apply.
+          step({ kind: 'tool', tool: 'Bash', command: 'cd /viz && ./check.sh' }),
+        ],
+        '/viz',
+      ),
+      { files: repos },
+    );
+    const bash = result.steps.map((s) => [s.phase, s.rule, s.failed]);
+    expect(bash).toEqual([
+      ['tests', 'rules.yaml:commands[1]', false],
+      ['build', 'rules.yaml:commands[0]', false],
+      ['tests', 'rules.yaml:commands[1]', true],
+      ['tests', 'rules.yaml:commands[0]', false],
+    ]);
+    // Rules given by the caller apply everywhere: the script is read, and its build wins.
+    const fixed = classifySession(
+      session(
+        [step({ kind: 'tool', tool: 'Bash', command: 'cd /ios && ./scripts/test.sh' })],
+        '/viz',
+      ),
+      {
+        files: repos,
+        rules: defaultRules(),
+      },
+    );
+    expect(fixed.steps[0]?.phase).toBe('build');
+  });
+
   it('reports a bad rule with its location', () => {
     expect(() =>
       compileRules([{ text: 'commands:\n  - { phase: testing, program: x }', source: 'my.yaml' }]),

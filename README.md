@@ -63,10 +63,10 @@ Every command takes `--help` and `--json`. A session is an ID or its first chara
 `awf statusline` puts the current session's phase split in Claude Code's status line, updated as the session goes:
 
 ```text
-tests 36% · explore 29% · scripts 15% · 15 failed · rework 2m
+tests 3% · build 32% · scripts 26% · 9 failed · rework 9s
 ```
 
-It shows the three phases that took the most time so far, then failed lint, test and build runs, and rework time when rework isn't one of the three. Shares are of the time the agent worked, without Waiting on you, so they hold still while you're away. Phase names are short: code, test code, lint, tests, build, rework, explore, scripts, plan and unclassified, coloured as in the report (`NO_COLOR=1` turns colours off).
+It shows Running tests, always and first, then the phases that took the most time so far (three phases in all), then failed lint, test and build runs, and rework time when rework isn't one of the phases shown. Pin other phases with `--pin` (`--pin tests,build`), or none with `--pin none` for only the top three. Shares are of the time the agent worked, without Waiting on you, so they hold still while you're away. Phase names are short: code, test code, lint, tests, build, rework, explore, scripts, plan and unclassified, coloured as in the report (`NO_COLOR=1` turns colours off).
 
 To set it up, add a `statusLine` to `~/.claude/settings.json`, with the path to your build:
 
@@ -90,7 +90,7 @@ echo '{"transcript_path": "'"$(ls -t ~/.claude/projects/*/*.jsonl | head -1)"'"}
 
 Every instant of a session gets exactly one phase, so phase times add up to the session's time. A Bash command is classified by what it really runs: `npm run test` by its script, `make lint` by its recipe, `./gradlew check` by its tasks, `fastlane <lane>` by the lane's actions, `git commit` by its pre-commit hook, `git push` by its pre-push hook. Commands that run something other than a check, an edit or a read (scripts, the app and its servers, `curl`, databases, deploys, `git push`, polling loops) are Running scripts. Browser and computer-use calls are Exploring when they only look at a page or the screen, and Running scripts when they act on it. A failed check is read from its exit code when the exit code is the check's own, and from its output when a pipe hid it. Edits after a failed check, until the same check passes, are Rework. [docs/phases.md](docs/phases.md) has every rule.
 
-Teach awf your own scripts and tools in `.awf/rules.yaml` in your repo, in the format of [src/classify/default-rules.yaml](src/classify/default-rules.yaml). Your rules come first: one that matches a command decides before awf reads the script it runs, so `{ phase: tests, program: test.sh }` makes `./scripts/test.sh` a test run even if it builds first, and `{ phase: tests, match: '(^|/)scripts/e2e-.*\.sh' }` names scripts by path. `awf stats` lists the unclassified programs worth a rule; `awf stats --phase tests` shows which commands a phase's time went to.
+Teach awf your own scripts and tools in `.awf/rules.yaml` in your repo, in the format of [src/classify/default-rules.yaml](src/classify/default-rules.yaml). Your rules come first: one that matches a command decides before awf reads the script it runs, so `{ phase: tests, program: test.sh }` makes `./scripts/test.sh` a test run even if it builds first, and `{ phase: tests, match: '(^|/)scripts/e2e-.*\.sh' }` names scripts by path. A command follows the rules of the repo it runs in, so `cd ../ios && ./scripts/test.sh` from a session started in another folder still uses the iOS repo's rules. `awf stats` lists the unclassified programs worth a rule; `awf stats --phase tests` shows which commands a phase's time went to.
 
 **Build drill-down.** Run builds with their timing output on (`cargo build --timings`, `./gradlew --profile`, `xcodebuild -showBuildTimingSummary`, `bazel build --profile=…`, `dotnet build -clp:PerformanceSummary`) and the report nests each build's slowest tasks under its bar. See [docs/build-drilldown.md](docs/build-drilldown.md).
 

@@ -196,22 +196,52 @@ export function defaultRules(): Rules {
   return defaults;
 }
 
+/** The nearest `.awf/rules.yaml` from `dir` upward. */
+function findRulesFile(dir: string, files: Files): { file: string; text: string } | undefined {
+  let current = path.resolve(dir);
+  for (let i = 0; i < 12; i++) {
+    const file = path.join(current, '.awf', 'rules.yaml');
+    const text = files.read(file);
+    if (text !== undefined) return { file, text };
+    const parent = path.dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  return undefined;
+}
+
+function withDefaults(found: { file: string; text: string }): Rules {
+  return compileRules([
+    { text: found.text, source: found.file },
+    { text: defaultRulesText, source: DEFAULT_RULES_SOURCE },
+  ]);
+}
+
 /** The built-in rules extended by `.awf/rules.yaml` in the project (searched from `cwd` upward). */
 export function loadRules(cwd: string | undefined, files: Files): Rules {
-  if (!cwd) return defaultRules();
-  let dir = path.resolve(cwd);
-  for (let i = 0; i < 12; i++) {
-    const file = path.join(dir, '.awf', 'rules.yaml');
-    const text = files.read(file);
-    if (text !== undefined) {
-      return compileRules([
-        { text, source: file },
-        { text: defaultRulesText, source: DEFAULT_RULES_SOURCE },
-      ]);
+  const found = cwd ? findRulesFile(cwd, files) : undefined;
+  return found ? withDefaults(found) : defaultRules();
+}
+
+/**
+ * The rules of the repo each directory is in: its nearest `.awf/rules.yaml` with the built-in
+ * rules, or undefined when it has none. Each file is compiled once. A command that runs in
+ * another repo than the session's (`cd ../ios && ./scripts/test.sh`) is classified by that
+ * repo's rules.
+ */
+export function repoRules(files: Files): (dir: string) => Rules | undefined {
+  const byDir = new Map<string, Rules | undefined>();
+  const byFile = new Map<string, Rules>();
+  return (dir) => {
+    const key = path.resolve(dir);
+    if (byDir.has(key)) return byDir.get(key);
+    const found = findRulesFile(key, files);
+    let rules: Rules | undefined;
+    if (found) {
+      rules = byFile.get(found.file) ?? withDefaults(found);
+      byFile.set(found.file, rules);
     }
-    const parent = path.dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
-  }
-  return defaultRules();
+    byDir.set(key, rules);
+    return rules;
+  };
 }
