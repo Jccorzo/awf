@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   idleFor,
+  isServer,
   liveState,
   stateLabel,
   transcriptFacts,
@@ -56,7 +57,9 @@ describe('live state', () => {
     expect(stateAt(5, start)).toMatchObject({ kind: 'working', why: 'turn', label: 'working' });
     const calling = [...start, bash(2, 't1')];
     expect(stateAt(5, calling)).toMatchObject({ kind: 'working', why: 'turn' });
-    expect(facts(...calling).openCalls).toEqual([{ id: 't1', tool: 'Bash', ms: ms(2) }]);
+    expect(facts(...calling).openCalls).toEqual([
+      { id: 't1', tool: 'Bash', ms: ms(2), command: 'npm run build' },
+    ]);
     const answered = [...calling, result(9, 't1')];
     expect(stateAt(10, answered)).toMatchObject({ kind: 'working' });
     expect(facts(...answered).openCalls).toEqual([]);
@@ -301,5 +304,100 @@ describe('live state', () => {
       openCalls: [],
       background: [],
     });
+  });
+
+  it('is your turn when only a server is left running: nothing waits for it to end', () => {
+    const serve = (command: string) => [
+      prompt(0, 'start the app'),
+      bash(1, 't1', { command, run_in_background: true }),
+      result(2, 't1', { toolUseResult: { backgroundTaskId: 'b1' } }),
+      endTurn(3, 'm2'),
+      system(3, 'turn_duration'),
+    ];
+    expect(
+      stateAt(100, serve('cd ui && PORT=3002 npx next dev -p 3002 > dev.log 2>&1')),
+    ).toMatchObject({ kind: 'your-turn', sinceMs: ms(3), background: 1, servers: 1 });
+    expect(stateAt(1000, serve('pnpm -C core dev'))).toMatchObject({
+      kind: 'idle',
+      label: 'idle 16m',
+    });
+    // A test run that brings up its own server is waited for.
+    expect(stateAt(100, serve('PORT=3001 pnpm test:e2e'))).toMatchObject({
+      kind: 'working',
+      background: 1,
+      servers: 0,
+    });
+    // So is anything else it started, next to the server.
+    expect(
+      stateAt(100, [
+        ...serve('pnpm dev'),
+        prompt(10, 'and the tests'),
+        bash(11, 't2', { command: 'pnpm test', run_in_background: true }),
+        result(12, 't2', { toolUseResult: { backgroundTaskId: 'b2' } }),
+        endTurn(13, 'm3'),
+      ]),
+    ).toMatchObject({ kind: 'working', why: 'background', background: 2, servers: 1 });
+    // A turn under way is working, server or not.
+    expect(stateAt(100, [...serve('pnpm dev'), prompt(50, 'now fix it')])).toMatchObject({
+      kind: 'working',
+      why: 'turn',
+    });
+  });
+
+  it('tells servers from commands that end', () => {
+    const servers = [
+      'pnpm dev',
+      'pnpm -C /Users/me/core dev',
+      'PORT=8082 CORE_BASE_URL=http://localhost:8090 pnpm dev:server',
+      'yarn start:dev',
+      'npm run dev > $TMPDIR/chat.log 2>&1',
+      'npx serve dist',
+      'pnpm build > build.log 2>&1 && pnpm exec next start --port 23057',
+      'exec pnpm exec vite --port 3101 --strictPort',
+      'CLOUDSDK_CORE_ACCOUNT=me@example.com exec cloud-sql-proxy --gcloud-auth --port 5435 p:r:i',
+      'go build -o back-bin . && PORT=8080 ./back-bin > back.log 2>&1',
+      'APP_BIND=127.0.0.1:8788 ./target/debug/app serve > back.log',
+      'cd fake-oauth && node server.mjs 9911',
+      'firebase serve --only hosting --port 5055',
+      'python3 -m http.server 8000',
+      'python manage.py runserver',
+      'docker compose up api',
+      'kubectl port-forward svc/api 8080:80',
+      'tail -f app.log',
+    ];
+    const ends = [
+      'pnpm test',
+      'pnpm build',
+      'npm run lint -- --fix',
+      'vite build',
+      'vite-node x.ts',
+      'pnpm add -D start-server-and-test',
+      'PORT=3001 pnpm test:e2e',
+      'PGPORT=5432 psql -c "select 1"',
+      'docker compose up -d',
+      'echo "starting server"',
+      'target/debug/app serve --help | sed -n 5,12p',
+      'timeout 60 pnpm dev',
+      'gh run watch 36678360235 --exit-status --interval 60',
+      'gh pr checks 12 --watch',
+      'until [ "$(gh run view 1 --json status --jq .status)" = completed ]; do sleep 30; done',
+      'xcodebuild test -scheme App',
+      'sleep 600; echo done',
+    ];
+    expect(servers.filter((c) => !isServer(c))).toEqual([]);
+    expect(ends.filter((c) => isServer(c))).toEqual([]);
+  });
+
+  it('counts only what the agent writes as activity, not what an exit or a reopen adds', () => {
+    const read = facts(
+      prompt(0, 'hi'),
+      endTurn(2, 'm1'),
+      system(2, 'turn_duration'),
+      { type: 'cost-state', sessionId: 's' },
+      { type: 'pr-link', timestamp: new Date(ms(5000)).toISOString(), prNumber: 1 },
+      { type: 'file-history-delta', timestamp: new Date(ms(6000)).toISOString() },
+      { type: 'last-prompt', lastPrompt: 'hi' },
+    );
+    expect(read).toMatchObject({ turnOpen: false, endedMs: ms(2), lastMs: ms(2) });
   });
 });

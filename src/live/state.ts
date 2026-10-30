@@ -28,11 +28,54 @@ const END_REASONS = new Set(['end_turn', 'stop_sequence']);
 /** Your turn for this long reads as idle. */
 export const IDLE_AFTER_MS = 5 * 60_000;
 const MAX_TITLE = 160;
+/**
+ * Entries the agent writes while it works. Claude Code also writes untimestamped entries
+ * (cost-state, last-prompt) when the process exits or the app reopens a session, and timestamped
+ * links (pr-link): those aren't activity.
+ */
+const ACTIVITY = new Set([
+  'user',
+  'assistant',
+  'system',
+  'api-request',
+  'queue-operation',
+  'attachment',
+]);
+
+/**
+ * Commands that serve or watch until they're stopped: dev servers, proxies, tunnels, `tail -f`. A
+ * background shell running one doesn't keep the session working, since nothing waits for it to end.
+ */
+const SERVERS = [
+  // A package script that serves: pnpm dev, pnpm -C core dev, yarn dev:web, npm start, npx serve.
+  /\b(?:npm|pnpm|yarn|bun|npx|bunx)\b[^;&|]*?\s(?:dev|start|serve|server|preview|watch|storybook)(?::[\w-]+)*(?=$|[\s;&|)])/,
+  /\b(?:next|vite|nuxt|nuxi|astro|remix|gatsby|expo|storybook|wrangler|webpack|rspack|ng|react-scripts|vue-cli-service)\s+(?:dev|develop|start|serve|preview)\b/,
+  /\bvite(?=$|\s+-|\s*[;&|)])/,
+  /(?:^|[\s;&|(/])(?:nodemon|http-server|live-server|json-server|browser-sync|uvicorn|gunicorn|hypercorn|daphne|streamlit|gradio|jupyter|puma|rackup|foreman|overmind|ngrok|cloudflared|caddy|cloud-sql-proxy|cloud_sql_proxy|redis-server|mongod|mailhog|mailpit)(?=$|[\s;&|)])/,
+  /\bpython[\d.]*\s+-m\s+http\.server\b|\bflask\s+run\b|\brails\s+s(?:erver)?\b|\bphp\s+-S\b/,
+  /\b(?:docker|podman)[\s-]compose\s+(?:\S+\s+)*?up\b(?![^;&|]*\s(?:-d|--detach)\b)/,
+  /\bkubectl\s+port-forward\b|\btail\s+-[fF]\b/,
+  // Any program's serve subcommand: firebase serve, registry serve, manage.py runserver.
+  /\s(?:serve|server|runserver)(?=$|[\s;&|)])/,
+  // A server by its file (node server.mjs), or by where it listens (PORT=8080 ./api, --port 3000).
+  /\bserver\.(?:[cm]?js|[cm]?ts|py|rb)\b/,
+  /(?:^|[\s;&|(])(?:PORT=\d|[A-Z_]*_(?:BIND|LISTEN)(?:_ADDR)?=)|\s--(?:port|bind|listen)[=\s]/,
+];
+/** A command that ends by itself, or a test run that brings up a server for itself. */
+const ENDS =
+  /\b(?:kill|pkill|killall|timeout|gtimeout|test|tests|spec|e2e|playwright|cypress|jest|vitest|pytest|xcodebuild)\b|\s--(?:help|version)\b/;
+
+/** A shell command that serves or watches until it's stopped. */
+export function isServer(command: string): boolean {
+  return !ENDS.test(command) && SERVERS.some((pattern) => pattern.test(command));
+}
 
 export interface OpenCall {
   id: string;
   tool: string;
   ms: number;
+  /** A Bash call's command. */
+  command?: string;
 }
 
 /** What the transcript says about the session now. */
@@ -49,7 +92,7 @@ export interface TranscriptFacts {
   openCalls: OpenCall[];
   /** Background shells, background subagents, monitors and workflows not finished yet. */
   background: OpenCall[];
-  /** The last timestamp in the transcript. */
+  /** When the agent last wrote something: a prompt, a reply, a request, a notice. */
   lastMs?: number;
 }
 
@@ -66,7 +109,7 @@ export function transcriptFacts(text: string): TranscriptFacts {
   let endedMs: number | undefined;
   let lastMs: number | undefined;
   const open = new Map<string, OpenCall>();
-  const tools = new Map<string, string>();
+  const calls = new Map<string, OpenCall>();
   const background = new Map<string, OpenCall>();
   const finished = new Set<string>();
 
@@ -119,7 +162,7 @@ export function transcriptFacts(text: string): TranscriptFacts {
     // Older versions kept subagent entries in the main file.
     if (entry.isSidechain === true) continue;
     const ms = timestampMs(entry);
-    if (ms === undefined) continue;
+    if (ms === undefined || !ACTIVITY.has(String(entry.type))) continue;
     cwd ??= str(entry.cwd);
     lastMs = Math.max(lastMs ?? ms, ms);
 
@@ -150,7 +193,8 @@ export function transcriptFacts(text: string): TranscriptFacts {
           if (!id) continue;
           // A result for a call no longer open (killed as the process exited) starts nothing.
           if (open.delete(id)) work();
-          const tool = tools.get(id);
+          const call = calls.get(id);
+          const tool = call?.tool;
           if (block.is_error === true || !result || !tool || TASK_REFS.has(tool)) continue;
           const taskId =
             str(result.backgroundTaskId) ??
@@ -158,7 +202,7 @@ export function transcriptFacts(text: string): TranscriptFacts {
               ? str(result.agentId)
               : undefined) ??
             (TASK_TOOLS.has(tool) ? str(result.taskId) : undefined);
-          if (taskId && !finished.has(taskId)) background.set(taskId, { id, tool, ms });
+          if (taskId && !finished.has(taskId)) background.set(taskId, { ...call, ms });
         }
         // "[Request interrupted by user]", "... for tool use": the turn ends where it stands.
         if (text.trimStart().startsWith('[Request interrupted')) end(ms);
@@ -170,22 +214,24 @@ export function transcriptFacts(text: string): TranscriptFacts {
           end(ms);
           break;
         }
-        let calls = false;
+        let used = false;
         for (const block of contentBlocks(entry)) {
           if (block.type !== 'tool_use') continue;
           const id = str(block.id);
           const tool = str(block.name);
           if (!id || !tool) continue;
-          calls = true;
-          open.set(id, { id, tool, ms });
-          tools.set(id, tool);
+          used = true;
+          const input = obj(block.input) ?? {};
+          const command = tool === 'Bash' ? str(input.command) : undefined;
+          const call: OpenCall = command ? { id, tool, ms, command } : { id, tool, ms };
+          open.set(id, call);
+          calls.set(id, call);
           if (STOP_TOOLS.has(tool)) {
-            const input = obj(block.input) ?? {};
             finish(str(input.task_id) ?? str(input.bash_id) ?? str(input.shell_id));
           }
         }
         const reason = str(obj(entry.message)?.stop_reason);
-        if (!calls && reason && END_REASONS.has(reason) && open.size === 0) end(ms);
+        if (!used && reason && END_REASONS.has(reason) && open.size === 0) end(ms);
         break;
       }
       case 'api-request':
@@ -245,12 +291,16 @@ export interface LiveState {
   question?: string;
   /** Background tasks and subagents still running. */
   background: number;
+  /** Of those, servers left running (see `isServer`): they don't keep the session working. */
+  servers: number;
 }
 
 /**
- * The session's state: working (mid-turn, a call open, or background work running), approval (the
- * recorder saw a permission prompt nobody answered yet), your turn (the turn ended, or a question
- * waits for you), idle (your turn for IDLE_AFTER_MS or more).
+ * The session's state: working (mid-turn, a call open, or background work it waits for running),
+ * approval (the recorder saw a permission prompt nobody answered yet), your turn (the turn ended,
+ * or a question waits for you), idle (your turn for IDLE_AFTER_MS or more). A server left running
+ * after the turn ended is your turn: the agent comes back when background work ends, and a server
+ * doesn't end.
  */
 export function liveState(
   facts: TranscriptFacts,
@@ -258,22 +308,29 @@ export function liveState(
   events?: RecorderEvent[],
 ): LiveState {
   const background = facts.background.length;
+  const servers = facts.background.filter((task) => task.command && isServer(task.command)).length;
+  const counts = { background, servers };
   if (facts.turnOpen) {
     const question = facts.openCalls.find((c) => QUESTION_TOOLS.has(c.tool));
-    if (question) return waiting(question.ms, now, background, question.tool);
+    if (question) return waiting(question.ms, now, counts, question.tool);
   }
-  if (facts.turnOpen || background > 0) {
-    if (events && approvalPending(events, facts)) return { kind: 'approval', background };
-    return { kind: 'working', why: facts.turnOpen ? 'turn' : 'background', background };
+  if (facts.turnOpen || background > servers) {
+    if (events && approvalPending(events, facts)) return { kind: 'approval', ...counts };
+    return { kind: 'working', why: facts.turnOpen ? 'turn' : 'background', ...counts };
   }
-  return waiting(facts.endedMs ?? facts.lastMs ?? now, now, background);
+  return waiting(facts.endedMs ?? facts.lastMs ?? now, now, counts);
 }
 
-function waiting(sinceMs: number, now: number, background: number, question?: string): LiveState {
+function waiting(
+  sinceMs: number,
+  now: number,
+  counts: { background: number; servers: number },
+  question?: string,
+): LiveState {
   const state: LiveState = {
     kind: now - sinceMs >= IDLE_AFTER_MS ? 'idle' : 'your-turn',
     sinceMs,
-    background,
+    ...counts,
   };
   if (question) state.question = question;
   return state;

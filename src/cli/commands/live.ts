@@ -19,7 +19,7 @@ import type { Command, Ctx, Options } from '../main';
 import { type ColorMode, colorMode, parsePin, phaseLine } from './statusline';
 
 export interface LiveOptions {
-  /** Sessions with a transcript change this recent. */
+  /** Sessions active this recently. */
   sinceMs: number;
   /** As typed: "2h". */
   since: string;
@@ -39,7 +39,7 @@ export interface LiveRow {
   label: string;
   /** The status line's phase split: '' when nothing worked yet, undefined when not read (yet). */
   line?: string;
-  /** The latest change to the transcript or a subagent's transcript. */
+  /** The session's last entry, or the latest change to a subagent's transcript. */
   activityMs: number;
   /** Why the phase line is missing. */
   error?: string;
@@ -86,6 +86,10 @@ function readSessionEvents(
 /**
  * The sessions to show, newest activity first, with their state. Phase lines are left out: see
  * `fillLine`. A transcript that can't be read, or has nothing in it, is skipped.
+ *
+ * Activity is the transcript's last entry, not its file's time: Claude Code adds entries without a
+ * time when the process exits or the app reopens a session, so an old session's file can look new.
+ * Files changed within --since are read; those with no activity in it are left out.
  */
 export function scan(
   ctx: Pick<Ctx, 'env'>,
@@ -93,29 +97,28 @@ export function scan(
   memo: LiveMemo,
   now: number,
 ): { rows: LiveRow[]; total: number } {
-  const active = activeTranscripts(ctx.env, now - options.sinceMs);
+  const sinceMs = now - options.sinceMs;
+  const changed = activeTranscripts(ctx.env, sinceMs);
   const home = ctx.env.HOME || os.homedir();
-  const rows: LiveRow[] = [];
-  let skipped = 0;
-  for (const file of active) {
-    if (rows.length >= options.limit) break;
+  const active: LiveRow[] = [];
+  for (const file of changed) {
     let row: LiveRow | undefined;
     try {
       row = readRow(ctx, file, memo, now, home);
     } catch {
       row = undefined;
     }
-    if (row) rows.push(row);
-    else skipped++;
+    if (row && row.activityMs >= sinceMs) active.push(row);
   }
+  const rows = active.sort((a, b) => b.activityMs - a.activityMs).slice(0, options.limit);
   // Sessions that left the board are forgotten, so a board left open for days doesn't grow.
   const shown = new Set(rows.map((row) => row.id));
-  const files = new Set(active.map((file) => file.path));
+  const files = new Set(changed.map((file) => file.path));
   for (const file of memo.facts.keys()) if (!files.has(file)) memo.facts.delete(file);
   for (const id of memo.lines.keys()) if (!shown.has(id)) memo.lines.delete(id);
   for (const file of memo.events.keys())
     if (!shown.has(path.basename(file, '.jsonl'))) memo.events.delete(file);
-  return { rows, total: active.length - skipped };
+  return { rows, total: active.length };
 }
 
 function readRow(
@@ -140,7 +143,7 @@ function readRow(
     project: facts.cwd ? projectName(facts.cwd, home) : file.project,
     state,
     label: stateLabel(state, now),
-    activityMs: file.activityMs,
+    activityMs: Math.max(facts.lastMs ?? 0, file.subagentsMs ?? 0),
   };
   if (facts.cwd) row.cwd = facts.cwd;
   if (facts.title) row.title = facts.title;
@@ -231,6 +234,7 @@ function jsonRow(row: LiveRow) {
     ...(row.state.sinceMs !== undefined ? { sinceMs: row.state.sinceMs } : {}),
     ...(row.state.question ? { question: row.state.question } : {}),
     background: row.state.background,
+    servers: row.state.servers,
     activityMs: row.activityMs,
     line: row.line?.replace(ANSI, ''),
     ...(row.error ? { error: row.error } : {}),
@@ -408,9 +412,9 @@ export const liveCommand: Command = {
   summary: 'A board of every active Claude Code session: project, task, state and phase split',
   usage: `Usage: awf live [--since 2h] [--limit 10] [--every 20s] [--pin tests] [--once] [--json]
 
-A board for a spare terminal tab: every Claude Code session whose transcript (or a subagent's
-transcript) changed recently, newest activity first, redrawn in place until Ctrl-C. It reads the
-transcripts, so it shows sessions of the desktop app too, where the status line never shows.
+A board for a spare terminal tab: every Claude Code session active recently (its last entry, or a
+subagent's transcript changing), newest activity first, redrawn in place until Ctrl-C. It reads
+the transcripts, so it shows sessions of the desktop app too, where the status line never shows.
 
   acme-billing/web   CI pipeline for demo-000…   working     tests 35% · build 33% · explore 12%
   deploys            Cache key rollout…          your turn   tests 4% · scripts 57% · rework 14m
@@ -418,7 +422,8 @@ transcripts, so it shows sessions of the desktop app too, where the status line 
 Each row: the session's folder, its title or first prompt, its state, and the status line's
 phase split (see "awf statusline --help"). The state, from the end of the transcript:
   working     a turn is under way (a model or tool call open), or background tasks or
-              subagents it started are still running
+              subagents it started are still running; a server left running (pnpm dev,
+              next dev, PORT=8080 ./api) doesn't count, since nothing waits for it to end
   approval?   a permission prompt is waiting; only known when the awf plugin recorded the session
   your turn   the turn ended, or a question waits for your answer
   idle 12m    your turn for 5 minutes or more
@@ -428,7 +433,7 @@ process exits, what it was running ends with it: your turn.
 Phase lines are kept in ~/.awf/cache/statusline/ with the status line's, so a pass reads only
 sessions that changed. Colours follow the status line; NO_COLOR turns them off.
 
-  --since <age>    sessions with a change this recent (default 2h; 30m, 1d)
+  --since <age>    sessions active this recently (default 2h; 30m, 1d)
   --limit <n>      at most this many sessions (default 10)
   --every <time>   redraw this often (default 20s; 5s, 1m)
   --pin <phases>   the phases always shown, first, as in "awf statusline" (default tests)
