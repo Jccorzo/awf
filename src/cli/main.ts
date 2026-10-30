@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { parseArgs, type ParseArgsConfig } from 'node:util';
 import { VERSION } from '../version';
 import { classifyCommand } from './commands/classify';
@@ -9,11 +10,14 @@ import { reportCommand } from './commands/report';
 import { accuracyCommand, sampleCommand } from './commands/sample';
 import { sessionsCommand } from './commands/sessions';
 import { statsCommand } from './commands/stats';
+import { statuslineCommand } from './commands/statusline';
 import { summaryCommand } from './commands/summary';
 
 export interface Io {
   out: (text: string) => void;
   err: (text: string) => void;
+  /** Standard input, read whole; undefined when it's a terminal. Only `statusline` reads it. */
+  input?: () => string | undefined;
 }
 
 export interface Ctx {
@@ -35,6 +39,7 @@ export interface Command {
 const defaultIo: Io = {
   out: (text) => process.stdout.write(text + '\n'),
   err: (text) => process.stderr.write(text + '\n'),
+  input: () => (process.stdin.isTTY ? undefined : readFileSync(0, 'utf8')),
 };
 
 export const COMMANDS: Record<string, Command> = {
@@ -45,6 +50,7 @@ export const COMMANDS: Record<string, Command> = {
   report: reportCommand,
   compare: compareCommand,
   stats: statsCommand,
+  statusline: statuslineCommand,
   sample: sampleCommand,
   accuracy: accuracyCommand,
   doctor: doctorCommand,

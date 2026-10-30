@@ -53,9 +53,38 @@ Every command takes `--help` and `--json`. A session is an ID or its first chara
 | `report`             | One self-contained HTML waterfall: phases, every step on a time axis, failures, rework, slowest steps, build tasks |
 | `compare`            | Two sessions or two date ranges side by side                                                                       |
 | `stats`              | Bash time by phase across sessions, and the unclassified programs that need rules                                  |
+| `statusline`         | One short line for Claude Code's status line: the current session's phase split so far                             |
 | `sample`, `accuracy` | Check the classifier against your own labels                                                                       |
 | `doctor`             | What awf can read, and log entries it doesn't recognise                                                            |
 | `purge`              | Deletes everything awf stored                                                                                      |
+
+## Status line
+
+`awf statusline` puts the current session's phase split in Claude Code's status line, updated as the session goes:
+
+```text
+tests 36% · explore 29% · scripts 15% · 15 failed · rework 2m
+```
+
+It shows the three phases that took the most time so far, then failed lint, test and build runs, and rework time when rework isn't one of the three. Shares are of the time the agent worked, without Waiting on you, so they hold still while you're away. Phase names are short: code, test code, lint, tests, build, rework, explore, scripts, plan and unclassified, coloured as in the report (`NO_COLOR=1` turns colours off).
+
+To set it up, add a `statusLine` to `~/.claude/settings.json`, with the path to your build:
+
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "node /path/to/awf/dist/awf.mjs statusline",
+    "padding": 0
+  }
+}
+```
+
+Claude Code sends the session's `transcript_path` on stdin; awf reads that transcript (and the plugin's recorded events, when there are any) and keeps the line in `~/.awf/cache/statusline/` until the transcript changes, so a repeat costs about 30 ms. Reading a long session again takes as long as `awf summary` does (0.4s for an 8 MB transcript). It never breaks the status line: on any error it prints nothing and exits 0; run it with `AWF_DEBUG=1` to see the error. Try it by hand with:
+
+```bash
+echo '{"transcript_path": "'"$(ls -t ~/.claude/projects/*/*.jsonl | head -1)"'"}' | node dist/awf.mjs statusline
+```
 
 ## Phases and rules
 
@@ -85,6 +114,7 @@ awf makes no network calls: lint forbids network code in `src/`, the tests run w
 - `events/<session>.jsonl`: the plugin's recorder, one line per hook event: event name, time, tool name, Bash command or file path, the action names of a browser call (`screenshot`, `left_click`), success or failure. Never prompts, tool output, URLs or typed text. Secrets in commands are masked.
 - `imported/<session>.json`: `awf import`'s cache of timings, so your history outlives the agents deleting old logs. No prompts or output.
 - `reports/<session>.html`: reports, unless you pass `--out`.
+- `cache/statusline/<session>.json`: the status line's last line for a session and the transcript size and time it was made from. Lines of sessions untouched for 30 days are deleted.
 
 **The full report** shows commands, file paths, the first prompt and tool output from the transcript, with secrets masked. Keep it to yourself; `--share` makes a copy with phases, durations and tool names only.
 

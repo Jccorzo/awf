@@ -16,6 +16,11 @@ export function importedDir(env: Env = process.env): string {
   return path.join(awfHome(env), 'imported');
 }
 
+/** Results awf can rebuild at any time, like the status line's last line per session. */
+export function cacheDir(env: Env = process.env): string {
+  return path.join(awfHome(env), 'cache');
+}
+
 /** Claude Code's transcripts, read-only: `$CLAUDE_CONFIG_DIR/projects` or `~/.claude/projects`. */
 export function claudeProjectsDir(env: Env = process.env): string {
   if (env.AWF_CLAUDE_PROJECTS) return env.AWF_CLAUDE_PROJECTS;

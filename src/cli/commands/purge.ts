@@ -6,7 +6,7 @@ import type { Command } from '../main';
 import { homeRelative } from '../table';
 
 /** What awf keeps in its folder. Anything else there means the folder isn't only awf's. */
-const OURS = new Set(['events', 'imported', 'reports', '.DS_Store']);
+const OURS = new Set(['events', 'imported', 'reports', 'cache', '.DS_Store']);
 
 function size(target: string): number {
   const stat = statSync(target, { throwIfNoEntry: false });
@@ -26,7 +26,8 @@ export const purgeCommand: Command = {
   summary: "Delete everything awf stored (~/.awf); Claude Code's own files stay",
   usage: `Usage: awf purge [--yes]
 
-Deletes awf's folder (~/.awf, or $AWF_HOME): recorded timings, the import cache and reports.
+Deletes awf's folder (~/.awf, or $AWF_HOME): recorded timings, the import cache, reports and the
+status line's cache.
 Claude Code's transcripts are never touched. Without --yes it only lists what it would delete.
   --yes   delete it`,
   options: { yes: { type: 'boolean' }, json: { type: 'boolean' } },
