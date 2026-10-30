@@ -12361,7 +12361,10 @@ function activeTranscripts(env, sinceMs) {
   for (const file of listTranscripts(env)) {
     const subagents = subagentFiles(file.path);
     const activityMs = Math.max(file.mtimeMs, subagents?.mtimeMs ?? 0);
-    if (activityMs >= sinceMs) active.push({ ...file, activityMs });
+    if (activityMs < sinceMs) continue;
+    active.push(
+      subagents ? { ...file, activityMs, subagentsMs: subagents.mtimeMs } : { ...file, activityMs }
+    );
   }
   return active.sort((a, b) => b.activityMs - a.activityMs);
 }
@@ -13350,6 +13353,33 @@ var TASK_TOOLS = /* @__PURE__ */ new Set(["Monitor", "Workflow"]);
 var END_REASONS = /* @__PURE__ */ new Set(["end_turn", "stop_sequence"]);
 var IDLE_AFTER_MS = 5 * 6e4;
 var MAX_TITLE = 160;
+var ACTIVITY = /* @__PURE__ */ new Set([
+  "user",
+  "assistant",
+  "system",
+  "api-request",
+  "queue-operation",
+  "attachment"
+]);
+var SERVERS = [
+  // A package script that serves: pnpm dev, pnpm -C core dev, yarn dev:web, npm start, npx serve.
+  /\b(?:npm|pnpm|yarn|bun|npx|bunx)\b[^;&|]*?\s(?:dev|start|serve|server|preview|watch|storybook)(?::[\w-]+)*(?=$|[\s;&|)])/,
+  /\b(?:next|vite|nuxt|nuxi|astro|remix|gatsby|expo|storybook|wrangler|webpack|rspack|ng|react-scripts|vue-cli-service)\s+(?:dev|develop|start|serve|preview)\b/,
+  /\bvite(?=$|\s+-|\s*[;&|)])/,
+  /(?:^|[\s;&|(/])(?:nodemon|http-server|live-server|json-server|browser-sync|uvicorn|gunicorn|hypercorn|daphne|streamlit|gradio|jupyter|puma|rackup|foreman|overmind|ngrok|cloudflared|caddy|cloud-sql-proxy|cloud_sql_proxy|redis-server|mongod|mailhog|mailpit)(?=$|[\s;&|)])/,
+  /\bpython[\d.]*\s+-m\s+http\.server\b|\bflask\s+run\b|\brails\s+s(?:erver)?\b|\bphp\s+-S\b/,
+  /\b(?:docker|podman)[\s-]compose\s+(?:\S+\s+)*?up\b(?![^;&|]*\s(?:-d|--detach)\b)/,
+  /\bkubectl\s+port-forward\b|\btail\s+-[fF]\b/,
+  // Any program's serve subcommand: firebase serve, registry serve, manage.py runserver.
+  /\s(?:serve|server|runserver)(?=$|[\s;&|)])/,
+  // A server by its file (node server.mjs), or by where it listens (PORT=8080 ./api, --port 3000).
+  /\bserver\.(?:[cm]?js|[cm]?ts|py|rb)\b/,
+  /(?:^|[\s;&|(])(?:PORT=\d|[A-Z_]*_(?:BIND|LISTEN)(?:_ADDR)?=)|\s--(?:port|bind|listen)[=\s]/
+];
+var ENDS = /\b(?:kill|pkill|killall|timeout|gtimeout|test|tests|spec|e2e|playwright|cypress|jest|vitest|pytest|xcodebuild)\b|\s--(?:help|version)\b/;
+function isServer(command) {
+  return !ENDS.test(command) && SERVERS.some((pattern) => pattern.test(command));
+}
 function transcriptFacts(text) {
   let cwd;
   let customTitle;
@@ -13361,7 +13391,7 @@ function transcriptFacts(text) {
   let endedMs;
   let lastMs;
   const open = /* @__PURE__ */ new Map();
-  const tools = /* @__PURE__ */ new Map();
+  const calls = /* @__PURE__ */ new Map();
   const background = /* @__PURE__ */ new Map();
   const finished = /* @__PURE__ */ new Set();
   const work = () => {
@@ -13409,7 +13439,7 @@ function transcriptFacts(text) {
     }
     if (entry.isSidechain === true) continue;
     const ms = timestampMs(entry);
-    if (ms === void 0) continue;
+    if (ms === void 0 || !ACTIVITY.has(String(entry.type))) continue;
     cwd ??= str3(entry.cwd);
     lastMs = Math.max(lastMs ?? ms, ms);
     switch (entry.type) {
@@ -13437,10 +13467,11 @@ function transcriptFacts(text) {
           const id = str3(block.tool_use_id);
           if (!id) continue;
           if (open.delete(id)) work();
-          const tool = tools.get(id);
+          const call = calls.get(id);
+          const tool = call?.tool;
           if (block.is_error === true || !result2 || !tool || TASK_REFS2.has(tool)) continue;
           const taskId = str3(result2.backgroundTaskId) ?? (result2.isAsync === true || result2.status === "async_launched" ? str3(result2.agentId) : void 0) ?? (TASK_TOOLS.has(tool) ? str3(result2.taskId) : void 0);
-          if (taskId && !finished.has(taskId)) background.set(taskId, { id, tool, ms });
+          if (taskId && !finished.has(taskId)) background.set(taskId, { ...call, ms });
         }
         if (text2.trimStart().startsWith("[Request interrupted")) end(ms);
         break;
@@ -13451,22 +13482,24 @@ function transcriptFacts(text) {
           end(ms);
           break;
         }
-        let calls = false;
+        let used = false;
         for (const block of contentBlocks(entry)) {
           if (block.type !== "tool_use") continue;
           const id = str3(block.id);
           const tool = str3(block.name);
           if (!id || !tool) continue;
-          calls = true;
-          open.set(id, { id, tool, ms });
-          tools.set(id, tool);
+          used = true;
+          const input = obj3(block.input) ?? {};
+          const command = tool === "Bash" ? str3(input.command) : void 0;
+          const call = command ? { id, tool, ms, command } : { id, tool, ms };
+          open.set(id, call);
+          calls.set(id, call);
           if (STOP_TOOLS2.has(tool)) {
-            const input = obj3(block.input) ?? {};
             finish(str3(input.task_id) ?? str3(input.bash_id) ?? str3(input.shell_id));
           }
         }
         const reason = str3(obj3(entry.message)?.stop_reason);
-        if (!calls && reason && END_REASONS.has(reason) && open.size === 0) end(ms);
+        if (!used && reason && END_REASONS.has(reason) && open.size === 0) end(ms);
         break;
       }
       case "api-request":
@@ -13504,21 +13537,23 @@ function oneLine3(text) {
 }
 function liveState(facts, now, events) {
   const background = facts.background.length;
+  const servers = facts.background.filter((task) => task.command && isServer(task.command)).length;
+  const counts = { background, servers };
   if (facts.turnOpen) {
     const question = facts.openCalls.find((c) => QUESTION_TOOLS.has(c.tool));
-    if (question) return waiting(question.ms, now, background, question.tool);
+    if (question) return waiting(question.ms, now, counts, question.tool);
   }
-  if (facts.turnOpen || background > 0) {
-    if (events && approvalPending(events, facts)) return { kind: "approval", background };
-    return { kind: "working", why: facts.turnOpen ? "turn" : "background", background };
+  if (facts.turnOpen || background > servers) {
+    if (events && approvalPending(events, facts)) return { kind: "approval", ...counts };
+    return { kind: "working", why: facts.turnOpen ? "turn" : "background", ...counts };
   }
-  return waiting(facts.endedMs ?? facts.lastMs ?? now, now, background);
+  return waiting(facts.endedMs ?? facts.lastMs ?? now, now, counts);
 }
-function waiting(sinceMs, now, background, question) {
+function waiting(sinceMs, now, counts, question) {
   const state = {
     kind: now - sinceMs >= IDLE_AFTER_MS ? "idle" : "your-turn",
     sinceMs,
-    background
+    ...counts
   };
   if (question) state.question = question;
   return state;
@@ -14033,28 +14068,27 @@ function readSessionEvents(env, id, memo) {
   return events;
 }
 function scan(ctx, options, memo, now) {
-  const active = activeTranscripts(ctx.env, now - options.sinceMs);
+  const sinceMs = now - options.sinceMs;
+  const changed = activeTranscripts(ctx.env, sinceMs);
   const home = ctx.env.HOME || os7.homedir();
-  const rows = [];
-  let skipped = 0;
-  for (const file of active) {
-    if (rows.length >= options.limit) break;
+  const active = [];
+  for (const file of changed) {
     let row;
     try {
       row = readRow(ctx, file, memo, now, home);
     } catch {
       row = void 0;
     }
-    if (row) rows.push(row);
-    else skipped++;
+    if (row && row.activityMs >= sinceMs) active.push(row);
   }
+  const rows = active.sort((a, b) => b.activityMs - a.activityMs).slice(0, options.limit);
   const shown = new Set(rows.map((row) => row.id));
-  const files2 = new Set(active.map((file) => file.path));
+  const files2 = new Set(changed.map((file) => file.path));
   for (const file of memo.facts.keys()) if (!files2.has(file)) memo.facts.delete(file);
   for (const id of memo.lines.keys()) if (!shown.has(id)) memo.lines.delete(id);
   for (const file of memo.events.keys())
     if (!shown.has(path18.basename(file, ".jsonl"))) memo.events.delete(file);
-  return { rows, total: active.length - skipped };
+  return { rows, total: active.length };
 }
 function readRow(ctx, file, memo, now, home) {
   const facts = readFacts(file, memo);
@@ -14072,7 +14106,7 @@ function readRow(ctx, file, memo, now, home) {
     project: facts.cwd ? projectName(facts.cwd, home) : file.project,
     state,
     label: stateLabel(state, now),
-    activityMs: file.activityMs
+    activityMs: Math.max(facts.lastMs ?? 0, file.subagentsMs ?? 0)
   };
   if (facts.cwd) row.cwd = facts.cwd;
   if (facts.title) row.title = facts.title;
@@ -14132,6 +14166,7 @@ function jsonRow(row) {
     ...row.state.sinceMs !== void 0 ? { sinceMs: row.state.sinceMs } : {},
     ...row.state.question ? { question: row.state.question } : {},
     background: row.state.background,
+    servers: row.state.servers,
     activityMs: row.activityMs,
     line: row.line?.replace(ANSI2, ""),
     ...row.error ? { error: row.error } : {},
@@ -14264,9 +14299,9 @@ var liveCommand = {
   summary: "A board of every active Claude Code session: project, task, state and phase split",
   usage: `Usage: awf live [--since 2h] [--limit 10] [--every 20s] [--pin tests] [--once] [--json]
 
-A board for a spare terminal tab: every Claude Code session whose transcript (or a subagent's
-transcript) changed recently, newest activity first, redrawn in place until Ctrl-C. It reads the
-transcripts, so it shows sessions of the desktop app too, where the status line never shows.
+A board for a spare terminal tab: every Claude Code session active recently (its last entry, or a
+subagent's transcript changing), newest activity first, redrawn in place until Ctrl-C. It reads
+the transcripts, so it shows sessions of the desktop app too, where the status line never shows.
 
   acme-billing/web   CI pipeline for demo-000\u2026   working     tests 35% \xB7 build 33% \xB7 explore 12%
   deploys            Cache key rollout\u2026          your turn   tests 4% \xB7 scripts 57% \xB7 rework 14m
@@ -14274,7 +14309,8 @@ transcripts, so it shows sessions of the desktop app too, where the status line 
 Each row: the session's folder, its title or first prompt, its state, and the status line's
 phase split (see "awf statusline --help"). The state, from the end of the transcript:
   working     a turn is under way (a model or tool call open), or background tasks or
-              subagents it started are still running
+              subagents it started are still running; a server left running (pnpm dev,
+              next dev, PORT=8080 ./api) doesn't count, since nothing waits for it to end
   approval?   a permission prompt is waiting; only known when the awf plugin recorded the session
   your turn   the turn ended, or a question waits for your answer
   idle 12m    your turn for 5 minutes or more
@@ -14284,7 +14320,7 @@ process exits, what it was running ends with it: your turn.
 Phase lines are kept in ~/.awf/cache/statusline/ with the status line's, so a pass reads only
 sessions that changed. Colours follow the status line; NO_COLOR turns them off.
 
-  --since <age>    sessions with a change this recent (default 2h; 30m, 1d)
+  --since <age>    sessions active this recently (default 2h; 30m, 1d)
   --limit <n>      at most this many sessions (default 10)
   --every <time>   redraw this often (default 20s; 5s, 1m)
   --pin <phases>   the phases always shown, first, as in "awf statusline" (default tests)
