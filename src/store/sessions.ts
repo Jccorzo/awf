@@ -1,4 +1,4 @@
-import { existsSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import {
   type AgentFile,
@@ -80,6 +80,51 @@ export function resolveSession(
     throw new Error(`"${input}" matches ${matches.length} sessions; type more of the ID`);
   }
   throw new Error(`no session "${input}". Run "awf sessions" to list them, or "awf import" first.`);
+}
+
+/**
+ * The files in a session's `subagents/` folder, next to its transcript: how many, their total size
+ * and their latest change. Undefined when there's no such folder.
+ */
+export function subagentFiles(
+  transcript: string,
+): { count: number; size: number; mtimeMs: number } | undefined {
+  const dir = path.join(path.dirname(transcript), path.basename(transcript, '.jsonl'), 'subagents');
+  let names: string[];
+  try {
+    names = readdirSync(dir);
+  } catch {
+    return undefined;
+  }
+  let size = 0;
+  let mtimeMs = 0;
+  for (const name of names) {
+    const stat = statSync(path.join(dir, name), { throwIfNoEntry: false });
+    if (!stat) continue;
+    size += stat.size;
+    mtimeMs = Math.max(mtimeMs, stat.mtimeMs);
+  }
+  return { count: names.length, size, mtimeMs };
+}
+
+/** A Claude Code session with recent activity. */
+export interface ActiveTranscript extends TranscriptFile {
+  /** The latest change to the transcript or to one of its subagents' transcripts. */
+  activityMs: number;
+}
+
+/**
+ * Claude Code sessions whose transcript, or a subagent's transcript, changed at or after `sinceMs`,
+ * most recent activity first. The other agents' sessions aren't included.
+ */
+export function activeTranscripts(env: Env, sinceMs: number): ActiveTranscript[] {
+  const active: ActiveTranscript[] = [];
+  for (const file of listTranscripts(env)) {
+    const subagents = subagentFiles(file.path);
+    const activityMs = Math.max(file.mtimeMs, subagents?.mtimeMs ?? 0);
+    if (activityMs >= sinceMs) active.push({ ...file, activityMs });
+  }
+  return active.sort((a, b) => b.activityMs - a.activityMs);
 }
 
 /** The project folder name Claude Code would use for a path. */

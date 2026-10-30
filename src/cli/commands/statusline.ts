@@ -12,7 +12,7 @@ import path from 'node:path';
 import { summarize, type Summary } from '../../analyze/summary';
 import { PHASE_LABEL, type PhaseId } from '../../classify/phases';
 import { cacheDir, eventsDir, safeId } from '../../store/paths';
-import { loadSession, resolveSession } from '../../store/sessions';
+import { loadSession, resolveSession, subagentFiles } from '../../store/sessions';
 import { VERSION } from '../../version';
 import { classifier } from '../load';
 import type { Command, Ctx } from '../main';
@@ -56,7 +56,7 @@ const COLOR: Record<PhaseId, string> = {
   waiting: '#a9a8a0',
   unclassified: '#8c8b84',
 };
-const FAILED_COLOR = '#d03b3b';
+export const FAILED_COLOR = '#d03b3b';
 
 export type ColorMode = 'truecolor' | '256' | 'none';
 
@@ -146,7 +146,8 @@ function xterm256(r: number, g: number, b: number): number {
   return 16 + 36 * nearest(r) + 6 * nearest(g) + nearest(b);
 }
 
-function paint(text: string, hex: string, mode: ColorMode): string {
+/** Colours text with a #rrggbb colour, in the terminal's colour mode. */
+export function paint(text: string, hex: string, mode: ColorMode): string {
   if (mode === 'none') return text;
   const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)) as [
     number,
@@ -197,22 +198,8 @@ function stamp(stat: Stats | undefined): string {
 
 /** Subagents write their own transcripts next to the session's; their growth changes the line too. */
 function subagentStamp(transcript: string): string {
-  const dir = path.join(path.dirname(transcript), path.basename(transcript, '.jsonl'), 'subagents');
-  let names: string[];
-  try {
-    names = readdirSync(dir);
-  } catch {
-    return '-';
-  }
-  let size = 0;
-  let mtime = 0;
-  for (const name of names) {
-    const stat = statSync(path.join(dir, name), { throwIfNoEntry: false });
-    if (!stat) continue;
-    size += stat.size;
-    mtime = Math.max(mtime, stat.mtimeMs);
-  }
-  return `${names.length}:${size}:${mtime}`;
+  const files = subagentFiles(transcript);
+  return files ? `${files.count}:${files.size}:${files.mtimeMs}` : '-';
 }
 
 function readCache(file: string, key: string): string | undefined {
@@ -248,62 +235,131 @@ interface Payload {
   transcript_path?: unknown;
 }
 
-/** The status line for Claude Code's JSON, or '' when there's nothing to show. Throws on bad input. */
-function statusLine(ctx: Ctx, input: string, json: boolean, pin: PhaseId[]): string {
-  const payload = JSON.parse(input) as Payload | null;
-  const transcript = payload?.transcript_path;
-  if (typeof transcript !== 'string' || !transcript.endsWith('.jsonl')) return '';
+/** A session's transcript and recorder events, as the line and its cache key are made from them. */
+interface LineSource {
+  id: string;
+  transcript: string;
+  transcriptStat: Stats;
+  events: string;
+  eventsStat: Stats | undefined;
+}
+
+function lineSource(env: Ctx['env'], transcript: string, id: string): LineSource | undefined {
+  if (!transcript.endsWith('.jsonl')) return undefined;
   const transcriptStat = statSync(transcript, { throwIfNoEntry: false });
-  if (!transcriptStat?.isFile()) return '';
-  const id =
-    typeof payload?.session_id === 'string' && payload.session_id
-      ? payload.session_id
-      : path.basename(transcript, '.jsonl');
-  const events = path.join(eventsDir(ctx.env), `${safeId(id)}.jsonl`);
+  if (!transcriptStat?.isFile()) return undefined;
+  const events = path.join(eventsDir(env), `${safeId(id)}.jsonl`);
   const eventsStat = statSync(events, { throwIfNoEntry: false });
-  const mode = colorMode(ctx.env);
-  const key = [
+  return { id, transcript, transcriptStat, events, eventsStat };
+}
+
+function cacheKey(source: LineSource, mode: ColorMode, pin: PhaseId[]): string {
+  return [
     FORMAT,
     VERSION,
     mode,
     pin.join(','),
-    stamp(transcriptStat),
-    stamp(eventsStat),
-    subagentStamp(transcript),
+    stamp(source.transcriptStat),
+    stamp(source.eventsStat),
+    subagentStamp(source.transcript),
   ].join('|');
-  const cacheFile = path.join(cacheDir(ctx.env), 'statusline', `${safeId(id)}.json`);
-  if (!json) {
-    const cached = readCache(cacheFile, key);
-    if (cached !== undefined) return cached;
-  }
+}
 
-  const ref = resolveSession(transcript, ctx.env);
-  if (eventsStat?.isFile())
-    ref.events = { id, path: events, mtimeMs: eventsStat.mtimeMs, size: eventsStat.size };
-  const { summary } = summarize(classifier()(loadSession(ref, { detail: true, env: ctx.env })));
-  const parts = statusParts(summary, 3, pin);
-  if (json) {
-    return JSON.stringify(
-      {
-        id: summary.id,
-        sources: summary.sources,
-        workingMs: parts.workingMs,
-        phases: parts.phases.map((p) => ({
-          ...p,
-          label: PHASE_LABEL[p.phase],
-          name: SHORT_NAME[p.phase],
-        })),
-        failed: parts.failed,
-        reworkMs: parts.reworkMs,
-        line: renderStatus(parts, 'none'),
-      },
-      null,
-      2,
-    );
-  }
-  const line = renderStatus(parts, mode);
-  writeCache(cacheFile, key, line, ctx.now);
+function cachePath(env: Ctx['env'], id: string): string {
+  return path.join(cacheDir(env), 'statusline', `${safeId(id)}.json`);
+}
+
+/** Reads and classifies the session, with the recorder's events when there are any. */
+function sessionSummary(env: Ctx['env'], source: LineSource): Summary {
+  const ref = resolveSession(source.transcript, env);
+  if (source.eventsStat?.isFile())
+    ref.events = {
+      id: source.id,
+      path: source.events,
+      mtimeMs: source.eventsStat.mtimeMs,
+      size: source.eventsStat.size,
+    };
+  return summarize(classifier()(loadSession(ref, { detail: true, env }))).summary;
+}
+
+export interface PhaseLineOptions {
+  /** Default: tests (DEFAULT_PIN). */
+  pin?: PhaseId[];
+  /** Default: from the environment, as the status line does. */
+  mode?: ColorMode;
+  /** Only a cached line: undefined rather than read the session. */
+  cachedOnly?: boolean;
+}
+
+/**
+ * The status line's phase split for a transcript, `id` being its session's ID. Kept in
+ * ~/.awf/cache/statusline/ under the same key the status line uses, so either one reads a session
+ * only once per change of its transcript, recorder events or subagents' transcripts. '' when the
+ * session has no working time yet; undefined when the transcript isn't there. Throws when the
+ * session can't be read.
+ */
+export function phaseLine(
+  ctx: Pick<Ctx, 'env' | 'now'>,
+  transcript: string,
+  id: string,
+  options: PhaseLineOptions = {},
+): string | undefined {
+  const source = lineSource(ctx.env, transcript, id);
+  if (!source) return undefined;
+  const mode = options.mode ?? colorMode(ctx.env);
+  const pin = options.pin ?? DEFAULT_PIN;
+  return cachedLine(ctx, source, mode, pin, options.cachedOnly ?? false);
+}
+
+function cachedLine(
+  ctx: Pick<Ctx, 'env' | 'now'>,
+  source: LineSource,
+  mode: ColorMode,
+  pin: PhaseId[],
+  cachedOnly: boolean,
+): string | undefined {
+  const key = cacheKey(source, mode, pin);
+  const file = cachePath(ctx.env, source.id);
+  const cached = readCache(file, key);
+  if (cached !== undefined || cachedOnly) return cached;
+  const line = renderStatus(statusParts(sessionSummary(ctx.env, source), 3, pin), mode);
+  writeCache(file, key, line, ctx.now);
   return line;
+}
+
+/** The status line for Claude Code's JSON, or '' when there's nothing to show. Throws on bad input. */
+function statusLine(ctx: Ctx, input: string, json: boolean, pin: PhaseId[]): string {
+  const payload = JSON.parse(input) as Payload | null;
+  const transcript = payload?.transcript_path;
+  if (typeof transcript !== 'string') return '';
+  const id =
+    typeof payload?.session_id === 'string' && payload.session_id
+      ? payload.session_id
+      : path.basename(transcript, '.jsonl');
+  const source = lineSource(ctx.env, transcript, id);
+  if (!source) return '';
+  if (!json) return cachedLine(ctx, source, colorMode(ctx.env), pin, false) ?? '';
+
+  // --json always reads the session.
+  const summary = sessionSummary(ctx.env, source);
+  const parts = statusParts(summary, 3, pin);
+  return JSON.stringify(
+    {
+      id: summary.id,
+      sources: summary.sources,
+      workingMs: parts.workingMs,
+      phases: parts.phases.map((p) => ({
+        ...p,
+        label: PHASE_LABEL[p.phase],
+        name: SHORT_NAME[p.phase],
+      })),
+      failed: parts.failed,
+      reworkMs: parts.reworkMs,
+      line: renderStatus(parts, 'none'),
+    },
+    null,
+    2,
+  );
 }
 
 export const statuslineCommand: Command = {
