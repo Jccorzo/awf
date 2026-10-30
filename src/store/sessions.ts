@@ -165,6 +165,16 @@ export function mergeSessions(recorded: Session, transcript: Session): Session {
           );
       if (source?.model) merged.model = source.model;
       if (source?.tokens) merged.tokens = source.tokens;
+      // The hooks don't see a request being resent; the transcript does. Model time starts at the
+      // send that was answered.
+      if (
+        source?.flags.includes('resent') &&
+        source.startMs > merged.startMs &&
+        source.startMs < merged.endMs
+      ) {
+        merged.startMs = source.startMs;
+        merged.flags = [...merged.flags, 'resent'];
+      }
     }
     return merged;
   });

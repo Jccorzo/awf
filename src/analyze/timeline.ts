@@ -34,6 +34,8 @@ export interface PhaseTotals {
   byPhase: Record<PhaseId, number>;
   /** Time inside the session that no step covered (agent overhead); counted as Unclassified. */
   uncoveredMs: number;
+  /** Time between turns that background work took (any phase but Waiting on you). */
+  awayWorkMs: number;
 }
 
 /** The leaf intervals of a session: what was running when, at which tier. */
@@ -178,9 +180,24 @@ export function sessionEnd(session: ClassifiedSession): number {
 export function phaseTotals(session: ClassifiedSession): PhaseTotals {
   const byPhase = Object.fromEntries(PHASES.map((p) => [p.id, 0])) as Record<PhaseId, number>;
   let uncoveredMs = 0;
+  let awayWorkMs = 0;
+  const gaps = session.steps
+    .filter((s) => s.kind === 'idle' && s.endMs > s.startMs)
+    .sort((a, b) => a.startMs - b.startMs);
+  let g = 0;
   for (const segment of phaseSegments(session)) {
     byPhase[segment.phase] += segment.end - segment.start;
     if (!segment.covered) uncoveredMs += segment.end - segment.start;
+    if (segment.phase === 'waiting') continue;
+    // Work done while the agent waited for your next prompt: the segment's overlap with idle gaps.
+    while (g < gaps.length && (gaps[g] as ClassifiedStep).endMs <= segment.start) g++;
+    for (let k = g; k < gaps.length && (gaps[k] as ClassifiedStep).startMs < segment.end; k++) {
+      const gap = gaps[k] as ClassifiedStep;
+      awayWorkMs += Math.max(
+        0,
+        Math.min(segment.end, gap.endMs) - Math.max(segment.start, gap.startMs),
+      );
+    }
   }
-  return { totalMs: sessionEnd(session) - session.startMs, byPhase, uncoveredMs };
+  return { totalMs: sessionEnd(session) - session.startMs, byPhase, uncoveredMs, awayWorkMs };
 }

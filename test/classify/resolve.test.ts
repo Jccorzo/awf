@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Classifier } from '../../src/classify/classify';
-import { memoryFiles, parseMakefile } from '../../src/classify/resolve';
-import { defaultRules } from '../../src/classify/rules';
+import { memoryFiles, parseFastfile, parseMakefile } from '../../src/classify/resolve';
+import { defaultRules, loadRules } from '../../src/classify/rules';
 import type { Session } from '../../src/model/types';
 
 function classifier(entries: Record<string, string>) {
@@ -182,6 +182,171 @@ describe('script files', () => {
     expect(c.command('bash scripts/test.sh', '/s').phase).toBe('tests');
     // One awf can't read runs something it can't see: Running scripts.
     expect(c.command('./scripts/missing.sh', '/s').phase).toBe('running');
+  });
+});
+
+describe('fastlane lanes', () => {
+  // A hand-made Fastfile in the usual layout: lanes inside a platform block, indented.
+  const fastfile = [
+    'default_platform(:ios)',
+    '',
+    'platform :ios do',
+    '  desc "Unit tests with coverage"',
+    '  lane :unit_tests do |options|',
+    '    sh("../scripts/generate.sh")',
+    '    scan(scheme: "App", code_coverage: true, clean: options.fetch(:clean, false))',
+    '  end',
+    '',
+    '  lane :beta do',
+    '    build_app(scheme: "App")',
+    '    upload_to_testflight',
+    '  end',
+    '',
+    '  lane :lint do',
+    '    swiftlint(strict: true)',
+    '  end',
+    '',
+    '  lane :ci do',
+    '    lint',
+    '    unit_tests(clean: true)',
+    '  end',
+    '',
+    '  lane :bootstrap do',
+    "    sh('../scripts/setup.sh')",
+    '  end',
+    '',
+    '  lane :notes do',
+    '    UI.message("scan finished")',
+    '  end',
+    '',
+    '  def helper',
+    '    gym',
+    '  end',
+    'end',
+    '',
+    'platform :android do',
+    '  lane :android_tests do',
+    '    gradle(task: "testDebugUnitTest")',
+    '  end',
+    'end',
+  ].join('\n');
+  const c = classifier({
+    '/app/fastlane/Fastfile': fastfile,
+    '/app/scripts/generate.sh': '#!/bin/sh\nxcodegen generate\n',
+    '/app/scripts/setup.sh': '#!/bin/sh\npod install\n',
+  });
+
+  it('reads the lanes and the bodies of a Fastfile', () => {
+    const lanes = parseFastfile(fastfile);
+    expect([...lanes.keys()]).toEqual([
+      'unit_tests',
+      'beta',
+      'lint',
+      'ci',
+      'bootstrap',
+      'notes',
+      'android_tests',
+    ]);
+    expect(lanes.get('beta')?.trim().split('\n')).toHaveLength(2);
+  });
+
+  it('classifies a lane by its actions, through bundle exec and a platform', () => {
+    for (const command of [
+      'bundle exec fastlane unit_tests',
+      'fastlane ios unit_tests clean:true',
+      'cd ios && bundle exec fastlane unit_tests > ../ci.log 2>&1',
+    ]) {
+      const info = c.command(command, '/app');
+      expect(info, command).toMatchObject({ phase: 'tests', decidedBy: 'fastlane scan' });
+      // Its `sh` steps don't count next to an action awf knows.
+      expect(info.tags).toContain('lane:unit_tests');
+      expect(info.tags).not.toContain('build');
+    }
+    expect(c.command('fastlane beta', '/app')).toMatchObject({
+      phase: 'build',
+      tags: expect.arrayContaining(['running', 'lane:beta']),
+    });
+    expect(c.command('fastlane lint', '/app').phase).toBe('lint');
+    expect(c.command('fastlane ci', '/app').phase).toBe('tests');
+    expect(c.command('fastlane android android_tests', '/app').phase).toBe('tests');
+  });
+
+  it("reads a lane's sh steps when it has no action awf knows", () => {
+    expect(c.command('fastlane bootstrap', '/app')).toMatchObject({
+      phase: 'build',
+      tags: expect.arrayContaining(['install', 'lane:bootstrap', 'file:../scripts/setup.sh']),
+    });
+  });
+
+  it('decides by the lane name when the Fastfile is missing or says nothing', () => {
+    const none = classifier({});
+    expect(none.command('bundle exec fastlane checkout_tests', '/elsewhere')).toMatchObject({
+      phase: 'tests',
+      tags: ['by-name', 'lane:checkout_tests'],
+    });
+    expect(none.command('fastlane build_release', '/elsewhere').phase).toBe('build');
+    // A name that says nothing: fastlane's own rules (deploys and uploads are Running scripts).
+    expect(none.command('fastlane beta', '/elsewhere').phase).toBe('running');
+    expect(c.command('fastlane notes', '/app').phase).toBe('running');
+    // fastlane's tools run by name, not lanes.
+    expect(none.command('fastlane scan', '/elsewhere').phase).toBe('tests');
+    expect(none.command('fastlane gym', '/elsewhere').phase).toBe('build');
+  });
+});
+
+describe("a repo's own rules", () => {
+  const files = {
+    '/app/scripts/test.sh':
+      '#!/bin/bash\nset -e\nxcodebuild build-for-testing -scheme App\nxcodebuild test-without-building -scheme App\n',
+    '/app/scripts/e2e-cli.sh':
+      '#!/usr/bin/env bash\nnode dist/cli.js deploy --dry-run\ncurl -sf localhost:8080/health\n',
+    '/app/scripts/smoke-full.sh': '#!/bin/sh\n./scripts/e2e-cli.sh\n',
+    '/app/scripts/check.sh': '#!/bin/sh\npytest -q\n',
+    '/app/package.json': JSON.stringify({ scripts: { e2e: 'node scripts/e2e.mjs' } }),
+  };
+  const rules = [
+    'commands:',
+    '  - { phase: tests, program: test.sh }',
+    "  - { phase: tests, match: '(^|/)scripts/(e2e-cli|smoke-full)\\.sh(\\s|$)', tool: e2e }",
+    '  - { phase: tests, program: pnpm, args: [e2e], tool: e2e }',
+  ].join('\n');
+  const withRules = memoryFiles({ ...files, '/app/.awf/rules.yaml': rules });
+  const own = new Classifier(loadRules('/app', withRules), withRules);
+  const plain = classifier(files);
+
+  it('reads a script awf has no repo rule for', () => {
+    // Its build comes first in rank, as in any compound command.
+    expect(plain.command('./scripts/test.sh', '/app')).toMatchObject({ phase: 'build' });
+    expect(plain.command('./scripts/e2e-cli.sh', '/app').phase).toBe('running');
+    expect(plain.command('pnpm e2e', '/app').phase).toBe('running');
+  });
+
+  it('lets a repo rule name a script by its program name before reading it', () => {
+    for (const command of [
+      './scripts/test.sh',
+      'bash scripts/test.sh -v',
+      'cd /app && ./scripts/test.sh 2>&1 | tail -20',
+    ]) {
+      const info = own.command(command, '/app');
+      expect(info, command).toMatchObject({ phase: 'tests', rule: 'rules.yaml:commands[0]' });
+      expect(info.checks.map((c) => c.key)).toEqual(['tests:test.sh']);
+    }
+  });
+
+  it("lets a repo rule's match name a script, and a package script, before reading it", () => {
+    expect(own.command('./scripts/e2e-cli.sh --env dev', '/app')).toMatchObject({
+      phase: 'tests',
+      decidedBy: 'e2e',
+    });
+    expect(own.command('sh scripts/smoke-full.sh', '/app').phase).toBe('tests');
+    expect(own.command('pnpm e2e', '/app').phase).toBe('tests');
+  });
+
+  it('still reads scripts no repo rule names', () => {
+    expect(own.command('./scripts/check.sh', '/app')).toMatchObject({
+      phase: 'tests',
+      tags: expect.arrayContaining(['file:./scripts/check.sh']),
+    });
   });
 });
 

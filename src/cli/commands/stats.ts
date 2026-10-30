@@ -13,11 +13,16 @@ export interface BashStats {
   unclassifiedMs: number;
   unclassifiedShare: number;
   byPhase: Array<{ phase: PhaseId; ms: number; calls: number; share: number }>;
-  /** Bash time of one phase (unclassified unless asked) by program, to show which rules are missing. */
+  /**
+   * Bash time of one phase by program: for Unclassified, the program no rule matched (which rule
+   * is missing); for the others, the part of the command that decided the phase.
+   */
   topUnclassified: Array<{ program: string; ms: number; calls: number }>;
   /** Unclassified time of other tools, by tool name. */
   otherUnclassified: Array<{ tool: string; ms: number; calls: number }>;
 }
+
+const POLLING = '(polling: sleep in a loop, or a long sleep)';
 
 /** Time a Bash call ran, without any wait for approval. */
 function runMs(step: ClassifiedStep): number {
@@ -94,18 +99,20 @@ export function bashStats(
       entry.calls++;
       byPhase.set(phase, entry);
       if (phase === focus) {
-        // For unclassified calls, the program no rule matched says which rule is missing.
+        // For unclassified calls, the program no rule matched says which rule is missing. For the
+        // others, the part of the command that decided the phase: `T=$(gh auth token); xcodebuild
+        // test` is a test run of xcodebuild, not of gh.
         const unmatched = step.tags
           .find((t) => t.startsWith('unmatched:'))
           ?.slice('unmatched:'.length);
-        const head =
-          focus === 'unclassified' && step.tags.includes('polling')
-            ? '(polling: sleep in a loop, or a long sleep)'
-            : focus === 'unclassified' && unmatched
-              ? unmatched
-              : step.command
-                ? commandHead(step.command)
-                : '(no command)';
+        const polling =
+          step.decidedBy === 'polling' ||
+          (focus === 'unclassified' && step.tags.includes('polling'));
+        const head = polling
+          ? POLLING
+          : focus === 'unclassified'
+            ? (unmatched ?? (step.command ? commandHead(step.command) : '(no command)'))
+            : (step.decidedBy ?? (step.command ? commandHead(step.command) : '(no command)'));
         const h = heads.get(head) ?? { ms: 0, calls: 0 };
         h.ms += ms;
         h.calls++;
@@ -144,7 +151,8 @@ export const statsCommand: Command = {
 
 Classifies the Bash calls of every recorded or imported session and shows the time per phase,
 the share left unclassified, and the programs behind that time, to show which rules are missing.
-  --phase <id>   break this phase down by program instead of unclassified (tests, build, exploring, ...)`,
+  --phase <id>   break this phase down instead of unclassified (tests, build, exploring, ...), by
+                 the part of each command that decided its phase: xcodebuild test, cargo test`,
   options: {
     since: { type: 'string' },
     project: { type: 'string' },

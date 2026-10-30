@@ -30,7 +30,7 @@ describe('awf sessions', () => {
     { e: 'Stop', t: start - 86_400_000 + 1000 },
   ]);
 
-  it('lists sessions newest first with duration and active time', async () => {
+  it('lists sessions newest first with duration and time in turns', async () => {
     const io = captureIo();
     expect(
       await main(['sessions'], io, {
@@ -41,7 +41,7 @@ describe('awf sessions', () => {
     ).toBe(0);
     const [header, first, second] = io.stdout[0]?.split('\n') ?? [];
     expect(header).toMatch(
-      /^SESSION\s+STARTED\s+DURATION\s+ACTIVE\s+TURNS\s+TOOLS\s+SOURCE\s+PROJECT$/,
+      /^SESSION\s+STARTED\s+DURATION\s+IN TURNS\s+TURNS\s+TOOLS\s+SOURCE\s+PROJECT$/,
     );
     expect(first).toMatch(
       /^11111111\s+2026-10-28 09:30\s+6m 10s\s+1m 10s\s+2\s+1\s+hooks\s+~\/repo$/,
@@ -62,7 +62,7 @@ describe('awf sessions', () => {
     expect(rows.map((r: { id: string }) => r.id)).toEqual(['11111111-aaaa']);
     expect(rows[0]).toMatchObject({
       durationMs: 370_000,
-      activeMs: 70_000,
+      turnsMs: 70_000,
       turns: 2,
       toolCalls: 1,
     });

@@ -1,12 +1,16 @@
 import { readdirSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { analyze } from '../../src/analyze/summary';
+import { memoryFiles } from '../../src/classify/resolve';
 import { importClaudeCodeTranscript } from '../../src/importers/claude-code/import';
 import type { Session, Step } from '../../src/model/types';
 import {
   ms,
   notification,
   prompt,
+  queuedNotice,
+  request,
   result,
   system,
   text,
@@ -253,6 +257,125 @@ describe('Claude Code importer edge cases', () => {
       ...session.steps.filter((s) => s.kind === 'model').map((s) => s.endMs - s.startMs),
     );
     expect(longest).toBeLessThan(60_000);
+  });
+
+  it("starts a subagent's model time at the send that was answered, not while it resent the request", () => {
+    // A background subagent starts a build in the background, polls for it until the poll is moved
+    // to the background, then sends its next request again and again for 22 minutes (API errors,
+    // timeouts) while both tasks finish. The answer comes from the last send, on a cold cache.
+    const file = writeTranscript(
+      'resent',
+      [
+        prompt(0, 'fix the flaky test in the background'),
+        toolUse(0.5, 'm1', 'a1', 'Agent', { subagent_type: 'general-purpose', prompt: 'go' }),
+        result(1, 'a1', {
+          toolUseResult: { agentId: 'bgagent', agentType: 'general-purpose', isAsync: true },
+        }),
+        text(2, 'm2', 'Started it.'),
+        system(2.1, 'turn_duration'),
+        prompt(2000, 'how did it go?'),
+        text(2005, 'm3', 'It passed.'),
+      ],
+      {
+        bgagent: [
+          { ...prompt(1, 'go'), message: { role: 'user', content: 'go' } },
+          request(1.1, 'q1'),
+          toolUse(2, 'sm1', 'b1', 'Bash', {
+            command: 'xcodebuild test -scheme App > /tmp/run.log 2>&1',
+            run_in_background: true,
+          }),
+          result(2.5, 'b1', {
+            content: 'Command running in background with ID: bgbuild.',
+            toolUseResult: { backgroundTaskId: 'bgbuild' },
+          }),
+          request(2.6, 'q2'),
+          toolUse(3, 'sm2', 'p1', 'Bash', {
+            command: 'until grep -q "exit" /tmp/run.log; do sleep 10; done',
+          }),
+          result(183, 'p1', {
+            content: 'Command was moved to the background (ID: bgpoll) after running for 180s.',
+            toolUseResult: { backgroundTaskId: 'bgpoll' },
+          }),
+          request(183.1, 'q3'),
+          request(184, 'q4'),
+          request(400, 'q5'),
+          request(899, 'q6'),
+          request(1500, 'q7'),
+          {
+            ...toolUse(1530, 'sm3', 'r1', 'Read', { file_path: '/repo/AppTests.swift' }),
+            requestRef: 'q7',
+          },
+          result(1530.5, 'r1'),
+          // Written when they reached the agent, timestamped when the tasks ended.
+          queuedNotice(600, 'bgbuild', 'completed'),
+          queuedNotice(900, 'bgpoll', 'completed'),
+          request(1530.6, 'q8'),
+          text(1540, 'sm4', 'The test passes now.'),
+        ],
+      },
+    );
+    const session = importClaudeCodeTranscript(file);
+    const before = session.steps.find((s) => s.kind === 'model' && s.produces?.includes('r1'));
+    expect(before).toMatchObject({ startMs: ms(1500), endMs: ms(1530), agentId: 'bgagent' });
+    expect(before?.flags).toContain('resent');
+    // Sent once: model time as before, from the result to the call.
+    expect(
+      session.steps.find((s) => s.kind === 'model' && s.produces?.includes('p1')),
+    ).toMatchObject({ startMs: ms(2.5), endMs: ms(3) });
+    const bg = session.steps.filter((s) => s.kind === 'background');
+    expect(bg.map((s) => [s.backgroundId, s.startMs, s.endMs])).toEqual([
+      ['bgbuild', ms(2), ms(600)],
+      ['bgpoll', ms(3), ms(900)],
+    ]);
+
+    // The wait takes the background build's phase while it runs, then the idle time between
+    // your turns (the poller is a background process: it doesn't take idle time).
+    const { summary } = analyze(session, { files: memoryFiles({}) });
+    const phase = (id: string) => summary.phases.find((p) => p.phase === id)?.ms ?? 0;
+    expect(phase('tests')).toBe(600_000 - 2_100); // from the end of your turn to the build's end
+    expect(phase('exploring')).toBe(30_500); // the answer and its Read, not the 22 minutes before
+    expect(phase('waiting')).toBe(1500_000 - 600_000 + (2000_000 - 1540_000));
+  });
+
+  it("starts the main agent's model time at the last send when the answer names no request", () => {
+    const file = writeTranscript('resent-main', [
+      prompt(0, 'look'),
+      request(0.1, 'q1'),
+      request(30, 'q2'),
+      request(400, 'q3'),
+      toolUse(405, 'm1', 'r1', 'Read', { file_path: '/repo/a.ts' }),
+      result(405.5, 'r1'),
+      request(405.6, 'q4'),
+      text(410, 'm2'),
+    ]);
+    const session = importClaudeCodeTranscript(file);
+    const models = session.steps.filter((s) => s.kind === 'model');
+    expect(models.map((s) => [s.startMs, s.endMs, s.flags])).toEqual([
+      [ms(400), ms(405), ['resent']],
+      [ms(405.5), ms(410), ['answer']],
+    ]);
+    // Nothing ran while the request was resent: that stretch of the turn is agent overhead.
+    const { summary } = analyze(session, { files: memoryFiles({}) });
+    expect(summary.uncoveredMs).toBe(400_000);
+  });
+
+  it('ends a background task at the call that stopped it: a stopped task sends no notice', () => {
+    const file = writeTranscript('stopped', [
+      prompt(0, 'run the tests in the background'),
+      toolUse(1, 'm1', 'b1', 'Bash', { command: 'pnpm vitest run', run_in_background: true }),
+      result(1.5, 'b1', {
+        content: 'Command running in background with ID: bgtests.',
+        toolUseResult: { backgroundTaskId: 'bgtests' },
+      }),
+      toolUse(300, 'm2', 's1', 'TaskStop', { task_id: 'bgtests' }),
+      result(300.2, 's1', { content: '{"message":"Successfully stopped task: bgtests"}' }),
+      text(305, 'm3', 'Stopped it.'),
+    ]);
+    const session = importClaudeCodeTranscript(file);
+    const bg = session.steps.find((s) => s.kind === 'background');
+    expect(bg).toMatchObject({ backgroundId: 'bgtests', startMs: ms(1), endMs: ms(300.2) });
+    expect(bg?.flags).toContain('interrupted');
+    expect(bg?.ok).toBeUndefined();
   });
 
   it('treats a resumed session as one session with the gap as idle', () => {

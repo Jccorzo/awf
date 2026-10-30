@@ -14,7 +14,11 @@ export interface SessionRow {
   startMs: number;
   endMs: number;
   durationMs: number;
-  activeMs: number;
+  /**
+   * Time inside turns: the session without the gaps between them. Background work in those gaps
+   * isn't included; `awf summary` shows it (it needs the session classified).
+   */
+  turnsMs: number;
   turns: number;
   toolCalls: number;
   cwd?: string;
@@ -31,7 +35,7 @@ export function sessionRow(session: Session): SessionRow {
     startMs: session.startMs,
     endMs: session.endMs,
     durationMs,
-    activeMs: Math.max(0, durationMs - idleMs),
+    turnsMs: Math.max(0, durationMs - idleMs),
     turns: session.steps.filter((s) => s.kind === 'turn').length,
     toolCalls: session.steps.filter((s) => s.kind === 'tool').length,
     sources: session.sources,
@@ -66,6 +70,9 @@ export const sessionsCommand: Command = {
   usage: `Usage: awf sessions [--since 30d] [--project <dir>] [--json]
 
 Lists sessions newest first: those the recorder captured and those "awf import" read from transcripts.
+IN TURNS is the time from each prompt (or notice) to the end of the agent's answer, without the
+gaps between turns. Background work in those gaps (subagents, builds left running) isn't in it:
+"awf summary <session>" shows it.
   --since <age>     only sessions that started within this age (30d, 12h)
   --project <dir>   only sessions started in this folder or below it
   --json            print JSON`,
@@ -95,12 +102,12 @@ Lists sessions newest first: those the recorder captured and those "awf import" 
     const home = ctx.env.HOME ?? os.homedir();
     ctx.io.out(
       table(
-        ['SESSION', 'STARTED', 'DURATION', 'ACTIVE', 'TURNS', 'TOOLS', 'SOURCE', 'PROJECT'],
+        ['SESSION', 'STARTED', 'DURATION', 'IN TURNS', 'TURNS', 'TOOLS', 'SOURCE', 'PROJECT'],
         rows.map((r) => [
           r.id.slice(0, 8),
           formatClock(r.startMs),
           formatDuration(r.durationMs),
-          formatDuration(r.activeMs),
+          formatDuration(r.turnsMs),
           String(r.turns),
           String(r.toolCalls),
           r.sources.join('+'),

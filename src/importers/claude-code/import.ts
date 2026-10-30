@@ -31,6 +31,10 @@ export interface ImportOptions {
 }
 
 const FILE_KEYS = ['file_path', 'notebook_path', 'path'];
+/** Calls that stop a background task. */
+const STOP_TOOLS = new Set(['TaskStop', 'KillShell', 'KillBash']);
+/** Calls that name a background task without starting one: they read or stop it. */
+const TASK_REFS = new Set([...STOP_TOOLS, 'TaskOutput', 'BashOutput']);
 const MAX_OUTPUT = 4000;
 
 interface ToolUse {
@@ -44,6 +48,12 @@ interface Message {
   lastMs: number;
   model?: string;
   tokens?: TokenUsage;
+  /**
+   * When the request that produced this answer was sent, if it was sent more than once: the
+   * answer's model time starts there. Before it, the agent resent the same request and wasn't
+   * generating.
+   */
+  sentMs?: number;
 }
 
 /** Turns a Claude Code transcript (and its subagents' transcripts) into a session. */
@@ -84,6 +94,10 @@ class TranscriptReader {
   private readonly notifications: TaskNotification[] = [];
   /** Subagent type per agent ID, from the Agent call that ran it. */
   private readonly agentTypes = new Map<string, string>();
+  /** When each model request was sent (`api-request` entries), by request ID. */
+  private readonly requests = new Map<string, number>();
+  /** Requests each agent ('' for the main one) sent since its last input, not yet answered. */
+  private readonly sends = new Map<string, number[]>();
   private turnOpen = false;
   private turnStart = 0;
   private lastActivity = 0;
@@ -151,6 +165,9 @@ class TranscriptReader {
         case 'system':
           this.system(entry, ms);
           break;
+        case 'api-request':
+          this.request(entry, ms, agentId);
+          break;
         case 'queue-operation':
         case 'attachment': {
           const text =
@@ -182,13 +199,23 @@ class TranscriptReader {
     });
     for (const entry of entries) {
       const ms = timestampMs(entry) as number;
-      if (entry.type === 'user') this.toolResults(entry, ms, agentId);
-      else if (entry.type === 'assistant') this.assistant(entry, ms, agentId);
+      if (entry.type === 'user') {
+        this.sends.delete(agentId);
+        this.toolResults(entry, ms, agentId);
+      } else if (entry.type === 'assistant') this.assistant(entry, ms, agentId);
+      else if (entry.type === 'api-request') this.request(entry, ms, agentId);
+      else if (entry.type === 'attachment') {
+        // The subagent's own background tasks finishing, queued for it.
+        const notice = parseNotification(JSON.stringify(entry.attachment ?? ''), ms);
+        if (notice) this.notifications.push(notice);
+      }
     }
     this.emit({ e: 'SubagentStop', t: timestampMs(last) as number, aid: agentId });
   }
 
   private user(entry: Entry, ms: number, agentId: string | undefined): void {
+    // New input: requests sent before it were for an earlier answer.
+    this.sends.delete(agentId ?? '');
     if (agentId) {
       this.toolResults(entry, ms, agentId);
       return;
@@ -324,6 +351,10 @@ class TranscriptReader {
     if (messageId) {
       const known = this.messages.get(messageId);
       const record: Message = known ?? { lastMs: ms };
+      if (!known) {
+        const sentMs = this.resentAt(agentId ?? '', str(entry.requestRef), ms);
+        if (sentMs !== undefined) record.sentMs = sentMs;
+      }
       record.lastMs = Math.max(record.lastMs, ms);
       if (agentId) record.agentId = agentId;
       const model = str(message.model);
@@ -387,6 +418,29 @@ class TranscriptReader {
     }
   }
 
+  /** An `api-request` entry: a model request sent by the main agent or a subagent. */
+  private request(entry: Entry, ms: number, agentId: string | undefined): void {
+    const id = str(entry.id);
+    if (id) this.requests.set(id, ms);
+    const key = agentId ?? '';
+    this.sends.set(key, [...(this.sends.get(key) ?? []), ms]);
+  }
+
+  /**
+   * When the request behind an answer was sent, if the agent had sent it before: after an API
+   * error, a timeout or a rate limit, Claude Code sends the same request again, sometimes for an
+   * hour. Undefined when it went out once. `requestRef` names the send that was answered; without
+   * it, the last send before the answer.
+   */
+  private resentAt(key: string, ref: string | undefined, ms: number): number | undefined {
+    const sends = this.sends.get(key) ?? [];
+    this.sends.delete(key);
+    const referenced = ref ? this.requests.get(ref) : undefined;
+    const sentMs = referenced ?? sends.filter((s) => s <= ms).at(-1);
+    if (sentMs === undefined || sentMs > ms) return undefined;
+    return sends.some((s) => s < sentMs) ? sentMs : undefined;
+  }
+
   private system(entry: Entry, ms: number): void {
     const subtype = str(entry.subtype) ?? '<none>';
     if (!SYSTEM_SUBTYPES.has(subtype)) {
@@ -427,34 +481,50 @@ class TranscriptReader {
     return session;
   }
 
-  /** A background shell runs from its call until its completion notice. */
+  /**
+   * A background shell runs from its call until its completion notice, or until a TaskStop or
+   * KillShell call stops it: a stopped task gets no notice.
+   */
   private addBackgroundSteps(session: Session): void {
-    for (const call of session.steps.filter((s) => s.kind === 'tool' && s.backgroundId)) {
+    const stops = session.steps.filter(
+      (s) => s.kind === 'tool' && s.backgroundId && STOP_TOOLS.has(s.tool ?? '') && s.ok !== false,
+    );
+    for (const call of session.steps.filter(
+      (s) => s.kind === 'tool' && s.backgroundId && !TASK_REFS.has(s.tool ?? ''),
+    )) {
       const notice = this.notifications
         .filter(
           (n) =>
             (n.taskId === call.backgroundId || n.toolUseId === call.id) && n.ms >= call.startMs,
         )
         .sort((a, b) => a.ms - b.ms)[0];
-      if (!notice || notice.ms < call.startMs) continue;
+      const stop = stops
+        .filter((s) => s.backgroundId === call.backgroundId && s.startMs >= call.endMs)
+        .sort((a, b) => a.endMs - b.endMs)[0];
+      const stopped = stop !== undefined && (!notice || stop.endMs < notice.ms);
+      const endMs = stopped ? stop.endMs : notice?.ms;
+      if (endMs === undefined || endMs < call.startMs) continue;
       const step: Step = {
         id: `bg:${call.backgroundId}`,
         parentId: call.id,
         kind: 'background',
         startMs: call.startMs,
-        endMs: notice.ms,
-        flags: ['background'],
+        endMs,
+        flags: stopped ? ['background', 'interrupted'] : ['background'],
         backgroundId: call.backgroundId,
       };
       if (call.tool) step.tool = call.tool;
       if (call.command) step.command = call.command;
       if (call.agentId) step.agentId = call.agentId;
-      if (notice.status) step.ok = notice.status === 'completed';
+      if (!stopped && notice?.status) step.ok = notice.status === 'completed';
       session.steps.push(step);
     }
   }
 
-  /** The model and tokens of the model call behind each model step. */
+  /**
+   * The model and tokens of the model call behind each model step. A step whose request was resent
+   * starts at the send that was answered: model time covers generating, not resending.
+   */
   private addModelDetails(session: Session): void {
     const byAgent = new Map<string, Message[]>();
     for (const message of this.messages.values()) {
@@ -473,6 +543,11 @@ class TranscriptReader {
       }
       if (message?.model) step.model = message.model;
       if (message?.tokens) step.tokens = message.tokens;
+      const sent = message?.sentMs;
+      if (sent !== undefined && sent > step.startMs && sent < step.endMs) {
+        step.startMs = sent;
+        step.flags.push('resent');
+      }
     }
   }
 }

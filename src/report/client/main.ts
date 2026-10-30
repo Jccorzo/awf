@@ -289,7 +289,9 @@ const wrap = h('div', { class: 'wrap' });
 app.append(wrap);
 
 const total = data.session.totalMs;
-const active = data.session.activeMs;
+const inTurns = data.session.turnsMs;
+const awayWork = data.session.awayWorkMs;
+const idleBetween = Math.max(0, total - inTurns - awayWork);
 const title = data.share
   ? `Shared session ${data.session.id.slice(0, 8)}`
   : (data.session.title ?? `Session ${data.session.id.slice(0, 8)}`);
@@ -332,8 +334,11 @@ const AGENTS: Record<string, string> = {
 const agent = AGENTS[data.session.agent] ?? data.session.agent;
 const meta = [
   clock(data.session.startMs, true),
-  active < total
-    ? `${formatDuration(total)} (active ${formatDuration(active)})`
+  inTurns < total
+    ? `${formatDuration(total)} (${[
+        `${formatDuration(inTurns)} in turns`,
+        ...(awayWork > 0 ? [`${formatDuration(awayWork)} background work between turns`] : []),
+      ].join(', ')})`
     : formatDuration(total),
   data.session.cwd,
   `${agent}${data.session.agentVersion ? ` ${data.session.agentVersion}` : ''}`,
@@ -366,9 +371,11 @@ card.append(
     h('span', {
       class: 'sub',
       text:
-        active < total
-          ? `total, ${formatDuration(active)} active (the rest is idle time between turns)`
-          : 'total',
+        inTurns >= total
+          ? 'total'
+          : awayWork > 0
+            ? `total: ${formatDuration(inTurns)} in turns, ${formatDuration(awayWork)} of background work between turns, ${formatDuration(idleBetween)} idle`
+            : `total: ${formatDuration(inTurns)} in turns, the rest idle between turns`,
     }),
   ),
 );
@@ -812,6 +819,7 @@ const BADGES: Partial<Record<string, string>> = {
   interrupted: 'interrupted',
   background: 'background',
   'api-error': 'API error',
+  resent: 'request resent',
   unfinished: 'no end seen',
 };
 

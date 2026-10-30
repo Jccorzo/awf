@@ -7,6 +7,7 @@ import { diskFiles, type Files, resolve, resolvePath } from './resolve';
 import { type CommandRule, loadRules, type RulePhase, type Rules, type ToolRule } from './rules';
 import {
   programName,
+  scriptFile,
   shellString,
   type SimpleCommand,
   splitCommand,
@@ -32,6 +33,11 @@ export interface ClassifiedStep extends Step {
   failed: boolean;
   /** The rule that decided, for awf stats and debugging. */
   rule?: string;
+  /**
+   * Shell commands: the part of the command that decided its phase, as its rule matched it
+   * (`xcodebuild test`, `git status`, `pnpm test`), or `polling`. For awf stats.
+   */
+  decidedBy?: string;
   /** Set by the rework detector: the check this edit reworks. */
   reworkFor?: string;
   /** Whether the exit code belongs to the checks (see exitTrust). */
@@ -54,6 +60,8 @@ export interface CommandInfo {
   tags: string[];
   checks: Check[];
   rule: string;
+  /** See ClassifiedStep.decidedBy. */
+  decidedBy?: string;
   exit?: ExitTrust;
 }
 
@@ -63,6 +71,8 @@ interface Part {
   tags: string[];
   checks: Check[];
   rule: string;
+  /** What the rule matched, to name the part: `xcodebuild test`, `git status`, `make lint`. */
+  label: string;
   files: string[];
   piped: boolean;
   /** Part of a command that waits: a sleep in a loop, or a long sleep. */
@@ -347,6 +357,7 @@ export class Classifier {
         tags: [],
         checks: [],
         rule: 'redirect',
+        label: `${program} >`,
         files: simple.writes,
         piped: simple.piped,
       });
@@ -358,6 +369,13 @@ export class Classifier {
         ...this.parts(inner, cwd, depth + 1).map((p) => ({ ...p, piped: p.piped || simple.piped })),
       ];
     }
+    // A repo's own rule for this command wins over reading what it runs: `scripts/test.sh` is
+    // Running tests if the repo says so, even when the script also builds.
+    const own = this.repoRule(argv);
+    if (own) {
+      out.push(this.byRule(own.argv, programName(own.argv[0] ?? ''), simple.piped, []));
+      return out;
+    }
     if (depth < MAX_DEPTH) {
       const expanded = this.expanded(argv, program, cwd, depth, simple.piped);
       if (expanded) return [...out, ...expanded];
@@ -366,6 +384,25 @@ export class Classifier {
     }
     out.push(this.byRule(argv, program, simple.piped, []));
     return out;
+  }
+
+  /**
+   * A rule from the repo's `.awf/rules.yaml` matching this command, or the script file it runs
+   * (`bash scripts/test.sh` is matched as `scripts/test.sh` too). Default rules never come first.
+   */
+  private repoRule(argv: string[]): { argv: string[] } | undefined {
+    const own = this.rules.commands.filter((r) => r.repo);
+    if (own.length === 0) return undefined;
+    const candidates = [argv];
+    const file = scriptFile(argv);
+    if (file && file !== argv[0]) candidates.push(argv.slice(argv.indexOf(file)));
+    for (const candidate of candidates) {
+      const program = programName(candidate[0] ?? '');
+      const byPath = (candidate[0] ?? '').includes('/');
+      if (own.some((r) => !(byPath && r.phase === 'neutral') && ruleMatches(r, program, candidate)))
+        return { argv: candidate };
+    }
+    return undefined;
   }
 
   /** The phase a script, target or task name suggests: its first word decides (build:test is a build). */
@@ -542,6 +579,28 @@ export class Classifier {
           ];
         return [{ ...this.unmatched('make', piped), tags: [`make:${res.target}`] }];
       }
+      case 'lane': {
+        const parts = res.commands.flatMap((c) => this.parts(c, res.cwd, depth + 1));
+        return tagged(
+          parts.length > 0 ? parts : [this.unmatched(program, piped)],
+          `lane:${res.name}`,
+        );
+      }
+      case 'lane-name': {
+        // `checkout_tests` is a test run: its first word, the whole name, or its last word.
+        const rule = this.byName(res.name) ?? this.byName(res.name.split(/[:_-]/).pop() ?? '');
+        if (!rule) return undefined; // the fastlane rules decide
+        return [
+          this.part(
+            rule.phase,
+            'fastlane',
+            rule.id,
+            piped,
+            ['by-name', `lane:${res.name}`],
+            `fastlane ${res.name}`,
+          ),
+        ];
+      }
       case 'tasks': {
         return res.tasks.map((task) => {
           // turbo, nx and lerna run package scripts by name; Gradle names a task by its path.
@@ -555,7 +614,15 @@ export class Classifier {
           const last = task.split(':').pop() ?? task;
           const rule = this.rules.tasks.find((r) => r.match.test(task) || r.match.test(last));
           if (!rule) return { ...this.unmatched(res.runner, piped), tags: [`task:${task}`] };
-          return this.part(rule.phase, res.runner, rule.id, piped, [`task:${task}`], res.runner);
+          return this.part(
+            rule.phase,
+            res.runner,
+            rule.id,
+            piped,
+            [`task:${task}`],
+            res.runner,
+            `${res.runner} ${last}`,
+          );
         });
       }
     }
@@ -568,22 +635,32 @@ export class Classifier {
     piped: boolean,
     tags: string[],
     tool: string,
+    label = tool,
   ): Part {
     const checks: Check[] = isCheckPhase(phase)
       ? [{ key: `${phase}:${tool}`, phase, tool, failed: false }]
       : [];
-    return { phase, program, tags, checks, rule, files: [], piped };
+    return { phase, program, tags, checks, rule, label, files: [], piped };
   }
 
   private unmatched(program: string, piped: boolean): Part {
-    return { phase: undefined, program, tags: [], checks: [], rule: 'none', files: [], piped };
+    return {
+      phase: undefined,
+      program,
+      tags: [],
+      checks: [],
+      rule: 'none',
+      label: program,
+      files: [],
+      piped,
+    };
   }
 
   private byRule(argv: string[], program: string, piped: boolean, tags: string[]): Part {
     const edited = inPlaceEdit(program, argv.slice(1));
     if (edited)
       return {
-        ...this.part('writing', program, 'in-place-edit', piped, tags, program),
+        ...this.part('writing', program, 'in-place-edit', piped, tags, program, `${program} -i`),
         files: edited,
       };
     // `script/test` and `bin/test` are scripts, not the shell's test builtin.
@@ -592,14 +669,20 @@ export class Classifier {
       (r) => !(byPath && r.phase === 'neutral') && ruleMatches(r, program, argv),
     );
     if (!rule) return { ...this.unmatched(program, piped), tags };
-    const sub = positionalArgs(program, argv.slice(1))[0] ?? '';
+    const positional = positionalArgs(program, argv.slice(1));
+    const tool = rule.tool?.replace('{1}', positional[0] ?? '') ?? program;
+    // Named by what the rule matched: its check name, or the program and the words it matched.
+    const label = rule.tool
+      ? tool
+      : [program, ...positional.slice(0, rule.args?.length ?? 0), ...(rule.with ?? [])].join(' ');
     const part = this.part(
       rule.phase,
       program,
       rule.id,
       piped,
       rule.tag ? [rule.tag, ...tags] : tags,
-      rule.tool?.replace('{1}', sub) ?? program,
+      tool,
+      label,
     );
     if (rule.phase === 'writing' && WRITERS.has(program)) {
       part.files = argv.slice(1).filter((a) => !a.startsWith('-') && /[/.]/.test(a));
@@ -654,11 +737,13 @@ export class Classifier {
       return { phase: 'unclassified', tags: [...tags], checks: [...checks.values()], rule };
     }
     const decider = polling ? undefined : counted[phases.indexOf(primary)];
+    const decidedBy = polling ? 'polling' : decider?.label;
     return {
       phase: primary,
       tags: [...tags],
       checks: [...checks.values()],
       rule: decider?.rule ?? (polling ? 'polling' : 'none'),
+      ...(decidedBy ? { decidedBy } : {}),
     };
   }
 
@@ -695,6 +780,7 @@ export class Classifier {
           checks: info.checks,
           rule: info.rule,
         });
+        if (info.decidedBy) step.decidedBy = info.decidedBy;
         if (info.exit) step.exit = info.exit;
         if (step.kind === 'tool') shellCwd.set(ctx, nextCwd(step.command, cwd, home));
         this.markFailures(step);

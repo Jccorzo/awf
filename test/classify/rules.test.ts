@@ -95,8 +95,6 @@ const CASES: Array<[PhaseId, string[]]> = [
       'mix test',
       'flutter test',
       'k6 run load.js',
-      'gh run watch 123 --exit-status',
-      'gh pr checks 42 --watch',
     ],
   ],
   [
@@ -586,8 +584,87 @@ const REVIEW_CASES: Array<[PhaseId, string[]]> = [
   ['tests', ['tsx --test test/a.test.ts']],
 ];
 
+// Gaps found in 30 days of sessions (2026-10-29): coverage reports, fastlane, cargo fuzz, git
+// plumbing, Ruby tooling and macOS tools.
+const GAP_CASES: Array<[PhaseId, string[]]> = [
+  [
+    'tests',
+    [
+      'cargo +nightly fuzz run parse corpus/parse -- -max_total_time=120',
+      'cargo-mutants -j 4',
+      'caffeinate -i pytest -q',
+      'sandbox-exec -f deny-net.sb pytest -q',
+    ],
+  ],
+  [
+    'build',
+    [
+      'cargo fuzz build parse',
+      'cargo clean',
+      'lipo -create a.a b.a -output c.a',
+      'gem build app.gemspec',
+      'bundle lock --add-platform arm64-darwin-24',
+      'gem install bundler',
+      'bundle install',
+      'npx create-next-app@latest web --ts',
+      'xcode-select --install',
+    ],
+  ],
+  [
+    'exploring',
+    [
+      'cargo fuzz list',
+      'xcrun llvm-cov report -instr-profile x.profdata App',
+      'llvm-cov export -format=lcov -instr-profile x.profdata App',
+      'xcrun xccov view --report --json r.xcresult',
+      'xccov view --report r.xcresult',
+      'llvm-profdata merge -o x.profdata a.profraw',
+      'swift-demangle < symbols.txt',
+      'pdfinfo a.pdf',
+      'pbpaste',
+      'pmset -g batt',
+      'lipo -info App',
+      'xcode-select -p',
+      'bundle check',
+      'gem contents fastlane',
+      'git merge-tree --write-tree --name-only main topic',
+      'git -C repo symbolic-ref --short HEAD',
+      'git cherry -v origin/main origin/develop',
+      'git archive HEAD',
+    ],
+  ],
+  [
+    'writing-code',
+    [
+      'cargo fuzz init',
+      'git write-tree',
+      'git commit-tree abc123 -p def456 -m x',
+      'git update-ref -d refs/remotes/origin/pr-1',
+      'git read-tree -u --reset origin/main',
+      'git update-index --cacheinfo 100644,abc,src/a.rs',
+      'git symbolic-ref HEAD refs/heads/x',
+    ],
+  ],
+  [
+    'running',
+    [
+      'gh run watch 123 --exit-status',
+      'gh pr checks 42 --watch',
+      'cloud-sql-proxy proj:region:db --port 5432',
+      'mkcert localhost',
+      'claude -p "summarise the log"',
+      'pdftoppm -png a.pdf page',
+      'pmset sleepnow',
+    ],
+  ],
+  [
+    'unclassified',
+    ['mktemp -d', 'pbcopy < a.txt', 'xcode-select -s /Applications/Xcode.app', 'caffeinate -d'],
+  ],
+];
+
 describe('rules', () => {
-  for (const [phase, commands] of [...CASES, ...REVIEW_CASES]) {
+  for (const [phase, commands] of [...CASES, ...REVIEW_CASES, ...GAP_CASES]) {
     it.each(commands)(`%s is ${phase}`, (command) => {
       check(command, phase);
     });
@@ -822,6 +899,73 @@ describe('coverage', () => {
     );
     const missing = all.filter((id) => !hit.has(id));
     expect(missing, `rules without a fixture: ${missing.join(', ')}`).toEqual([]);
+  });
+});
+
+describe('watching CI', () => {
+  it('is polling, like a loop that waits for CI, not a test run', () => {
+    for (const command of [
+      'gh run watch 123 --exit-status',
+      'until gh run view 123 --json status | grep -q completed; do sleep 30; done',
+    ]) {
+      const info = check(command, 'running');
+      expect(info.tags).toContain('polling');
+      expect(info.checks).toEqual([]);
+    }
+  });
+});
+
+describe('shell syntax from real sessions', () => {
+  it("runs a variable's command when the variable was set earlier in the same command", () => {
+    check('R=./.build/release/app; $R tree booted | tail -8', 'running');
+    check('G="git -C /repo"; $G status; $G log -1', 'exploring');
+    check('P="psql -h localhost -d app -At"; $P -c "select 1"', 'running');
+    check('S=/tmp/s; T=$S/test.sh\n$T --all', 'running');
+    expect(
+      check(
+        'CH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"; "$CH" --headless',
+        'running',
+      ).tags,
+    ).not.toContain('unmatched:$CH');
+    // Set from a command's output, or only for one command: not known.
+    check('T=$(cat tool.txt); $T run', 'unclassified');
+    check('X=pytest true; $X', 'unclassified');
+  });
+
+  it('keeps ${...} in one word', () => {
+    const info = check(
+      'for p in "a 1" "b 2"; do r=${p%% *}; gh run view ${p##* } -R o/$r; done',
+      'exploring',
+    );
+    expect(info.tags.filter((t) => t.startsWith('unmatched:'))).toEqual([]);
+  });
+
+  it('skips calls of a function defined in the same command, in a substitution or inside an if', () => {
+    check('st() { gh run view "$1" --json status; }; S=$(st 123); echo $S', 'exploring');
+    check(
+      'if command -v gtimeout >/dev/null; then\n  run() { pytest -q; }\nelse\n  run() { pytest; }\nfi\nrun',
+      'tests',
+    );
+  });
+
+  it("reads an array's values as values, not as a subshell", () => {
+    check(
+      'ARGS=(-instr-profile "$P" -object "$B"); OBJECTS+=("$x"); llvm-cov report "${ARGS[@]}"',
+      'exploring',
+    );
+    check('A=(x $(pytest -q) y)', 'tests');
+  });
+
+  it('finds a heredoc after a comment with an apostrophe in it, as scripts have', () => {
+    check(
+      "# the role's password, set from Python\ncat > \"$F\" <<'PY'\nimport os\nENVS = ['prod', 'test']\nPY\npython3 -I \"$F\"",
+      'running',
+    );
+  });
+
+  it('ignores what masking left behind: a masked value, a heredoc placeholder', () => {
+    check('VITE_TOKEN= ‹masked› DEV=1 ./scripts/start.sh web', 'running');
+    check('IFS="|" read A B <<< "$pair"\n‹19 lines›', 'unclassified');
   });
 });
 

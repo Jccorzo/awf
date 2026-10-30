@@ -2,7 +2,12 @@ import { readdirSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { detectRework } from '../../src/analyze/rework';
-import { analyze, formatSummaryLines, summarize } from '../../src/analyze/summary';
+import {
+  analyze,
+  formatDurationLine,
+  formatSummaryLines,
+  summarize,
+} from '../../src/analyze/summary';
 import { phaseTotals } from '../../src/analyze/timeline';
 import type { ClassifiedSession, ClassifiedStep } from '../../src/classify/classify';
 import { memoryFiles } from '../../src/classify/resolve';
@@ -331,6 +336,51 @@ describe('summary', () => {
     expect(line).toMatchObject({ ms: 64_000, calls: 2, pollingMs: 60_000 });
     expect(formatSummaryLines(summary).find((l) => l.startsWith('Running scripts'))).toMatch(
       /^Running scripts\s+1m 04s · 100% · 2 calls, 1m 00s polling$/,
+    );
+  });
+
+  it('splits the time between turns into background work and idle time', () => {
+    // Two turns of 10 min with 60 min between them; a background build runs 25 min of the gap,
+    // a dev server the whole of it (a server doesn't count as work while you're away).
+    const min = 60_000;
+    const { summary } = summarize(
+      session([
+        step({ id: 't1', kind: 'turn', startMs: 0, endMs: 10 * min }),
+        step({ id: 'm1', kind: 'model', startMs: 0, endMs: 10 * min, phase: 'planning' }),
+        step({ id: 'idle', kind: 'idle', startMs: 10 * min, endMs: 70 * min, phase: 'waiting' }),
+        step({
+          id: 'bg',
+          kind: 'background',
+          startMs: 5 * min,
+          endMs: 35 * min,
+          phase: 'build',
+          flags: ['background'],
+        }),
+        step({
+          id: 'srv',
+          kind: 'background',
+          startMs: 5 * min,
+          endMs: 70 * min,
+          phase: 'running',
+          flags: ['background'],
+        }),
+        step({ id: 't2', kind: 'turn', startMs: 70 * min, endMs: 80 * min }),
+        step({ id: 'm2', kind: 'model', startMs: 70 * min, endMs: 80 * min, phase: 'planning' }),
+      ]),
+    );
+    expect(summary).toMatchObject({
+      totalMs: 80 * min,
+      turnsMs: 20 * min,
+      awayWorkMs: 25 * min,
+    });
+    expect(formatDurationLine(summary)).toBe(
+      '1h 20m 00s (20m 00s in turns, 25m 00s background work between turns)',
+    );
+    expect(formatDurationLine({ totalMs: 80 * min, turnsMs: 20 * min, awayWorkMs: 0 })).toBe(
+      '1h 20m 00s (20m 00s in turns)',
+    );
+    expect(formatDurationLine({ totalMs: 80 * min, turnsMs: 80 * min, awayWorkMs: 0 })).toBe(
+      '1h 20m 00s',
     );
   });
 

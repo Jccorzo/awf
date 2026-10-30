@@ -30,9 +30,9 @@ const PATTERNS: Array<[RegExp, string]> = [
   ],
   // Credentials in connection strings: scheme://user:password@host
   [/\b([a-z][a-z0-9+.-]*:\/\/[^:/\s@"']+:)([^@\s"']+)(@)/gi, `$1${MASK}$3`],
-  // CLI flags that take a secret
+  // CLI flags that take a secret (a flag starts a word: `print-access-token` isn't `--token`)
   [
-    /(--?(?:password|passwd|pass|token|api-key|apikey|secret|access-key|secret-key|auth-token|client-secret)(?:=|\s+))("[^"]*"|'[^']*'|[^\s"']+)/gi,
+    /((?<![\w-])--?(?:password|passwd|pass|token|api-key|apikey|secret|access-key|secret-key|auth-token|client-secret)(?:=|\s+))("[^"]*"|'[^']*'|[^\s"']+)/gi,
     `$1${MASK}`,
   ],
   // Well-known token formats
@@ -67,7 +67,10 @@ export function dropHeredocBodies(command: string): string {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i] ?? '';
     out.push(line);
-    const tags = [...line.matchAll(/<<-?\s*(?:'([^']+)'|"([^"]+)"|\\?([A-Za-z_][A-Za-z0-9_]*))/g)]
+    // `<<<` is a here-string, not a heredoc: it has no body.
+    const tags = [
+      ...line.matchAll(/(?<!<)<<(?!<)-?\s*(?:'([^']+)'|"([^"]+)"|\\?([A-Za-z_][A-Za-z0-9_]*))/g),
+    ]
       .map((m) => m[1] ?? m[2] ?? m[3])
       .filter((tag): tag is string => Boolean(tag));
     for (const tag of tags) {
