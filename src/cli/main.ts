@@ -5,6 +5,7 @@ import { classifyCommand } from './commands/classify';
 import { compareCommand } from './commands/compare';
 import { doctorCommand } from './commands/doctor';
 import { importCommand } from './commands/import';
+import { liveCommand } from './commands/live';
 import { purgeCommand } from './commands/purge';
 import { reportCommand } from './commands/report';
 import { accuracyCommand, sampleCommand } from './commands/sample';
@@ -51,6 +52,7 @@ export const COMMANDS: Record<string, Command> = {
   compare: compareCommand,
   stats: statsCommand,
   statusline: statuslineCommand,
+  live: liveCommand,
   sample: sampleCommand,
   accuracy: accuracyCommand,
   doctor: doctorCommand,
