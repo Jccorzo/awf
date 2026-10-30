@@ -41,6 +41,8 @@ const MONITOR_TIMEOUT_MS = 300_000;
 const MONITOR_MAX_TIMEOUT_MS = 1_800_000;
 /** A Monitor's result, when it has no `toolUseResult` (some subagent transcripts). */
 const MONITOR_STARTED = /^Monitor started \(task ([\w-]+)/;
+/** A background shell's result, when it has no `toolUseResult` (some subagent transcripts). */
+const SHELL_STARTED = /^Command running in background with ID: ([\w-]+)/;
 
 interface ToolUse {
   name: string;
@@ -328,6 +330,7 @@ class TranscriptReader {
         if (type && !this.agentTypes.has(child)) this.agentTypes.set(child, type);
       }
       let bgid = str(result?.backgroundTaskId);
+      if (!bgid && !failed && use?.name === 'Bash') bgid = SHELL_STARTED.exec(text)?.[1];
       const monitor = this.monitors.get(tuid);
       if (monitor && !failed) {
         // A Monitor runs its command in the background as a task, like a background shell.

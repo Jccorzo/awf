@@ -65,7 +65,7 @@ No transcript from the last 30 days kept subagent entries in the main file; the 
 
 ## Background tasks
 
-A background Bash call returns `Command running in background with ID: <id>` and `toolUseResult.backgroundTaskId`. When the task ends, Claude Code queues a notification:
+A background Bash call returns `Command running in background with ID: <id>` and `toolUseResult.backgroundTaskId`. Some subagent transcripts have no `toolUseResult`; awf then reads the task ID from that text, only when the result starts with it. When the task ends, Claude Code queues a notification:
 
 ```text
 <task-notification><task-id>…</task-id><tool-use-id>…</tool-use-id><status>completed|failed|killed|stopped</status><summary>…</summary>…</task-notification>

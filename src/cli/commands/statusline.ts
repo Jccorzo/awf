@@ -13,6 +13,7 @@ import { summarize, type Summary } from '../../analyze/summary';
 import { PHASE_LABEL, type PhaseId } from '../../classify/phases';
 import { cacheDir, eventsDir, safeId } from '../../store/paths';
 import { loadSession, resolveSession, subagentFiles } from '../../store/sessions';
+import { IMPORT_VERSION } from '../../store/imported';
 import { VERSION } from '../../version';
 import { classifier } from '../load';
 import type { Command, Ctx } from '../main';
@@ -257,6 +258,8 @@ function cacheKey(source: LineSource, mode: ColorMode, pin: PhaseId[]): string {
   return [
     FORMAT,
     VERSION,
+    // A new importer reads the same transcript differently: lines cached before it are stale.
+    IMPORT_VERSION,
     mode,
     pin.join(','),
     stamp(source.transcriptStat),

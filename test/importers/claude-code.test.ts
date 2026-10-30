@@ -380,6 +380,30 @@ describe('Claude Code importer edge cases', () => {
     expect(bg?.ok).toBeUndefined();
   });
 
+  it("reads a background shell's task from its result text when there's no toolUseResult", () => {
+    // Some subagent transcripts leave toolUseResult out; the text still names the task.
+    const file = writeTranscript('bg-text', [
+      prompt(0, 'build it in the background'),
+      toolUse(1, 'm1', 'b1', 'Bash', { command: 'pnpm build', run_in_background: true }),
+      result(1.5, 'b1', {
+        content:
+          'Command running in background with ID: bgbuild. Output is being written to: /tmp/t/bgbuild.output',
+      }),
+      text(2, 'm2', 'Started.'),
+      system(2.1, 'turn_duration'),
+      notification(120, 'bgbuild', 'completed'),
+      // Output that only mentions the phrase doesn't start a task.
+      prompt(200, 'what did it print?'),
+      toolUse(201, 'm3', 'b2', 'Bash', { command: 'cat notes.txt' }),
+      result(201.5, 'b2', { content: 'see: Command running in background with ID: nope' }),
+      text(203, 'm4', 'That.'),
+    ]);
+    const session = importClaudeCodeTranscript(file);
+    const bg = session.steps.filter((s) => s.kind === 'background');
+    expect(bg).toHaveLength(1);
+    expect(bg[0]).toMatchObject({ backgroundId: 'bgbuild', startMs: ms(1), endMs: ms(120) });
+  });
+
   it('runs a Monitor in the background until its kill notice, filling a resent request', () => {
     // The agent watches CI with a Monitor, then its next request is sent again for three minutes.
     // The Monitor's events aren't its end; it's killed after the last turn, when you leave.
