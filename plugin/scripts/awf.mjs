@@ -114,17 +114,17 @@ var require_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP;
     visit.REMOVE = REMOVE;
-    function visit_(key, node, visitor, path21) {
-      const ctrl = callVisitor(key, node, visitor, path21);
+    function visit_(key, node, visitor, path22) {
+      const ctrl = callVisitor(key, node, visitor, path22);
       if (identity.isNode(ctrl) || identity.isPair(ctrl)) {
-        replaceNode(key, path21, ctrl);
-        return visit_(key, ctrl, visitor, path21);
+        replaceNode(key, path22, ctrl);
+        return visit_(key, ctrl, visitor, path22);
       }
       if (typeof ctrl !== "symbol") {
         if (identity.isCollection(node)) {
-          path21 = Object.freeze(path21.concat(node));
+          path22 = Object.freeze(path22.concat(node));
           for (let i = 0; i < node.items.length; ++i) {
-            const ci = visit_(i, node.items[i], visitor, path21);
+            const ci = visit_(i, node.items[i], visitor, path22);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -135,13 +135,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity.isPair(node)) {
-          path21 = Object.freeze(path21.concat(node));
-          const ck = visit_("key", node.key, visitor, path21);
+          path22 = Object.freeze(path22.concat(node));
+          const ck = visit_("key", node.key, visitor, path22);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = visit_("value", node.value, visitor, path21);
+          const cv = visit_("value", node.value, visitor, path22);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -162,17 +162,17 @@ var require_visit = __commonJS({
     visitAsync.BREAK = BREAK;
     visitAsync.SKIP = SKIP;
     visitAsync.REMOVE = REMOVE;
-    async function visitAsync_(key, node, visitor, path21) {
-      const ctrl = await callVisitor(key, node, visitor, path21);
+    async function visitAsync_(key, node, visitor, path22) {
+      const ctrl = await callVisitor(key, node, visitor, path22);
       if (identity.isNode(ctrl) || identity.isPair(ctrl)) {
-        replaceNode(key, path21, ctrl);
-        return visitAsync_(key, ctrl, visitor, path21);
+        replaceNode(key, path22, ctrl);
+        return visitAsync_(key, ctrl, visitor, path22);
       }
       if (typeof ctrl !== "symbol") {
         if (identity.isCollection(node)) {
-          path21 = Object.freeze(path21.concat(node));
+          path22 = Object.freeze(path22.concat(node));
           for (let i = 0; i < node.items.length; ++i) {
-            const ci = await visitAsync_(i, node.items[i], visitor, path21);
+            const ci = await visitAsync_(i, node.items[i], visitor, path22);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -183,13 +183,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity.isPair(node)) {
-          path21 = Object.freeze(path21.concat(node));
-          const ck = await visitAsync_("key", node.key, visitor, path21);
+          path22 = Object.freeze(path22.concat(node));
+          const ck = await visitAsync_("key", node.key, visitor, path22);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = await visitAsync_("value", node.value, visitor, path21);
+          const cv = await visitAsync_("value", node.value, visitor, path22);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -216,23 +216,23 @@ var require_visit = __commonJS({
       }
       return visitor;
     }
-    function callVisitor(key, node, visitor, path21) {
+    function callVisitor(key, node, visitor, path22) {
       if (typeof visitor === "function")
-        return visitor(key, node, path21);
+        return visitor(key, node, path22);
       if (identity.isMap(node))
-        return visitor.Map?.(key, node, path21);
+        return visitor.Map?.(key, node, path22);
       if (identity.isSeq(node))
-        return visitor.Seq?.(key, node, path21);
+        return visitor.Seq?.(key, node, path22);
       if (identity.isPair(node))
-        return visitor.Pair?.(key, node, path21);
+        return visitor.Pair?.(key, node, path22);
       if (identity.isScalar(node))
-        return visitor.Scalar?.(key, node, path21);
+        return visitor.Scalar?.(key, node, path22);
       if (identity.isAlias(node))
-        return visitor.Alias?.(key, node, path21);
+        return visitor.Alias?.(key, node, path22);
       return void 0;
     }
-    function replaceNode(key, path21, node) {
-      const parent = path21[path21.length - 1];
+    function replaceNode(key, path22, node) {
+      const parent = path22[path22.length - 1];
       if (identity.isCollection(parent)) {
         parent.items[key] = node;
       } else if (identity.isPair(parent)) {
@@ -844,10 +844,10 @@ var require_Collection = __commonJS({
     var createNode = require_createNode();
     var identity = require_identity();
     var Node = require_Node();
-    function collectionFromPath(schema, path21, value) {
+    function collectionFromPath(schema, path22, value) {
       let v = value;
-      for (let i = path21.length - 1; i >= 0; --i) {
-        const k = path21[i];
+      for (let i = path22.length - 1; i >= 0; --i) {
+        const k = path22[i];
         if (typeof k === "number" && Number.isInteger(k) && k >= 0) {
           const a = [];
           a[k] = v;
@@ -866,7 +866,7 @@ var require_Collection = __commonJS({
         sourceObjects: /* @__PURE__ */ new Map()
       });
     }
-    var isEmptyPath = (path21) => path21 == null || typeof path21 === "object" && !!path21[Symbol.iterator]().next().done;
+    var isEmptyPath = (path22) => path22 == null || typeof path22 === "object" && !!path22[Symbol.iterator]().next().done;
     var Collection = class extends Node.NodeBase {
       constructor(type, schema) {
         super(type);
@@ -896,11 +896,11 @@ var require_Collection = __commonJS({
        * be a Pair instance or a `{ key, value }` object, which may not have a key
        * that already exists in the map.
        */
-      addIn(path21, value) {
-        if (isEmptyPath(path21))
+      addIn(path22, value) {
+        if (isEmptyPath(path22))
           this.add(value);
         else {
-          const [key, ...rest] = path21;
+          const [key, ...rest] = path22;
           const node = this.get(key, true);
           if (identity.isCollection(node))
             node.addIn(rest, value);
@@ -914,8 +914,8 @@ var require_Collection = __commonJS({
        * Removes a value from the collection.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path21) {
-        const [key, ...rest] = path21;
+      deleteIn(path22) {
+        const [key, ...rest] = path22;
         if (rest.length === 0)
           return this.delete(key);
         const node = this.get(key, true);
@@ -929,8 +929,8 @@ var require_Collection = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path21, keepScalar) {
-        const [key, ...rest] = path21;
+      getIn(path22, keepScalar) {
+        const [key, ...rest] = path22;
         const node = this.get(key, true);
         if (rest.length === 0)
           return !keepScalar && identity.isScalar(node) ? node.value : node;
@@ -948,8 +948,8 @@ var require_Collection = __commonJS({
       /**
        * Checks if the collection includes a value with the key `key`.
        */
-      hasIn(path21) {
-        const [key, ...rest] = path21;
+      hasIn(path22) {
+        const [key, ...rest] = path22;
         if (rest.length === 0)
           return this.has(key);
         const node = this.get(key, true);
@@ -959,8 +959,8 @@ var require_Collection = __commonJS({
        * Sets a value in this collection. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path21, value) {
-        const [key, ...rest] = path21;
+      setIn(path22, value) {
+        const [key, ...rest] = path22;
         if (rest.length === 0) {
           this.set(key, value);
         } else {
@@ -3475,9 +3475,9 @@ var require_Document = __commonJS({
           this.contents.add(value);
       }
       /** Adds a value to the document. */
-      addIn(path21, value) {
+      addIn(path22, value) {
         if (assertCollection(this.contents))
-          this.contents.addIn(path21, value);
+          this.contents.addIn(path22, value);
       }
       /**
        * Create a new `Alias` node, ensuring that the target `node` has the required anchor.
@@ -3552,14 +3552,14 @@ var require_Document = __commonJS({
        * Removes a value from the document.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path21) {
-        if (Collection.isEmptyPath(path21)) {
+      deleteIn(path22) {
+        if (Collection.isEmptyPath(path22)) {
           if (this.contents == null)
             return false;
           this.contents = null;
           return true;
         }
-        return assertCollection(this.contents) ? this.contents.deleteIn(path21) : false;
+        return assertCollection(this.contents) ? this.contents.deleteIn(path22) : false;
       }
       /**
        * Returns item at `key`, or `undefined` if not found. By default unwraps
@@ -3574,10 +3574,10 @@ var require_Document = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path21, keepScalar) {
-        if (Collection.isEmptyPath(path21))
+      getIn(path22, keepScalar) {
+        if (Collection.isEmptyPath(path22))
           return !keepScalar && identity.isScalar(this.contents) ? this.contents.value : this.contents;
-        return identity.isCollection(this.contents) ? this.contents.getIn(path21, keepScalar) : void 0;
+        return identity.isCollection(this.contents) ? this.contents.getIn(path22, keepScalar) : void 0;
       }
       /**
        * Checks if the document includes a value with the key `key`.
@@ -3588,10 +3588,10 @@ var require_Document = __commonJS({
       /**
        * Checks if the document includes a value at `path`.
        */
-      hasIn(path21) {
-        if (Collection.isEmptyPath(path21))
+      hasIn(path22) {
+        if (Collection.isEmptyPath(path22))
           return this.contents !== void 0;
-        return identity.isCollection(this.contents) ? this.contents.hasIn(path21) : false;
+        return identity.isCollection(this.contents) ? this.contents.hasIn(path22) : false;
       }
       /**
        * Sets a value in this document. For `!!set`, `value` needs to be a
@@ -3608,13 +3608,13 @@ var require_Document = __commonJS({
        * Sets a value in this document. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path21, value) {
-        if (Collection.isEmptyPath(path21)) {
+      setIn(path22, value) {
+        if (Collection.isEmptyPath(path22)) {
           this.contents = value;
         } else if (this.contents == null) {
-          this.contents = Collection.collectionFromPath(this.schema, Array.from(path21), value);
+          this.contents = Collection.collectionFromPath(this.schema, Array.from(path22), value);
         } else if (assertCollection(this.contents)) {
-          this.contents.setIn(path21, value);
+          this.contents.setIn(path22, value);
         }
       }
       /**
@@ -5575,9 +5575,9 @@ var require_cst_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP;
     visit.REMOVE = REMOVE;
-    visit.itemAtPath = (cst, path21) => {
+    visit.itemAtPath = (cst, path22) => {
       let item = cst;
-      for (const [field, index] of path21) {
+      for (const [field, index] of path22) {
         const tok = item?.[field];
         if (tok && "items" in tok) {
           item = tok.items[index];
@@ -5586,23 +5586,23 @@ var require_cst_visit = __commonJS({
       }
       return item;
     };
-    visit.parentCollection = (cst, path21) => {
-      const parent = visit.itemAtPath(cst, path21.slice(0, -1));
-      const field = path21[path21.length - 1][0];
+    visit.parentCollection = (cst, path22) => {
+      const parent = visit.itemAtPath(cst, path22.slice(0, -1));
+      const field = path22[path22.length - 1][0];
       const coll = parent?.[field];
       if (coll && "items" in coll)
         return coll;
       throw new Error("Parent collection not found");
     };
-    function _visit(path21, item, visitor) {
-      let ctrl = visitor(item, path21);
+    function _visit(path22, item, visitor) {
+      let ctrl = visitor(item, path22);
       if (typeof ctrl === "symbol")
         return ctrl;
       for (const field of ["key", "value"]) {
         const token = item[field];
         if (token && "items" in token) {
           for (let i = 0; i < token.items.length; ++i) {
-            const ci = _visit(Object.freeze(path21.concat([[field, i]])), token.items[i], visitor);
+            const ci = _visit(Object.freeze(path22.concat([[field, i]])), token.items[i], visitor);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -5613,10 +5613,10 @@ var require_cst_visit = __commonJS({
             }
           }
           if (typeof ctrl === "function" && field === "key")
-            ctrl = ctrl(item, path21);
+            ctrl = ctrl(item, path22);
         }
       }
-      return typeof ctrl === "function" ? ctrl(item, path21) : ctrl;
+      return typeof ctrl === "function" ? ctrl(item, path22) : ctrl;
     }
     exports.visit = visit;
   }
@@ -7368,6 +7368,7 @@ var require_dist = __commonJS({
 });
 
 // src/cli/main.ts
+import { readFileSync as readFileSync12 } from "node:fs";
 import { parseArgs as parseArgs2 } from "node:util";
 
 // src/version.ts
@@ -7947,6 +7948,7 @@ function heredocTags(line, stack) {
       }
       continue;
     }
+    if (c === "#" && (i === 0 || /[\s;&|(]/.test(line[i - 1] ?? ""))) break;
     if (c === "'") stack.push("sq");
     else if (c === '"') stack.push("dq");
     else if (c === "$" && line[i + 1] === "(") {
@@ -8053,6 +8055,13 @@ function tokenize(text) {
       i = end;
       continue;
     }
+    if (c === "$" && text[i + 1] === "{") {
+      const end = closingBrace(text, i + 1);
+      word += text.slice(i, end + 1);
+      inWord = true;
+      i = end;
+      continue;
+    }
     if (c === "`") {
       const end = text.indexOf("`", i + 1);
       const stop = end === -1 ? text.length : end;
@@ -8126,6 +8135,21 @@ function closingQuote(text, open) {
   }
   return text.length;
 }
+function closingBrace(text, open) {
+  let depth = 0;
+  for (let i = open; i < text.length; i++) {
+    const c = text[i];
+    if (c === "\\") i++;
+    else if (c === "'") {
+      const end = text.indexOf("'", i + 1);
+      i = end === -1 ? text.length : end;
+    } else if (c === '"') i = closingQuote(text, i);
+    else if (c === "\n") return i - 1;
+    else if (c === "{") depth++;
+    else if (c === "}" && --depth === 0) return i;
+  }
+  return text.length - 1;
+}
 function closingParen(text, open) {
   let depth = 0;
   for (let i = open; i < text.length; i++) {
@@ -8154,7 +8178,48 @@ var LEADING_KEYWORDS = /* @__PURE__ */ new Set([
 ]);
 var SKIPPED_HEADS = /* @__PURE__ */ new Set(["fi", "done", "esac", "for", "select", "case", "function"]);
 var ASSIGNMENT = /^[A-Za-z_][A-Za-z0-9_]*(\[[^\]]*\])?\+?=/;
-function splitCommand(text, depth = 0) {
+var VAR_HEAD = /^\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))$/;
+var VAR_REF = /\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))/g;
+var DECLARES = /* @__PURE__ */ new Set(["export", "local", "declare", "typeset", "readonly"]);
+function firstWord(words) {
+  let i = 0;
+  while (i < words.length && !words[i]?.quoted && LEADING_KEYWORDS.has(words[i]?.value ?? "")) i++;
+  return i;
+}
+function expandVariables(words, scope) {
+  let i = firstWord(words);
+  const assignments = [];
+  if (words[i]?.value && DECLARES.has(words[i]?.value) && !words[i]?.quoted) {
+    assignments.push(...words.slice(i + 1).filter((w) => ASSIGNMENT.test(w.value)));
+    i = words.length;
+  }
+  while (i < words.length && ASSIGNMENT.test(words[i]?.value ?? ""))
+    assignments.push(words[i++]);
+  if (i >= words.length) {
+    for (const word of assignments) {
+      const at = word.value.indexOf("=");
+      const name = word.value.slice(0, at).replace(/\+$/, "");
+      const value2 = word.value.slice(at + 1);
+      if (word.subs?.length || /`|\$\(/.test(value2)) scope.vars.delete(name);
+      else
+        scope.vars.set(
+          name,
+          value2.replace(VAR_REF, (ref, a, b) => scope.vars.get(a ?? b) ?? ref)
+        );
+    }
+    return words;
+  }
+  const head2 = words[i];
+  const match = VAR_HEAD.exec(head2.value);
+  const value = match ? scope.vars.get(match[1] ?? match[2]) : void 0;
+  if (value === void 0 || !value.trim()) return words;
+  const expanded = (head2.quoted ? [value] : value.split(/\s+/).filter(Boolean)).map((v) => ({
+    value: v,
+    quoted: true
+  }));
+  return [...words.slice(0, i), ...expanded, ...words.slice(i + 1)];
+}
+function splitCommand(text, depth = 0, scope = { functions: /* @__PURE__ */ new Set(), vars: /* @__PURE__ */ new Map() }) {
   const commands = [];
   let words = [];
   let writes = [];
@@ -8162,20 +8227,22 @@ function splitCommand(text, depth = 0) {
   let redirect = null;
   const cd = [];
   const scopes = [];
-  const functions = /* @__PURE__ */ new Set();
+  const functions = scope.functions;
   let caseDepth = 0;
   let inPattern = false;
   const end = (operator) => {
-    if (words[0]?.value === "function" && words[1] && words[2]?.value === "{") {
-      functions.add(words[1].value.replace(/\(\)$/, ""));
-      words = words.slice(3);
+    const head2 = firstWord(words);
+    if (words[head2]?.value === "function" && words[head2 + 1] && words[head2 + 2]?.value === "{") {
+      functions.add(words[head2 + 1].value.replace(/\(\)$/, ""));
+      words = words.slice(head2 + 3);
     }
+    if (words[firstWord(words)]?.value === "function" && words[firstWord(words) + 1])
+      functions.add(words[firstWord(words) + 1].value.replace(/\(\)$/, ""));
+    words = expandVariables(words, scope);
     const argv = clean(words);
-    if (words[0]?.value === "function" && words[1])
-      functions.add(words[1].value.replace(/\(\)$/, ""));
     if (depth < 4) {
       for (const sub of words.flatMap((w) => w.subs ?? [])) {
-        for (const inner of splitCommand(sub, depth + 1)) {
+        for (const inner of splitCommand(sub, depth + 1, scope)) {
           commands.push({
             ...inner,
             cd: [...cd, ...inner.cd],
@@ -8227,8 +8294,8 @@ function splitCommand(text, depth = 0) {
       inPattern = true;
       continue;
     }
-    if (token.kind === "op" && token.value === "(" && words.length === 1 && tokens5[t + 1]?.kind === "op" && tokens5[t + 1]?.value === ")") {
-      functions.add(words[0]?.value);
+    if (token.kind === "op" && token.value === "(" && words.length === firstWord(words) + 1 && tokens5[t + 1]?.kind === "op" && tokens5[t + 1]?.value === ")") {
+      functions.add(words[words.length - 1]?.value);
       words = [];
       t++;
       continue;
@@ -8247,6 +8314,19 @@ function splitCommand(text, depth = 0) {
     }
     if (token.kind === "redirect") {
       redirect = token.value;
+      continue;
+    }
+    const last = words[words.length - 1];
+    if (token.kind === "op" && token.value === "(" && last && !last.quoted && /^[A-Za-z_][A-Za-z0-9_]*\+?=$/.test(last.value)) {
+      const subs = [...last.subs ?? []];
+      for (let open = 1; t + 1 < tokens5.length && open > 0; ) {
+        const inner = tokens5[++t];
+        if (inner.kind === "op" && inner.value === "(") open++;
+        else if (inner.kind === "op" && inner.value === ")") open--;
+        else if (inner.kind === "word") subs.push(...inner.subs ?? []);
+      }
+      last.value += "(\u2026)";
+      if (subs.length) last.subs = subs;
       continue;
     }
     if (token.kind === "op") {
@@ -8271,7 +8351,8 @@ function clean(words) {
   }
   const head2 = at(start);
   if (head2 && !head2.quoted && SKIPPED_HEADS.has(head2.value)) return [];
-  while (start < words.length && ASSIGNMENT.test(at(start)?.value ?? "")) {
+  if (/^‹\d+$/.test(head2?.value ?? "") && /^lines?›$/.test(at(start + 1)?.value ?? "")) return [];
+  while (start < words.length && (ASSIGNMENT.test(at(start)?.value ?? "") || at(start)?.value === "\u2039masked\u203A")) {
     start++;
   }
   return words.slice(start).map((w) => w.value);
@@ -8327,6 +8408,7 @@ var WRAPPERS = {
   },
   chronic: {},
   corepack: {},
+  "sandbox-exec": { valueOptions: ["-f", "-n", "-p", "-D"] },
   xcrun: { valueOptions: ["--sdk", "-sdk", "--toolchain", "-toolchain"] }
 };
 var WRAPPER_PAIRS = {
@@ -9289,6 +9371,8 @@ function resolve(argv, cwd, files2) {
       return resolveTasks(program, args);
     case "git":
       return resolveGitHook(args, cwd, files2);
+    case "fastlane":
+      return resolveFastlane(args, cwd, files2);
   }
   const file = scriptFile(argv);
   if (file) {
@@ -9298,6 +9382,132 @@ function resolve(argv, cwd, files2) {
       return { kind: "file", file, commands: [text], cwd };
   }
   return void 0;
+}
+var FASTLANE_COMMANDS = /* @__PURE__ */ new Set([
+  "run",
+  "init",
+  "lanes",
+  "list",
+  "docs",
+  "env",
+  "action",
+  "actions",
+  "new_action",
+  "add_plugin",
+  "install_plugins",
+  "update_plugins",
+  "new_plugin",
+  "search_plugins",
+  "enable_auto_complete",
+  "update_fastlane",
+  "help",
+  "socket_server",
+  "trigger",
+  "spaceauth",
+  "scan",
+  "gym",
+  "match",
+  "snapshot",
+  "frameit",
+  "deliver",
+  "pilot",
+  "supply",
+  "cert",
+  "sigh",
+  "pem",
+  "produce",
+  "precheck",
+  "screengrab"
+]);
+var FASTLANE_PLATFORMS = /* @__PURE__ */ new Set(["ios", "android", "mac"]);
+var FASTLANE_ACTIONS = {
+  scan: "fastlane scan",
+  run_tests: "fastlane scan",
+  multi_scan: "fastlane scan",
+  gym: "fastlane gym",
+  build_app: "fastlane gym",
+  build_ios_app: "fastlane gym",
+  build_mac_app: "fastlane gym",
+  xcodebuild: "xcodebuild build",
+  xcbuild: "xcodebuild build",
+  xctest: "xcodebuild test",
+  swiftlint: "swiftlint",
+  cocoapods: "pod install",
+  carthage: "carthage bootstrap",
+  spm: "swift build",
+  // Uploads, signing and distribution: Running scripts, like `fastlane deliver`.
+  upload_to_testflight: "fastlane pilot",
+  pilot: "fastlane pilot",
+  testflight: "fastlane pilot",
+  deliver: "fastlane deliver",
+  upload_to_app_store: "fastlane deliver",
+  appstore: "fastlane deliver",
+  supply: "fastlane supply",
+  upload_to_play_store: "fastlane supply",
+  match: "fastlane match",
+  sync_code_signing: "fastlane match",
+  firebase_app_distribution: "fastlane deliver",
+  appcenter_upload: "fastlane deliver"
+};
+function parseFastfile(text) {
+  const lanes = /* @__PURE__ */ new Map();
+  const lines = text.split("\n");
+  for (let i = 0; i < lines.length; i++) {
+    const match = /^(\s*)(?:private_)?lane\s+:([A-Za-z_]\w*)\b.*\bdo\b/.exec(lines[i] ?? "");
+    if (!match) continue;
+    const indent = match[1].length;
+    const body = [];
+    for (let j = i + 1; j < lines.length; j++) {
+      const line = lines[j] ?? "";
+      const own = (/^\s*/.exec(line)?.[0] ?? "").length;
+      if (line.trim() && own <= indent) break;
+      body.push(line);
+    }
+    if (!lanes.has(match[2])) lanes.set(match[2], body.join("\n"));
+  }
+  return lanes;
+}
+var RUBY_STRING = /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g;
+function laneSteps(name, lanes, seen = /* @__PURE__ */ new Set()) {
+  const out = { actions: [], shell: [] };
+  const body = lanes.get(name);
+  if (body === void 0 || seen.has(name)) return out;
+  seen.add(name);
+  const code = body.split("\n").filter((line) => !line.trim().startsWith("#")).join("\n");
+  for (const m of code.matchAll(/\bsh\s*\(?\s*(?:command:\s*)?(["'])((?:\\.|(?!\1).)*)\1/g))
+    out.shell.push(m[2].replace(/\\(["'\\])/g, "$1"));
+  for (const m of code.matchAll(/\b(?:gradle|build_android_app)\s*\(([^)]*)\)/g)) {
+    const task = /\btask:\s*["']([\w:-]+)["']/.exec(m[1])?.[1];
+    if (task) out.actions.push(`gradle ${task}`);
+  }
+  const plain = code.replace(RUBY_STRING, '""');
+  for (const m of plain.matchAll(
+    /(?<![.:\w])([a-z_][a-z0-9_]*)(?=\s*\(|[ \t]+[a-z_]+:|[ \t]*$)/gm
+  )) {
+    const call = m[1];
+    const command = FASTLANE_ACTIONS[call];
+    if (command) out.actions.push(command);
+    else if (lanes.has(call) && call !== name) {
+      const inner = laneSteps(call, lanes, seen);
+      out.actions.push(...inner.actions);
+      out.shell.push(...inner.shell);
+    }
+  }
+  return out;
+}
+function resolveFastlane(args, cwd, files2) {
+  const words = positionals(args, ["--env"]).filter((w) => !w.includes(":"));
+  let name = words[0];
+  if (name && FASTLANE_PLATFORMS.has(name) && words[1]) name = words[1];
+  if (!name || FASTLANE_COMMANDS.has(name)) return void 0;
+  const found = findUp(cwd, ["fastlane/Fastfile", "Fastfile", ".fastlane/Fastfile"], files2);
+  const lanes = found ? parseFastfile(found.text) : void 0;
+  if (found && lanes?.has(name)) {
+    const steps = laneSteps(name, lanes);
+    const commands = steps.actions.length > 0 ? steps.actions : steps.shell;
+    if (commands.length > 0) return { kind: "lane", name, commands, cwd: path.dirname(found.file) };
+  }
+  return { kind: "lane-name", name };
 }
 var SHELL_SHEBANG = /^#!\s*\S*\/(env\s+)?(sh|bash|zsh|dash|ksh)\b/;
 function isShellScript(file, text) {
@@ -9310,374 +9520,7 @@ var import_yaml2 = __toESM(require_dist(), 1);
 import path2 from "node:path";
 
 // raw:src/classify/default-rules.yaml
-var default_rules_default = `# awf phase rules. See docs/phases.md.
-#
-# A repo extends these in .awf/rules.yaml, in the same format. Its rules are tried first, so it can
-# also override these. Within a section the first matching rule wins: specific rules go first.
-#
-# Phases: lint, tests, build, exploring, writing (Writing code or Writing tests, by file), running
-# (Running scripts), planning, waiting, neutral (changes nothing and doesn't count, like cd or echo).
-
-version: 1
-
-# Bash commands. A compound command (&&, ||, ;, |, newlines, subshells, sh -c) is split into simple
-# commands. Each one is matched after wrappers (env FOO=1, sudo, time, timeout, npx, pnpm exec,
-# uv run, poetry run, bundle exec, python -m, ...) are removed, and after npm/pnpm/yarn/bun scripts,
-# make targets, Gradle tasks, Maven goals and git commit hooks are resolved to what they run.
-#
-#   program   the command's name, without its path (string or list)
-#   args      leading arguments that must follow, in order, options skipped ("a|b" for either)
-#   with      arguments that must all appear anywhere (--flag also matches --flag=value)
-#   without   arguments that must not appear
-#   only      every argument must be one of these
-#   match     instead of program: a regex tested on the simple command
-#   tag       an extra tag on the step, like install
-#   tool      the check's name, when it isn't the program (go test is "go test")
-commands:
-  # --version, --help and friends only read. For these programs -v and -V mean verbose.
-  - { phase: exploring, match: '^(?!(pytest|py\\.test|unittest|tox|nox|ctest|ninja|mypy|flake8|black|isort|pylint|behave|ansible-lint)\\s)\\S+\\s+(--version|-v|-V|--help|-h|version|help|-version|--usage)$' }
-
-  # Lint and format
-  - { phase: exploring, program: eslint, with: [--print-config] }
-  - phase: lint
-    program: [eslint, prettier, oxlint, standard, xo, stylelint, markdownlint, markdownlint-cli2, htmlhint, jsonlint, yamllint, hadolint, shellcheck, shfmt, actionlint, editorconfig-checker, eclint, lint-staged, commitlint, knip, depcheck, sort-package-json, syncpack, cspell, swift-format]
-  - { phase: lint, program: biome, args: ['check|lint|format|ci'] }
-  - { phase: lint, program: ruff, args: ['check|format'] }
-  - { phase: lint, program: [black, isort, flake8, pylint, mypy, pyright, basedpyright, pyflakes, pycodestyle, pydocstyle, bandit, autopep8, yapf, pyre, pytype, vulture] }
-  - { phase: lint, program: [golangci-lint, gofmt, goimports, gofumpt, staticcheck, revive, errcheck, govulncheck] }
-  - { phase: lint, program: go, args: ['vet|fmt'], tool: 'go {1}' }
-  - { phase: lint, program: [cargo, cross], args: ['clippy|fmt|check|audit|deny|udeps|machete|semver-checks|hack'], tool: 'cargo {1}' }
-  - { phase: lint, program: [rustfmt, clippy-driver] }
-  - { phase: lint, program: [ktlint, detekt, ktfmt, swiftlint, swiftformat, clang-format, clang-tidy, cpplint, cppcheck] }
-  - { phase: lint, program: swift, args: ['format'], tool: swift format }
-  - { phase: lint, program: dotnet, args: ['format'], tool: dotnet format }
-  - { phase: lint, program: [rubocop, standardrb, erb_lint, reek, brakeman] }
-  - { phase: lint, program: [phpcs, phpcbf, phpstan, psalm, php-cs-fixer, pint] }
-  - { phase: lint, program: [tsc, vue-tsc], with: [--noEmit], tool: tsc --noEmit }
-  - { phase: lint, program: [svelte-check, tflint, sqlfluff, checkov, ansible-lint, credo] }
-  - { phase: lint, program: buf, args: ['lint|format|breaking'] }
-  - { phase: lint, program: astro, args: ['check'] }
-  - { phase: lint, program: terraform, args: ['fmt|validate'] }
-  - { phase: lint, program: deno, args: ['lint|fmt|check'] }
-  - { phase: lint, program: [flutter, dart], args: ['analyze|format'] }
-  - { phase: lint, program: mix, args: ['format|credo|dialyzer'] }
-  - { phase: lint, program: pre-commit, args: ['run'] }
-  - { phase: lint, program: [ty, pyrefly], args: ['check'] }
-  - { phase: lint, program: [next, ng, vue-cli-service, expo], args: ['lint'] }
-  - { phase: lint, program: [nuxi, nuxt], args: ['typecheck'] }
-  - { phase: lint, program: xcodebuild, with: [analyze], tool: xcodebuild analyze }
-  - { phase: lint, match: '^(python\\S*\\s+)?(\\./)?manage\\.py\\s+check(\\s|$)', tool: django check }
-  - { phase: lint, match: '^(tox|nox)\\s(.*\\s)?(-e|-s|--session)\\s+\\S*(lint|mypy|typecheck|types|format|fmt|style|ruff|flake8|pylint|pre-commit)', tool: tox lint }
-
-  # Running tests (before Build, so a few build-like commands with test flags land here)
-  - { phase: exploring, program: [jest, vitest], with: [--listTests] }
-  - { phase: exploring, program: [pytest, py.test], with: [--collect-only] }
-  - { phase: exploring, program: [pytest, py.test], with: [--co] }
-  - { phase: exploring, program: go, args: [test], with: [-list] }
-  - { phase: exploring, program: cargo, args: ['nextest', 'list'] }
-  - { phase: exploring, program: cargo, args: [test], with: [--list] }
-  - { phase: exploring, program: [swift, dotnet], args: [test], with: [--list-tests] }
-  - { phase: build, program: go, args: [test], with: [-c], tool: go test -c }
-  - { phase: build, program: cargo, args: ['test|nextest'], with: [--no-run] }
-  - { phase: tests, program: [jest, vitest, mocha, ava, tap, jasmine, karma, uvu, cucumber-js, wdio, testcafe, nightwatch] }
-  - { phase: tests, program: playwright, args: ['test'] }
-  - { phase: tests, program: cypress, args: ['run'] }
-  - { phase: tests, program: [node, tsx], with: [--test] }
-  - { phase: tests, program: [bun, deno], args: ['test'] }
-  - { phase: tests, program: [pytest, py.test, tox, nox, nose2, ward, behave] }
-  - { phase: tests, program: unittest }
-  - { phase: tests, match: '^(python\\S*\\s+)?(\\./)?manage\\.py\\s+test(\\s|$)', tool: django test }
-  - { phase: tests, match: '^ruby\\s+(-I\\s*\\S+\\s+)*\\S*_test\\.rb', tool: minitest }
-  - { phase: tests, program: php, args: ['artisan', 'test'], tool: artisan test }
-  - { phase: tests, program: [ng, react-scripts, craco, vue-cli-service], args: ['test|test:*|e2e'] }
-  - { phase: tests, program: [hatch, rye, tuist], args: ['test'] }
-  - { phase: tests, program: fastlane, args: ['scan|test|tests'] }
-  - { phase: tests, program: go, args: [test], tool: go test }
-  - { phase: tests, program: [gotestsum, ginkgo] }
-  - { phase: tests, program: [cargo, cross], args: ['test|nextest|bench|miri|llvm-cov|tarpaulin|insta|mutants'], tool: cargo test }
-  - { phase: tests, program: cargo, args: ['xtask|make', 'test|tests|ci'], tool: cargo test }
-  - { phase: tests, program: dotnet, args: ['test|vstest'], tool: dotnet test }
-  - { phase: tests, program: dotnet, args: ['watch', 'test'], tool: dotnet test }
-  - { phase: tests, program: xcodebuild, with: [test], tool: xcodebuild test }
-  - { phase: tests, program: xcodebuild, with: [test-without-building], tool: xcodebuild test }
-  - { phase: tests, program: swift, args: [test], tool: swift test }
-  - { phase: tests, program: [bazel, bazelisk], args: [test], tool: bazel test }
-  - { phase: tests, program: [rspec, phpunit, pest, ctest, busted, prove] }
-  - { phase: tests, program: rails, args: ['test|test:*|spec|spec:*'] }
-  - { phase: tests, program: meson, args: [test] }
-  - { phase: tests, program: ninja, args: ['test|check'] }
-  - { phase: tests, match: '^cmake\\s.*--target\\s+(test|check|RUN_TESTS)(\\s|$)', tool: ctest }
-  - { phase: tests, program: mix, args: ['test'] }
-  - { phase: tests, program: [flutter, dart], args: ['test'] }
-  - { phase: tests, program: [k6, artillery], args: ['run'] }
-  # Waiting on CI: the remote run of the same checks
-  - { phase: tests, program: gh, args: ['run', 'watch'], tool: ci }
-  - { phase: tests, program: gh, args: ['pr', 'checks'], with: [--watch], tool: ci }
-
-  # Build
-  - { phase: running, program: [webpack, rspack], args: ['serve|dev|watch'] }
-  - { phase: build, program: [tsc, vue-tsc, tsup, unbuild, swc, babel, rollup, webpack, esbuild, parcel, rspack, rolldown, microbundle, ncc, pkg, electron-builder] }
-  - { phase: build, program: [vite, next, nuxt, astro, remix, svelte-kit, react-router, gatsby, ng, react-scripts, vue-cli-service, expo, storybook, craco], args: [build] }
-  - { phase: build, program: remix, args: ['vite:build'] }
-  - { phase: build, program: expo, args: ['export|prebuild'] }
-  - { phase: build, program: [gcc, g++, cc, c++, clang, clang++, rustc, javac, kotlinc, swiftc, scalac, zig, tinygo] }
-  - { phase: build, program: build, tool: python -m build }
-  - { phase: build, program: [uv, poetry, hatch, pdm, rye], args: [build] }
-  - { phase: build, program: maturin, args: ['build|develop'] }
-  - { phase: build, program: vite, args: ['optimize'] }
-  - { phase: build, program: go, args: ['build|install|generate'], tool: 'go {1}' }
-  - { phase: build, program: [cargo, cross], args: ['build|install|doc'], tool: 'cargo {1}' }
-  - { phase: build, program: dotnet, args: ['build|publish|pack|msbuild'], tool: 'dotnet {1}' }
-  - { phase: build, program: [msbuild, MSBuild, xbuild] }
-  - { phase: build, program: xcodebuild, with: [-resolvePackageDependencies], tag: install, tool: install }
-  - { phase: build, program: xcodebuild, without: [-list, -showsdks, -version, -showBuildSettings, -showdestinations, -showTestPlans, -showBuildSettingsForIndex, -showComponent, -help, -usage, -license, -checkFirstLaunchStatus], tool: xcodebuild build }
-  - { phase: exploring, program: xcodebuild }
-  - { phase: build, program: swift, args: ['build'], tool: swift build }
-  - { phase: build, program: [bazel, bazelisk, buck, buck2, pants], args: ['build'], tool: bazel build }
-  - { phase: build, program: [cmake, ninja, meson, scons, xmake, premake5, autoreconf, configure] }
-  - { phase: build, program: [docker, podman], args: ['build'], tool: docker build }
-  - { phase: build, program: [docker, podman], args: ['buildx|compose|image', 'build'], tool: docker build }
-  - { phase: build, program: docker-compose, args: ['build'], tool: docker build }
-  - { phase: build, match: '^(docker\\s+compose|docker-compose)\\s(.*\\s)?up\\s(.*\\s)?--build', tool: docker build }
-  - { phase: build, program: [protoc, flatc, thrift, graphql-codegen, openapi-generator, openapi-generator-cli, sqlc, wire, mockgen, stringer] }
-  - { phase: build, program: buf, args: ['generate'] }
-  - { phase: build, program: prisma, args: ['generate'] }
-  - { phase: build, program: [dart, flutter], args: ['run|pub', 'build_runner'] }
-  - { phase: build, program: flutter, args: ['build|pub'] }
-  - { phase: build, program: dart, args: ['pub', 'get|upgrade|add|remove|downgrade'], tag: install, tool: install }
-  - { phase: build, program: mix, args: ['compile|deps.get|release'] }
-  - { phase: build, program: [pod, carthage], args: ['install|update|bootstrap'], tag: install }
-  - { phase: build, program: [tuist, xcodegen], args: ['generate|install|fetch|build'] }
-  - { phase: build, program: xcodegen, only: [] }
-  - { phase: build, program: fastlane, args: ['gym|build|build_app'] }
-  - { phase: build, program: deno, args: ['compile'] }
-  - { phase: build, program: bun, args: ['build'] }
-
-  # Installing dependencies counts as Build, tagged install
-  - { phase: build, program: [npm, pnpm, bun], args: ['install|i|ci|add|remove|rm|uninstall|update|up|upgrade|link|rebuild|prune|dedupe'], tag: install, tool: install }
-  - { phase: build, match: '^yarn(\\s+--?[a-z][a-z-]*)*$', tag: install, tool: install }
-  - { phase: build, program: yarn, args: ['install|add|remove|upgrade|up|dedupe'], tag: install, tool: install }
-  - { phase: build, program: [pip, pip3, pipx, uv, poetry, pipenv, pdm, conda, mamba, micromamba], args: ['install|sync|add|lock|update|uninstall|remove|venv|create'], tag: install, tool: install }
-  - { phase: build, program: uv, args: ['pip', 'install|sync|compile'], tag: install, tool: install }
-  - { phase: build, program: uv, args: ['tool', 'install|upgrade'], tag: install, tool: install }
-  - { phase: build, program: [conda, mamba, micromamba], args: ['env', 'create|update'], tag: install, tool: install }
-  - { phase: build, program: [bundle, gem, composer], args: ['install|update|add|require'], tag: install, tool: install }
-  - { phase: build, match: '^bundle(\\s+(--?[a-z][a-z-]*|\\d+))*$', tag: install, tool: install }
-  - { phase: build, program: swift, args: ['package', 'resolve|update'], tag: install, tool: install }
-  - { phase: exploring, program: go, args: ['mod', 'why|graph|verify'] }
-  - { phase: writing, program: go, args: ['mod', 'edit|init'] }
-  - { phase: build, program: go, args: ['mod', 'tidy|download|vendor'], tag: install, tool: install }
-  - { phase: build, program: go, args: ['get'], tag: install, tool: install }
-  - { phase: build, program: cargo, args: ['fetch|update|add|vendor'], tag: install, tool: install }
-  - { phase: writing, program: dotnet, args: ['add|remove', 'reference'] }
-  - { phase: build, program: dotnet, args: ['restore|add|tool'], tag: install, tool: install }
-  - { phase: build, program: [brew, apt, apt-get, dnf, yum, apk, port], args: ['install|upgrade|reinstall'], tag: install, tool: install }
-  - { phase: build, program: playwright, args: ['install'], tag: install, tool: install }
-  - { phase: build, program: [docker, podman], args: ['pull'], tag: install, tool: install }
-  - { phase: build, program: [docker, podman], args: ['compose', 'pull'], tag: install, tool: install }
-  - { phase: build, program: docker-compose, args: ['pull'], tag: install, tool: install }
-  - { phase: exploring, program: rustup, args: ['show|which|doc|check'] }
-  - { phase: exploring, match: '^rustup\\s+\\S+\\s+list(\\s|$)' }
-  - { phase: exploring, program: [nvm, fnm, pyenv, rbenv, asdf, mise, sdk, volta], args: ['ls|list|ls-remote|current|which|version|versions|list-remote'] }
-  - { phase: neutral, program: [nvm, fnm, pyenv, rbenv, asdf, mise, sdk], args: ['use|shell|local|global|deactivate|env|init'] }
-  - { phase: build, program: [rustup, nvm, fnm, volta, pyenv, rbenv, asdf, mise, sdk], args: ['install|add|toolchain|target|component'], tag: install, tool: install }
-
-  # Shell commands that only read
-  - phase: exploring
-    program: [ls, ll, la, lsd, eza, exa, tree, cat, bat, batcat, head, tail, less, more, grep, egrep, fgrep, rg, ag, ack, find, fd, fzf, wc, file, stat, du, df, which, whereis, type, pwd, realpath, readlink, basename, dirname, diff, colordiff, cmp, comm, jq, yq, gron, sort, uniq, cut, column, strings, xxd, hexdump, od, nl, tac, md5, md5sum, shasum, sha1sum, sha256sum, cksum, lsof, ps, pgrep, env, printenv, uname, sw_vers, whoami, id, hostname, date, man, tldr, history, tokei, cloc, scc, ldd, otool, nm, objdump, plutil, defaults, mdfind, xmllint, pdftotext, identify, exiftool, codesign, security, ioreg, system_profiler, vm_stat, sysctl, netstat, ifconfig, lsblk, free, top, htop, uptime, w, last, journalctl, dmesg, tput]
-  - { phase: exploring, program: [tr, base64, fold, paste, rev, iconv, expand, unexpand, fmt, seq, tsort, numfmt, look, uuidgen] }
-  - { phase: exploring, program: command, with: [-v] }
-  - { phase: exploring, program: [make, gmake], with: [-n] }
-  - { phase: exploring, match: '^(gcloud|aws|az|doctl|flyctl|heroku|vercel|netlify)\\s(\\S+\\s)*(list|describe|read|get|show|status|logs|print-access-token|print-identity-token|info|get-[a-z-]+|describe-[a-z-]+|list-[a-z-]+)(\\s|$)' }
-  - { phase: exploring, program: [sed, gsed, awk, gawk, nawk, mawk, perl] }
-  - phase: exploring
-    program: git
-    args: ['status|log|diff|show|blame|annotate|rev-parse|ls-files|ls-tree|ls-remote|grep|describe|shortlog|reflog|cat-file|whatchanged|range-diff|merge-base|name-rev|rev-list|count-objects|check-ignore|show-ref|for-each-ref|var|help|version|fetch|clone']
-  - { phase: exploring, program: git, args: ['stash|worktree|submodule|notes', 'list|show|status'] }
-  - { phase: exploring, match: '^git config\\s(.*\\s)?(--get(-all|-regexp|-urlmatch|-color|colorbool)?|--list|-l)(\\s|$)' }
-  - { phase: exploring, match: '^git config(\\s+--(global|local|system|worktree|show-origin|show-scope|includes|null|name-only))*\\s+[A-Za-z][\\w-]*\\.[\\w.-]+$' }
-  - { phase: exploring, program: git, args: ['tag'], with: [-l] }
-  - { phase: exploring, match: '^git (branch|tag|remote)( -[a-zA-Z-]+)*$' }
-  - { phase: exploring, match: '^git (branch|tag)\\s(.*\\s)?--(list|contains|no-contains|merged|no-merged|sort|points-at|show-current|format)(\\s|=|$)' }
-  - { phase: exploring, program: git, args: ['remote', 'get-url|show'] }
-  - { phase: running, match: '^\\S*(gh|glab)\\s+api\\s(.*\\s)?(-X|--method)[\\s=]*(POST|PUT|PATCH|DELETE)\\b' }
-  - { phase: exploring, program: [gh, glab], args: ['pr|mr|issue|run|ci|pipeline|job|repo|release|workflow|search|api|gist|label|cache|variable', 'view|list|ls|diff|checks|status|watch|search|download|trace|get'] }
-  - { phase: exploring, program: [gh, glab], args: ['api'] }
-  - { phase: exploring, program: [gh, glab], args: ['auth', 'status|token'] }
-  - { phase: neutral, program: [gh, glab], args: ['auth', 'switch|login|logout|setup-git|refresh'] }
-  - { phase: exploring, program: [npm, pnpm, yarn, bun], args: ['ls|list|why|view|info|show|outdated|audit|explain|query|search|config|bin|root|prefix|pkg|licenses|doctor'] }
-  - { phase: exploring, program: uv, args: ['pip', 'list|show|freeze|tree|check'] }
-  - { phase: exploring, program: [pip, pip3, uv, poetry, conda], args: ['list|show|freeze|check|tree|info|search|env'] }
-  - { phase: exploring, program: swift, args: ['package', 'describe|dump-package|show-dependencies|show-executables|tools-version'] }
-  - { phase: exploring, program: go, args: ['list|env|doc|version|tool'] }
-  - { phase: exploring, program: cargo, args: ['tree|metadata|search|locate-project|pkgid|info'] }
-  - { phase: exploring, program: [docker, podman], args: ['ps|images|logs|inspect|stats|top|port|history|version|info|context'] }
-  - { phase: exploring, program: [docker, podman], args: ['compose', 'ps|logs|config|images|ls'] }
-  - { phase: exploring, program: docker-compose, args: ['ps|logs|config|images|ls|top|version'] }
-  - { phase: exploring, program: kubectl, args: ['get|describe|logs|top|explain|version|api-resources|config|auth|events'] }
-  - { phase: exploring, program: [simctl, devicectl], args: ['list'] }
-  - { phase: exploring, program: xcresulttool, args: ['get|export|metadata|graph|formatDescription'] }
-  - { phase: exploring, program: xcrun }
-  - { phase: exploring, program: [terraform, tofu], args: ['show|output|state|providers|version|graph'] }
-  - { phase: exploring, program: coverage, args: ['report|html|xml|json'] }
-  - { phase: exploring, match: '^tar\\s+-?[a-zA-Z]*t' }
-
-  # Shell commands that change files
-  - { phase: writing, program: [mkdir, touch, cp, mv, rm, rmdir, ln, chmod, chown, chgrp, truncate, tee, patch, install, rsync, scp, unzip, ditto] }
-  - { phase: writing, program: tar }
-  - phase: writing
-    program: git
-    args: ['add|commit|checkout|switch|restore|reset|stash|merge|rebase|cherry-pick|revert|mv|rm|tag|apply|am|init|clean|branch|worktree|submodule|notes|config|remote|pull']
-    tool: git
-
-  # Running scripts: running something that isn't a check, an edit or a read. Scripts and programs,
-  # the app and its servers, HTTP calls, databases, containers and clusters, deploys, publishing,
-  # pushes and CI actions. These come after the rules above, so \`gh pr view\` still explores and
-  # \`docker build\` still builds. Waiting in a loop counts here too (polling, decided in code).
-  - { phase: running, match: '^(\\S*/)?(python[23]?(\\.\\d+)?|pypy3?|py)(\\s|$)' }
-  - { phase: running, program: [node, nodejs, tsx, ts-node, ts-node-esm, vite-node, esno, bun, deno, ruby, php, java, kotlin, groovy, scala, jshell, swift, dotnet, Rscript, julia, lua, luajit, elixir, escript, electron] }
-  - { phase: running, program: [bash, sh, zsh, dash, ksh, fish, pwsh, powershell] }
-  - { phase: running, program: [go, cargo, mix], args: ['run|watch|phx.server|ecto.*'] }
-  - { phase: running, program: [vite, next, nuxt, nuxi, astro, remix, gatsby, react-scripts, vue-cli-service, ng, expo, storybook, react-native, flutter, tauri, wrangler], args: ['dev|develop|start|serve|preview|run|run-ios|run-android|run:ios|run:android|attach'] }
-  - { phase: running, program: vite }
-  - { phase: running, program: [nodemon, pm2, forever, serve, http-server, live-server, json-server, browser-sync, wait-on, http.server, uvicorn, gunicorn, hypercorn, daphne, flask, fastapi, streamlit, gradio, jupyter, ipython, celery, puma, rackup, foreman, overmind, air, ngrok, cloudflared, caddy] }
-  - { phase: running, program: rails, args: ['server|s|console|c|runner|r|dbconsole|db|db:*'] }
-  - { phase: running, program: [curl, wget, http, https, xh, curlie, grpcurl, websocat, wscat, nc, ncat, netcat, telnet, ssh, mosh, ping, traceroute, mtr, dig, nslookup, host, whois, openssl] }
-  - { phase: running, program: [psql, pg_ctl, pg_dump, pg_dumpall, pg_restore, pg_isready, createdb, dropdb, createuser, dropuser, initdb, postgres, mysql, mysqldump, mysqladmin, mariadb, sqlite3, duckdb, redis-cli, redis-server, mongosh, mongo, mongod, mongodump, mongorestore, clickhouse, sqlcmd, cqlsh, alembic, flyway, liquibase, dbmate, goose, atlas] }
-  - { phase: running, program: [prisma, drizzle-kit], args: ['migrate|db|studio|push|up|seed'] }
-  - { phase: running, program: [docker, podman, docker-compose, nerdctl, colima, minikube, kind, k3d, kubectl, helm, skaffold, tilt, terraform, tofu, pulumi, ansible, ansible-playbook] }
-  - { phase: running, program: [gcloud, gsutil, bq, aws, az, doctl, flyctl, fly, heroku, vercel, netlify, firebase, wrangler, railway, supabase, eas, fastlane] }
-  - { phase: running, program: [simctl, devicectl, adb, emulator, ios-deploy, idb] }
-  - { phase: running, program: [npm, pnpm, yarn, bun], args: ['publish|unpublish|deprecate|dist-tag|login|logout|adduser'] }
-  - { phase: running, program: [cargo, poetry, uv, pdm, hatch, flit, gem], args: ['publish|push|yank|login|owner'] }
-  - { phase: running, program: twine }
-  - { phase: running, program: git, args: ['push'] }
-  - { phase: running, program: [gh, glab] }
-  - { phase: running, program: [playwright, lighthouse, ffmpeg, magick, sips, screencapture] }
-  # A script file, or a program run by its path (./run, bin/dev, .build/release/app): the project's
-  # own scripts and binaries.
-  - { phase: running, match: '^\\S*\\.(sh|bash|zsh|py|js|mjs|cjs|ts|mts|cts|rb|pl|php|lua|swift|kts|exs|ps1|command)(\\s|$)' }
-  - { phase: running, match: '^\\S*/' }
-
-  # Changes nothing on its own, or takes no time worth a phase
-  - phase: neutral
-    program: [cd, pushd, popd, echo, printf, print, export, unset, set, source, '.', 'true', 'false', ':', sleep, wait, exit, return, read, alias, unalias, trap, shift, local, declare, typeset, readonly, ulimit, umask, '[', '[[', test, clear, reset, hash, shopt, setopt, bindkey, eval, let, break, continue, osascript, say, afplay, notify-send, terminal-notifier, open, xdg-open, kill, pkill, killall, disown, jobs, fg, bg]
-
-# Gradle tasks, Maven goals, and task names given to turbo, nx, sbt and similar runners.
-# Tested against each task name, and against its last part for qualified names like :app:testDebug.
-tasks:
-  - { phase: exploring, match: '^(tasks|help|dependencies|dependencyInsight|properties|projects|buildEnvironment|outgoingVariants|resolvableConfigurations|javaToolchains|model|dependency:tree|dependency:list|help:effective-pom|versions:display-dependency-updates)$' }
-  - { phase: lint, match: '^(lint[A-Za-z]*|ktlint[A-Za-z]*|detekt[A-Za-z]*|spotless[A-Za-z]*|spotless:(check|apply)|checkstyle[A-Za-z]*|checkstyle:check|pmd[A-Za-z]*|pmd:check|spotbugs[A-Za-z]*|spotbugs:check|ktfmt[A-Za-z]*|format[A-Za-z]*|typecheck|type-check|tsc|check-types|checkTypes|prettier|eslint|fmt)$' }
-  - { phase: build, match: '^(build[A-Za-z]*|assemble[A-Za-z]*|bundle[A-Za-z]*|compile[A-Za-z]*|jar|bootJar|shadowJar|war|ear|dist[A-Za-z]*|install[A-Za-z]*|publish[A-Za-z]*|package|deploy|generate[A-Za-z]*|kapt[A-Za-z]*|ksp[A-Za-z]*|nativeCompile|clean|prepare|test-compile|process-resources|codegen|[a-z][A-Za-z]*Classes)$' }
-  - { phase: running, match: '^(run|bootRun|appRun|jettyRun|tomcatRun|runIde|quarkusDev|spring-boot:run|exec:java|exec:exec|jetty:run|quarkus:dev|liberty:dev)$' }
-  - { phase: tests, match: '^(test|tests|check|verify|connectedCheck|integration-test|e2e|spec|coverage|test[A-Z][A-Za-z0-9]*|test:.*|[a-z][A-Za-z0-9]*Tests?|connected[A-Za-z]*Test|(verify|record|validate)(Paparazzi|Roborazzi)[A-Za-z0-9]*|jacoco[A-Za-z]*|kover[A-Za-z]*|surefire:test|failsafe:integration-test|failsafe:verify)$' }
-
-# Names of npm/pnpm/yarn/bun scripts and make targets, used only when the file that defines them
-# can't be read. Steps decided this way are tagged by-name.
-scripts:
-  - { phase: lint, match: '^(lint|lint:.*|.*:lint|format|format:.*|fmt|prettier|eslint|typecheck|type-check|types|tsc|check-types|check:types|stylelint|biome|rubocop|ruff|black|mypy|pylint|flake8|clippy|style)$' }
-  - { phase: tests, match: '^(test|tests|test:.*|.*:test|spec|specs|e2e|e2e:.*|unit|integration|coverage|cy:run|vitest|jest|pytest|check|verify|validate|ci)$' }
-  - { phase: build, match: '^(build|build:.*|.*:build|compile|bundle|dist|prepare|prepack|package|generate|codegen|install|deps|all)$' }
-  - { phase: running, match: '^(dev|develop|start|serve|server|preview|watch|storybook|seed|migrate|db|deploy|release|publish|up|down|ios|android|web|tauri|electron)$' }
-
-# Tool calls other than Bash, by name: exact names, or a regex in match. action: the call's action
-# ("a|b" for either), like a browser computer call's screenshot. A batch's calls are matched one by
-# one, and the batch takes the highest-ranked phase, as a compound command does.
-tools:
-  - { phase: exploring, name: [Read, Grep, Glob, LS, WebSearch, WebFetch, NotebookRead, LSP, ToolSearch, Skill, ListMcpResourcesTool, ReadMcpResourceTool, ListAgents] }
-  - { phase: writing, name: [Edit, Write, MultiEdit, NotebookEdit] }
-  - { phase: planning, name: [TodoWrite, TodoRead, TaskCreate, TaskUpdate, TaskList, TaskGet, EnterPlanMode, ExitPlanMode, StructuredOutput, SubagentHandback, SendMessage, SendUserMessage, SendUserFile, Workflow] }
-  - { phase: planning, match: '^mcp__ccd_turn__' }
-  - { phase: waiting, name: [AskUserQuestion] }
-  - { phase: running, name: [Monitor] }
-  - { phase: lint, name: [mcp__ide__getDiagnostics] }
-  # Browsers (Claude in Chrome, the desktop app's built-in browser): looking at a page is Exploring,
-  # acting on it Running scripts. Waiting for the page doesn't count next to other calls.
-  - { phase: exploring, match: '^mcp__(.+__)?(claude-in-chrome|Claude_Browser)__(navigate|get_page_text|read_page|find|tabs_context|tabs_context_mcp|read_console_messages|read_network_requests|preview_logs|preview_list|list_connected_browsers|shortcuts_list)$' }
-  - { phase: exploring, match: '^mcp__(.+__)?(claude-in-chrome|Claude_Browser)__computer$', action: 'screenshot|zoom|scroll|scroll_to' }
-  - { phase: neutral, match: '^mcp__(.+__)?(claude-in-chrome|Claude_Browser)__computer$', action: wait }
-  - { phase: running, match: '^mcp__(.+__)?(claude-in-chrome|Claude_Browser)__' }
-  # Computer use: the same on the whole screen. Asking you for access to an app waits on you.
-  - { phase: waiting, name: [mcp__computer-use__request_access] }
-  - { phase: exploring, match: '^mcp__computer-use__(screenshot|zoom|scroll|cursor_position|list_granted_applications|read_clipboard)$' }
-  - { phase: neutral, name: [mcp__computer-use__wait] }
-  - { phase: running, match: '^mcp__computer-use__' }
-
-# Files whose edits count as Writing tests rather than Writing code.
-testFiles:
-  - '**/*_test.go'
-  - '**/*.{test,spec}.{ts,tsx,mts,cts,js,jsx,mjs,cjs}'
-  - '**/*.{test,spec}-d.ts'
-  - '**/__tests__/**'
-  - '**/__mocks__/**'
-  - '**/test_*.py'
-  - '**/*_test.py'
-  - '**/conftest.py'
-  - '**/src/test/**'
-  - '**/src/androidTest/**'
-  - '**/src/*Test/**'
-  - '**/*{Test,Tests,IT,Spec}.{java,kt,scala,groovy}'
-  - '**/Tests/**'
-  - '**/*Tests/**'
-  - '**/*{Test,Tests}.swift'
-  - '**/*.Tests/**'
-  - '**/*.UnitTests/**'
-  - '**/*{Test,Tests}.cs'
-  - '**/*_spec.rb'
-  - '**/*_test.rb'
-  - '**/test/**'
-  - '**/tests/**'
-  - '**/spec/**/*.{rb,js,jsx,ts,tsx,mjs,cjs,py,ex,exs,php}'
-  - '**/tests.py'
-  - '**/testdata/**'
-  - '**/*.cy.{js,jsx,ts,tsx}'
-  - '**/__snapshots__/**'
-  - '**/e2e/**'
-  - '**/*_test.{c,cc,cpp,rs,exs,dart}'
-  - '**/*.test.{c,cc,cpp}'
-
-# Failure patterns, matched against a check's output when the transcript has it, to catch failures
-# a pipe hid (pnpm test | tail). tool names a check (program or rule tool); * applies to every check.
-failurePatterns:
-  - { tool: vitest, pattern: '(Test Files|Tests)\\s+(\\d+ failed|.*\\b\\d+ failed)' }
-  - { tool: jest, pattern: 'Tests:\\s+\\d+ failed' }
-  - { tool: mocha, pattern: '\\b\\d+ failing\\b' }
-  - { tool: node, pattern: '(?m)^(# fail [1-9]|\u2139 fail [1-9])' }
-  - { tool: bun, pattern: '(?m)^\\s*[1-9]\\d* fail\\b' }
-  - { tool: playwright, pattern: '(?m)^\\s+[1-9]\\d* failed' }
-  - { tool: pytest, pattern: '(?m)^(=+ .*\\b\\d+ (failed|error)|FAILED |ERROR \\S+(::|\\.py))' }
-  - { tool: tox, pattern: '(?m)evaluation failed|^ERROR:\\s+\\S+: (commands failed|exit \\d+)' }
-  - { tool: rspec, pattern: '\\d+ examples?, [1-9]\\d* failures?' }
-  - { tool: rails, pattern: '\\d+ runs, \\d+ assertions, ([1-9]\\d* failures|\\d+ failures, [1-9]\\d* errors)' }
-  - { tool: minitest, pattern: '\\d+ runs, \\d+ assertions, ([1-9]\\d* failures|\\d+ failures, [1-9]\\d* errors)' }
-  - { tool: phpunit, pattern: '(?m)^(FAILURES!|ERRORS!)' }
-  - { tool: ctest, pattern: 'tests failed out of' }
-  - { tool: go test, pattern: '(?m)^(FAIL|--- FAIL)\\b' }
-  - { tool: go build, pattern: '(?m)^\\S+\\.go:\\d+:\\d+: ' }
-  - { tool: go vet, pattern: '(?m)^\\S+\\.go:\\d+:\\d+: ' }
-  - { tool: cargo test, pattern: 'test result: FAILED' }
-  - { tool: cargo build, pattern: '(?m)^error(\\[E\\d{4}\\])?: ' }
-  - { tool: cargo check, pattern: '(?m)^error(\\[E\\d{4}\\])?: ' }
-  - { tool: cargo clippy, pattern: '(?m)^error(\\[|:)' }
-  - { tool: tsc, pattern: 'error TS\\d+' }
-  - { tool: tsc --noEmit, pattern: 'error TS\\d+' }
-  - { tool: eslint, pattern: '\\d+ problems? \\([1-9]\\d* errors?' }
-  - { tool: prettier, pattern: 'Code style issues found|\\[error\\]' }
-  - { tool: ruff, pattern: 'Found \\d+ errors?\\b(?! \\(\\d+ fixed, 0 remaining\\))|Would reformat' }
-  - { tool: mypy, pattern: 'Found \\d+ errors?' }
-  - { tool: pyright, pattern: '(?m)^\\s*[1-9]\\d* errors?, ' }
-  - { tool: golangci-lint, pattern: '(?m)^\\d+ issues?:' }
-  - { tool: rubocop, pattern: '[1-9]\\d* offenses? detected' }
-  - { tool: gradle, pattern: 'BUILD FAILED|FAILURE: Build failed' }
-  - { tool: mvn, pattern: 'BUILD FAILURE' }
-  - { tool: xcodebuild test, pattern: '\\*\\* TEST FAILED \\*\\*|Testing failed' }
-  - { tool: xcodebuild build, pattern: '\\*\\* BUILD FAILED \\*\\*' }
-  - { tool: dotnet build, pattern: 'Build FAILED|error [A-Z]{2,}\\d+' }
-  - { tool: dotnet test, pattern: 'Failed!\\s+-\\s+Failed:\\s+[1-9]' }
-  - { tool: swift test, pattern: '(?m)^(\\S+:\\d+:\\d+: )?error: |Test Suite .\\S+. failed|\u2718 Test run with .* failed' }
-  - { tool: ci, pattern: 'completed with .failure.|X .* failed|run failed' }
-  - { tool: '*', pattern: '(?m)ELIFECYCLE\\s+(Command|Test) failed|npm ERR! (code|Test failed)|npm error (code \\d|Lifecycle script)|error Command failed with exit code|ERR_PNPM_\\w+|^\\s*ERROR\\s+run failed|make(\\[\\d+\\])?: \\*\\*\\* \\[.*\\] Error \\d+|^FAILED\\b|BUILD FAILED|^error\\[' }
-`;
+var default_rules_default = "# awf phase rules. See docs/phases.md.\n#\n# A repo extends these in .awf/rules.yaml, in the same format. Its rules are tried first, so it can\n# also override these. Within a section the first matching rule wins: specific rules go first.\n#\n# Phases: lint, tests, build, exploring, writing (Writing code or Writing tests, by file), running\n# (Running scripts), planning, waiting, neutral (changes nothing and doesn't count, like cd or echo).\n\nversion: 1\n\n# Bash commands. A compound command (&&, ||, ;, |, newlines, subshells, sh -c) is split into simple\n# commands. Each one is matched after wrappers (env FOO=1, sudo, time, timeout, npx, pnpm exec,\n# uv run, poetry run, bundle exec, python -m, ...) are removed, and after npm/pnpm/yarn/bun scripts,\n# make targets, Gradle tasks, Maven goals and git commit hooks are resolved to what they run.\n#\n#   program   the command's name, without its path (string or list)\n#   args      leading arguments that must follow, in order, options skipped (\"a|b\" for either)\n#   with      arguments that must all appear anywhere (--flag also matches --flag=value)\n#   without   arguments that must not appear\n#   only      every argument must be one of these\n#   match     instead of program: a regex tested on the simple command\n#   tag       an extra tag on the step, like install\n#   tool      the check's name, when it isn't the program (go test is \"go test\")\ncommands:\n  # --version, --help and friends only read. For these programs -v and -V mean verbose.\n  - { phase: exploring, match: '^(?!(pytest|py\\.test|unittest|tox|nox|ctest|ninja|mypy|flake8|black|isort|pylint|behave|ansible-lint)\\s)\\S+\\s+(--version|-v|-V|--help|-h|version|help|-version|--usage)$' }\n\n  # Lint and format\n  - { phase: exploring, program: eslint, with: [--print-config] }\n  - phase: lint\n    program: [eslint, prettier, oxlint, standard, xo, stylelint, markdownlint, markdownlint-cli2, htmlhint, jsonlint, yamllint, hadolint, shellcheck, shfmt, actionlint, editorconfig-checker, eclint, lint-staged, commitlint, knip, depcheck, sort-package-json, syncpack, cspell, swift-format]\n  - { phase: lint, program: biome, args: ['check|lint|format|ci'] }\n  - { phase: lint, program: ruff, args: ['check|format'] }\n  - { phase: lint, program: [black, isort, flake8, pylint, mypy, pyright, basedpyright, pyflakes, pycodestyle, pydocstyle, bandit, autopep8, yapf, pyre, pytype, vulture] }\n  - { phase: lint, program: [golangci-lint, gofmt, goimports, gofumpt, staticcheck, revive, errcheck, govulncheck] }\n  - { phase: lint, program: go, args: ['vet|fmt'], tool: 'go {1}' }\n  - { phase: lint, program: [cargo, cross], args: ['clippy|fmt|check|audit|deny|udeps|machete|semver-checks|hack'], tool: 'cargo {1}' }\n  - { phase: lint, program: [rustfmt, clippy-driver] }\n  - { phase: lint, program: [ktlint, detekt, ktfmt, swiftlint, swiftformat, clang-format, clang-tidy, cpplint, cppcheck] }\n  - { phase: lint, program: swift, args: ['format'], tool: swift format }\n  - { phase: lint, program: dotnet, args: ['format'], tool: dotnet format }\n  - { phase: lint, program: [rubocop, standardrb, erb_lint, reek, brakeman] }\n  - { phase: lint, program: [phpcs, phpcbf, phpstan, psalm, php-cs-fixer, pint] }\n  - { phase: lint, program: [tsc, vue-tsc], with: [--noEmit], tool: tsc --noEmit }\n  - { phase: lint, program: [svelte-check, tflint, sqlfluff, checkov, ansible-lint, credo] }\n  - { phase: lint, program: buf, args: ['lint|format|breaking'] }\n  - { phase: lint, program: astro, args: ['check'] }\n  - { phase: lint, program: terraform, args: ['fmt|validate'] }\n  - { phase: lint, program: deno, args: ['lint|fmt|check'] }\n  - { phase: lint, program: [flutter, dart], args: ['analyze|format'] }\n  - { phase: lint, program: mix, args: ['format|credo|dialyzer'] }\n  - { phase: lint, program: pre-commit, args: ['run'] }\n  - { phase: lint, program: [ty, pyrefly], args: ['check'] }\n  - { phase: lint, program: [next, ng, vue-cli-service, expo], args: ['lint'] }\n  - { phase: lint, program: [nuxi, nuxt], args: ['typecheck'] }\n  - { phase: lint, program: xcodebuild, with: [analyze], tool: xcodebuild analyze }\n  - { phase: lint, match: '^(python\\S*\\s+)?(\\./)?manage\\.py\\s+check(\\s|$)', tool: django check }\n  - { phase: lint, match: '^(tox|nox)\\s(.*\\s)?(-e|-s|--session)\\s+\\S*(lint|mypy|typecheck|types|format|fmt|style|ruff|flake8|pylint|pre-commit)', tool: tox lint }\n\n  # Running tests (before Build, so a few build-like commands with test flags land here)\n  - { phase: exploring, program: [jest, vitest], with: [--listTests] }\n  - { phase: exploring, program: [pytest, py.test], with: [--collect-only] }\n  - { phase: exploring, program: [pytest, py.test], with: [--co] }\n  - { phase: exploring, program: go, args: [test], with: [-list] }\n  - { phase: exploring, program: cargo, args: ['nextest', 'list'] }\n  - { phase: exploring, program: cargo, args: [test], with: [--list] }\n  - { phase: exploring, program: [swift, dotnet], args: [test], with: [--list-tests] }\n  - { phase: build, program: go, args: [test], with: [-c], tool: go test -c }\n  - { phase: build, program: cargo, args: ['test|nextest'], with: [--no-run] }\n  - { phase: tests, program: [jest, vitest, mocha, ava, tap, jasmine, karma, uvu, cucumber-js, wdio, testcafe, nightwatch] }\n  - { phase: tests, program: playwright, args: ['test'] }\n  - { phase: tests, program: cypress, args: ['run'] }\n  - { phase: tests, program: [node, tsx], with: [--test] }\n  - { phase: tests, program: [bun, deno], args: ['test'] }\n  - { phase: tests, program: [pytest, py.test, tox, nox, nose2, ward, behave] }\n  - { phase: tests, program: unittest }\n  - { phase: tests, match: '^(python\\S*\\s+)?(\\./)?manage\\.py\\s+test(\\s|$)', tool: django test }\n  - { phase: tests, match: '^ruby\\s+(-I\\s*\\S+\\s+)*\\S*_test\\.rb', tool: minitest }\n  - { phase: tests, program: php, args: ['artisan', 'test'], tool: artisan test }\n  - { phase: tests, program: [ng, react-scripts, craco, vue-cli-service], args: ['test|test:*|e2e'] }\n  - { phase: tests, program: [hatch, rye, tuist], args: ['test'] }\n  - { phase: tests, program: fastlane, args: ['scan|test|tests'] }\n  - { phase: tests, program: go, args: [test], tool: go test }\n  - { phase: tests, program: [gotestsum, ginkgo] }\n  - { phase: tests, program: [cargo, cross], args: ['test|nextest|bench|miri|llvm-cov|tarpaulin|insta|mutants'], tool: cargo test }\n  - { phase: tests, program: cargo, args: ['xtask|make', 'test|tests|ci'], tool: cargo test }\n  - { phase: exploring, program: cargo, args: ['fuzz', 'list'] }\n  - { phase: build, program: cargo, args: ['fuzz', 'build|check'], tool: cargo fuzz build }\n  - { phase: writing, program: cargo, args: ['fuzz', 'init|add|new'] }\n  - { phase: tests, program: cargo, args: ['fuzz', 'run|coverage|cmin|tmin'], tool: cargo fuzz }\n  - { phase: tests, program: cargo-mutants, tool: cargo test }\n  - { phase: tests, program: dotnet, args: ['test|vstest'], tool: dotnet test }\n  - { phase: tests, program: dotnet, args: ['watch', 'test'], tool: dotnet test }\n  - { phase: tests, program: xcodebuild, with: [test], tool: xcodebuild test }\n  - { phase: tests, program: xcodebuild, with: [test-without-building], tool: xcodebuild test }\n  - { phase: tests, program: swift, args: [test], tool: swift test }\n  - { phase: tests, program: [bazel, bazelisk], args: [test], tool: bazel test }\n  - { phase: tests, program: [rspec, phpunit, pest, ctest, busted, prove] }\n  - { phase: tests, program: rails, args: ['test|test:*|spec|spec:*'] }\n  - { phase: tests, program: meson, args: [test] }\n  - { phase: tests, program: ninja, args: ['test|check'] }\n  - { phase: tests, match: '^cmake\\s.*--target\\s+(test|check|RUN_TESTS)(\\s|$)', tool: ctest }\n  - { phase: tests, program: mix, args: ['test'] }\n  - { phase: tests, program: [flutter, dart], args: ['test'] }\n  - { phase: tests, program: [k6, artillery], args: ['run'] }\n  # Watching CI waits for something outside the session, like an `until gh run view ...; do sleep\n  # 30; done` loop: Running scripts, polling. (Before the exploring gh rules below.)\n  - { phase: running, program: gh, args: ['run', 'watch'], tag: polling }\n  - { phase: running, program: gh, args: ['pr', 'checks'], with: [--watch], tag: polling }\n\n  # Build\n  - { phase: running, program: [webpack, rspack], args: ['serve|dev|watch'] }\n  - { phase: build, program: [tsc, vue-tsc, tsup, unbuild, swc, babel, rollup, webpack, esbuild, parcel, rspack, rolldown, microbundle, ncc, pkg, electron-builder] }\n  - { phase: build, program: [vite, next, nuxt, astro, remix, svelte-kit, react-router, gatsby, ng, react-scripts, vue-cli-service, expo, storybook, craco], args: [build] }\n  - { phase: build, program: remix, args: ['vite:build'] }\n  - { phase: build, program: expo, args: ['export|prebuild'] }\n  - { phase: build, program: [gcc, g++, cc, c++, clang, clang++, rustc, javac, kotlinc, swiftc, scalac, zig, tinygo] }\n  - { phase: build, program: build, tool: python -m build }\n  - { phase: build, program: [uv, poetry, hatch, pdm, rye], args: [build] }\n  - { phase: build, program: maturin, args: ['build|develop'] }\n  - { phase: build, program: vite, args: ['optimize'] }\n  - { phase: build, program: go, args: ['build|install|generate'], tool: 'go {1}' }\n  - { phase: build, program: [cargo, cross], args: ['build|install|doc'], tool: 'cargo {1}' }\n  - { phase: build, program: cargo, args: ['clean'], tool: cargo clean }\n  - { phase: build, program: dotnet, args: ['build|publish|pack|msbuild'], tool: 'dotnet {1}' }\n  - { phase: build, program: [msbuild, MSBuild, xbuild] }\n  - { phase: build, program: xcodebuild, with: [-resolvePackageDependencies], tag: install, tool: install }\n  - { phase: build, program: xcodebuild, without: [-list, -showsdks, -version, -showBuildSettings, -showdestinations, -showTestPlans, -showBuildSettingsForIndex, -showComponent, -help, -usage, -license, -checkFirstLaunchStatus], tool: xcodebuild build }\n  - { phase: exploring, program: xcodebuild }\n  - { phase: build, program: swift, args: ['build'], tool: swift build }\n  - { phase: build, program: [bazel, bazelisk, buck, buck2, pants], args: ['build'], tool: bazel build }\n  - { phase: build, program: [cmake, ninja, meson, scons, xmake, premake5, autoreconf, configure] }\n  - { phase: build, program: [docker, podman], args: ['build'], tool: docker build }\n  - { phase: build, program: [docker, podman], args: ['buildx|compose|image', 'build'], tool: docker build }\n  - { phase: build, program: docker-compose, args: ['build'], tool: docker build }\n  - { phase: build, match: '^(docker\\s+compose|docker-compose)\\s(.*\\s)?up\\s(.*\\s)?--build', tool: docker build }\n  - { phase: build, program: [protoc, flatc, thrift, graphql-codegen, openapi-generator, openapi-generator-cli, sqlc, wire, mockgen, stringer] }\n  - { phase: build, program: buf, args: ['generate'] }\n  - { phase: build, program: prisma, args: ['generate'] }\n  - { phase: build, program: [dart, flutter], args: ['run|pub', 'build_runner'] }\n  - { phase: build, program: flutter, args: ['build|pub'] }\n  - { phase: build, program: dart, args: ['pub', 'get|upgrade|add|remove|downgrade'], tag: install, tool: install }\n  - { phase: build, program: mix, args: ['compile|deps.get|release'] }\n  - { phase: build, program: [pod, carthage], args: ['install|update|bootstrap'], tag: install }\n  - { phase: build, program: [tuist, xcodegen], args: ['generate|install|fetch|build'] }\n  - { phase: build, program: xcodegen, only: [] }\n  - { phase: build, program: fastlane, args: ['gym|build|build_app'] }\n  - { phase: build, program: deno, args: ['compile'] }\n  - { phase: exploring, match: '^lipo\\s(.*\\s)?-(info|archs|detailed_info|verify_arch)(\\s|$)' }\n  - { phase: build, program: lipo }\n  - { phase: build, program: bun, args: ['build'] }\n\n  # Installing dependencies counts as Build, tagged install\n  - { phase: build, program: [npm, pnpm, bun], args: ['install|i|ci|add|remove|rm|uninstall|update|up|upgrade|link|rebuild|prune|dedupe'], tag: install, tool: install }\n  - { phase: build, match: '^yarn(\\s+--?[a-z][a-z-]*)*$', tag: install, tool: install }\n  - { phase: build, program: yarn, args: ['install|add|remove|upgrade|up|dedupe'], tag: install, tool: install }\n  - { phase: build, program: [pip, pip3, pipx, uv, poetry, pipenv, pdm, conda, mamba, micromamba], args: ['install|sync|add|lock|update|uninstall|remove|venv|create'], tag: install, tool: install }\n  - { phase: build, program: uv, args: ['pip', 'install|sync|compile'], tag: install, tool: install }\n  - { phase: build, program: uv, args: ['tool', 'install|upgrade'], tag: install, tool: install }\n  - { phase: build, program: [conda, mamba, micromamba], args: ['env', 'create|update'], tag: install, tool: install }\n  - { phase: exploring, program: bundle, args: ['check|list|info|show|outdated|platform|doctor|config'] }\n  - { phase: exploring, program: gem, args: ['list|contents|which|info|search|environment|env|specification|query|outdated|dependency'] }\n  - { phase: build, program: [bundle, gem, composer], args: ['install|update|add|require|lock'], tag: install, tool: install }\n  - { phase: build, program: gem, args: ['build'] }\n  - { phase: build, program: [create-next-app, create-vite], tag: install, tool: install }\n  - { phase: exploring, match: '^xcode-select\\s+(-p|--print-path)$' }\n  - { phase: build, program: xcode-select, with: [--install], tag: install, tool: install }\n  - { phase: build, match: '^bundle(\\s+(--?[a-z][a-z-]*|\\d+))*$', tag: install, tool: install }\n  - { phase: build, program: swift, args: ['package', 'resolve|update'], tag: install, tool: install }\n  - { phase: exploring, program: go, args: ['mod', 'why|graph|verify'] }\n  - { phase: writing, program: go, args: ['mod', 'edit|init'] }\n  - { phase: build, program: go, args: ['mod', 'tidy|download|vendor'], tag: install, tool: install }\n  - { phase: build, program: go, args: ['get'], tag: install, tool: install }\n  - { phase: build, program: cargo, args: ['fetch|update|add|vendor'], tag: install, tool: install }\n  - { phase: writing, program: dotnet, args: ['add|remove', 'reference'] }\n  - { phase: build, program: dotnet, args: ['restore|add|tool'], tag: install, tool: install }\n  - { phase: build, program: [brew, apt, apt-get, dnf, yum, apk, port], args: ['install|upgrade|reinstall'], tag: install, tool: install }\n  - { phase: build, program: playwright, args: ['install'], tag: install, tool: install }\n  - { phase: build, program: [docker, podman], args: ['pull'], tag: install, tool: install }\n  - { phase: build, program: [docker, podman], args: ['compose', 'pull'], tag: install, tool: install }\n  - { phase: build, program: docker-compose, args: ['pull'], tag: install, tool: install }\n  - { phase: exploring, program: rustup, args: ['show|which|doc|check'] }\n  - { phase: exploring, match: '^rustup\\s+\\S+\\s+list(\\s|$)' }\n  - { phase: exploring, program: [nvm, fnm, pyenv, rbenv, asdf, mise, sdk, volta], args: ['ls|list|ls-remote|current|which|version|versions|list-remote'] }\n  - { phase: neutral, program: [nvm, fnm, pyenv, rbenv, asdf, mise, sdk], args: ['use|shell|local|global|deactivate|env|init'] }\n  - { phase: build, program: [rustup, nvm, fnm, volta, pyenv, rbenv, asdf, mise, sdk], args: ['install|add|toolchain|target|component'], tag: install, tool: install }\n\n  # Shell commands that only read\n  - phase: exploring\n    program: [ls, ll, la, lsd, eza, exa, tree, cat, bat, batcat, head, tail, less, more, grep, egrep, fgrep, rg, ag, ack, find, fd, fzf, wc, file, stat, du, df, which, whereis, type, pwd, realpath, readlink, basename, dirname, diff, colordiff, cmp, comm, jq, yq, gron, sort, uniq, cut, column, strings, xxd, hexdump, od, nl, tac, md5, md5sum, shasum, sha1sum, sha256sum, cksum, lsof, ps, pgrep, env, printenv, uname, sw_vers, whoami, id, hostname, date, man, tldr, history, tokei, cloc, scc, ldd, otool, nm, objdump, plutil, defaults, mdfind, xmllint, pdftotext, identify, exiftool, codesign, security, ioreg, system_profiler, vm_stat, sysctl, netstat, ifconfig, lsblk, free, top, htop, uptime, w, last, journalctl, dmesg, tput]\n  - { phase: exploring, program: [tr, base64, fold, paste, rev, iconv, expand, unexpand, fmt, seq, tsort, numfmt, look, uuidgen, swift-demangle, c++filt] }\n  - { phase: exploring, program: command, with: [-v] }\n  - { phase: exploring, program: [make, gmake], with: [-n] }\n  - { phase: exploring, match: '^(gcloud|aws|az|doctl|flyctl|heroku|vercel|netlify)\\s(\\S+\\s)*(list|describe|read|get|show|status|logs|print-access-token|print-identity-token|info|get-[a-z-]+|describe-[a-z-]+|list-[a-z-]+)(\\s|$)' }\n  - { phase: exploring, program: [sed, gsed, awk, gawk, nawk, mawk, perl] }\n  - phase: exploring\n    program: git\n    args: ['status|log|diff|show|blame|annotate|rev-parse|ls-files|ls-tree|ls-remote|grep|describe|shortlog|reflog|cat-file|whatchanged|range-diff|merge-base|name-rev|rev-list|count-objects|check-ignore|show-ref|for-each-ref|var|help|version|fetch|clone|merge-tree|cherry|archive|diff-tree|diff-index|diff-files|show-branch|verify-commit|verify-tag|check-attr|check-ref-format|fsck|hash-object']\n  - { phase: exploring, program: git, args: ['stash|worktree|submodule|notes', 'list|show|status'] }\n  - { phase: exploring, match: '^git config\\s(.*\\s)?(--get(-all|-regexp|-urlmatch|-color|colorbool)?|--list|-l)(\\s|$)' }\n  - { phase: exploring, match: '^git config(\\s+--(global|local|system|worktree|show-origin|show-scope|includes|null|name-only))*\\s+[A-Za-z][\\w-]*\\.[\\w.-]+$' }\n  - { phase: exploring, program: git, args: ['tag'], with: [-l] }\n  - { phase: exploring, match: '^git (branch|tag|remote)( -[a-zA-Z-]+)*$' }\n  - { phase: exploring, match: '^git (branch|tag)\\s(.*\\s)?--(list|contains|no-contains|merged|no-merged|sort|points-at|show-current|format)(\\s|=|$)' }\n  - { phase: exploring, program: git, args: ['remote', 'get-url|show'] }\n  - { phase: exploring, match: '^git symbolic-ref(\\s+(-q|--quiet|--short|--no-recurse))*\\s+\\S+$' }\n  - { phase: running, match: '^\\S*(gh|glab)\\s+api\\s(.*\\s)?(-X|--method)[\\s=]*(POST|PUT|PATCH|DELETE)\\b' }\n  - { phase: exploring, program: [gh, glab], args: ['pr|mr|issue|run|ci|pipeline|job|repo|release|workflow|search|api|gist|label|cache|variable', 'view|list|ls|diff|checks|status|watch|search|download|trace|get'] }\n  - { phase: exploring, program: [gh, glab], args: ['api'] }\n  - { phase: exploring, program: [gh, glab], args: ['auth', 'status|token'] }\n  - { phase: neutral, program: [gh, glab], args: ['auth', 'switch|login|logout|setup-git|refresh'] }\n  - { phase: exploring, program: [npm, pnpm, yarn, bun], args: ['ls|list|why|view|info|show|outdated|audit|explain|query|search|config|bin|root|prefix|pkg|licenses|doctor'] }\n  - { phase: exploring, program: uv, args: ['pip', 'list|show|freeze|tree|check'] }\n  - { phase: exploring, program: [pip, pip3, uv, poetry, conda], args: ['list|show|freeze|check|tree|info|search|env'] }\n  - { phase: exploring, program: swift, args: ['package', 'describe|dump-package|show-dependencies|show-executables|tools-version'] }\n  - { phase: exploring, program: go, args: ['list|env|doc|version|tool'] }\n  - { phase: exploring, program: cargo, args: ['tree|metadata|search|locate-project|pkgid|info'] }\n  - { phase: exploring, program: [docker, podman], args: ['ps|images|logs|inspect|stats|top|port|history|version|info|context'] }\n  - { phase: exploring, program: [docker, podman], args: ['compose', 'ps|logs|config|images|ls'] }\n  - { phase: exploring, program: docker-compose, args: ['ps|logs|config|images|ls|top|version'] }\n  - { phase: exploring, program: kubectl, args: ['get|describe|logs|top|explain|version|api-resources|config|auth|events'] }\n  - { phase: exploring, program: [simctl, devicectl], args: ['list'] }\n  - { phase: exploring, program: xcresulttool, args: ['get|export|metadata|graph|formatDescription'] }\n  - { phase: exploring, program: xcrun }\n  - { phase: exploring, program: [terraform, tofu], args: ['show|output|state|providers|version|graph'] }\n  - { phase: exploring, program: coverage, args: ['report|html|xml|json'] }\n  # Coverage reports read what a test run measured, like `coverage report` and xcresulttool. A\n  # coverage gate script is classified by what else it runs (see docs/phases.md).\n  - { phase: exploring, program: [llvm-cov, xccov, llvm-profdata], tag: coverage }\n  - { phase: exploring, program: [pdfinfo, pbpaste] }\n  - { phase: exploring, match: '^pmset\\s+-g' }\n  - { phase: exploring, match: '^tar\\s+-?[a-zA-Z]*t' }\n\n  # Shell commands that change files\n  - { phase: writing, program: [mkdir, touch, cp, mv, rm, rmdir, ln, chmod, chown, chgrp, truncate, tee, patch, install, rsync, scp, unzip, ditto] }\n  - { phase: writing, program: tar }\n  - phase: writing\n    program: git\n    args: ['add|commit|checkout|switch|restore|reset|stash|merge|rebase|cherry-pick|revert|mv|rm|tag|apply|am|init|clean|branch|worktree|submodule|notes|config|remote|pull|symbolic-ref|write-tree|commit-tree|update-ref|read-tree|update-index|mktree|replace']\n    tool: git\n\n  # Running scripts: running something that isn't a check, an edit or a read. Scripts and programs,\n  # the app and its servers, HTTP calls, databases, containers and clusters, deploys, publishing,\n  # pushes and CI actions. These come after the rules above, so `gh pr view` still explores and\n  # `docker build` still builds. Waiting in a loop counts here too (polling, decided in code).\n  - { phase: running, match: '^(\\S*/)?(python[23]?(\\.\\d+)?|pypy3?|py)(\\s|$)' }\n  - { phase: running, program: [node, nodejs, tsx, ts-node, ts-node-esm, vite-node, esno, bun, deno, ruby, php, java, kotlin, groovy, scala, jshell, swift, dotnet, Rscript, julia, lua, luajit, elixir, escript, electron] }\n  - { phase: running, program: [bash, sh, zsh, dash, ksh, fish, pwsh, powershell] }\n  - { phase: running, program: [go, cargo, mix], args: ['run|watch|phx.server|ecto.*'] }\n  - { phase: running, program: [vite, next, nuxt, nuxi, astro, remix, gatsby, react-scripts, vue-cli-service, ng, expo, storybook, react-native, flutter, tauri, wrangler], args: ['dev|develop|start|serve|preview|run|run-ios|run-android|run:ios|run:android|attach'] }\n  - { phase: running, program: vite }\n  - { phase: running, program: [nodemon, pm2, forever, serve, http-server, live-server, json-server, browser-sync, wait-on, http.server, uvicorn, gunicorn, hypercorn, daphne, flask, fastapi, streamlit, gradio, jupyter, ipython, celery, puma, rackup, foreman, overmind, air, ngrok, cloudflared, caddy, cloud-sql-proxy, mkcert] }\n  # Another agent run from the shell (claude -p) does work awf can't see into.\n  - { phase: running, program: claude }\n  - { phase: running, program: rails, args: ['server|s|console|c|runner|r|dbconsole|db|db:*'] }\n  - { phase: running, program: [curl, wget, http, https, xh, curlie, grpcurl, websocat, wscat, nc, ncat, netcat, telnet, ssh, mosh, ping, traceroute, mtr, dig, nslookup, host, whois, openssl] }\n  - { phase: running, program: [psql, pg_ctl, pg_dump, pg_dumpall, pg_restore, pg_isready, createdb, dropdb, createuser, dropuser, initdb, postgres, mysql, mysqldump, mysqladmin, mariadb, sqlite3, duckdb, redis-cli, redis-server, mongosh, mongo, mongod, mongodump, mongorestore, clickhouse, sqlcmd, cqlsh, alembic, flyway, liquibase, dbmate, goose, atlas] }\n  - { phase: running, program: [prisma, drizzle-kit], args: ['migrate|db|studio|push|up|seed'] }\n  - { phase: running, program: [docker, podman, docker-compose, nerdctl, colima, minikube, kind, k3d, kubectl, helm, skaffold, tilt, terraform, tofu, pulumi, ansible, ansible-playbook] }\n  - { phase: running, program: [gcloud, gsutil, bq, aws, az, doctl, flyctl, fly, heroku, vercel, netlify, firebase, wrangler, railway, supabase, eas, fastlane] }\n  - { phase: running, program: [simctl, devicectl, adb, emulator, ios-deploy, idb] }\n  - { phase: running, program: [npm, pnpm, yarn, bun], args: ['publish|unpublish|deprecate|dist-tag|login|logout|adduser'] }\n  - { phase: running, program: [cargo, poetry, uv, pdm, hatch, flit, gem], args: ['publish|push|yank|login|owner'] }\n  - { phase: running, program: twine }\n  - { phase: running, program: git, args: ['push'] }\n  - { phase: running, program: [gh, glab] }\n  - { phase: running, program: [playwright, lighthouse, ffmpeg, magick, sips, screencapture, pdftoppm, pmset] }\n  # A script file, or a program run by its path (./run, bin/dev, .build/release/app): the project's\n  # own scripts and binaries.\n  - { phase: running, match: '^\\S*\\.(sh|bash|zsh|py|js|mjs|cjs|ts|mts|cts|rb|pl|php|lua|swift|kts|exs|ps1|command)(\\s|$)' }\n  - { phase: running, match: '^\\S*/' }\n\n  # Changes nothing on its own, or takes no time worth a phase\n  - phase: neutral\n    program: [cd, pushd, popd, echo, printf, print, export, unset, set, source, '.', 'true', 'false', ':', sleep, wait, exit, return, read, alias, unalias, trap, shift, local, declare, typeset, readonly, ulimit, umask, '[', '[[', test, clear, reset, hash, shopt, setopt, bindkey, eval, let, break, continue, osascript, say, afplay, notify-send, terminal-notifier, open, xdg-open, kill, pkill, killall, disown, jobs, fg, bg, mktemp, pbcopy, xcode-select, caffeinate]\n\n# Gradle tasks, Maven goals, and task names given to turbo, nx, sbt and similar runners.\n# Tested against each task name, and against its last part for qualified names like :app:testDebug.\ntasks:\n  - { phase: exploring, match: '^(tasks|help|dependencies|dependencyInsight|properties|projects|buildEnvironment|outgoingVariants|resolvableConfigurations|javaToolchains|model|dependency:tree|dependency:list|help:effective-pom|versions:display-dependency-updates)$' }\n  - { phase: lint, match: '^(lint[A-Za-z]*|ktlint[A-Za-z]*|detekt[A-Za-z]*|spotless[A-Za-z]*|spotless:(check|apply)|checkstyle[A-Za-z]*|checkstyle:check|pmd[A-Za-z]*|pmd:check|spotbugs[A-Za-z]*|spotbugs:check|ktfmt[A-Za-z]*|format[A-Za-z]*|typecheck|type-check|tsc|check-types|checkTypes|prettier|eslint|fmt)$' }\n  - { phase: build, match: '^(build[A-Za-z]*|assemble[A-Za-z]*|bundle[A-Za-z]*|compile[A-Za-z]*|jar|bootJar|shadowJar|war|ear|dist[A-Za-z]*|install[A-Za-z]*|publish[A-Za-z]*|package|deploy|generate[A-Za-z]*|kapt[A-Za-z]*|ksp[A-Za-z]*|nativeCompile|clean|prepare|test-compile|process-resources|codegen|[a-z][A-Za-z]*Classes)$' }\n  - { phase: running, match: '^(run|bootRun|appRun|jettyRun|tomcatRun|runIde|quarkusDev|spring-boot:run|exec:java|exec:exec|jetty:run|quarkus:dev|liberty:dev)$' }\n  - { phase: tests, match: '^(test|tests|check|verify|connectedCheck|integration-test|e2e|spec|coverage|test[A-Z][A-Za-z0-9]*|test:.*|[a-z][A-Za-z0-9]*Tests?|connected[A-Za-z]*Test|(verify|record|validate)(Paparazzi|Roborazzi)[A-Za-z0-9]*|jacoco[A-Za-z]*|kover[A-Za-z]*|surefire:test|failsafe:integration-test|failsafe:verify)$' }\n\n# Names of npm/pnpm/yarn/bun scripts and make targets, used only when the file that defines them\n# can't be read. Steps decided this way are tagged by-name.\nscripts:\n  - { phase: lint, match: '^(lint|lint:.*|.*:lint|format|format:.*|fmt|prettier|eslint|typecheck|type-check|types|tsc|check-types|check:types|stylelint|biome|rubocop|ruff|black|mypy|pylint|flake8|clippy|style)$' }\n  - { phase: tests, match: '^(test|tests|test:.*|.*:test|spec|specs|e2e|e2e:.*|unit|integration|coverage|cy:run|vitest|jest|pytest|check|verify|validate|ci)$' }\n  - { phase: build, match: '^(build|build:.*|.*:build|compile|bundle|dist|prepare|prepack|package|generate|codegen|install|deps|all)$' }\n  - { phase: running, match: '^(dev|develop|start|serve|server|preview|watch|storybook|seed|migrate|db|deploy|release|publish|up|down|ios|android|web|tauri|electron)$' }\n\n# Tool calls other than Bash, by name: exact names, or a regex in match. action: the call's action\n# (\"a|b\" for either), like a browser computer call's screenshot. A batch's calls are matched one by\n# one, and the batch takes the highest-ranked phase, as a compound command does.\ntools:\n  - { phase: exploring, name: [Read, Grep, Glob, LS, WebSearch, WebFetch, NotebookRead, LSP, ToolSearch, Skill, ListMcpResourcesTool, ReadMcpResourceTool, ListAgents] }\n  - { phase: writing, name: [Edit, Write, MultiEdit, NotebookEdit] }\n  - { phase: planning, name: [TodoWrite, TodoRead, TaskCreate, TaskUpdate, TaskList, TaskGet, EnterPlanMode, ExitPlanMode, StructuredOutput, SubagentHandback, SendMessage, SendUserMessage, SendUserFile, Workflow] }\n  - { phase: planning, match: '^mcp__ccd_turn__' }\n  - { phase: waiting, name: [AskUserQuestion] }\n  - { phase: running, name: [Monitor] }\n  - { phase: lint, name: [mcp__ide__getDiagnostics] }\n  # Browsers (Claude in Chrome, the desktop app's built-in browser): looking at a page is Exploring,\n  # acting on it Running scripts. Waiting for the page doesn't count next to other calls.\n  - { phase: exploring, match: '^mcp__(.+__)?(claude-in-chrome|Claude_Browser)__(navigate|get_page_text|read_page|find|tabs_context|tabs_context_mcp|read_console_messages|read_network_requests|preview_logs|preview_list|list_connected_browsers|shortcuts_list)$' }\n  - { phase: exploring, match: '^mcp__(.+__)?(claude-in-chrome|Claude_Browser)__computer$', action: 'screenshot|zoom|scroll|scroll_to' }\n  - { phase: neutral, match: '^mcp__(.+__)?(claude-in-chrome|Claude_Browser)__computer$', action: wait }\n  - { phase: running, match: '^mcp__(.+__)?(claude-in-chrome|Claude_Browser)__' }\n  # Computer use: the same on the whole screen. Asking you for access to an app waits on you.\n  - { phase: waiting, name: [mcp__computer-use__request_access] }\n  - { phase: exploring, match: '^mcp__computer-use__(screenshot|zoom|scroll|cursor_position|list_granted_applications|read_clipboard)$' }\n  - { phase: neutral, name: [mcp__computer-use__wait] }\n  - { phase: running, match: '^mcp__computer-use__' }\n\n# Files whose edits count as Writing tests rather than Writing code.\ntestFiles:\n  - '**/*_test.go'\n  - '**/*.{test,spec}.{ts,tsx,mts,cts,js,jsx,mjs,cjs}'\n  - '**/*.{test,spec}-d.ts'\n  - '**/__tests__/**'\n  - '**/__mocks__/**'\n  - '**/test_*.py'\n  - '**/*_test.py'\n  - '**/conftest.py'\n  - '**/src/test/**'\n  - '**/src/androidTest/**'\n  - '**/src/*Test/**'\n  - '**/*{Test,Tests,IT,Spec}.{java,kt,scala,groovy}'\n  - '**/Tests/**'\n  - '**/*Tests/**'\n  - '**/*{Test,Tests}.swift'\n  - '**/*.Tests/**'\n  - '**/*.UnitTests/**'\n  - '**/*{Test,Tests}.cs'\n  - '**/*_spec.rb'\n  - '**/*_test.rb'\n  - '**/test/**'\n  - '**/tests/**'\n  - '**/spec/**/*.{rb,js,jsx,ts,tsx,mjs,cjs,py,ex,exs,php}'\n  - '**/tests.py'\n  - '**/testdata/**'\n  - '**/*.cy.{js,jsx,ts,tsx}'\n  - '**/__snapshots__/**'\n  - '**/e2e/**'\n  - '**/*_test.{c,cc,cpp,rs,exs,dart}'\n  - '**/*.test.{c,cc,cpp}'\n\n# Failure patterns, matched against a check's output when the transcript has it, to catch failures\n# a pipe hid (pnpm test | tail). tool names a check (program or rule tool); * applies to every check.\nfailurePatterns:\n  - { tool: vitest, pattern: '(Test Files|Tests)\\s+(\\d+ failed|.*\\b\\d+ failed)' }\n  - { tool: jest, pattern: 'Tests:\\s+\\d+ failed' }\n  - { tool: mocha, pattern: '\\b\\d+ failing\\b' }\n  - { tool: node, pattern: '(?m)^(# fail [1-9]|\u2139 fail [1-9])' }\n  - { tool: bun, pattern: '(?m)^\\s*[1-9]\\d* fail\\b' }\n  - { tool: playwright, pattern: '(?m)^\\s+[1-9]\\d* failed' }\n  - { tool: pytest, pattern: '(?m)^(=+ .*\\b\\d+ (failed|error)|FAILED |ERROR \\S+(::|\\.py))' }\n  - { tool: tox, pattern: '(?m)evaluation failed|^ERROR:\\s+\\S+: (commands failed|exit \\d+)' }\n  - { tool: rspec, pattern: '\\d+ examples?, [1-9]\\d* failures?' }\n  - { tool: rails, pattern: '\\d+ runs, \\d+ assertions, ([1-9]\\d* failures|\\d+ failures, [1-9]\\d* errors)' }\n  - { tool: minitest, pattern: '\\d+ runs, \\d+ assertions, ([1-9]\\d* failures|\\d+ failures, [1-9]\\d* errors)' }\n  - { tool: phpunit, pattern: '(?m)^(FAILURES!|ERRORS!)' }\n  - { tool: ctest, pattern: 'tests failed out of' }\n  - { tool: go test, pattern: '(?m)^(FAIL|--- FAIL)\\b' }\n  - { tool: go build, pattern: '(?m)^\\S+\\.go:\\d+:\\d+: ' }\n  - { tool: go vet, pattern: '(?m)^\\S+\\.go:\\d+:\\d+: ' }\n  - { tool: cargo test, pattern: 'test result: FAILED' }\n  - { tool: cargo build, pattern: '(?m)^error(\\[E\\d{4}\\])?: ' }\n  - { tool: cargo check, pattern: '(?m)^error(\\[E\\d{4}\\])?: ' }\n  - { tool: cargo clippy, pattern: '(?m)^error(\\[|:)' }\n  - { tool: tsc, pattern: 'error TS\\d+' }\n  - { tool: tsc --noEmit, pattern: 'error TS\\d+' }\n  - { tool: eslint, pattern: '\\d+ problems? \\([1-9]\\d* errors?' }\n  - { tool: prettier, pattern: 'Code style issues found|\\[error\\]' }\n  - { tool: ruff, pattern: 'Found \\d+ errors?\\b(?! \\(\\d+ fixed, 0 remaining\\))|Would reformat' }\n  - { tool: mypy, pattern: 'Found \\d+ errors?' }\n  - { tool: pyright, pattern: '(?m)^\\s*[1-9]\\d* errors?, ' }\n  - { tool: golangci-lint, pattern: '(?m)^\\d+ issues?:' }\n  - { tool: rubocop, pattern: '[1-9]\\d* offenses? detected' }\n  - { tool: gradle, pattern: 'BUILD FAILED|FAILURE: Build failed' }\n  - { tool: mvn, pattern: 'BUILD FAILURE' }\n  - { tool: xcodebuild test, pattern: '\\*\\* TEST FAILED \\*\\*|Testing failed' }\n  - { tool: xcodebuild build, pattern: '\\*\\* BUILD FAILED \\*\\*' }\n  - { tool: dotnet build, pattern: 'Build FAILED|error [A-Z]{2,}\\d+' }\n  - { tool: dotnet test, pattern: 'Failed!\\s+-\\s+Failed:\\s+[1-9]' }\n  - { tool: swift test, pattern: '(?m)^(\\S+:\\d+:\\d+: )?error: |Test Suite .\\S+. failed|\u2718 Test run with .* failed' }\n  - { tool: '*', pattern: '(?m)ELIFECYCLE\\s+(Command|Test) failed|npm ERR! (code|Test failed)|npm error (code \\d|Lifecycle script)|error Command failed with exit code|ERR_PNPM_\\w+|^\\s*ERROR\\s+run failed|make(\\[\\d+\\])?: \\*\\*\\* \\[.*\\] Error \\d+|^FAILED\\b|BUILD FAILED|^error\\[' }\n";
 
 // src/classify/rules.ts
 var RULE_PHASES = /* @__PURE__ */ new Set([
@@ -9757,6 +9600,7 @@ function compileRules(docs) {
       if (r.tag !== void 0) rule.tag = String(r.tag);
       if (r.tool !== void 0) rule.tool = String(r.tool);
       if (!rule.programs && !rule.match) throw new Error(`${where}: needs program or match`);
+      if (source !== DEFAULT_RULES_SOURCE) rule.repo = true;
       rules.commands.push(rule);
     });
     for (const key of ["tasks", "scripts"]) {
@@ -10071,6 +9915,7 @@ var Classifier = class {
         tags: [],
         checks: [],
         rule: "redirect",
+        label: `${program} >`,
         files: simple.writes,
         piped: simple.piped
       });
@@ -10082,6 +9927,11 @@ var Classifier = class {
         ...this.parts(inner, cwd, depth + 1).map((p) => ({ ...p, piped: p.piped || simple.piped }))
       ];
     }
+    const own = this.repoRule(argv);
+    if (own) {
+      out.push(this.byRule(own.argv, programName(own.argv[0] ?? ""), simple.piped, []));
+      return out;
+    }
     if (depth < MAX_DEPTH) {
       const expanded = this.expanded(argv, program, cwd, depth, simple.piped);
       if (expanded) return [...out, ...expanded];
@@ -10090,6 +9940,24 @@ var Classifier = class {
     }
     out.push(this.byRule(argv, program, simple.piped, []));
     return out;
+  }
+  /**
+   * A rule from the repo's `.awf/rules.yaml` matching this command, or the script file it runs
+   * (`bash scripts/test.sh` is matched as `scripts/test.sh` too). Default rules never come first.
+   */
+  repoRule(argv) {
+    const own = this.rules.commands.filter((r) => r.repo);
+    if (own.length === 0) return void 0;
+    const candidates = [argv];
+    const file = scriptFile(argv);
+    if (file && file !== argv[0]) candidates.push(argv.slice(argv.indexOf(file)));
+    for (const candidate of candidates) {
+      const program = programName(candidate[0] ?? "");
+      const byPath = (candidate[0] ?? "").includes("/");
+      if (own.some((r) => !(byPath && r.phase === "neutral") && ruleMatches(r, program, candidate)))
+        return { argv: candidate };
+    }
+    return void 0;
   }
   /** The phase a script, target or task name suggests: its first word decides (build:test is a build). */
   byName(name) {
@@ -10246,6 +10114,27 @@ var Classifier = class {
           ];
         return [{ ...this.unmatched("make", piped), tags: [`make:${res.target}`] }];
       }
+      case "lane": {
+        const parts = res.commands.flatMap((c) => this.parts(c, res.cwd, depth + 1));
+        return tagged(
+          parts.length > 0 ? parts : [this.unmatched(program, piped)],
+          `lane:${res.name}`
+        );
+      }
+      case "lane-name": {
+        const rule = this.byName(res.name) ?? this.byName(res.name.split(/[:_-]/).pop() ?? "");
+        if (!rule) return void 0;
+        return [
+          this.part(
+            rule.phase,
+            "fastlane",
+            rule.id,
+            piped,
+            ["by-name", `lane:${res.name}`],
+            `fastlane ${res.name}`
+          )
+        ];
+      }
       case "tasks": {
         return res.tasks.map((task) => {
           if (["turbo", "nx", "lerna"].includes(res.runner))
@@ -10258,23 +10147,40 @@ var Classifier = class {
           const last = task.split(":").pop() ?? task;
           const rule = this.rules.tasks.find((r) => r.match.test(task) || r.match.test(last));
           if (!rule) return { ...this.unmatched(res.runner, piped), tags: [`task:${task}`] };
-          return this.part(rule.phase, res.runner, rule.id, piped, [`task:${task}`], res.runner);
+          return this.part(
+            rule.phase,
+            res.runner,
+            rule.id,
+            piped,
+            [`task:${task}`],
+            res.runner,
+            `${res.runner} ${last}`
+          );
         });
       }
     }
   }
-  part(phase, program, rule, piped, tags, tool) {
+  part(phase, program, rule, piped, tags, tool, label2 = tool) {
     const checks = isCheckPhase(phase) ? [{ key: `${phase}:${tool}`, phase, tool, failed: false }] : [];
-    return { phase, program, tags, checks, rule, files: [], piped };
+    return { phase, program, tags, checks, rule, label: label2, files: [], piped };
   }
   unmatched(program, piped) {
-    return { phase: void 0, program, tags: [], checks: [], rule: "none", files: [], piped };
+    return {
+      phase: void 0,
+      program,
+      tags: [],
+      checks: [],
+      rule: "none",
+      label: program,
+      files: [],
+      piped
+    };
   }
   byRule(argv, program, piped, tags) {
     const edited = inPlaceEdit(program, argv.slice(1));
     if (edited)
       return {
-        ...this.part("writing", program, "in-place-edit", piped, tags, program),
+        ...this.part("writing", program, "in-place-edit", piped, tags, program, `${program} -i`),
         files: edited
       };
     const byPath = (argv[0] ?? "").includes("/");
@@ -10282,14 +10188,17 @@ var Classifier = class {
       (r) => !(byPath && r.phase === "neutral") && ruleMatches(r, program, argv)
     );
     if (!rule) return { ...this.unmatched(program, piped), tags };
-    const sub = positionalArgs(program, argv.slice(1))[0] ?? "";
+    const positional = positionalArgs(program, argv.slice(1));
+    const tool = rule.tool?.replace("{1}", positional[0] ?? "") ?? program;
+    const label2 = rule.tool ? tool : [program, ...positional.slice(0, rule.args?.length ?? 0), ...rule.with ?? []].join(" ");
     const part = this.part(
       rule.phase,
       program,
       rule.id,
       piped,
       rule.tag ? [rule.tag, ...tags] : tags,
-      rule.tool?.replace("{1}", sub) ?? program
+      tool,
+      label2
     );
     if (rule.phase === "writing" && WRITERS.has(program)) {
       part.files = argv.slice(1).filter((a) => !a.startsWith("-") && /[/.]/.test(a));
@@ -10338,11 +10247,13 @@ var Classifier = class {
       return { phase: "unclassified", tags: [...tags], checks: [...checks.values()], rule };
     }
     const decider = polling ? void 0 : counted[phases.indexOf(primary)];
+    const decidedBy = polling ? "polling" : decider?.label;
     return {
       phase: primary,
       tags: [...tags],
       checks: [...checks.values()],
-      rule: decider?.rule ?? (polling ? "polling" : "none")
+      rule: decider?.rule ?? (polling ? "polling" : "none"),
+      ...decidedBy ? { decidedBy } : {}
     };
   }
   /** Classifies a whole session: every step gets a phase (containers excepted), checks and failures. */
@@ -10374,6 +10285,7 @@ var Classifier = class {
           checks: info.checks,
           rule: info.rule
         });
+        if (info.decidedBy) step.decidedBy = info.decidedBy;
         if (info.exit) step.exit = info.exit;
         if (step.kind === "tool") shellCwd.set(ctx, nextCwd(step.command, cwd, home));
         this.markFailures(step);
@@ -10614,6 +10526,9 @@ function eventsDir(env = process.env) {
 function importedDir(env = process.env) {
   return path4.join(awfHome(env), "imported");
 }
+function cacheDir(env = process.env) {
+  return path4.join(awfHome(env), "cache");
+}
 function claudeProjectsDir(env = process.env) {
   if (env.AWF_CLAUDE_PROJECTS) return env.AWF_CLAUDE_PROJECTS;
   return path4.join(env.CLAUDE_CONFIG_DIR || path4.join(os2.homedir(), ".claude"), "projects");
@@ -10660,7 +10575,7 @@ import {
   writeFileSync
 } from "node:fs";
 import path6 from "node:path";
-var IMPORT_VERSION = 2;
+var IMPORT_VERSION = 3;
 function cacheFile(id, env = process.env) {
   return path6.join(importedDir(env), `${safeId(id)}.json`);
 }
@@ -10669,7 +10584,7 @@ function readImported(id, env = process.env) {
   if (!existsSync3(file)) return void 0;
   try {
     const parsed = JSON.parse(readFileSync3(file, "utf8"));
-    return (parsed.version === 1 || parsed.version === IMPORT_VERSION) && parsed.session ? parsed : void 0;
+    return [1, 2, IMPORT_VERSION].includes(parsed.version) && parsed.session ? parsed : void 0;
   } catch {
     return void 0;
   }
@@ -10738,9 +10653,9 @@ var PATTERNS = [
   ],
   // Credentials in connection strings: scheme://user:password@host
   [/\b([a-z][a-z0-9+.-]*:\/\/[^:/\s@"']+:)([^@\s"']+)(@)/gi, `$1${MASK}$3`],
-  // CLI flags that take a secret
+  // CLI flags that take a secret (a flag starts a word: `print-access-token` isn't `--token`)
   [
-    /(--?(?:password|passwd|pass|token|api-key|apikey|secret|access-key|secret-key|auth-token|client-secret)(?:=|\s+))("[^"]*"|'[^']*'|[^\s"']+)/gi,
+    /((?<![\w-])--?(?:password|passwd|pass|token|api-key|apikey|secret|access-key|secret-key|auth-token|client-secret)(?:=|\s+))("[^"]*"|'[^']*'|[^\s"']+)/gi,
     `$1${MASK}`
   ],
   // Well-known token formats
@@ -10769,7 +10684,9 @@ function dropHeredocBodies(command) {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i] ?? "";
     out.push(line);
-    const tags = [...line.matchAll(/<<-?\s*(?:'([^']+)'|"([^"]+)"|\\?([A-Za-z_][A-Za-z0-9_]*))/g)].map((m) => m[1] ?? m[2] ?? m[3]).filter((tag) => Boolean(tag));
+    const tags = [
+      ...line.matchAll(/(?<!<)<<(?!<)-?\s*(?:'([^']+)'|"([^"]+)"|\\?([A-Za-z_][A-Za-z0-9_]*))/g)
+    ].map((m) => m[1] ?? m[2] ?? m[3]).filter((tag) => Boolean(tag));
     for (const tag of tags) {
       let body = 0;
       while (i + 1 < lines.length && (lines[i + 1] ?? "").trim() !== tag) {
@@ -11621,7 +11538,14 @@ function toolActions(tool, input) {
 }
 
 // src/importers/claude-code/format.ts
-var READ_TYPES = /* @__PURE__ */ new Set(["user", "assistant", "system", "queue-operation", "attachment"]);
+var READ_TYPES = /* @__PURE__ */ new Set([
+  "user",
+  "assistant",
+  "system",
+  "queue-operation",
+  "attachment",
+  "api-request"
+]);
 var SKIPPED_TYPES = /* @__PURE__ */ new Set([
   "summary",
   "last-prompt",
@@ -11635,7 +11559,6 @@ var SKIPPED_TYPES = /* @__PURE__ */ new Set([
   "pr-link",
   "file-history-snapshot",
   "file-history-delta",
-  "api-request",
   "api-request-blob",
   "api-request-shape",
   "bridge-session",
@@ -11726,6 +11649,8 @@ var EXIT_CODE = /^(?:Error: )?Exit code (\d+)/;
 
 // src/importers/claude-code/import.ts
 var FILE_KEYS = ["file_path", "notebook_path", "path"];
+var STOP_TOOLS = /* @__PURE__ */ new Set(["TaskStop", "KillShell", "KillBash"]);
+var TASK_REFS = /* @__PURE__ */ new Set([...STOP_TOOLS, "TaskOutput", "BashOutput"]);
 var MAX_OUTPUT2 = 4e3;
 function importClaudeCodeTranscript(file, options = {}) {
   const sessionId = path11.basename(file, ".jsonl");
@@ -11763,6 +11688,10 @@ var TranscriptReader = class {
   notifications = [];
   /** Subagent type per agent ID, from the Agent call that ran it. */
   agentTypes = /* @__PURE__ */ new Map();
+  /** When each model request was sent (`api-request` entries), by request ID. */
+  requests = /* @__PURE__ */ new Map();
+  /** Requests each agent ('' for the main one) sent since its last input, not yet answered. */
+  sends = /* @__PURE__ */ new Map();
   turnOpen = false;
   turnStart = 0;
   lastActivity = 0;
@@ -11822,6 +11751,9 @@ var TranscriptReader = class {
         case "system":
           this.system(entry, ms);
           break;
+        case "api-request":
+          this.request(entry, ms, agentId);
+          break;
         case "queue-operation":
         case "attachment": {
           const text = entry.type === "attachment" ? JSON.stringify(entry.attachment ?? "") : str3(entry.content) ?? "";
@@ -11849,12 +11781,20 @@ var TranscriptReader = class {
     });
     for (const entry of entries2) {
       const ms = timestampMs(entry);
-      if (entry.type === "user") this.toolResults(entry, ms, agentId);
-      else if (entry.type === "assistant") this.assistant(entry, ms, agentId);
+      if (entry.type === "user") {
+        this.sends.delete(agentId);
+        this.toolResults(entry, ms, agentId);
+      } else if (entry.type === "assistant") this.assistant(entry, ms, agentId);
+      else if (entry.type === "api-request") this.request(entry, ms, agentId);
+      else if (entry.type === "attachment") {
+        const notice = parseNotification(JSON.stringify(entry.attachment ?? ""), ms);
+        if (notice) this.notifications.push(notice);
+      }
     }
     this.emit({ e: "SubagentStop", t: timestampMs(last), aid: agentId });
   }
   user(entry, ms, agentId) {
+    this.sends.delete(agentId ?? "");
     if (agentId) {
       this.toolResults(entry, ms, agentId);
       return;
@@ -11977,6 +11917,10 @@ var TranscriptReader = class {
     if (messageId) {
       const known = this.messages.get(messageId);
       const record = known ?? { lastMs: ms };
+      if (!known) {
+        const sentMs = this.resentAt(agentId ?? "", str3(entry.requestRef), ms);
+        if (sentMs !== void 0) record.sentMs = sentMs;
+      }
       record.lastMs = Math.max(record.lastMs, ms);
       if (agentId) record.agentId = agentId;
       const model = str3(message.model);
@@ -12039,6 +11983,27 @@ var TranscriptReader = class {
       }
     }
   }
+  /** An `api-request` entry: a model request sent by the main agent or a subagent. */
+  request(entry, ms, agentId) {
+    const id = str3(entry.id);
+    if (id) this.requests.set(id, ms);
+    const key = agentId ?? "";
+    this.sends.set(key, [...this.sends.get(key) ?? [], ms]);
+  }
+  /**
+   * When the request behind an answer was sent, if the agent had sent it before: after an API
+   * error, a timeout or a rate limit, Claude Code sends the same request again, sometimes for an
+   * hour. Undefined when it went out once. `requestRef` names the send that was answered; without
+   * it, the last send before the answer.
+   */
+  resentAt(key, ref, ms) {
+    const sends = this.sends.get(key) ?? [];
+    this.sends.delete(key);
+    const referenced = ref ? this.requests.get(ref) : void 0;
+    const sentMs = referenced ?? sends.filter((s) => s <= ms).at(-1);
+    if (sentMs === void 0 || sentMs > ms) return void 0;
+    return sends.some((s) => s < sentMs) ? sentMs : void 0;
+  }
   system(entry, ms) {
     const subtype = str3(entry.subtype) ?? "<none>";
     if (!SYSTEM_SUBTYPES.has(subtype)) {
@@ -12077,30 +12042,44 @@ var TranscriptReader = class {
     }
     return session;
   }
-  /** A background shell runs from its call until its completion notice. */
+  /**
+   * A background shell runs from its call until its completion notice, or until a TaskStop or
+   * KillShell call stops it: a stopped task gets no notice.
+   */
   addBackgroundSteps(session) {
-    for (const call of session.steps.filter((s) => s.kind === "tool" && s.backgroundId)) {
+    const stops = session.steps.filter(
+      (s) => s.kind === "tool" && s.backgroundId && STOP_TOOLS.has(s.tool ?? "") && s.ok !== false
+    );
+    for (const call of session.steps.filter(
+      (s) => s.kind === "tool" && s.backgroundId && !TASK_REFS.has(s.tool ?? "")
+    )) {
       const notice = this.notifications.filter(
         (n) => (n.taskId === call.backgroundId || n.toolUseId === call.id) && n.ms >= call.startMs
       ).sort((a, b) => a.ms - b.ms)[0];
-      if (!notice || notice.ms < call.startMs) continue;
+      const stop = stops.filter((s) => s.backgroundId === call.backgroundId && s.startMs >= call.endMs).sort((a, b) => a.endMs - b.endMs)[0];
+      const stopped = stop !== void 0 && (!notice || stop.endMs < notice.ms);
+      const endMs = stopped ? stop.endMs : notice?.ms;
+      if (endMs === void 0 || endMs < call.startMs) continue;
       const step = {
         id: `bg:${call.backgroundId}`,
         parentId: call.id,
         kind: "background",
         startMs: call.startMs,
-        endMs: notice.ms,
-        flags: ["background"],
+        endMs,
+        flags: stopped ? ["background", "interrupted"] : ["background"],
         backgroundId: call.backgroundId
       };
       if (call.tool) step.tool = call.tool;
       if (call.command) step.command = call.command;
       if (call.agentId) step.agentId = call.agentId;
-      if (notice.status) step.ok = notice.status === "completed";
+      if (!stopped && notice?.status) step.ok = notice.status === "completed";
       session.steps.push(step);
     }
   }
-  /** The model and tokens of the model call behind each model step. */
+  /**
+   * The model and tokens of the model call behind each model step. A step whose request was resent
+   * starts at the send that was answered: model time covers generating, not resending.
+   */
   addModelDetails(session) {
     const byAgent = /* @__PURE__ */ new Map();
     for (const message of this.messages.values()) {
@@ -12117,6 +12096,11 @@ var TranscriptReader = class {
       }
       if (message?.model) step.model = message.model;
       if (message?.tokens) step.tokens = message.tokens;
+      const sent = message?.sentMs;
+      if (sent !== void 0 && sent > step.startMs && sent < step.endMs) {
+        step.startMs = sent;
+        step.flags.push("resent");
+      }
     }
   }
 };
@@ -12294,6 +12278,10 @@ function mergeSessions(recorded, transcript) {
       );
       if (source?.model) merged.model = source.model;
       if (source?.tokens) merged.tokens = source.tokens;
+      if (source?.flags.includes("resent") && source.startMs > merged.startMs && source.startMs < merged.endMs) {
+        merged.startMs = source.startMs;
+        merged.flags = [...merged.flags, "resent"];
+      }
     }
     return merged;
   });
@@ -12676,11 +12664,23 @@ function sessionEnd(session) {
 function phaseTotals(session) {
   const byPhase = Object.fromEntries(PHASES.map((p) => [p.id, 0]));
   let uncoveredMs = 0;
+  let awayWorkMs = 0;
+  const gaps = session.steps.filter((s) => s.kind === "idle" && s.endMs > s.startMs).sort((a, b) => a.startMs - b.startMs);
+  let g = 0;
   for (const segment of phaseSegments(session)) {
     byPhase[segment.phase] += segment.end - segment.start;
     if (!segment.covered) uncoveredMs += segment.end - segment.start;
+    if (segment.phase === "waiting") continue;
+    while (g < gaps.length && gaps[g].endMs <= segment.start) g++;
+    for (let k = g; k < gaps.length && gaps[k].startMs < segment.end; k++) {
+      const gap = gaps[k];
+      awayWorkMs += Math.max(
+        0,
+        Math.min(segment.end, gap.endMs) - Math.max(segment.start, gap.startMs)
+      );
+    }
   }
-  return { totalMs: sessionEnd(session) - session.startMs, byPhase, uncoveredMs };
+  return { totalMs: sessionEnd(session) - session.startMs, byPhase, uncoveredMs, awayWorkMs };
 }
 
 // src/analyze/summary.ts
@@ -12744,7 +12744,8 @@ function summarize(classified) {
     startMs: session.startMs,
     endMs: session.startMs + totals.totalMs,
     totalMs: totals.totalMs,
-    activeMs: Math.max(0, totals.totalMs - idleMs),
+    turnsMs: Math.max(0, totals.totalMs - idleMs),
+    awayWorkMs: totals.awayWorkMs,
     phases,
     modelCalls: session.steps.filter((s) => s.kind === "model").length,
     toolCalls: tools.length,
@@ -12760,6 +12761,14 @@ function summarize(classified) {
   return { session, summary };
 }
 var plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+function formatDurationLine(summary) {
+  const total = formatDuration(summary.totalMs);
+  if (summary.turnsMs >= summary.totalMs) return total;
+  const parts = [`${formatDuration(summary.turnsMs)} in turns`];
+  if (summary.awayWorkMs > 0)
+    parts.push(`${formatDuration(summary.awayWorkMs)} background work between turns`);
+  return `${total} (${parts.join(", ")})`;
+}
 function phaseDetail(line) {
   switch (line.phase) {
     case "lint":
@@ -12841,7 +12850,8 @@ function sideOf(label2, summaries) {
     label: label2,
     sessions: summaries.length,
     totalMs,
-    activeMs: sum((s) => s.activeMs),
+    turnsMs: sum((s) => s.turnsMs),
+    awayWorkMs: sum((s) => s.awayWorkMs),
     phases: PHASES.map(({ id, label: name }) => {
       const ms = sum((s) => s.phases.find((p) => p.phase === id)?.ms ?? 0);
       return { phase: id, label: name, ms, share: totalMs > 0 ? ms / totalMs : 0 };
@@ -13177,7 +13187,7 @@ deleting old logs. Prints the sessions, steps and any log entries awf doesn't re
 import { existsSync as existsSync9, readdirSync as readdirSync7, rmSync, statSync as statSync6 } from "node:fs";
 import os7 from "node:os";
 import path16 from "node:path";
-var OURS = /* @__PURE__ */ new Set(["events", "imported", "reports", ".DS_Store"]);
+var OURS = /* @__PURE__ */ new Set(["events", "imported", "reports", "cache", ".DS_Store"]);
 function size(target) {
   const stat2 = statSync6(target, { throwIfNoEntry: false });
   if (!stat2) return 0;
@@ -13194,7 +13204,8 @@ var purgeCommand = {
   summary: "Delete everything awf stored (~/.awf); Claude Code's own files stay",
   usage: `Usage: awf purge [--yes]
 
-Deletes awf's folder (~/.awf, or $AWF_HOME): recorded timings, the import cache and reports.
+Deletes awf's folder (~/.awf, or $AWF_HOME): recorded timings, the import cache, reports and the
+status line's cache.
 Claude Code's transcripts are never touched. Without --yes it only lists what it would delete.
   --yes   delete it`,
   options: { yes: { type: "boolean" }, json: { type: "boolean" } },
@@ -13665,7 +13676,8 @@ function buildReportData(analysis, options = {}) {
       sources: session.sources,
       startMs: t0,
       totalMs: summary.totalMs,
-      activeMs: summary.activeMs
+      turnsMs: summary.turnsMs,
+      awayWorkMs: summary.awayWorkMs
     },
     phases: summary.phases.map((p) => ({
       id: p.phase,
@@ -13701,7 +13713,7 @@ function buildReportData(analysis, options = {}) {
 }
 
 // report-assets:report-assets
-var CLIENT_JS = '"use strict";(()=>{function f(e){if(!Number.isFinite(e)||e<0)return"\\u2013";if(e<1e3)return`${Math.round(e)} ms`;if(e<1e4)return`${(e/1e3).toFixed(1)}s`;let t=Math.round(e/1e3),s=Math.floor(t/3600),a=Math.floor(t%3600/60),o=t%60;return s>0?`${s}h ${pe(a)}m ${pe(o)}s`:a>0?`${a}m ${pe(o)}s`:`${o}s`}function pe(e){return String(e).padStart(2,"0")}var Ee="0.1.0";var Je=performance.now(),c=JSON.parse(document.getElementById("awf-data")?.textContent??"null"),b=c.steps,$=Math.max(1,c.session.totalMs),oe=b.map(()=>[]);for(let e of b)e.p>=0&&oe[e.p]?.push(e.i);var Ae=new Map(c.phases.map(e=>[e.id,e.label])),Qe=new Map(c.slowest.map((e,t)=>[e,t])),he=b.filter(e=>!e.container).length;function n(e,t={},...s){let a=document.createElement(e);for(let[o,i]of Object.entries(t))i===void 0||i===!1||(o==="class"?a.className=String(i):o==="text"?a.textContent=String(i):a.setAttribute(o,i===!0?"":String(i)));for(let o of s)o&&a.append(o);return a}var M=e=>String(e).padStart(2,"0"),O=e=>e.replace(/\\s+/g," ").trim(),j=(e,t)=>e.length>t?e.slice(0,t-1)+"\\u2026":e,P=(e,t,s=`${t}s`)=>`${e.toLocaleString("en-US")} ${e===1?t:s}`,_=e=>`var(--c-${e})`,H=e=>e?Ae.get(e)??e:"",T=e=>e.e-e.s;function v(e){return e>0&&e<.005?"<1%":`${Math.round(e*100)}%`}function S(e,t=!0){let s=Math.max(0,Math.round(e/1e3)),a=Math.floor(s/3600),o=Math.floor(s%3600/60);return $>=36e5?`${a}:${M(o)}${t?`:${M(s%60)}`:""}`:`${Math.floor(s/60)}:${M(s%60)}`}function ge(e,t=!1){let s=new Date(e),a=`${M(s.getHours())}:${M(s.getMinutes())}:${M(s.getSeconds())}`;return t?`${s.getFullYear()}-${M(s.getMonth()+1)}-${M(s.getDate())} ${a.slice(0,5)}`:a}function G(e){return e>=1e6?`${(e/1e6).toFixed(e>=1e7?0:1)}M`:e>=1e3?`${(e/1e3).toFixed(e>=1e4?0:1)}k`:String(e)}function D(e){if(e.text)return e.text;if(e.description)return e.description;if(e.kind==="turn"&&e.flags.includes("notification"))return"started by a notice, not a prompt"}var Ze=[...[1,2,5,10,15,30].map(e=>e*1e3),...[1,2,5,10,15,30].map(e=>e*6e4),...[1,2,3,6,12,24].map(e=>e*36e5)];function et(){let e=b.filter(o=>o.kind!=="idle"&&o.e>o.s).map(o=>[o.s,o.e]).sort((o,i)=>o[0]-i[0]),t=Math.max(6e4,$*.03),s=[],a=0;for(let[o,i]of e)o-a>=t&&s.push({s:a,e:o}),a=Math.max(a,i);return $-a>=t&&s.push({s:a,e:$}),s}var xe=et();function Ie(e){let t=e?xe:[],s=t.reduce((x,h)=>x+h.e-h.s,0),a=$-s,o=t.length&&a>0?Math.min(1.5,12/t.length):0,i=o?t:[],d=(100-i.length*o)/(o?a:$),u=[[0,0]],m=[],p=0,w=0;for(let x of i)p+=(x.s-w)*d,u.push([x.s,p]),m.push({s:x.s,e:x.e,x0:p,x1:p+o}),p+=o,u.push([x.e,p]),w=x.e;return u.push([$,100]),{x:x=>{if(x<=0)return 0;if(x>=$)return 100;let h=0,A=u.length-1;for(;A-h>1;){let ue=h+A>>1;u[ue][0]<=x?h=ue:A=ue}let[ce,de]=u[h],[ve,Xe]=u[A];return ve===ce?de:de+(x-ce)/(ve-ce)*(Xe-de)},gaps:m,k:d}}function tt(e){let t=Math.round(e/6e4);return t>=60?`${Math.floor(t/60)}h ${M(t%60)}m`:t>=1?`${t}m`:`${Math.round(e/1e3)}s`}var Re=e=>`${tt(e.e-e.s)} idle`;function nt(e){let t=d=>{let u=(me(d)+22)/Math.max(e,1)*100,m=u/g.k,p=Ze.find(w=>w>=m)??Math.ceil(m/864e5)*864e5;return{minPct:u,step:p}},{minPct:s,step:a}=t($>=36e5?"0:00":"00:00");$>=36e5&&a<6e4&&({minPct:s,step:a}=t("0:00:00"));let o=[],i=-1/0;for(let d=0;d<=$;d+=a){if(g.gaps.some(p=>d>p.s&&d<p.e))continue;let u=g.x(d);if(u-i<s)continue;let m=g.gaps.some(p=>{let w=(me(Re(p))/2+12)/Math.max(e,1)*100;return Math.abs(u-(p.x0+p.x1)/2)<w+s/2});d>0&&m||(o.push({x:u,text:S(d,a<6e4)}),i=u)}let r=$>=36e5?a<6e4?"h:mm:ss":"h:mm":"m:ss";return{ticks:o,unit:r}}var l={collapsed:new Set,filterCollapsed:new Set,phases:new Set,failedOnly:!1,query:"",open:-1,focus:-1,squeeze:xe.length>0};for(let e of b)e.container&&(e.kind==="subagent"||he>250&&e.kind==="turn")&&l.collapsed.add(e.i);var g=Ie(l.squeeze),E=()=>l.phases.size>0||l.failedOnly||l.query!=="";function Pe(e){return!(l.phases.size>0&&!(e.phase&&l.phases.has(e.phase))||l.failedOnly&&!e.failed||l.query&&![e.label,e.text,e.tool,e.agentType,e.description,...e.checks.map(s=>s.key)].filter(Boolean).join(`\n`).toLowerCase().includes(l.query))}function _e(){let e=E(),t,s=new Set;if(e){t=new Set;for(let r of b)if(Pe(r)){t.add(r.i);for(let d=r.p;d>=0&&!s.has(d);d=b[d]?.p??-1)t.add(d),s.add(d)}}else for(let r of b)r.container&&s.add(r.i);let a=e?l.filterCollapsed:l.collapsed,o=[],i=1/0;for(let r of b)r.depth>i||(i=1/0,!(t&&!t.has(r.i))&&(o.push(r),s.has(r.i)&&a.has(r.i)&&(i=r.depth)));return{rows:o,parents:s}}var k=_e(),st=document.getElementById("app"),V=n("div",{class:"wrap"});st.append(V);var R=c.session.totalMs,ee=c.session.activeMs,at=c.share?`Shared session ${c.session.id.slice(0,8)}`:c.session.title??`Session ${c.session.id.slice(0,8)}`,te=n("button",{class:"theme",type:"button"});function ot(){try{let e=localStorage.getItem("awf-theme");return e==="light"||e==="dark"?e:"auto"}catch{return"auto"}}function He(e){e==="auto"?delete document.documentElement.dataset.theme:document.documentElement.dataset.theme=e,te.textContent=`Theme: ${e[0]?.toUpperCase()}${e.slice(1)}`,te.setAttribute("aria-label",`Color theme: ${e}. Change theme`)}var I=ot();He(I);te.addEventListener("click",()=>{I=I==="auto"?"light":I==="light"?"dark":"auto",He(I);try{I==="auto"?localStorage.removeItem("awf-theme"):localStorage.setItem("awf-theme",I)}catch{}});var it={"claude-code":"Claude Code",codex:"Codex CLI",gemini:"Gemini CLI",opencode:"OpenCode"},rt=it[c.session.agent]??c.session.agent,lt=[ge(c.session.startMs,!0),ee<R?`${f(R)} (active ${f(ee)})`:f(R),c.session.cwd,`${rt}${c.session.agentVersion?` ${c.session.agentVersion}`:""}`].filter(e=>!!e);V.append(n("header",{class:"top"},n("div",{},n("p",{class:"brand",text:"awf \\xB7 agent waterfall"}),n("h1",{text:j(O(at),220)}),n("p",{class:"meta",text:lt.join(" \\xB7 ")})),te));var ie=c.phases.filter(e=>e.ms>0),F=n("section",{class:"card","aria-label":"Where the time went"});F.append(n("div",{class:"total"},n("span",{class:"value",text:f(R)}),n("span",{class:"sub",text:ee<R?`total, ${f(ee)} active (the rest is idle time between turns)`:"total"})));var ke=n("div",{class:"stack",role:"img","aria-label":ie.map(e=>`${e.label} ${v(e.share)}`).join(", ")});for(let e of ie){let t=n("span",{"data-phase":e.id});t.style.background=_(e.id),t.style.flex=`${e.ms} 1 0`,ke.append(t)}F.append(ke);var Fe=n("ul",{class:"legend","aria-label":"Phases. Pick one or more to filter steps"}),Be=new Map;for(let e of ie){let t=n("button",{class:"chip",type:"button","aria-pressed":"false",title:e.detail?`${e.label}: ${e.detail}`:e.label},n("span",{class:"sw","aria-hidden":"true"}),n("span",{class:"name",text:e.label}),n("span",{class:"num",text:`${f(e.ms)} \\xB7 ${v(e.share)}`}));t.firstChild.style.background=_(e.id),t.addEventListener("click",()=>{l.phases.has(e.id)?l.phases.delete(e.id):l.phases.add(e.id),le()}),Be.set(e.id,t),Fe.append(n("li",{},t))}F.append(Fe);var B=c.counts,ct=[[B.modelCalls,"model call"],[B.toolCalls,"tool call"],...B.subagents?[[B.subagents,"subagent"]]:[],[B.failures,"failed check"],[B.reworkLoops,"rework loop"]],$e=n("p",{class:"counts"});for(let[e,t]of ct){let[s,...a]=P(e,t).split(" ");$e.append(n("span",{},n("b",{text:s??""}),` ${a.join(" ")}`))}if(c.tokens){let e=c.tokens.input+c.tokens.cacheRead+c.tokens.cacheWrite,t=e>0?c.tokens.cacheRead/e:0;$e.append(n("span",{},n("b",{text:G(e)}),` tokens in (${v(t)} from cache), `,n("b",{text:G(c.tokens.output)})," out"))}F.append($e);var W=n("ul",{class:"why"}),dt=[...ie].sort((e,t)=>t.ms-e.ms),[N,Y,X]=dt;N&&W.append(n("li",{},"Most time went to ",n("b",{text:N.label}),`: ${f(N.ms)} (${v(N.share)})${N.detail?`, ${N.detail}`:""}.`,Y?` Then ${Y.label} ${f(Y.ms)} (${v(Y.share)})${X?` and ${X.label} ${f(X.ms)} (${v(X.share)})`:""}.`:""));if(c.slowest.length){let e=n("li",{},"Slowest steps: ");c.slowest.forEach((t,s)=>{let a=b[t];if(!a)return;let o=a.kind==="model"?b[a.produces?.[0]??-1]:void 0,i=o?D(o):a.kind==="model"?void 0:D(a),r=n("button",{class:"link",type:"button",title:"Show this step"},o?`${a.label} ${f(T(a))}, writing ${o.label}`:a.label,i?n("code",{text:j(O(i),60)}):null,o?"":` ${f(T(a))}`,a.failed?" \\u2715 failed":"");r.addEventListener("click",()=>Ye(t)),e.append(s>0?", ":"",r)}),e.append("."),W.append(e)}if(c.rework.length){let e=c.rework.filter(s=>s.edits>0),t=n("li",{},e.length?"Rework: ":"Rework: none. ");e.slice(0,3).forEach((s,a)=>{t.append(a>0?"; ":"",n("code",{text:s.check}),` failed at ${S(s.failedAt)}`,s.passedAt!==void 0?` and passed at ${S(s.passedAt)} after ${P(s.edits,"edit")}`:` and hadn\'t passed by the end (${P(s.edits,"edit")})`)}),e.length>3&&t.append(`; ${e.length-3} more`),e.length?t.append("."):t.append("checks failed, but no edits followed before they ran again."),W.append(t)}else W.append(n("li",{text:"No rework: no check failed and then got fixed."}));var J=c.phases.find(e=>e.id==="unclassified");J&&J.share>=.05&&c.unclassified.length&&W.append(n("li",{},`Unclassified ${f(J.ms)} (${v(J.share)}): `,...c.unclassified.slice(0,3).flatMap((e,t)=>[t>0?", ":"",n("code",{text:e.name}),` ${f(e.ms)}`]),c.unclassifiedModelMs>=1e3?`, and ${f(c.unclassifiedModelMs)} of model time writing those calls`:"",". Rules in ",n("code",{text:".awf/rules.yaml"})," can sort them."));F.append(W);var we=n("table",{},n("caption",{class:"sr",text:"Time by phase"}));we.append(n("thead",{},n("tr",{},n("th",{scope:"col",text:"Phase"}),n("th",{scope:"col",class:"n",text:"Time"}),n("th",{scope:"col",class:"n",text:"Share"}),n("th",{scope:"col",text:"Detail"}))));var ye=n("tbody");for(let e of c.phases)ye.append(n("tr",{},n("td",{text:e.label}),n("td",{class:"n",text:f(e.ms)}),n("td",{class:"n",text:v(e.share)}),n("td",{text:e.detail})));ye.append(n("tr",{class:"sum"},n("td",{text:"Total"}),n("td",{class:"n",text:f(R)}),n("td",{class:"n",text:"100%"}),n("td",{})));we.append(ye);F.append(n("details",{class:"table"},n("summary",{text:"Phase table"}),we));V.append(F);var ne=n("input",{type:"checkbox"}),se=n("input",{type:"search",placeholder:c.share?"Search tools and phases":"Search commands, files, tools","aria-label":"Search steps"}),ae=n("input",{type:"checkbox"});ae.checked=l.squeeze;var Ne=n("span",{class:"count","aria-live":"polite"}),re=n("button",{class:"link",type:"button",text:"Clear filters"}),qe=n("button",{class:"link",type:"button",text:"Expand all"}),De=n("button",{class:"link",type:"button",text:"Collapse all"}),ut=n("div",{class:"filters"},se,n("label",{},ne,"Failed only"),xe.length?n("label",{title:"Squeeze long idle stretches to a sliver"},ae,"Squeeze idle gaps"):null,qe,De,re,Ne);V.append(ut);ne.addEventListener("change",()=>{l.failedOnly=ne.checked,le()});var Ce=0;se.addEventListener("input",()=>{clearTimeout(Ce),Ce=window.setTimeout(()=>{l.query=se.value.trim().toLowerCase(),le()},120)});ae.addEventListener("change",()=>{l.squeeze=ae.checked,g=Ie(l.squeeze),je(),C()});re.addEventListener("click",()=>{l.phases.clear(),l.failedOnly=!1,l.query="",ne.checked=!1,se.value="",le()});qe.addEventListener("click",()=>{(E()?l.filterCollapsed:l.collapsed).clear(),C()});De.addEventListener("click",()=>{let e=E()?l.filterCollapsed:l.collapsed;for(let t of k.parents)e.add(t);C()});function le(){l.filterCollapsed.clear();for(let[e,t]of Be)t.setAttribute("aria-pressed",String(l.phases.has(e))),t.classList.toggle("dim",l.phases.size>0&&!l.phases.has(e));for(let e of ke.children){let t=e.dataset.phase;e.style.opacity=l.phases.size>0&&!l.phases.has(t)?"0.3":""}C()}var Me=n("section",{class:"fall","aria-label":"Waterfall of every step"}),q=n("div",{class:"axis","aria-hidden":"true"}),Q=n("div",{class:"strip",role:"img"}),We=n("div",{class:"hl"});Me.append(n("div",{class:"head"},We,q,n("div",{class:"hl sub",text:"Phase at each moment"}),Q));var Z=n("div",{class:"lines","aria-hidden":"true"}),L=n("div",{class:"rows",role:"list","aria-label":"Steps"});Me.append(n("div",{class:"body"},Z,L));V.append(Me);function Se(e,t,s){let a=g.x(t);e.style.left=`${a}%`,e.style.width=`${Math.max(0,g.x(s)-a)}%`}var K=0,ze=64,fe=document.createElement("canvas").getContext("2d"),Te=new Map;function me(e){let t=Te.get(e);return t===void 0&&(fe?(fe.font=`11.5px ${getComputedStyle(document.body).fontFamily}`,t=fe.measureText(e).width):t=e.length*7,Te.set(e,t)),t}function Oe(){K=q.clientWidth,ze=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--pad"))||64;let{ticks:e,unit:t}=nt(K||800);We.textContent=`Step \\xB7 elapsed ${t}`,q.replaceChildren(),Z.replaceChildren();for(let s of e){let a=n("span",{class:`tick${s.x===0?" start":s.x>94?" end":""}`,text:s.text});a.style.left=`${s.x}%`,q.append(a);let o=n("i");o.style.left=`${s.x}%`,Z.append(o)}for(let s of g.gaps){let a=n("span",{class:"brk",title:`${f(s.e-s.s)} idle, squeezed`});a.style.left=`${s.x0}%`,a.style.width=`${s.x1-s.x0}%`;let o=n("span",{class:"gapl",text:Re(s)});o.style.left=`${(s.x0+s.x1)/2}%`,q.append(a,o);let i=n("i",{class:"gap"});i.style.left=`${s.x0}%`,i.style.width=`${s.x1-s.x0}%`,Z.append(i)}}function je(){Oe(),Q.replaceChildren(),c.timeline.forEach(([e,t,s],a)=>{if(g.x(t)-g.x(e)<.02)return;let o=n("span",{"data-seg":a});o.style.background=_(s),Se(o,e,t),Q.append(o)}),Q.setAttribute("aria-label",`Phase over time, from 0 to ${f(R)}. The phase table lists the totals.`)}function Ve(e){let t=[];if(e.kind==="turn")for(let[s,a,o]of c.timeline)a>e.s&&s<e.e&&t.push([Math.max(s,e.s),Math.min(a,e.e),o]);else{let s=a=>{for(let o of oe[a]??[]){let i=b[o];i&&(i.container?s(o):i.phase&&i.e>i.s&&t.push([i.s,i.e,i.phase]))}};s(e.i)}return t}function pt(e){let t=new Map;for(let[s,a,o]of Ve(e))t.set(o,(t.get(o)??0)+a-s);return[...t].sort((s,a)=>a[1]-s[1])}var Ge=(e,t=3)=>pt(e).slice(0,t).map(([s,a])=>`${H(s)} ${f(a)}`).join(" \\xB7 ");function ft(e){let t=n("span",{class:"mix"});Se(t,e.s,e.e);let s=g.x(e.e)-g.x(e.s);if(s<=0)return t;let a=Ve(e),o=g.x(e.s);for(let[i,r,d]of a){let u=(g.x(i)-o)/s*100,m=(g.x(r)-o)/s*100;if(m-u<.05)continue;let p=n("span");p.style.left=`${u}%`,p.style.width=`${m-u}%`,p.style.background=_(d),t.append(p)}return t}var Ke={approval:"approval",denied:"denied",interrupted:"interrupted",background:"background","api-error":"API error",unfinished:"no end seen"};function ht(e){let t=D(e);return[e.label,t?j(O(t),120):"",H(e.phase),f(T(e)),e.failed?"failed":""].filter(Boolean).join(", ")}function mt(e){let t=E(),s=k.parents.has(e.i),a=(t?l.filterCollapsed:l.collapsed).has(e.i),o=n("div",{class:`row${e.container&&!e.phase?" group":""}${e.kind==="idle"?" idle":""}${e.kind==="build-task"?" task":""}${l.open===e.i?" sel":""}`,role:"listitem","data-i":e.i}),i=n("div",{class:"name"});if(i.style.paddingLeft=`calc(6px + ${e.depth} * var(--indent))`,s){let h=oe[e.i]?.length??0;i.append(n("button",{class:"tw",type:"button",tabindex:-1,"aria-expanded":String(!a),"aria-label":`${a?"Show":"Hide"} ${P(h,"step")} inside ${e.label}`,text:a?"\\u25B8":"\\u25BE"}))}else i.append(n("span",{class:"tw","aria-hidden":"true"}));let r=n("button",{class:"pick",type:"button",tabindex:l.focus===e.i?0:-1,"aria-expanded":String(l.open===e.i),"aria-label":ht(e)});if(e.phase&&!e.container){let h=n("span",{class:"dot","aria-hidden":"true"});h.style.background=_(e.phase),r.append(h)}r.append(n("span",{class:"kind",text:e.label}));let d=D(e);d&&r.append(n("span",{class:"text",text:j(O(d),300)})),e.failed&&r.append(n("span",{class:"fail"},"\\u2715",n("span",{class:"w",text:" failed"})));let u=Qe.get(e.i);u!==void 0&&r.append(n("span",{class:"badge",text:u===0?"slowest":`#${u+1} slowest`}));for(let h of e.flags){let A=Ke[h];A&&!(h==="background"&&e.kind==="background")&&r.append(n("span",{class:"badge soft",text:A}))}i.append(r),o.append(i);let m=n("div",{class:"track","aria-hidden":"true"});if(e.container&&a)m.append(ft(e));else{let h=n("span",{class:`bar${e.failed?" failed":""}`});e.failed?h.style.background="var(--critical)":e.phase&&(h.style.background=_(e.phase)),e.started===!1&&h.classList.add("unstarted"),Se(h,e.s,e.e),m.append(h)}let p=n("span",{class:"dur"},e.failed?n("span",{class:"x",text:"\\u2715 "}):null,f(T(e))),w=g.x(e.s),U=g.x(e.e),x=me(p.textContent??"")+6;return(100-U)/100*K+ze>=x+4?p.style.left=`calc(${U}% + 6px)`:w/100*K>=x+4?p.style.right=`calc(${100-w}% + 6px)`:(p.classList.add("in"),p.style.right=`calc(${100-U}% + 4px)`),m.append(p),o.append(m),l.open===e.i&&o.append(gt(e)),o}function bt(e){let t=e.indexOf(":"),s=t>0?e.slice(0,t):e,a=t>0?e.slice(t+1):"";switch(s){case"script":return`runs the package script "${a}"`;case"make":return`runs the make target "${a}"`;case"task":return`runs the task "${a}"`;case"hook":return`runs the git hook ${a}`;case"file":return`runs the script ${a}`;case"via":return`through ${a}`;case"unmatched":return`no rule for "${a}"`;case"was":return`was ${H(a)||a} before a check failed`}let o={"by-name":"phase guessed from a script or task name",install:"installs dependencies",polling:"waits in a loop",neutral:"only commands that say nothing about the phase","failure-unattributed":"the failure could not be pinned on one check","background-task":"waits on a background task",compaction:"context compaction",subagent:"ran a subagent","no-command":"no command recorded"};return o[e]?o[e]:Ae.has(e)?`also ${H(e)}`:e}function gt(e){let t=n("div",{class:"more",role:"region","aria-label":`Details: ${e.label}`}),s=n("dl"),a=(r,...d)=>s.append(n("dt",{text:r}),n("dd",{},...d));if(e.phase){let r=n("span",{class:"sw","aria-hidden":"true"});r.style.background=_(e.phase),a("Phase",r,H(e.phase),e.reworkFor?` (after ${e.reworkFor} failed)`:"")}if(a("When",`${S(e.s)} \\u2192 ${S(e.e)} \\xB7 ${f(T(e))} \\xB7 ${ge(c.session.startMs+e.s)}`),e.waitMs&&a("Waited for you",f(e.waitMs)),e.runMs!==void 0&&e.waitMs&&a("Ran",f(e.runMs)),e.kind==="tool"||e.kind==="background"){let r=e.failed?n("span",{class:"status-failed",text:"\\u2715 Failed"}):e.ok===!0?"OK":e.ok===!1?"Error":"Unknown";a("Result",r,e.exitCode!==void 0?` \\xB7 exit code ${e.exitCode}`:"")}if(e.tool&&a("Tool",e.tool),e.agentType&&a("Agent type",e.agentType),e.model&&a("Model",e.model),e.tokens){let r=e.tokens,d=T(e)/1e3;a("Tokens",`${G(r.input+r.cacheRead+r.cacheWrite)} in (${G(r.cacheRead)} cached) \\xB7 ${G(r.output)} out`,e.kind==="model"&&d>=1&&r.output>0?` \\xB7 ${Math.round(r.output/d)} tokens/s out`:"")}e.checks.length&&a("Checks",e.checks.map(r=>`${r.key} ${r.failed?"failed":"passed"}`).join(", ")),e.flags.length&&a("Flags",e.flags.map(r=>Ke[r]??r).join(", "));let o=e.tags.map(bt).filter(Boolean);if(o.length&&a("Notes",o.join("; ")),e.kind==="build-task"&&(a("Build tool",e.tool??""),e.started===!1&&a("Start",`not recorded by ${e.tool}: drawn from the build\'s start. Tasks may have run in parallel.`)),e.container){a("Inside",P(oe[e.i]?.length??0,e.kind==="tool"?"build task":"step"));let r=Ge(e,5);r&&a("By phase",r)}e.kind==="tool"&&!c.session.sources.includes("recorder")&&!e.waitMs&&a("Note","May include waiting for your approval: only the recorder (the plugin) sees approvals."),t.append(s);let i=(r,d)=>t.append(n("h3",{text:r}),n("pre",{text:d}));if(e.kind==="model"&&e.produces?.length){t.append(n("h3",{text:"Wrote these calls"}));let r=n("ul",{class:"made"});for(let d of e.produces){let u=b[d];if(!u)continue;let m=D(u),p=n("button",{class:"link",type:"button"},u.label,m?n("code",{text:j(O(m),100)}):null,` ${f(T(u))}`);p.addEventListener("click",w=>{w.stopPropagation(),Ye(d)}),r.append(n("li",{},p))}t.append(r)}else e.text&&e.tool==="Bash"&&i("Command",e.text);return e.files?.length&&i(e.files.length===1?"File":"Files",e.files.join(`\n`)),e.description&&e.description!==e.text&&i("Description",e.description),e.output&&i(`Output (secrets masked${e.output.length>=4e3?", first 4,000 characters":""})`,e.output),c.share&&t.append(n("p",{class:"note",text:"Shared report: commands, files and output are left out."})),t}function C(){let e=L.contains(document.activeElement);k=_e(),k.rows.some(a=>a.i===l.focus)||(l.focus=k.rows[0]?.i??-1);let t=document.createDocumentFragment();for(let a of k.rows)t.append(mt(a));k.rows.length||t.append(n("p",{class:"empty",text:b.length?"No steps match these filters.":"This session has no steps."})),L.replaceChildren(t);let s=k.rows.filter(a=>!a.container).length;Ne.textContent=E()?`${P(s,"step")} match, of ${he.toLocaleString("en-US")}`:P(he,"step"),re.hidden=!E(),e&&z(l.focus)}function z(e){l.focus=e;for(let s of L.querySelectorAll(".pick"))s.tabIndex=-1;let t=L.querySelector(`.row[data-i="${e}"] .pick`);t&&(t.tabIndex=0,t.focus({preventScroll:!1}))}function be(e){let t=E()?l.filterCollapsed:l.collapsed;t.has(e)?t.delete(e):t.add(e),l.focus=e,C(),z(e)}function Ue(e){l.open=l.open===e?-1:e,l.focus=e,C(),z(e)}function Ye(e){let t=b[e];if(t){E()&&!Pe(t)&&re.click();for(let s=t.p;s>=0;s=b[s]?.p??-1)l.collapsed.delete(s),l.filterCollapsed.delete(s);l.open=e,l.focus=e,C(),z(e),L.querySelector(`.row[data-i="${e}"]`)?.scrollIntoView({block:"center"})}}L.addEventListener("click",e=>{let t=e.target;if(t.closest(".more"))return;let s=t.closest(".row");if(!s)return;let a=Number(s.getAttribute("data-i"));t.closest(".tw")?be(a):Ue(a)});L.addEventListener("keydown",e=>{let t=e.target.closest(".row");if(!t||!e.target.closest(".pick"))return;let s=Number(t.getAttribute("data-i")),a=k.rows.findIndex(d=>d.i===s),o=b[s];if(!o)return;let i=(E()?l.filterCollapsed:l.collapsed).has(s),r=d=>{let u=k.rows[Math.max(0,Math.min(k.rows.length-1,d))];u&&z(u.i)};switch(e.key){case"ArrowDown":r(a+1);break;case"ArrowUp":r(a-1);break;case"Home":r(0);break;case"End":r(k.rows.length-1);break;case"ArrowRight":k.parents.has(s)&&i?be(s):k.parents.has(s)&&r(a+1);break;case"ArrowLeft":k.parents.has(s)&&!i?be(s):o.p>=0&&z(o.p);break;case"Escape":l.open>=0&&Ue(l.open);break;default:return}e.preventDefault()});var y=n("div",{class:"tip",role:"tooltip",hidden:!0});document.body.append(y);var xt=window.matchMedia("(hover: hover)").matches;function kt(e){let t=e.closest("[data-phase]");if(t){let i=c.phases.find(r=>r.id===t.dataset.phase);if(i)return[n("b",{text:i.label}),n("span",{text:`${f(i.ms)} \\xB7 ${v(i.share)}${i.detail?` \\xB7 ${i.detail}`:""}`})]}let s=e.closest("[data-seg]");if(s){let i=c.timeline[Number(s.dataset.seg)];if(i)return[n("b",{text:H(i[2])}),n("span",{text:`${S(i[0])} \\u2192 ${S(i[1])} \\xB7 ${f(i[1]-i[0])}`})]}let o=e.closest(".track")?.closest(".row");if(o){let i=b[Number(o.getAttribute("data-i"))];if(!i)return;let r=D(i);return[n("b",{text:i.label}),r?n("code",{text:j(O(r),160)}):null,n("span",{text:[H(i.phase),f(T(i)),`${S(i.s)} \\u2192 ${S(i.e)}`,i.failed?"\\u2715 failed":""].filter(Boolean).join(" \\xB7 ")}),i.container?n("span",{text:Ge(i)}):null]}}xt&&(document.addEventListener("mousemove",e=>{let t=e.target instanceof Element?kt(e.target):void 0;if(!t){y.hidden=!0;return}y.replaceChildren(...t.filter(r=>!!r)),y.hidden=!1;let s=y.offsetWidth,a=y.offsetHeight,o=Math.min(e.clientX+14,window.innerWidth-s-8),i=e.clientY+18+a>window.innerHeight?e.clientY-a-12:e.clientY+18;y.style.left=`${Math.max(8,o)}px`,y.style.top=`${Math.max(8,i)}px`}),document.addEventListener("mouseleave",()=>y.hidden=!0));V.append(n("footer",{class:"foot"},`Made by awf ${Ee} on ${ge(c.generatedAt,!0)}. `,c.share?"Shared report: phases, durations and tool names only.":"This file holds commands, file paths and tool output from the session, with secrets masked. Make a version without them with --share."));je();C();var Le=0;window.addEventListener("resize",()=>{cancelAnimationFrame(Le),Le=requestAnimationFrame(()=>{q.clientWidth!==K&&(Oe(),C())})});document.body.dataset.ready="1";document.body.dataset.renderMs=String(Math.round(performance.now()-Je));})();';
+var CLIENT_JS = '"use strict";(()=>{function u(e){if(!Number.isFinite(e)||e<0)return"\\u2013";if(e<1e3)return`${Math.round(e)} ms`;if(e<1e4)return`${(e/1e3).toFixed(1)}s`;let t=Math.round(e/1e3),s=Math.floor(t/3600),a=Math.floor(t%3600/60),o=t%60;return s>0?`${s}h ${fe(a)}m ${fe(o)}s`:a>0?`${a}m ${fe(o)}s`:`${o}s`}function fe(e){return String(e).padStart(2,"0")}var Ce="0.1.0";var Qe=performance.now(),c=JSON.parse(document.getElementById("awf-data")?.textContent??"null"),b=c.steps,$=Math.max(1,c.session.totalMs),ie=b.map(()=>[]);for(let e of b)e.p>=0&&ie[e.p]?.push(e.i);var Ie=new Map(c.phases.map(e=>[e.id,e.label])),Ze=new Map(c.slowest.map((e,t)=>[e,t])),me=b.filter(e=>!e.container).length;function n(e,t={},...s){let a=document.createElement(e);for(let[o,i]of Object.entries(t))i===void 0||i===!1||(o==="class"?a.className=String(i):o==="text"?a.textContent=String(i):a.setAttribute(o,i===!0?"":String(i)));for(let o of s)o&&a.append(o);return a}var M=e=>String(e).padStart(2,"0"),j=e=>e.replace(/\\s+/g," ").trim(),V=(e,t)=>e.length>t?e.slice(0,t-1)+"\\u2026":e,P=(e,t,s=`${t}s`)=>`${e.toLocaleString("en-US")} ${e===1?t:s}`,_=e=>`var(--c-${e})`,H=e=>e?Ie.get(e)??e:"",T=e=>e.e-e.s;function E(e){return e>0&&e<.005?"<1%":`${Math.round(e*100)}%`}function S(e,t=!0){let s=Math.max(0,Math.round(e/1e3)),a=Math.floor(s/3600),o=Math.floor(s%3600/60);return $>=36e5?`${a}:${M(o)}${t?`:${M(s%60)}`:""}`:`${Math.floor(s/60)}:${M(s%60)}`}function xe(e,t=!1){let s=new Date(e),a=`${M(s.getHours())}:${M(s.getMinutes())}:${M(s.getSeconds())}`;return t?`${s.getFullYear()}-${M(s.getMonth()+1)}-${M(s.getDate())} ${a.slice(0,5)}`:a}function K(e){return e>=1e6?`${(e/1e6).toFixed(e>=1e7?0:1)}M`:e>=1e3?`${(e/1e3).toFixed(e>=1e4?0:1)}k`:String(e)}function D(e){if(e.text)return e.text;if(e.description)return e.description;if(e.kind==="turn"&&e.flags.includes("notification"))return"started by a notice, not a prompt"}var et=[...[1,2,5,10,15,30].map(e=>e*1e3),...[1,2,5,10,15,30].map(e=>e*6e4),...[1,2,3,6,12,24].map(e=>e*36e5)];function tt(){let e=b.filter(o=>o.kind!=="idle"&&o.e>o.s).map(o=>[o.s,o.e]).sort((o,i)=>o[0]-i[0]),t=Math.max(6e4,$*.03),s=[],a=0;for(let[o,i]of e)o-a>=t&&s.push({s:a,e:o}),a=Math.max(a,i);return $-a>=t&&s.push({s:a,e:$}),s}var ke=tt();function Re(e){let t=e?ke:[],s=t.reduce((x,h)=>x+h.e-h.s,0),a=$-s,o=t.length&&a>0?Math.min(1.5,12/t.length):0,i=o?t:[],d=(100-i.length*o)/(o?a:$),p=[[0,0]],m=[],f=0,w=0;for(let x of i)f+=(x.s-w)*d,p.push([x.s,f]),m.push({s:x.s,e:x.e,x0:f,x1:f+o}),f+=o,p.push([x.e,f]),w=x.e;return p.push([$,100]),{x:x=>{if(x<=0)return 0;if(x>=$)return 100;let h=0,I=p.length-1;for(;I-h>1;){let pe=h+I>>1;p[pe][0]<=x?h=pe:I=pe}let[de,ue]=p[h],[ve,Je]=p[I];return ve===de?ue:ue+(x-de)/(ve-de)*(Je-ue)},gaps:m,k:d}}function nt(e){let t=Math.round(e/6e4);return t>=60?`${Math.floor(t/60)}h ${M(t%60)}m`:t>=1?`${t}m`:`${Math.round(e/1e3)}s`}var Pe=e=>`${nt(e.e-e.s)} idle`;function st(e){let t=d=>{let p=(be(d)+22)/Math.max(e,1)*100,m=p/g.k,f=et.find(w=>w>=m)??Math.ceil(m/864e5)*864e5;return{minPct:p,step:f}},{minPct:s,step:a}=t($>=36e5?"0:00":"00:00");$>=36e5&&a<6e4&&({minPct:s,step:a}=t("0:00:00"));let o=[],i=-1/0;for(let d=0;d<=$;d+=a){if(g.gaps.some(f=>d>f.s&&d<f.e))continue;let p=g.x(d);if(p-i<s)continue;let m=g.gaps.some(f=>{let w=(be(Pe(f))/2+12)/Math.max(e,1)*100;return Math.abs(p-(f.x0+f.x1)/2)<w+s/2});d>0&&m||(o.push({x:p,text:S(d,a<6e4)}),i=p)}let r=$>=36e5?a<6e4?"h:mm:ss":"h:mm":"m:ss";return{ticks:o,unit:r}}var l={collapsed:new Set,filterCollapsed:new Set,phases:new Set,failedOnly:!1,query:"",open:-1,focus:-1,squeeze:ke.length>0};for(let e of b)e.container&&(e.kind==="subagent"||me>250&&e.kind==="turn")&&l.collapsed.add(e.i);var g=Re(l.squeeze),v=()=>l.phases.size>0||l.failedOnly||l.query!=="";function _e(e){return!(l.phases.size>0&&!(e.phase&&l.phases.has(e.phase))||l.failedOnly&&!e.failed||l.query&&![e.label,e.text,e.tool,e.agentType,e.description,...e.checks.map(s=>s.key)].filter(Boolean).join(`\n`).toLowerCase().includes(l.query))}function He(){let e=v(),t,s=new Set;if(e){t=new Set;for(let r of b)if(_e(r)){t.add(r.i);for(let d=r.p;d>=0&&!s.has(d);d=b[d]?.p??-1)t.add(d),s.add(d)}}else for(let r of b)r.container&&s.add(r.i);let a=e?l.filterCollapsed:l.collapsed,o=[],i=1/0;for(let r of b)r.depth>i||(i=1/0,!(t&&!t.has(r.i))&&(o.push(r),s.has(r.i)&&a.has(r.i)&&(i=r.depth)));return{rows:o,parents:s}}var k=He(),at=document.getElementById("app"),G=n("div",{class:"wrap"});at.append(G);var L=c.session.totalMs,W=c.session.turnsMs,U=c.session.awayWorkMs,ot=Math.max(0,L-W-U),it=c.share?`Shared session ${c.session.id.slice(0,8)}`:c.session.title??`Session ${c.session.id.slice(0,8)}`,ne=n("button",{class:"theme",type:"button"});function rt(){try{let e=localStorage.getItem("awf-theme");return e==="light"||e==="dark"?e:"auto"}catch{return"auto"}}function Be(e){e==="auto"?delete document.documentElement.dataset.theme:document.documentElement.dataset.theme=e,ne.textContent=`Theme: ${e[0]?.toUpperCase()}${e.slice(1)}`,ne.setAttribute("aria-label",`Color theme: ${e}. Change theme`)}var R=rt();Be(R);ne.addEventListener("click",()=>{R=R==="auto"?"light":R==="light"?"dark":"auto",Be(R);try{R==="auto"?localStorage.removeItem("awf-theme"):localStorage.setItem("awf-theme",R)}catch{}});var lt={"claude-code":"Claude Code",codex:"Codex CLI",gemini:"Gemini CLI",opencode:"OpenCode"},ct=lt[c.session.agent]??c.session.agent,dt=[xe(c.session.startMs,!0),W<L?`${u(L)} (${[`${u(W)} in turns`,...U>0?[`${u(U)} background work between turns`]:[]].join(", ")})`:u(L),c.session.cwd,`${ct}${c.session.agentVersion?` ${c.session.agentVersion}`:""}`].filter(e=>!!e);G.append(n("header",{class:"top"},n("div",{},n("p",{class:"brand",text:"awf \\xB7 agent waterfall"}),n("h1",{text:V(j(it),220)}),n("p",{class:"meta",text:dt.join(" \\xB7 ")})),ne));var re=c.phases.filter(e=>e.ms>0),B=n("section",{class:"card","aria-label":"Where the time went"});B.append(n("div",{class:"total"},n("span",{class:"value",text:u(L)}),n("span",{class:"sub",text:W>=L?"total":U>0?`total: ${u(W)} in turns, ${u(U)} of background work between turns, ${u(ot)} idle`:`total: ${u(W)} in turns, the rest idle between turns`})));var $e=n("div",{class:"stack",role:"img","aria-label":re.map(e=>`${e.label} ${E(e.share)}`).join(", ")});for(let e of re){let t=n("span",{"data-phase":e.id});t.style.background=_(e.id),t.style.flex=`${e.ms} 1 0`,$e.append(t)}B.append($e);var Fe=n("ul",{class:"legend","aria-label":"Phases. Pick one or more to filter steps"}),qe=new Map;for(let e of re){let t=n("button",{class:"chip",type:"button","aria-pressed":"false",title:e.detail?`${e.label}: ${e.detail}`:e.label},n("span",{class:"sw","aria-hidden":"true"}),n("span",{class:"name",text:e.label}),n("span",{class:"num",text:`${u(e.ms)} \\xB7 ${E(e.share)}`}));t.firstChild.style.background=_(e.id),t.addEventListener("click",()=>{l.phases.has(e.id)?l.phases.delete(e.id):l.phases.add(e.id),ce()}),qe.set(e.id,t),Fe.append(n("li",{},t))}B.append(Fe);var F=c.counts,ut=[[F.modelCalls,"model call"],[F.toolCalls,"tool call"],...F.subagents?[[F.subagents,"subagent"]]:[],[F.failures,"failed check"],[F.reworkLoops,"rework loop"]],we=n("p",{class:"counts"});for(let[e,t]of ut){let[s,...a]=P(e,t).split(" ");we.append(n("span",{},n("b",{text:s??""}),` ${a.join(" ")}`))}if(c.tokens){let e=c.tokens.input+c.tokens.cacheRead+c.tokens.cacheWrite,t=e>0?c.tokens.cacheRead/e:0;we.append(n("span",{},n("b",{text:K(e)}),` tokens in (${E(t)} from cache), `,n("b",{text:K(c.tokens.output)})," out"))}B.append(we);var z=n("ul",{class:"why"}),pt=[...re].sort((e,t)=>t.ms-e.ms),[q,J,Q]=pt;q&&z.append(n("li",{},"Most time went to ",n("b",{text:q.label}),`: ${u(q.ms)} (${E(q.share)})${q.detail?`, ${q.detail}`:""}.`,J?` Then ${J.label} ${u(J.ms)} (${E(J.share)})${Q?` and ${Q.label} ${u(Q.ms)} (${E(Q.share)})`:""}.`:""));if(c.slowest.length){let e=n("li",{},"Slowest steps: ");c.slowest.forEach((t,s)=>{let a=b[t];if(!a)return;let o=a.kind==="model"?b[a.produces?.[0]??-1]:void 0,i=o?D(o):a.kind==="model"?void 0:D(a),r=n("button",{class:"link",type:"button",title:"Show this step"},o?`${a.label} ${u(T(a))}, writing ${o.label}`:a.label,i?n("code",{text:V(j(i),60)}):null,o?"":` ${u(T(a))}`,a.failed?" \\u2715 failed":"");r.addEventListener("click",()=>Xe(t)),e.append(s>0?", ":"",r)}),e.append("."),z.append(e)}if(c.rework.length){let e=c.rework.filter(s=>s.edits>0),t=n("li",{},e.length?"Rework: ":"Rework: none. ");e.slice(0,3).forEach((s,a)=>{t.append(a>0?"; ":"",n("code",{text:s.check}),` failed at ${S(s.failedAt)}`,s.passedAt!==void 0?` and passed at ${S(s.passedAt)} after ${P(s.edits,"edit")}`:` and hadn\'t passed by the end (${P(s.edits,"edit")})`)}),e.length>3&&t.append(`; ${e.length-3} more`),e.length?t.append("."):t.append("checks failed, but no edits followed before they ran again."),z.append(t)}else z.append(n("li",{text:"No rework: no check failed and then got fixed."}));var Z=c.phases.find(e=>e.id==="unclassified");Z&&Z.share>=.05&&c.unclassified.length&&z.append(n("li",{},`Unclassified ${u(Z.ms)} (${E(Z.share)}): `,...c.unclassified.slice(0,3).flatMap((e,t)=>[t>0?", ":"",n("code",{text:e.name}),` ${u(e.ms)}`]),c.unclassifiedModelMs>=1e3?`, and ${u(c.unclassifiedModelMs)} of model time writing those calls`:"",". Rules in ",n("code",{text:".awf/rules.yaml"})," can sort them."));B.append(z);var ye=n("table",{},n("caption",{class:"sr",text:"Time by phase"}));ye.append(n("thead",{},n("tr",{},n("th",{scope:"col",text:"Phase"}),n("th",{scope:"col",class:"n",text:"Time"}),n("th",{scope:"col",class:"n",text:"Share"}),n("th",{scope:"col",text:"Detail"}))));var Me=n("tbody");for(let e of c.phases)Me.append(n("tr",{},n("td",{text:e.label}),n("td",{class:"n",text:u(e.ms)}),n("td",{class:"n",text:E(e.share)}),n("td",{text:e.detail})));Me.append(n("tr",{class:"sum"},n("td",{text:"Total"}),n("td",{class:"n",text:u(L)}),n("td",{class:"n",text:"100%"}),n("td",{})));ye.append(Me);B.append(n("details",{class:"table"},n("summary",{text:"Phase table"}),ye));G.append(B);var se=n("input",{type:"checkbox"}),ae=n("input",{type:"search",placeholder:c.share?"Search tools and phases":"Search commands, files, tools","aria-label":"Search steps"}),oe=n("input",{type:"checkbox"});oe.checked=l.squeeze;var Ne=n("span",{class:"count","aria-live":"polite"}),le=n("button",{class:"link",type:"button",text:"Clear filters"}),We=n("button",{class:"link",type:"button",text:"Expand all"}),De=n("button",{class:"link",type:"button",text:"Collapse all"}),ft=n("div",{class:"filters"},ae,n("label",{},se,"Failed only"),ke.length?n("label",{title:"Squeeze long idle stretches to a sliver"},oe,"Squeeze idle gaps"):null,We,De,le,Ne);G.append(ft);se.addEventListener("change",()=>{l.failedOnly=se.checked,ce()});var Te=0;ae.addEventListener("input",()=>{clearTimeout(Te),Te=window.setTimeout(()=>{l.query=ae.value.trim().toLowerCase(),ce()},120)});oe.addEventListener("change",()=>{l.squeeze=oe.checked,g=Re(l.squeeze),Ve(),C()});le.addEventListener("click",()=>{l.phases.clear(),l.failedOnly=!1,l.query="",se.checked=!1,ae.value="",ce()});We.addEventListener("click",()=>{(v()?l.filterCollapsed:l.collapsed).clear(),C()});De.addEventListener("click",()=>{let e=v()?l.filterCollapsed:l.collapsed;for(let t of k.parents)e.add(t);C()});function ce(){l.filterCollapsed.clear();for(let[e,t]of qe)t.setAttribute("aria-pressed",String(l.phases.has(e))),t.classList.toggle("dim",l.phases.size>0&&!l.phases.has(e));for(let e of $e.children){let t=e.dataset.phase;e.style.opacity=l.phases.size>0&&!l.phases.has(t)?"0.3":""}C()}var Se=n("section",{class:"fall","aria-label":"Waterfall of every step"}),N=n("div",{class:"axis","aria-hidden":"true"}),ee=n("div",{class:"strip",role:"img"}),ze=n("div",{class:"hl"});Se.append(n("div",{class:"head"},ze,N,n("div",{class:"hl sub",text:"Phase at each moment"}),ee));var te=n("div",{class:"lines","aria-hidden":"true"}),A=n("div",{class:"rows",role:"list","aria-label":"Steps"});Se.append(n("div",{class:"body"},te,A));G.append(Se);function Ee(e,t,s){let a=g.x(t);e.style.left=`${a}%`,e.style.width=`${Math.max(0,g.x(s)-a)}%`}var Y=0,Oe=64,he=document.createElement("canvas").getContext("2d"),Le=new Map;function be(e){let t=Le.get(e);return t===void 0&&(he?(he.font=`11.5px ${getComputedStyle(document.body).fontFamily}`,t=he.measureText(e).width):t=e.length*7,Le.set(e,t)),t}function je(){Y=N.clientWidth,Oe=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--pad"))||64;let{ticks:e,unit:t}=st(Y||800);ze.textContent=`Step \\xB7 elapsed ${t}`,N.replaceChildren(),te.replaceChildren();for(let s of e){let a=n("span",{class:`tick${s.x===0?" start":s.x>94?" end":""}`,text:s.text});a.style.left=`${s.x}%`,N.append(a);let o=n("i");o.style.left=`${s.x}%`,te.append(o)}for(let s of g.gaps){let a=n("span",{class:"brk",title:`${u(s.e-s.s)} idle, squeezed`});a.style.left=`${s.x0}%`,a.style.width=`${s.x1-s.x0}%`;let o=n("span",{class:"gapl",text:Pe(s)});o.style.left=`${(s.x0+s.x1)/2}%`,N.append(a,o);let i=n("i",{class:"gap"});i.style.left=`${s.x0}%`,i.style.width=`${s.x1-s.x0}%`,te.append(i)}}function Ve(){je(),ee.replaceChildren(),c.timeline.forEach(([e,t,s],a)=>{if(g.x(t)-g.x(e)<.02)return;let o=n("span",{"data-seg":a});o.style.background=_(s),Ee(o,e,t),ee.append(o)}),ee.setAttribute("aria-label",`Phase over time, from 0 to ${u(L)}. The phase table lists the totals.`)}function Ge(e){let t=[];if(e.kind==="turn")for(let[s,a,o]of c.timeline)a>e.s&&s<e.e&&t.push([Math.max(s,e.s),Math.min(a,e.e),o]);else{let s=a=>{for(let o of ie[a]??[]){let i=b[o];i&&(i.container?s(o):i.phase&&i.e>i.s&&t.push([i.s,i.e,i.phase]))}};s(e.i)}return t}function ht(e){let t=new Map;for(let[s,a,o]of Ge(e))t.set(o,(t.get(o)??0)+a-s);return[...t].sort((s,a)=>a[1]-s[1])}var Ke=(e,t=3)=>ht(e).slice(0,t).map(([s,a])=>`${H(s)} ${u(a)}`).join(" \\xB7 ");function mt(e){let t=n("span",{class:"mix"});Ee(t,e.s,e.e);let s=g.x(e.e)-g.x(e.s);if(s<=0)return t;let a=Ge(e),o=g.x(e.s);for(let[i,r,d]of a){let p=(g.x(i)-o)/s*100,m=(g.x(r)-o)/s*100;if(m-p<.05)continue;let f=n("span");f.style.left=`${p}%`,f.style.width=`${m-p}%`,f.style.background=_(d),t.append(f)}return t}var Ue={approval:"approval",denied:"denied",interrupted:"interrupted",background:"background","api-error":"API error",resent:"request resent",unfinished:"no end seen"};function bt(e){let t=D(e);return[e.label,t?V(j(t),120):"",H(e.phase),u(T(e)),e.failed?"failed":""].filter(Boolean).join(", ")}function gt(e){let t=v(),s=k.parents.has(e.i),a=(t?l.filterCollapsed:l.collapsed).has(e.i),o=n("div",{class:`row${e.container&&!e.phase?" group":""}${e.kind==="idle"?" idle":""}${e.kind==="build-task"?" task":""}${l.open===e.i?" sel":""}`,role:"listitem","data-i":e.i}),i=n("div",{class:"name"});if(i.style.paddingLeft=`calc(6px + ${e.depth} * var(--indent))`,s){let h=ie[e.i]?.length??0;i.append(n("button",{class:"tw",type:"button",tabindex:-1,"aria-expanded":String(!a),"aria-label":`${a?"Show":"Hide"} ${P(h,"step")} inside ${e.label}`,text:a?"\\u25B8":"\\u25BE"}))}else i.append(n("span",{class:"tw","aria-hidden":"true"}));let r=n("button",{class:"pick",type:"button",tabindex:l.focus===e.i?0:-1,"aria-expanded":String(l.open===e.i),"aria-label":bt(e)});if(e.phase&&!e.container){let h=n("span",{class:"dot","aria-hidden":"true"});h.style.background=_(e.phase),r.append(h)}r.append(n("span",{class:"kind",text:e.label}));let d=D(e);d&&r.append(n("span",{class:"text",text:V(j(d),300)})),e.failed&&r.append(n("span",{class:"fail"},"\\u2715",n("span",{class:"w",text:" failed"})));let p=Ze.get(e.i);p!==void 0&&r.append(n("span",{class:"badge",text:p===0?"slowest":`#${p+1} slowest`}));for(let h of e.flags){let I=Ue[h];I&&!(h==="background"&&e.kind==="background")&&r.append(n("span",{class:"badge soft",text:I}))}i.append(r),o.append(i);let m=n("div",{class:"track","aria-hidden":"true"});if(e.container&&a)m.append(mt(e));else{let h=n("span",{class:`bar${e.failed?" failed":""}`});e.failed?h.style.background="var(--critical)":e.phase&&(h.style.background=_(e.phase)),e.started===!1&&h.classList.add("unstarted"),Ee(h,e.s,e.e),m.append(h)}let f=n("span",{class:"dur"},e.failed?n("span",{class:"x",text:"\\u2715 "}):null,u(T(e))),w=g.x(e.s),X=g.x(e.e),x=be(f.textContent??"")+6;return(100-X)/100*Y+Oe>=x+4?f.style.left=`calc(${X}% + 6px)`:w/100*Y>=x+4?f.style.right=`calc(${100-w}% + 6px)`:(f.classList.add("in"),f.style.right=`calc(${100-X}% + 4px)`),m.append(f),o.append(m),l.open===e.i&&o.append(kt(e)),o}function xt(e){let t=e.indexOf(":"),s=t>0?e.slice(0,t):e,a=t>0?e.slice(t+1):"";switch(s){case"script":return`runs the package script "${a}"`;case"make":return`runs the make target "${a}"`;case"task":return`runs the task "${a}"`;case"hook":return`runs the git hook ${a}`;case"file":return`runs the script ${a}`;case"via":return`through ${a}`;case"unmatched":return`no rule for "${a}"`;case"was":return`was ${H(a)||a} before a check failed`}let o={"by-name":"phase guessed from a script or task name",install:"installs dependencies",polling:"waits in a loop",neutral:"only commands that say nothing about the phase","failure-unattributed":"the failure could not be pinned on one check","background-task":"waits on a background task",compaction:"context compaction",subagent:"ran a subagent","no-command":"no command recorded"};return o[e]?o[e]:Ie.has(e)?`also ${H(e)}`:e}function kt(e){let t=n("div",{class:"more",role:"region","aria-label":`Details: ${e.label}`}),s=n("dl"),a=(r,...d)=>s.append(n("dt",{text:r}),n("dd",{},...d));if(e.phase){let r=n("span",{class:"sw","aria-hidden":"true"});r.style.background=_(e.phase),a("Phase",r,H(e.phase),e.reworkFor?` (after ${e.reworkFor} failed)`:"")}if(a("When",`${S(e.s)} \\u2192 ${S(e.e)} \\xB7 ${u(T(e))} \\xB7 ${xe(c.session.startMs+e.s)}`),e.waitMs&&a("Waited for you",u(e.waitMs)),e.runMs!==void 0&&e.waitMs&&a("Ran",u(e.runMs)),e.kind==="tool"||e.kind==="background"){let r=e.failed?n("span",{class:"status-failed",text:"\\u2715 Failed"}):e.ok===!0?"OK":e.ok===!1?"Error":"Unknown";a("Result",r,e.exitCode!==void 0?` \\xB7 exit code ${e.exitCode}`:"")}if(e.tool&&a("Tool",e.tool),e.agentType&&a("Agent type",e.agentType),e.model&&a("Model",e.model),e.tokens){let r=e.tokens,d=T(e)/1e3;a("Tokens",`${K(r.input+r.cacheRead+r.cacheWrite)} in (${K(r.cacheRead)} cached) \\xB7 ${K(r.output)} out`,e.kind==="model"&&d>=1&&r.output>0?` \\xB7 ${Math.round(r.output/d)} tokens/s out`:"")}e.checks.length&&a("Checks",e.checks.map(r=>`${r.key} ${r.failed?"failed":"passed"}`).join(", ")),e.flags.length&&a("Flags",e.flags.map(r=>Ue[r]??r).join(", "));let o=e.tags.map(xt).filter(Boolean);if(o.length&&a("Notes",o.join("; ")),e.kind==="build-task"&&(a("Build tool",e.tool??""),e.started===!1&&a("Start",`not recorded by ${e.tool}: drawn from the build\'s start. Tasks may have run in parallel.`)),e.container){a("Inside",P(ie[e.i]?.length??0,e.kind==="tool"?"build task":"step"));let r=Ke(e,5);r&&a("By phase",r)}e.kind==="tool"&&!c.session.sources.includes("recorder")&&!e.waitMs&&a("Note","May include waiting for your approval: only the recorder (the plugin) sees approvals."),t.append(s);let i=(r,d)=>t.append(n("h3",{text:r}),n("pre",{text:d}));if(e.kind==="model"&&e.produces?.length){t.append(n("h3",{text:"Wrote these calls"}));let r=n("ul",{class:"made"});for(let d of e.produces){let p=b[d];if(!p)continue;let m=D(p),f=n("button",{class:"link",type:"button"},p.label,m?n("code",{text:V(j(m),100)}):null,` ${u(T(p))}`);f.addEventListener("click",w=>{w.stopPropagation(),Xe(d)}),r.append(n("li",{},f))}t.append(r)}else e.text&&e.tool==="Bash"&&i("Command",e.text);return e.files?.length&&i(e.files.length===1?"File":"Files",e.files.join(`\n`)),e.description&&e.description!==e.text&&i("Description",e.description),e.output&&i(`Output (secrets masked${e.output.length>=4e3?", first 4,000 characters":""})`,e.output),c.share&&t.append(n("p",{class:"note",text:"Shared report: commands, files and output are left out."})),t}function C(){let e=A.contains(document.activeElement);k=He(),k.rows.some(a=>a.i===l.focus)||(l.focus=k.rows[0]?.i??-1);let t=document.createDocumentFragment();for(let a of k.rows)t.append(gt(a));k.rows.length||t.append(n("p",{class:"empty",text:b.length?"No steps match these filters.":"This session has no steps."})),A.replaceChildren(t);let s=k.rows.filter(a=>!a.container).length;Ne.textContent=v()?`${P(s,"step")} match, of ${me.toLocaleString("en-US")}`:P(me,"step"),le.hidden=!v(),e&&O(l.focus)}function O(e){l.focus=e;for(let s of A.querySelectorAll(".pick"))s.tabIndex=-1;let t=A.querySelector(`.row[data-i="${e}"] .pick`);t&&(t.tabIndex=0,t.focus({preventScroll:!1}))}function ge(e){let t=v()?l.filterCollapsed:l.collapsed;t.has(e)?t.delete(e):t.add(e),l.focus=e,C(),O(e)}function Ye(e){l.open=l.open===e?-1:e,l.focus=e,C(),O(e)}function Xe(e){let t=b[e];if(t){v()&&!_e(t)&&le.click();for(let s=t.p;s>=0;s=b[s]?.p??-1)l.collapsed.delete(s),l.filterCollapsed.delete(s);l.open=e,l.focus=e,C(),O(e),A.querySelector(`.row[data-i="${e}"]`)?.scrollIntoView({block:"center"})}}A.addEventListener("click",e=>{let t=e.target;if(t.closest(".more"))return;let s=t.closest(".row");if(!s)return;let a=Number(s.getAttribute("data-i"));t.closest(".tw")?ge(a):Ye(a)});A.addEventListener("keydown",e=>{let t=e.target.closest(".row");if(!t||!e.target.closest(".pick"))return;let s=Number(t.getAttribute("data-i")),a=k.rows.findIndex(d=>d.i===s),o=b[s];if(!o)return;let i=(v()?l.filterCollapsed:l.collapsed).has(s),r=d=>{let p=k.rows[Math.max(0,Math.min(k.rows.length-1,d))];p&&O(p.i)};switch(e.key){case"ArrowDown":r(a+1);break;case"ArrowUp":r(a-1);break;case"Home":r(0);break;case"End":r(k.rows.length-1);break;case"ArrowRight":k.parents.has(s)&&i?ge(s):k.parents.has(s)&&r(a+1);break;case"ArrowLeft":k.parents.has(s)&&!i?ge(s):o.p>=0&&O(o.p);break;case"Escape":l.open>=0&&Ye(l.open);break;default:return}e.preventDefault()});var y=n("div",{class:"tip",role:"tooltip",hidden:!0});document.body.append(y);var $t=window.matchMedia("(hover: hover)").matches;function wt(e){let t=e.closest("[data-phase]");if(t){let i=c.phases.find(r=>r.id===t.dataset.phase);if(i)return[n("b",{text:i.label}),n("span",{text:`${u(i.ms)} \\xB7 ${E(i.share)}${i.detail?` \\xB7 ${i.detail}`:""}`})]}let s=e.closest("[data-seg]");if(s){let i=c.timeline[Number(s.dataset.seg)];if(i)return[n("b",{text:H(i[2])}),n("span",{text:`${S(i[0])} \\u2192 ${S(i[1])} \\xB7 ${u(i[1]-i[0])}`})]}let o=e.closest(".track")?.closest(".row");if(o){let i=b[Number(o.getAttribute("data-i"))];if(!i)return;let r=D(i);return[n("b",{text:i.label}),r?n("code",{text:V(j(r),160)}):null,n("span",{text:[H(i.phase),u(T(i)),`${S(i.s)} \\u2192 ${S(i.e)}`,i.failed?"\\u2715 failed":""].filter(Boolean).join(" \\xB7 ")}),i.container?n("span",{text:Ke(i)}):null]}}$t&&(document.addEventListener("mousemove",e=>{let t=e.target instanceof Element?wt(e.target):void 0;if(!t){y.hidden=!0;return}y.replaceChildren(...t.filter(r=>!!r)),y.hidden=!1;let s=y.offsetWidth,a=y.offsetHeight,o=Math.min(e.clientX+14,window.innerWidth-s-8),i=e.clientY+18+a>window.innerHeight?e.clientY-a-12:e.clientY+18;y.style.left=`${Math.max(8,o)}px`,y.style.top=`${Math.max(8,i)}px`}),document.addEventListener("mouseleave",()=>y.hidden=!0));G.append(n("footer",{class:"foot"},`Made by awf ${Ce} on ${xe(c.generatedAt,!0)}. `,c.share?"Shared report: phases, durations and tool names only.":"This file holds commands, file paths and tool output from the session, with secrets masked. Make a version without them with --share."));Ve();C();var Ae=0;window.addEventListener("resize",()=>{cancelAnimationFrame(Ae),Ae=requestAnimationFrame(()=>{N.clientWidth!==Y&&(je(),C())})});document.body.dataset.ready="1";document.body.dataset.renderMs=String(Math.round(performance.now()-Qe));})();';
 var CLIENT_CSS = ':root{color-scheme:light;--page: #f9f9f7;--surface: #fcfcfb;--raised: #ffffff;--ink: #0b0b0b;--ink-2: #52514e;--muted: #6f6d68;--grid: #e8e7e1;--axis: #c3c2b7;--ring: rgba(11, 11, 11, .12);--hover: rgba(11, 11, 11, .04);--selected: rgba(42, 120, 214, .08);--focus: #2a78d6;--link: #1f63b5;--critical: #d03b3b;--critical-ink: #b42323;--container: #a3a29b;--c-writing-code: #2a78d6;--c-writing-tests: #eb6834;--c-lint: #1baf7a;--c-tests: #eda100;--c-build: #e87ba4;--c-rework: #6250d6;--c-exploring: #008300;--c-running: #0b5f73;--c-planning: #7b8494;--c-waiting: repeating-linear-gradient(135deg, #a9a8a0 0 2px, #e2e1da 2px 5px);--c-unclassified: #a5a49d;--mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;--sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;--label: 34%;--pad: 64px;--indent: 14px;--row: 28px}@media(prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;--page: #0d0d0d;--surface: #1a1a19;--raised: #222220;--ink: #f0efec;--ink-2: #c3c2b7;--muted: #9c9a92;--grid: #2a2a28;--axis: #383835;--ring: rgba(255, 255, 255, .12);--hover: rgba(255, 255, 255, .05);--selected: rgba(57, 135, 229, .14);--focus: #3987e5;--link: #7fb1ef;--critical: #e05252;--critical-ink: #f08080;--container: #6e6d68;--c-writing-code: #3987e5;--c-writing-tests: #d95926;--c-lint: #199e70;--c-tests: #c98500;--c-build: #d55181;--c-rework: #9085e9;--c-exploring: #008300;--c-running: #86cfe0;--c-planning: #8a93a3;--c-waiting: repeating-linear-gradient(135deg, #7a7973 0 2px, #33332f 2px 5px);--c-unclassified: #6e6d68}}:root[data-theme=dark]{color-scheme:dark;--page: #0d0d0d;--surface: #1a1a19;--raised: #222220;--ink: #f0efec;--ink-2: #c3c2b7;--muted: #9c9a92;--grid: #2a2a28;--axis: #383835;--ring: rgba(255, 255, 255, .12);--hover: rgba(255, 255, 255, .05);--selected: rgba(57, 135, 229, .14);--focus: #3987e5;--link: #7fb1ef;--critical: #e05252;--critical-ink: #f08080;--container: #6e6d68;--c-writing-code: #3987e5;--c-writing-tests: #d95926;--c-lint: #199e70;--c-tests: #c98500;--c-build: #d55181;--c-rework: #9085e9;--c-exploring: #008300;--c-running: #86cfe0;--c-planning: #8a93a3;--c-waiting: repeating-linear-gradient(135deg, #7a7973 0 2px, #33332f 2px 5px);--c-unclassified: #6e6d68}*{box-sizing:border-box}html,body{margin:0;background:var(--page);color:var(--ink);font:14px/1.45 var(--sans);-webkit-text-size-adjust:100%}button,input{font:inherit;color:inherit}:focus-visible{outline:2px solid var(--focus);outline-offset:2px}[hidden]{display:none!important}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}.wrap{max-width:1440px;margin:0 auto;padding:20px 24px 48px}code{font-family:var(--mono);font-size:12.5px;background:var(--hover);border-radius:4px;padding:1px 4px;overflow-wrap:anywhere}.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.brand{font-size:12px;color:var(--muted);letter-spacing:.02em;margin:0 0 6px}h1{font-size:20px;line-height:1.3;font-weight:600;margin:0 0 6px;overflow-wrap:anywhere}.meta{color:var(--ink-2);margin:0;overflow-wrap:anywhere}.theme{flex:none;border:1px solid var(--ring);background:var(--surface);border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--ink-2)}.theme:hover{background:var(--hover)}.card{background:var(--surface);border:1px solid var(--ring);border-radius:12px;padding:16px;margin-top:16px}.total{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px;margin-bottom:12px}.total .value{font-size:28px;font-weight:600;font-variant-numeric:tabular-nums}.total .sub{color:var(--ink-2)}.stack{display:flex;gap:2px;height:18px;width:100%}.stack span{height:100%;min-width:2px}.stack span:first-child{border-radius:4px 0 0 4px}.stack span:last-child{border-radius:0 4px 4px 0}.stack span:only-child{border-radius:4px}.legend{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0;padding:0;list-style:none}.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--ring);background:var(--raised);border-radius:999px;padding:4px 10px 4px 8px;cursor:pointer;min-height:30px;text-align:left}.chip:hover{background:var(--hover)}.chip[aria-pressed=true]{border-color:var(--ink-2);box-shadow:inset 0 0 0 1px var(--ink-2)}.chip.dim{opacity:.5}.sw{display:inline-block;width:10px;height:10px;border-radius:3px;flex:none}.chip .num{color:var(--ink-2);font-variant-numeric:tabular-nums}.counts{display:flex;flex-wrap:wrap;gap:4px 18px;margin:14px 0 0;color:var(--ink-2)}.counts b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}.why{margin:12px 0 0;padding:0 0 0 18px}.why li{margin:5px 0}.why b{font-weight:600}.link{border:0;background:none;color:var(--link);cursor:pointer;padding:2px 0;text-align:left}.link:hover{text-decoration:underline}.link code{margin:0 3px;color:var(--ink)}details.table{margin-top:12px}details.table summary{cursor:pointer;color:var(--ink-2)}details.table table{border-collapse:collapse;margin-top:8px;width:100%;max-width:680px}details.table th,details.table td{text-align:left;padding:4px 8px;border-bottom:1px solid var(--grid);font-variant-numeric:tabular-nums}details.table th{color:var(--muted);font-weight:500}details.table .n{text-align:right}details.table .sum td{font-weight:600;border-bottom:0}.filters{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin:20px 0 10px}.filters label{display:inline-flex;align-items:center;gap:6px;cursor:pointer;min-height:32px}.filters input[type=search]{border:1px solid var(--ring);background:var(--surface);border-radius:8px;padding:6px 10px;flex:1 1 240px;max-width:360px;min-height:34px}.filters .count{color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums}.fall{background:var(--surface);border:1px solid var(--ring);border-radius:12px;overflow:clip}.head{position:sticky;top:0;z-index:3;display:grid;grid-template-columns:var(--label) 1fr;background:var(--surface);border-bottom:1px solid var(--grid)}.hl{padding:6px 12px 0;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hl.sub{padding:2px 12px 8px}.axis{position:relative;height:26px;margin-right:var(--pad)}.tick{position:absolute;top:6px;transform:translate(-50%);font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}.tick.start{transform:none}.tick.end{transform:translate(-100%)}.brk{position:absolute;top:4px;bottom:2px;background:repeating-linear-gradient(135deg,transparent 0 3px,var(--axis) 3px 4px);border-radius:2px}.strip{position:relative;height:10px;margin:4px var(--pad) 10px 0;border-radius:3px;overflow:hidden;background:var(--grid)}.strip span{position:absolute;top:0;bottom:0}.body{position:relative}.lines{position:absolute;top:0;bottom:0;left:var(--label);right:var(--pad);pointer-events:none}.lines i{position:absolute;top:0;bottom:0;width:1px;background:var(--grid)}.lines i.gap{background:repeating-linear-gradient(135deg,transparent 0 5px,var(--grid) 5px 6px)}.rows{position:relative}.row{display:grid;grid-template-columns:var(--label) 1fr;align-items:center;cursor:pointer}.row:hover{background:var(--hover)}.row.sel{background:var(--selected)}.name{display:flex;align-items:center;gap:4px;min-width:0;min-height:var(--row);padding-right:8px}.tw{width:18px;height:22px;flex:none;color:var(--muted);text-align:center;font-size:11px;border:0;background:none;padding:0;border-radius:4px;cursor:pointer}button.tw:hover{background:var(--hover);color:var(--ink)}.pick{display:flex;align-items:center;gap:6px;min-width:0;flex:1 1 auto;border:0;background:none;padding:2px 0;text-align:left;cursor:pointer;white-space:nowrap;border-radius:4px}.dot{width:8px;height:8px;border-radius:2px;flex:none}.kind{flex:0 0 auto;max-width:60%;overflow:hidden;text-overflow:ellipsis}.text{flex:0 1 auto;min-width:0;color:var(--ink-2);font-family:var(--mono);font-size:12px;overflow:hidden;text-overflow:ellipsis}.row.group .kind{font-weight:600}.row.idle .kind{color:var(--muted)}.fail{flex:none;color:var(--critical-ink);font-weight:600;font-size:12.5px}.badge{flex:none;border:1px solid var(--ring);background:var(--raised);color:var(--ink);border-radius:999px;font-size:10.5px;padding:0 6px;line-height:16px}.badge.soft{color:var(--ink-2);background:none}.track{position:relative;height:var(--row);margin-right:var(--pad)}.bar,.mix{position:absolute;top:calc(50% - 6px);height:12px;min-width:2px;border-radius:3px}.row.group .bar{top:calc(50% - 2px);height:4px;background:var(--container);border-radius:2px}.mix{top:calc(50% - 4px);height:8px;overflow:hidden;background:var(--grid);border-radius:2px}.mix span{position:absolute;top:0;bottom:0}.row.task .bar{top:calc(50% - 4px);height:8px;opacity:.85}.row.task .bar.unstarted{background-image:repeating-linear-gradient(90deg,transparent 0 6px,var(--surface) 6px 7px)!important}.row.task .kind{font-family:var(--mono);font-size:12px;color:var(--ink-2)}.gapl{position:absolute;top:5px;transform:translate(-50%);font-size:11px;color:var(--ink-2);background:var(--surface);border:1px solid var(--grid);border-radius:4px;padding:0 4px;white-space:nowrap}.made{margin:6px 0 0;padding-left:18px}.dur{position:absolute;top:calc(50% - 9px);font-size:11.5px;line-height:18px;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums;pointer-events:none}.dur .x{color:var(--critical-ink);font-weight:600}.dur.in{background:var(--surface);border-radius:4px;padding:0 4px}.empty{padding:24px 16px;margin:0;color:var(--muted)}.more{grid-column:1 / -1;position:relative;z-index:1;margin:2px 12px 10px;background:var(--raised);border:1px solid var(--ring);border-radius:10px;padding:12px 14px;cursor:auto}.more dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:0}.more dt{color:var(--muted)}.more dd{margin:0;overflow-wrap:anywhere}.more dd .sw{margin-right:6px;vertical-align:-1px}.more h3{font-size:12.5px;font-weight:600;margin:14px 0 0;color:var(--ink-2)}.more pre{font-family:var(--mono);font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--surface);border:1px solid var(--ring);border-radius:8px;padding:8px 10px;margin:6px 0 0;max-height:360px;overflow:auto}.status-failed{color:var(--critical-ink);font-weight:600}.note,.foot{color:var(--muted);font-size:12.5px;margin:10px 0 0}.foot{margin-top:20px}.tip{position:fixed;z-index:20;pointer-events:none;display:flex;flex-direction:column;gap:2px;background:var(--raised);border:1px solid var(--ring);border-radius:8px;padding:6px 9px;box-shadow:0 6px 20px #00000024;font-size:12.5px;max-width:360px}.tip span{color:var(--ink-2)}.tip code{align-self:flex-start}@media(max-width:760px){:root{--label: 44%;--pad: 52px;--indent: 8px;--row: 36px}.wrap{padding:14px 16px 40px}h1{font-size:17px}.top{flex-direction:column-reverse;gap:10px}.theme{align-self:flex-end}.pick{flex-wrap:wrap;row-gap:0;padding:4px 0}.text{flex:1 0 100%;order:10;padding-left:14px;font-size:11.5px}.badge.soft,.fail .w{display:none}.filters input[type=search]{max-width:none;flex-basis:100%}.filters .count{margin-left:0}.more{margin:2px 6px 10px}.legend{display:grid;grid-template-columns:1fr 1fr}.chip{display:grid;grid-template-columns:auto 1fr;column-gap:6px;align-items:center;width:100%;height:100%;border-radius:10px;padding:5px 8px;font-size:13px}.chip .num{grid-column:2;font-size:12px}.more dl{grid-template-columns:1fr;gap:0}.more dd{margin-bottom:6px}}@media print{.filters,.theme{display:none}.row{break-inside:avoid}}';
 
 // src/report/html.ts
@@ -13985,7 +13997,7 @@ function sessionRow(session) {
     startMs: session.startMs,
     endMs: session.endMs,
     durationMs,
-    activeMs: Math.max(0, durationMs - idleMs),
+    turnsMs: Math.max(0, durationMs - idleMs),
     turns: session.steps.filter((s) => s.kind === "turn").length,
     toolCalls: session.steps.filter((s) => s.kind === "tool").length,
     sources: session.sources
@@ -14016,6 +14028,9 @@ var sessionsCommand = {
   usage: `Usage: awf sessions [--since 30d] [--project <dir>] [--json]
 
 Lists sessions newest first: those the recorder captured and those "awf import" read from transcripts.
+IN TURNS is the time from each prompt (or notice) to the end of the agent's answer, without the
+gaps between turns. Background work in those gaps (subagents, builds left running) isn't in it:
+"awf summary <session>" shows it.
   --since <age>     only sessions that started within this age (30d, 12h)
   --project <dir>   only sessions started in this folder or below it
   --json            print JSON`,
@@ -14043,12 +14058,12 @@ Lists sessions newest first: those the recorder captured and those "awf import" 
     const home = ctx.env.HOME ?? os9.homedir();
     ctx.io.out(
       table(
-        ["SESSION", "STARTED", "DURATION", "ACTIVE", "TURNS", "TOOLS", "SOURCE", "PROJECT"],
+        ["SESSION", "STARTED", "DURATION", "IN TURNS", "TURNS", "TOOLS", "SOURCE", "PROJECT"],
         rows.map((r) => [
           r.id.slice(0, 8),
           formatClock(r.startMs),
           formatDuration(r.durationMs),
-          formatDuration(r.activeMs),
+          formatDuration(r.turnsMs),
           String(r.turns),
           String(r.toolCalls),
           r.sources.join("+"),
@@ -14062,6 +14077,7 @@ Lists sessions newest first: those the recorder captured and those "awf import" 
 };
 
 // src/cli/commands/stats.ts
+var POLLING = "(polling: sleep in a loop, or a long sleep)";
 function runMs(step) {
   return Math.max(0, step.endMs - step.startMs - (step.waitMs ?? 0));
 }
@@ -14124,7 +14140,8 @@ function bashStats(sessions, top = 10, focus = "unclassified") {
       byPhase.set(phase, entry);
       if (phase === focus) {
         const unmatched = step.tags.find((t) => t.startsWith("unmatched:"))?.slice("unmatched:".length);
-        const head2 = focus === "unclassified" && step.tags.includes("polling") ? "(polling: sleep in a loop, or a long sleep)" : focus === "unclassified" && unmatched ? unmatched : step.command ? commandHead(step.command) : "(no command)";
+        const polling = step.decidedBy === "polling" || focus === "unclassified" && step.tags.includes("polling");
+        const head2 = polling ? POLLING : focus === "unclassified" ? unmatched ?? (step.command ? commandHead(step.command) : "(no command)") : step.decidedBy ?? (step.command ? commandHead(step.command) : "(no command)");
         const h = heads.get(head2) ?? { ms: 0, calls: 0 };
         h.ms += ms;
         h.calls++;
@@ -14157,7 +14174,8 @@ var statsCommand = {
 
 Classifies the Bash calls of every recorded or imported session and shows the time per phase,
 the share left unclassified, and the programs behind that time, to show which rules are missing.
-  --phase <id>   break this phase down by program instead of unclassified (tests, build, exploring, ...)`,
+  --phase <id>   break this phase down instead of unclassified (tests, build, exploring, ...), by
+                 the part of each command that decided its phase: xcodebuild test, cargo test`,
   options: {
     since: { type: "string" },
     project: { type: "string" },
@@ -14227,6 +14245,246 @@ the share left unclassified, and the programs behind that time, to show which ru
   }
 };
 
+// src/cli/commands/statusline.ts
+import {
+  mkdirSync as mkdirSync3,
+  readdirSync as readdirSync9,
+  readFileSync as readFileSync11,
+  renameSync as renameSync2,
+  rmSync as rmSync2,
+  statSync as statSync7,
+  writeFileSync as writeFileSync3
+} from "node:fs";
+import path21 from "node:path";
+var FORMAT = 1;
+var MAX_WIDTH = 64;
+var KEEP_MS = 30 * 864e5;
+var SHORT_NAME = {
+  "writing-code": "code",
+  "writing-tests": "test code",
+  lint: "lint",
+  tests: "tests",
+  build: "build",
+  rework: "rework",
+  exploring: "explore",
+  running: "scripts",
+  planning: "plan",
+  waiting: "waiting",
+  unclassified: "unclassified"
+};
+var COLOR = {
+  "writing-code": "#2a78d6",
+  "writing-tests": "#d95926",
+  lint: "#199e70",
+  tests: "#c98500",
+  build: "#d55181",
+  rework: "#7a6ae0",
+  exploring: "#008300",
+  running: "#2a8ca3",
+  planning: "#7b8494",
+  waiting: "#a9a8a0",
+  unclassified: "#8c8b84"
+};
+var FAILED_COLOR = "#d03b3b";
+function statusParts(summary, top = 3) {
+  const working = summary.phases.filter((p) => p.phase !== "waiting");
+  const workingMs = working.reduce((n, p) => n + p.ms, 0);
+  const phases = working.filter((p) => p.ms > 0).sort((a, b) => b.ms - a.ms).slice(0, top).map((p) => ({ phase: p.phase, ms: p.ms, share: workingMs > 0 ? p.ms / workingMs : 0 }));
+  return {
+    phases,
+    failed: summary.phases.reduce((n, p) => n + (p.failed ?? 0), 0),
+    reworkMs: summary.phases.find((p) => p.phase === "rework")?.ms ?? 0,
+    workingMs
+  };
+}
+function shortDuration(ms) {
+  const s = Math.round(ms / 1e3);
+  if (s < 60) return `${s}s`;
+  const m = Math.round(s / 60);
+  if (m < 60) return `${m}m`;
+  return `${Math.floor(m / 60)}h${String(m % 60).padStart(2, "0")}m`;
+}
+function percent(share) {
+  const n = Math.round(share * 100);
+  return n === 0 ? "<1%" : `${n}%`;
+}
+function colorMode(env) {
+  if (env.NO_COLOR) return "none";
+  return /truecolor|24bit/i.test(env.COLORTERM ?? "") ? "truecolor" : "256";
+}
+function xterm256(r, g, b) {
+  const levels = [0, 95, 135, 175, 215, 255];
+  const nearest2 = (v) => levels.reduce(
+    (best, level, i) => Math.abs(level - v) < Math.abs(levels[best] - v) ? i : best,
+    0
+  );
+  return 16 + 36 * nearest2(r) + 6 * nearest2(g) + nearest2(b);
+}
+function paint(text, hex, mode) {
+  if (mode === "none") return text;
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const code = mode === "truecolor" ? `38;2;${r};${g};${b}` : `38;5;${xterm256(r, g, b)}`;
+  return `\x1B[${code}m${text}\x1B[39m`;
+}
+function renderStatus(parts, mode) {
+  const phases = parts.phases.map((p) => ({
+    name: SHORT_NAME[p.phase],
+    color: COLOR[p.phase],
+    value: percent(p.share)
+  }));
+  if (phases.length === 0) return "";
+  const tail = [];
+  if (parts.failed > 0) tail.push({ name: `${parts.failed} failed`, color: FAILED_COLOR });
+  if (parts.reworkMs >= 1e3 && !parts.phases.some((p) => p.phase === "rework"))
+    tail.push({ name: "rework", color: COLOR.rework, value: shortDuration(parts.reworkMs) });
+  const text = (item) => item.value ? `${item.name} ${item.value}` : item.name;
+  const width = (items) => items.map(text).join(" \xB7 ").length;
+  while (phases.length > 1 && width([...phases, ...tail]) > MAX_WIDTH) phases.pop();
+  const separator = mode === "none" ? " \xB7 " : " \x1B[2m\xB7\x1B[22m ";
+  return [...phases, ...tail].map((item) => paint(item.name, item.color, mode) + (item.value ? ` ${item.value}` : "")).join(separator);
+}
+function stamp(stat2) {
+  return stat2 ? `${stat2.size}:${stat2.mtimeMs}` : "-";
+}
+function subagentStamp(transcript) {
+  const dir = path21.join(path21.dirname(transcript), path21.basename(transcript, ".jsonl"), "subagents");
+  let names;
+  try {
+    names = readdirSync9(dir);
+  } catch {
+    return "-";
+  }
+  let size2 = 0;
+  let mtime = 0;
+  for (const name of names) {
+    const stat2 = statSync7(path21.join(dir, name), { throwIfNoEntry: false });
+    if (!stat2) continue;
+    size2 += stat2.size;
+    mtime = Math.max(mtime, stat2.mtimeMs);
+  }
+  return `${names.length}:${size2}:${mtime}`;
+}
+function readCache(file, key) {
+  try {
+    const cached = JSON.parse(readFileSync11(file, "utf8"));
+    return cached.key === key && typeof cached.line === "string" ? cached.line : void 0;
+  } catch {
+    return void 0;
+  }
+}
+function writeCache(file, key, line, now) {
+  try {
+    const dir = path21.dirname(file);
+    mkdirSync3(dir, { recursive: true });
+    const temp = `${file}.${process.pid}.tmp`;
+    writeFileSync3(temp, JSON.stringify({ key, line }));
+    renameSync2(temp, file);
+    for (const name of readdirSync9(dir)) {
+      const other = path21.join(dir, name);
+      const stat2 = statSync7(other, { throwIfNoEntry: false });
+      if (stat2 && now - stat2.mtimeMs > KEEP_MS) rmSync2(other, { force: true });
+    }
+  } catch {
+  }
+}
+function statusLine(ctx, input, json) {
+  const payload = JSON.parse(input);
+  const transcript = payload?.transcript_path;
+  if (typeof transcript !== "string" || !transcript.endsWith(".jsonl")) return "";
+  const transcriptStat = statSync7(transcript, { throwIfNoEntry: false });
+  if (!transcriptStat?.isFile()) return "";
+  const id = typeof payload?.session_id === "string" && payload.session_id ? payload.session_id : path21.basename(transcript, ".jsonl");
+  const events = path21.join(eventsDir(ctx.env), `${safeId(id)}.jsonl`);
+  const eventsStat = statSync7(events, { throwIfNoEntry: false });
+  const mode = colorMode(ctx.env);
+  const key = [
+    FORMAT,
+    VERSION,
+    mode,
+    stamp(transcriptStat),
+    stamp(eventsStat),
+    subagentStamp(transcript)
+  ].join("|");
+  const cacheFile2 = path21.join(cacheDir(ctx.env), "statusline", `${safeId(id)}.json`);
+  if (!json) {
+    const cached = readCache(cacheFile2, key);
+    if (cached !== void 0) return cached;
+  }
+  const ref = resolveSession(transcript, ctx.env);
+  if (eventsStat?.isFile())
+    ref.events = { id, path: events, mtimeMs: eventsStat.mtimeMs, size: eventsStat.size };
+  const { summary } = summarize(classifier()(loadSession(ref, { detail: true, env: ctx.env })));
+  const parts = statusParts(summary);
+  if (json) {
+    return JSON.stringify(
+      {
+        id: summary.id,
+        sources: summary.sources,
+        workingMs: parts.workingMs,
+        phases: parts.phases.map((p) => ({
+          ...p,
+          label: PHASE_LABEL[p.phase],
+          name: SHORT_NAME[p.phase]
+        })),
+        failed: parts.failed,
+        reworkMs: parts.reworkMs,
+        line: renderStatus(parts, "none")
+      },
+      null,
+      2
+    );
+  }
+  const line = renderStatus(parts, mode);
+  writeCache(cacheFile2, key, line, ctx.now);
+  return line;
+}
+var statuslineCommand = {
+  summary: "One short line for Claude Code's status line: the session's phase split so far",
+  usage: `Usage: awf statusline [--json]
+
+For Claude Code's status line. Reads the JSON Claude Code sends on stdin (session_id,
+transcript_path), and prints one line: the three phases that took the most time so far, then
+failed lint, test and build runs, and rework time when it isn't one of the three:
+
+  tests 36% \xB7 explore 29% \xB7 scripts 15% \xB7 15 failed \xB7 rework 2m
+
+Shares are of the time the agent worked, without Waiting on you, so they hold still while you're
+away. Phases are named code, test code, lint, tests, build, rework, explore, scripts, plan and
+unclassified. Colours follow the report; NO_COLOR turns them off.
+
+It never breaks the status line: on any error it prints nothing and exits 0 (AWF_DEBUG=1 prints
+the error on stderr). The line is kept in ~/.awf/cache/statusline/ until the transcript, the
+recorder's events or a subagent's transcript changes.
+
+Set it up in ~/.claude/settings.json:
+  "statusLine": { "type": "command", "command": "awf statusline", "padding": 0 }
+
+  --json   print the phases, failures and rework as JSON (not cached)`,
+  options: { json: { type: "boolean" } },
+  run(ctx, _args, options) {
+    let input;
+    try {
+      input = ctx.io.input?.();
+    } catch {
+      return 0;
+    }
+    if (input === void 0) {
+      ctx.io.err(
+        'awf statusline reads the JSON Claude Code sends on stdin. Run "awf statusline --help".'
+      );
+      return 0;
+    }
+    try {
+      const line = statusLine(ctx, input, Boolean(options.json));
+      if (line) ctx.io.out(line);
+    } catch (error) {
+      if (ctx.env.AWF_DEBUG)
+        ctx.io.err(`awf statusline: ${error instanceof Error ? error.message : String(error)}`);
+    }
+    return 0;
+  }
+};
+
 // src/cli/commands/summary.ts
 import os10 from "node:os";
 var summaryCommand = {
@@ -14260,7 +14518,7 @@ or a transcript or events file.
     const header = [
       `Session ${summary.id.slice(0, 8)}`,
       formatClock(summary.startMs),
-      summary.activeMs < summary.totalMs ? `${formatDuration(summary.totalMs)} (active ${formatDuration(summary.activeMs)})` : formatDuration(summary.totalMs),
+      formatDurationLine(summary),
       ...summary.cwd ? [homeRelative(summary.cwd, home)] : []
     ].join(" \xB7 ");
     ctx.io.out(header);
@@ -14274,7 +14532,8 @@ or a transcript or events file.
 // src/cli/main.ts
 var defaultIo = {
   out: (text) => process.stdout.write(text + "\n"),
-  err: (text) => process.stderr.write(text + "\n")
+  err: (text) => process.stderr.write(text + "\n"),
+  input: () => process.stdin.isTTY ? void 0 : readFileSync12(0, "utf8")
 };
 var COMMANDS = {
   sessions: sessionsCommand,
@@ -14284,6 +14543,7 @@ var COMMANDS = {
   report: reportCommand,
   compare: compareCommand,
   stats: statsCommand,
+  statusline: statuslineCommand,
   sample: sampleCommand,
   accuracy: accuracyCommand,
   doctor: doctorCommand,
