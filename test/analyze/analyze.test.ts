@@ -140,6 +140,57 @@ describe('timeline', () => {
     expect(build.byPhase).toMatchObject({ build: 50, waiting: 40 });
   });
 
+  it('ranks a Monitor like a background poller whatever its command', () => {
+    const steps = [
+      step({ id: 'm', kind: 'model', startMs: 0, endMs: 10, phase: 'running' }),
+      // A request resent inside the turn: nothing in the foreground from 10 to 40.
+      step({ id: 'm2', kind: 'model', startMs: 40, endMs: 50, phase: 'planning' }),
+      step({ id: 'idle', kind: 'idle', startMs: 50, endMs: 100, phase: 'waiting' }),
+      step({ id: 'm3', kind: 'model', startMs: 100, endMs: 110, phase: 'planning' }),
+      // `tail -F app.log`: Exploring by its command, left running past the session's end.
+      step({
+        id: 'bg:mon',
+        kind: 'background',
+        tool: 'Monitor',
+        startMs: 5,
+        endMs: 500,
+        phase: 'exploring',
+        flags: ['background'],
+      }),
+    ];
+    const totals = phaseTotals(session(steps, 0, 500));
+    expect(totals.totalMs).toBe(110);
+    expect(totals.byPhase).toMatchObject({ exploring: 30, waiting: 50, planning: 20 });
+    expect(totals.awayWorkMs).toBe(0);
+  });
+
+  it("lets background work between turns beat a compaction while you're away", () => {
+    const totals = phaseTotals(
+      session([
+        step({ id: 'm', kind: 'model', startMs: 0, endMs: 10, phase: 'planning' }),
+        step({ id: 'idle', kind: 'idle', startMs: 10, endMs: 100, phase: 'waiting' }),
+        step({ id: 'm2', kind: 'model', startMs: 100, endMs: 110, phase: 'planning' }),
+        step({
+          id: 'c',
+          kind: 'compact',
+          startMs: 40,
+          endMs: 70,
+          phase: 'waiting',
+          flags: ['background'],
+        }),
+        step({
+          id: 'b',
+          kind: 'background',
+          startMs: 10,
+          endMs: 50,
+          phase: 'build',
+          flags: ['background'],
+        }),
+      ]),
+    );
+    expect(totals.byPhase).toMatchObject({ planning: 20, build: 40, waiting: 50, unclassified: 0 });
+  });
+
   it('splits an approval wait from the run, and counts uncovered time as unclassified', () => {
     const totals = phaseTotals(
       session(

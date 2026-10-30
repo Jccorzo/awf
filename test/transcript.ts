@@ -96,6 +96,30 @@ export function notification(t: number, taskId: string, status: string): Entry {
   };
 }
 
+/** An event from a running Monitor: a notice with no status, so not the task's end. */
+export function monitorEvent(t: number, taskId: string, line: string): Entry {
+  return {
+    type: 'queue-operation',
+    operation: 'enqueue',
+    timestamp: at(t),
+    content: `<task-notification>\n<task-id>${taskId}</task-id>\n<summary>Monitor event: "checks"</summary>\n<event>${line}</event>\n</task-notification>`,
+  };
+}
+
+/** The summary Claude Code writes after a compaction, as a user entry. */
+export function compactSummary(t: number): Entry {
+  return {
+    type: 'user',
+    timestamp: at(t),
+    isCompactSummary: true,
+    isVisibleInTranscriptOnly: true,
+    message: {
+      role: 'user',
+      content: 'This session is being continued from a previous conversation.',
+    },
+  };
+}
+
 /** A model request being sent (Claude Code 2.1.30x and later). Resending one repeats the entry. */
 export function request(t: number, id: string): Entry {
   return {

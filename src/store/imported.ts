@@ -12,7 +12,7 @@ import { importedDir, safeId } from './paths';
 
 type Env = Record<string, string | undefined>;
 
-export const IMPORT_VERSION = 3;
+export const IMPORT_VERSION = 4;
 
 /**
  * What `awf import` keeps of a transcript, so the history survives Claude Code deleting it after 30 days.
@@ -22,9 +22,11 @@ export const IMPORT_VERSION = 3;
 export interface ImportedSession {
   /**
    * 2 adds browser and computer-use actions; 3 starts model time at the send of a resent request
-   * and ends background tasks stopped with TaskStop. Older entries still load; `awf import` redoes them.
+   * and ends background tasks stopped with TaskStop; 4 adds Monitors' background steps, and flags a
+   * compaction while you're away (dropping one after the last turn). Older entries still load;
+   * `awf import` redoes them.
    */
-  version: 1 | 2 | typeof IMPORT_VERSION;
+  version: 1 | 2 | 3 | typeof IMPORT_VERSION;
   source: { path: string; mtimeMs: number; size: number };
   session: Session;
 }
@@ -38,7 +40,9 @@ export function readImported(id: string, env: Env = process.env): ImportedSessio
   if (!existsSync(file)) return undefined;
   try {
     const parsed = JSON.parse(readFileSync(file, 'utf8')) as ImportedSession;
-    return [1, 2, IMPORT_VERSION].includes(parsed.version) && parsed.session ? parsed : undefined;
+    return [1, 2, 3, IMPORT_VERSION].includes(parsed.version) && parsed.session
+      ? parsed
+      : undefined;
   } catch {
     return undefined;
   }

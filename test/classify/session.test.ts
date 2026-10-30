@@ -278,6 +278,45 @@ describe('model time and other steps', () => {
     expect(steps[3]?.failed).toBe(true);
   });
 
+  it("classifies a Monitor's task by its command, and a read of its output takes that phase", () => {
+    const command = 'until gh run view 42 --json status | grep -q completed; do sleep 30; done';
+    const steps = classify(
+      session([
+        step({ id: 'mon', kind: 'tool', tool: 'Monitor', command, backgroundId: 'b1' }),
+        step({ kind: 'background', tool: 'Monitor', parentId: 'mon', command, backgroundId: 'b1' }),
+        step({ kind: 'tool', tool: 'TaskOutput', backgroundId: 'b1' }),
+        step({
+          id: 'tail',
+          kind: 'tool',
+          tool: 'Monitor',
+          command: 'tail -F a.log',
+          backgroundId: 'b2',
+        }),
+        step({
+          kind: 'background',
+          tool: 'Monitor',
+          parentId: 'tail',
+          command: 'tail -F a.log',
+          backgroundId: 'b2',
+        }),
+        step({ kind: 'tool', tool: 'TaskStop', backgroundId: 'b2' }),
+      ]),
+    ).steps;
+    expect(steps.map((s) => [s.phase, s.tags.includes('polling')])).toEqual([
+      ['running', false],
+      ['running', true],
+      ['running', false],
+      ['running', false],
+      ['exploring', false],
+      ['exploring', false],
+    ]);
+  });
+
+  it("counts a compaction while you're away as waiting on you", () => {
+    const steps = classify(session([step({ kind: 'compact', flags: ['background'] })])).steps;
+    expect(steps[0]).toMatchObject({ phase: 'waiting', tags: ['compaction'] });
+  });
+
   it('keeps cd between shell calls, until it leaves the project', () => {
     const c = new Classifier(
       defaultRules(),

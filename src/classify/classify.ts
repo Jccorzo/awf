@@ -832,18 +832,19 @@ export class Classifier {
         this.tool(step, hasChildren);
       }
     }
-    // Calls that wait on a background task take its phase.
+    // Calls that wait on a background task take its phase: the background step's, classified by
+    // its command, before the call that started it (a Monitor call is Running scripts by name).
     for (const step of ordered) {
       if (step.kind !== 'tool' || !step.tool || !BACKGROUND_TOOLS.has(step.tool)) continue;
-      const source = steps.find(
+      if (!step.backgroundId) continue;
+      const sources = steps.filter(
         (s) =>
-          s !== step &&
-          s.backgroundId &&
           s.backgroundId === step.backgroundId &&
           s.phase &&
-          s.phase !== 'unclassified',
+          !(s.kind === 'tool' && BACKGROUND_TOOLS.has(s.tool ?? '')),
       );
-      if (source?.phase) {
+      const source = sources.find((s) => s.kind === 'background') ?? sources[0];
+      if (source?.phase && source.phase !== 'unclassified') {
         step.phase = source.phase;
         step.tags = unique([...step.tags, 'background-task']);
       }
@@ -852,7 +853,9 @@ export class Classifier {
       if (step.kind === 'model') step.phase = this.modelPhase(step, byId);
       else if (step.kind === 'idle') step.phase = 'waiting';
       else if (step.kind === 'compact') {
-        step.phase = 'unclassified';
+        // A compaction while you're away (Claude Code compacts an idle session before its prompt
+        // cache expires) holds nothing up: it's part of the wait for your next prompt.
+        step.phase = step.flags.includes('background') ? 'waiting' : 'unclassified';
         step.tags = ['compaction'];
       }
     }

@@ -16,10 +16,16 @@ const SERVICE = 3;
 const isBackground = (step: ClassifiedStep, background: (s: ClassifiedStep) => boolean) =>
   step.kind === 'background' || background(step);
 
-/** A background shell running a server, a watcher or anything awf has no rule for. */
+/**
+ * A background shell running a server, a watcher or anything awf has no rule for. A Monitor's
+ * command is a watcher by design (each line it prints is an event), whatever it runs: a poller,
+ * or a `tail -F` that would otherwise count as Exploring.
+ */
 const isService = (step: ClassifiedStep) =>
   (step.kind === 'background' || step.flags.includes('background')) &&
-  (step.phase === 'running' || step.phase === 'unclassified');
+  (step.phase === 'running' ||
+    step.phase === 'unclassified' ||
+    (step.kind === 'background' && step.tool === 'Monitor'));
 
 export interface Interval {
   start: number;

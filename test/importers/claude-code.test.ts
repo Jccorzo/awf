@@ -6,6 +6,8 @@ import { memoryFiles } from '../../src/classify/resolve';
 import { importClaudeCodeTranscript } from '../../src/importers/claude-code/import';
 import type { Session, Step } from '../../src/model/types';
 import {
+  compactSummary,
+  monitorEvent,
   ms,
   notification,
   prompt,
@@ -376,6 +378,183 @@ describe('Claude Code importer edge cases', () => {
     expect(bg).toMatchObject({ backgroundId: 'bgtests', startMs: ms(1), endMs: ms(300.2) });
     expect(bg?.flags).toContain('interrupted');
     expect(bg?.ok).toBeUndefined();
+  });
+
+  it('runs a Monitor in the background until its kill notice, filling a resent request', () => {
+    // The agent watches CI with a Monitor, then its next request is sent again for three minutes.
+    // The Monitor's events aren't its end; it's killed after the last turn, when you leave.
+    const file = writeTranscript('monitor', [
+      prompt(0, 'fix the pipeline'),
+      request(0.1, 'q1'),
+      toolUse(5, 'm1', 'mon', 'Monitor', {
+        command:
+          'while true; do gh pr checks 75 --json name,bucket | jq -r ".[].bucket"; sleep 30; done',
+        description: 'PR checks',
+        timeout_ms: 1_200_000,
+      }),
+      result(6.1, 'mon', {
+        content: 'Monitor started (task bmon1, expires in 20m unless the source ends first).',
+        toolUseResult: { taskId: 'bmon1', timeoutMs: 1_200_000, persistent: false },
+      }),
+      request(6.2, 'q2'),
+      monitorEvent(150, 'bmon1', 'Lint Code: pass'),
+      request(187, 'q3'),
+      {
+        ...toolUse(190, 'm2', 'r1', 'Read', { file_path: '/repo/package.json' }),
+        requestRef: 'q3',
+      },
+      result(190.5, 'r1'),
+      request(190.6, 'q4'),
+      text(195, 'm3', 'Pinned it.'),
+      system(195.1, 'turn_duration'),
+      notification(260, 'bmon1', 'killed'),
+    ]);
+    const session = importClaudeCodeTranscript(file);
+    const bg = session.steps.find((s) => s.kind === 'background');
+    expect(bg).toMatchObject({
+      parentId: 'mon',
+      tool: 'Monitor',
+      backgroundId: 'bmon1',
+      startMs: ms(5),
+      endMs: ms(260),
+      flags: ['background'],
+      ok: false,
+    });
+    expect(
+      session.steps.find((s) => s.kind === 'model' && s.produces?.includes('r1')),
+    ).toMatchObject({ startMs: ms(187), flags: ['resent'] });
+
+    const { session: classified, summary } = analyze(session, { files: memoryFiles({}) });
+    expect(classified.steps.find((s) => s.kind === 'background')).toMatchObject({
+      phase: 'running',
+      tags: expect.arrayContaining(['polling']),
+    });
+    const phase = (id: string) => summary.phases.find((p) => p.phase === id)?.ms ?? 0;
+    // The resent request's three minutes go to the poller running then, not to Unclassified.
+    expect(phase('running')).toBe(187_000);
+    expect(phase('unclassified')).toBe(0);
+    expect(summary.uncoveredMs).toBe(0);
+    // Killed after the last turn: it doesn't stretch the session.
+    expect(summary.totalMs).toBe(195_100);
+  });
+
+  it("ends a Monitor with no notice at its timeout, or at the transcript's last entry", () => {
+    const file = writeTranscript('monitor-timeout', [
+      prompt(0, 'watch the log'),
+      toolUse(1, 'm1', 'mon1', 'Monitor', {
+        command: 'tail -n 0 -F /tmp/app.log | grep --line-buffered ERROR',
+        description: 'errors in app.log',
+        timeout_ms: 60_000,
+      }),
+      // Some subagent transcripts have no toolUseResult: the task ID is read from the text.
+      result(2, 'mon1', {
+        content: 'Monitor started (task bmon2, expires in 1m unless the source ends first).',
+      }),
+      text(3, 'm2', 'Watching.'),
+      system(3.1, 'turn_duration'),
+      prompt(600, 'anything?'),
+      toolUse(601, 'm3', 'mon2', 'Monitor', { command: 'tail -F /tmp/app.log', description: 'x' }),
+      result(602, 'mon2', {
+        content: 'Monitor started (task bmon3, expires in 5m unless the source ends first).',
+        toolUseResult: { taskId: 'bmon3', timeoutMs: 300_000, persistent: false },
+      }),
+      toolUse(605, 'm4', 'o1', 'TaskOutput', { task_id: 'bmon3', block: false }),
+      result(605.5, 'o1'),
+      text(610, 'm5', 'No errors.'),
+    ]);
+    const session = importClaudeCodeTranscript(file);
+    const bg = session.steps.filter((s) => s.kind === 'background');
+    expect(bg.map((s) => [s.backgroundId, s.startMs, s.endMs, s.flags])).toEqual([
+      ['bmon2', ms(1), ms(62), ['background', 'unfinished']],
+      ['bmon3', ms(601), ms(610), ['background', 'unfinished']],
+    ]);
+    expect(bg[0]?.ok).toBeUndefined();
+
+    const { session: classified, summary } = analyze(session, { files: memoryFiles({}) });
+    // Reading its output takes the Monitor's phase, from its command.
+    expect(classified.steps.find((s) => s.id === 'o1')).toMatchObject({
+      phase: 'exploring',
+      tags: ['background-task'],
+    });
+    const phase = (id: string) => summary.phases.find((p) => p.phase === id)?.ms ?? 0;
+    // A log tail is Exploring, but a Monitor is a watcher: while you're away it's your wait.
+    expect(phase('waiting')).toBe(600_000 - 3_100);
+    expect(phase('exploring')).toBe(3_500); // the read of its output and the model time before it
+  });
+
+  it("doesn't let a compaction while you're away stretch the session after its last turn", () => {
+    const file = writeTranscript('idle-compaction-end', [
+      prompt(0, 'a'),
+      text(5, 'm1'),
+      system(5.1, 'turn_duration'),
+      system(3300, 'compact_boundary', {
+        compactMetadata: { trigger: 'auto', durationMs: 35_000, preTokens: 320_000 },
+      }),
+      compactSummary(3300),
+      system(3300.1, 'informational', {
+        content: 'Compacted while idle, before the prompt cache expired',
+      }),
+    ]);
+    const session = importClaudeCodeTranscript(file);
+    expect(session.endMs).toBe(ms(5.1));
+    expect(session.steps.some((s) => s.kind === 'compact')).toBe(false);
+    const { summary } = analyze(session, { files: memoryFiles({}) });
+    expect(summary.totalMs).toBe(5_100);
+    expect(summary.phases.find((p) => p.phase === 'unclassified')?.ms).toBe(0);
+  });
+
+  it("counts a compaction while you're away between turns as waiting on you", () => {
+    const file = writeTranscript('idle-compaction', [
+      prompt(0, 'a'),
+      text(5, 'm1'),
+      system(5.1, 'turn_duration'),
+      system(3300, 'compact_boundary', {
+        compactMetadata: { trigger: 'auto', durationMs: 35_000, preTokens: 320_000 },
+      }),
+      compactSummary(3300),
+      system(3300.1, 'informational', {
+        content: 'Compacted while idle, before the prompt cache expired',
+      }),
+      // A reminder the model answers on its own: that turn starts at the reminder, not at the
+      // compaction's summary.
+      {
+        ...prompt(3500, '<system-reminder>A file changed.</system-reminder>'),
+        origin: undefined,
+        isMeta: true,
+      },
+      text(3502, 'm2', 'Noted.'),
+      system(3502.1, 'turn_duration'),
+      prompt(4000, 'b'),
+      text(4005, 'm3'),
+    ]);
+    const session = importClaudeCodeTranscript(file);
+    expect(session.steps.find((s) => s.kind === 'compact')).toMatchObject({
+      parentId: null,
+      startMs: ms(3265),
+      endMs: ms(3300),
+      flags: ['background'],
+    });
+    expect(session.steps.filter((s) => s.kind === 'turn').map((s) => s.startMs)).toEqual([
+      ms(0),
+      ms(3500),
+      ms(4000),
+    ]);
+    // One gap, the compaction inside it.
+    expect(session.steps.filter((s) => s.kind === 'idle').map((s) => [s.startMs, s.endMs])).toEqual(
+      [
+        [ms(5.1), ms(3500)],
+        [ms(3502.1), ms(4000)],
+      ],
+    );
+    const { session: classified, summary } = analyze(session, { files: memoryFiles({}) });
+    expect(classified.steps.find((s) => s.kind === 'compact')).toMatchObject({
+      phase: 'waiting',
+      tags: ['compaction'],
+    });
+    const phase = summary.phases.find((p) => p.phase === 'waiting');
+    expect(phase?.ms).toBe(3_494_900 + 497_900);
+    expect(phase?.gaps).toBe(2);
+    expect(summary.phases.find((p) => p.phase === 'unclassified')?.ms).toBe(0);
   });
 
   it('treats a resumed session as one session with the gap as idle', () => {

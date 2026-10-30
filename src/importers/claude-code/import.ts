@@ -36,6 +36,11 @@ const STOP_TOOLS = new Set(['TaskStop', 'KillShell', 'KillBash']);
 /** Calls that name a background task without starting one: they read or stop it. */
 const TASK_REFS = new Set([...STOP_TOOLS, 'TaskOutput', 'BashOutput']);
 const MAX_OUTPUT = 4000;
+/** A Monitor's timeout when its call names none, and the longest Claude Code allows. */
+const MONITOR_TIMEOUT_MS = 300_000;
+const MONITOR_MAX_TIMEOUT_MS = 1_800_000;
+/** A Monitor's result, when it has no `toolUseResult` (some subagent transcripts). */
+const MONITOR_STARTED = /^Monitor started \(task ([\w-]+)/;
 
 interface ToolUse {
   name: string;
@@ -98,6 +103,10 @@ class TranscriptReader {
   private readonly requests = new Map<string, number>();
   /** Requests each agent ('' for the main one) sent since its last input, not yet answered. */
   private readonly sends = new Map<string, number[]>();
+  /** Monitor calls by tool_use_id: how long each may run before Claude Code kills it. */
+  private readonly monitors = new Map<string, { timeoutMs: number; persistent: boolean }>();
+  /** The latest timestamp in the transcripts: Claude Code was still running then. */
+  private lastMs = -Infinity;
   private turnOpen = false;
   private turnStart = 0;
   private lastActivity = 0;
@@ -153,6 +162,7 @@ class TranscriptReader {
       if (!this.accept(entry)) continue;
       const ms = timestampMs(entry);
       if (ms === undefined) continue;
+      this.lastMs = Math.max(this.lastMs, ms);
       // Older versions kept subagent entries in the main file, marked as sidechain.
       const agentId = entry.isSidechain === true ? (str(entry.agentId) ?? 'sidechain') : undefined;
       switch (entry.type) {
@@ -199,6 +209,7 @@ class TranscriptReader {
     });
     for (const entry of entries) {
       const ms = timestampMs(entry) as number;
+      this.lastMs = Math.max(this.lastMs, ms);
       if (entry.type === 'user') {
         this.sends.delete(agentId);
         this.toolResults(entry, ms, agentId);
@@ -226,8 +237,13 @@ class TranscriptReader {
       if (messageText(entry).startsWith('[Request interrupted')) {
         // "[Request interrupted by user]": the turn ends here, unless it had ended already.
         if (!ended) this.lastActivity = Math.max(this.lastActivity, ms);
-      } else if (ended && !contentBlocks(entry).some((b) => b.type === 'tool_result')) {
+      } else if (
+        ended &&
+        entry.isCompactSummary !== true &&
+        !contentBlocks(entry).some((b) => b.type === 'tool_result')
+      ) {
         // Sent after the turn ended, but not a prompt: if the model answers it, a turn starts here.
+        // A compaction's summary isn't one: the model doesn't answer it (an idle compaction).
         this.pendingPrompt ??= ms;
       }
       this.toolResults(entry, ms, undefined);
@@ -311,7 +327,14 @@ class TranscriptReader {
         const type = str(result?.agentType);
         if (type && !this.agentTypes.has(child)) this.agentTypes.set(child, type);
       }
-      const bgid = str(result?.backgroundTaskId);
+      let bgid = str(result?.backgroundTaskId);
+      const monitor = this.monitors.get(tuid);
+      if (monitor && !failed) {
+        // A Monitor runs its command in the background as a task, like a background shell.
+        bgid ??= str(result?.taskId) ?? MONITOR_STARTED.exec(text)?.[1];
+        if (typeof result?.timeoutMs === 'number') monitor.timeoutMs = result.timeoutMs;
+        if (result?.persistent === true) monitor.persistent = true;
+      }
       if (bgid) event.bgid = bgid;
       this.emit(event);
       this.resolveBatch(use, tuid, ms);
@@ -393,6 +416,13 @@ class TranscriptReader {
       if (act) event.act = act;
       const ref = str(input.task_id) ?? str(input.bash_id) ?? str(input.shell_id);
       if (ref) event.bgid = ref;
+      if (name === 'Monitor') {
+        const asked = typeof input.timeout_ms === 'number' ? input.timeout_ms : MONITOR_TIMEOUT_MS;
+        this.monitors.set(tuid, {
+          timeoutMs: Math.min(asked, MONITOR_MAX_TIMEOUT_MS),
+          persistent: input.persistent === true,
+        });
+      }
       if (agentId) event.aid = agentId;
       this.emit(event);
       this.startEvents.set(tuid, this.events[this.events.length - 1] as RecorderEvent);
@@ -483,7 +513,8 @@ class TranscriptReader {
 
   /**
    * A background shell runs from its call until its completion notice, or until a TaskStop or
-   * KillShell call stops it: a stopped task gets no notice.
+   * KillShell call stops it: a stopped task gets no notice. A Monitor's command runs the same way,
+   * and no longer than its timeout. A notice without a status (a Monitor's event) isn't an end.
    */
   private addBackgroundSteps(session: Session): void {
     const stops = session.steps.filter(
@@ -495,14 +526,28 @@ class TranscriptReader {
       const notice = this.notifications
         .filter(
           (n) =>
-            (n.taskId === call.backgroundId || n.toolUseId === call.id) && n.ms >= call.startMs,
+            n.status !== undefined &&
+            (n.taskId === call.backgroundId || n.toolUseId === call.id) &&
+            n.ms >= call.startMs,
         )
         .sort((a, b) => a.ms - b.ms)[0];
       const stop = stops
         .filter((s) => s.backgroundId === call.backgroundId && s.startMs >= call.endMs)
         .sort((a, b) => a.endMs - b.endMs)[0];
       const stopped = stop !== undefined && (!notice || stop.endMs < notice.ms);
-      const endMs = stopped ? stop.endMs : notice?.ms;
+      let endMs = stopped ? stop.endMs : notice?.ms;
+      let unfinished = false;
+      const monitor = this.monitors.get(call.id);
+      if (monitor) {
+        // Killed at its timeout, which starts when the call returns. With no notice, it ran until
+        // then, or until the transcript's last entry: Claude Code kills it when it exits.
+        const deadline = Math.min(
+          monitor.persistent ? Infinity : call.endMs + monitor.timeoutMs,
+          this.lastMs,
+        );
+        if (endMs === undefined) unfinished = true;
+        endMs = Math.min(endMs ?? Infinity, deadline);
+      }
       if (endMs === undefined || endMs < call.startMs) continue;
       const step: Step = {
         id: `bg:${call.backgroundId}`,
@@ -510,7 +555,11 @@ class TranscriptReader {
         kind: 'background',
         startMs: call.startMs,
         endMs,
-        flags: stopped ? ['background', 'interrupted'] : ['background'],
+        flags: stopped
+          ? ['background', 'interrupted']
+          : unfinished
+            ? ['background', 'unfinished']
+            : ['background'],
         backgroundId: call.backgroundId,
       };
       if (call.tool) step.tool = call.tool;
