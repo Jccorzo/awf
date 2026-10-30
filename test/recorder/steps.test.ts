@@ -162,6 +162,67 @@ describe('eventsToSession', () => {
     expect(session.endMs - session.startMs).toBe(40000);
   });
 
+  it("keeps a compaction while you're away inside the idle gap, flagged background", () => {
+    const session = eventsToSession('s', [
+      ev('UserPromptSubmit', 1000),
+      ev('Stop', 2000),
+      ev('PreCompact', 50000, { trigger: 'auto' }),
+      ev('PostCompact', 80000, { trigger: 'auto' }),
+      ev('UserPromptSubmit', 100000),
+      ev('Stop', 101000),
+    ]);
+    const compaction = session.steps.find((s) => s.kind === 'compact');
+    expect(compaction).toMatchObject({ parentId: null, flags: ['background'] });
+    expect(span(compaction)).toEqual([50000, 80000]);
+    expect(session.steps.filter((s) => s.kind === 'idle').map(span)).toEqual([[2000, 100000]]);
+  });
+
+  it('carves a /compact you waited for out of the idle gap', () => {
+    const session = eventsToSession('s', [
+      ev('UserPromptSubmit', 1000),
+      ev('Stop', 2000),
+      ev('PreCompact', 50000, { trigger: 'manual' }),
+      ev('PostCompact', 80000, { trigger: 'manual' }),
+      ev('UserPromptSubmit', 100000),
+      ev('Stop', 101000),
+    ]);
+    expect(session.steps.find((s) => s.kind === 'compact')?.flags).toEqual([]);
+    expect(session.steps.filter((s) => s.kind === 'idle').map(span)).toEqual([
+      [2000, 50000],
+      [80000, 100000],
+    ]);
+  });
+
+  it("drops a compaction while you're away after the last turn: it doesn't stretch the session", () => {
+    const session = eventsToSession('s', [
+      ev('UserPromptSubmit', 1000),
+      ev('Stop', 2000),
+      ev('PreCompact', 3_200_000, { trigger: 'auto' }),
+      ev('PostCompact', 3_235_000, { trigger: 'auto' }),
+    ]);
+    expect(session.steps.some((s) => s.kind === 'compact')).toBe(false);
+    expect(session).toMatchObject({ startMs: 1000, endMs: 2000 });
+  });
+
+  it('splits a compaction while you were away at the prompt you sent during it', () => {
+    const session = eventsToSession('s', [
+      ev('UserPromptSubmit', 1000),
+      ev('Stop', 2000),
+      ev('PreCompact', 50000, { trigger: 'auto' }),
+      ev('UserPromptSubmit', 60000),
+      ev('PostCompact', 80000, { trigger: 'auto' }),
+      ev('Stop', 90000),
+    ]);
+    const turn = session.steps.filter((s) => s.kind === 'turn')[1];
+    const parts = session.steps.filter((s) => s.kind === 'compact');
+    expect(parts.map((s) => [s.startMs, s.endMs, s.parentId, s.flags])).toEqual([
+      [50000, 60000, null, ['background']],
+      [60000, 80000, turn?.id, []],
+    ]);
+    expect(session.steps.filter((s) => s.kind === 'idle').map(span)).toEqual([[2000, 60000]]);
+    expect(models(session.steps).map(span).at(-1)).toEqual([80000, 90000]);
+  });
+
   it('starts model time when the last call ends on versions without PostToolBatch', () => {
     const session = eventsToSession('s', [
       ev('UserPromptSubmit', 1000),

@@ -102,7 +102,7 @@ class Builder {
         this.stop(e);
         break;
       case 'PreCompact':
-        this.compactStart(e.t);
+        this.compactStart(e.t, e.trigger);
         break;
       case 'PostCompact':
         this.compactEnd(e.t);
@@ -116,6 +116,7 @@ class Builder {
   finish(): Session {
     if (!Number.isFinite(this.startMs)) return this.session(0, 0);
     this.closeAll(this.endMs);
+    this.dropLateCompactions();
     for (const step of this.steps) {
       if (step.endMs < step.startMs) step.endMs = step.startMs;
     }
@@ -200,11 +201,20 @@ class Builder {
     this.main.lastToolEnd = null;
   }
 
-  /** Idle time between turns, with compactions carved out of it. */
+  /**
+   * Idle time between turns, with compactions you waited for (`/compact`) carved out of it. A
+   * compaction while you're away stays in it.
+   */
   private addIdle(from: number, to: number): void {
     let cursor = from;
     const cuts = this.compactions
-      .filter((c) => c.parentId === null && c.endMs > from && c.startMs < to)
+      .filter(
+        (c) =>
+          c.parentId === null &&
+          !c.flags.includes('background') &&
+          c.endMs > from &&
+          c.startMs < to,
+      )
       .sort((a, b) => a.startMs - b.startMs);
     for (const cut of cuts) {
       if (cut.startMs > cursor) this.pushIdle(cursor, cut.startMs);
@@ -452,27 +462,59 @@ class Builder {
     this.closeTurn(e.t);
   }
 
-  private compactStart(t: number): void {
+  /**
+   * A compaction with no turn open that you didn't ask for is an idle compaction: Claude Code
+   * compacts a session left idle before its prompt cache expires. It runs while you're away and
+   * holds nothing up, so it's flagged background.
+   */
+  private compactStart(t: number, trigger?: string): void {
     if (this.turn && this.main.modelStart !== null) {
       this.main.modelParts.push(this.modelStep(this.main, this.main.modelStart, t));
       this.main.modelStart = null;
     }
-    this.compaction = this.push({
+    this.compaction = this.newCompaction(t, !this.turn && trigger !== 'manual');
+  }
+
+  private newCompaction(t: number, idle: boolean): Step {
+    const step = this.push({
       id: this.id('compact'),
       parentId: this.turn?.id ?? null,
       kind: 'compact',
       startMs: t,
       endMs: t,
-      flags: [],
+      flags: idle ? ['background'] : [],
     });
-    this.compactions.push(this.compaction);
+    this.compactions.push(step);
+    return step;
   }
 
   private compactEnd(t: number): void {
-    if (!this.compaction) return;
-    this.compaction.endMs = t;
+    const compaction = this.compaction;
+    if (!compaction) return;
+    compaction.endMs = t;
     this.compaction = null;
+    if (this.turn && compaction.flags.includes('background') && this.turn.startMs < t) {
+      // You came back while it ran: from your prompt on, your turn waited for it.
+      compaction.endMs = Math.max(compaction.startMs, this.turn.startMs);
+      this.newCompaction(compaction.endMs, false).endMs = t;
+    }
     if (this.turn && this.main.open.size === 0) this.main.modelStart = t;
+  }
+
+  /**
+   * Time after the last turn isn't part of the session, and neither is a compaction while you were
+   * away then: it doesn't stretch the session.
+   */
+  private dropLateCompactions(): void {
+    const lastTurnEnd = this.lastTurnEnd;
+    if (lastTurnEnd === null) return;
+    const late = new Set(
+      this.compactions.filter((c) => c.flags.includes('background') && c.startMs >= lastTurnEnd),
+    );
+    if (late.size === 0) return;
+    const kept = this.steps.filter((s) => !late.has(s));
+    this.steps.length = 0;
+    this.steps.push(...kept);
   }
 
   private closeOpenTools(ctx: Ctx, t: number, flag: StepFlag): void {
