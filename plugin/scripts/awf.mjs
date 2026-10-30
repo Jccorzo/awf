@@ -9644,23 +9644,43 @@ function defaultRules() {
   defaults ??= compileRules([{ text: default_rules_default, source: DEFAULT_RULES_SOURCE }]);
   return defaults;
 }
-function loadRules(cwd, files2) {
-  if (!cwd) return defaultRules();
-  let dir = path2.resolve(cwd);
+function findRulesFile(dir, files2) {
+  let current = path2.resolve(dir);
   for (let i = 0; i < 12; i++) {
-    const file = path2.join(dir, ".awf", "rules.yaml");
+    const file = path2.join(current, ".awf", "rules.yaml");
     const text = files2.read(file);
-    if (text !== void 0) {
-      return compileRules([
-        { text, source: file },
-        { text: default_rules_default, source: DEFAULT_RULES_SOURCE }
-      ]);
-    }
-    const parent = path2.dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
+    if (text !== void 0) return { file, text };
+    const parent = path2.dirname(current);
+    if (parent === current) break;
+    current = parent;
   }
-  return defaultRules();
+  return void 0;
+}
+function withDefaults(found) {
+  return compileRules([
+    { text: found.text, source: found.file },
+    { text: default_rules_default, source: DEFAULT_RULES_SOURCE }
+  ]);
+}
+function loadRules(cwd, files2) {
+  const found = cwd ? findRulesFile(cwd, files2) : void 0;
+  return found ? withDefaults(found) : defaultRules();
+}
+function repoRules(files2) {
+  const byDir = /* @__PURE__ */ new Map();
+  const byFile = /* @__PURE__ */ new Map();
+  return (dir) => {
+    const key = path2.resolve(dir);
+    if (byDir.has(key)) return byDir.get(key);
+    const found = findRulesFile(key, files2);
+    let rules;
+    if (found) {
+      rules = byFile.get(found.file) ?? withDefaults(found);
+      byFile.set(found.file, rules);
+    }
+    byDir.set(key, rules);
+    return rules;
+  };
 }
 
 // src/classify/classify.ts
@@ -9869,18 +9889,44 @@ var WRITERS = /* @__PURE__ */ new Set([
   "unzip"
 ]);
 var Classifier = class {
-  constructor(rules, files2) {
-    this.rules = rules;
+  constructor(rules, files2, rulesAt) {
     this.files = files2;
+    this.rulesAt = rulesAt;
+    this.rules = rules;
+    this.sessionRules = rules;
   }
-  rules;
   files;
+  rulesAt;
+  /** The rules in effect: the session's, or the repo's a command runs in while it's classified. */
+  rules;
+  sessionRules;
+  /** Rules of other repos the command being classified ran in. */
+  visited = /* @__PURE__ */ new Set();
   /** Classifies one Bash command run in `cwd`. */
   command(text, cwd) {
-    const parts = this.parts(text, cwd, 0);
-    const info = this.combine(parts, cwd);
-    if (info.checks.length > 0) info.exit = exitTrust(splitCommand(text), parts);
+    this.visited = /* @__PURE__ */ new Set();
+    const info = this.within(cwd, () => {
+      const parts = this.parts(text, cwd, 0);
+      const combined = this.combine(parts, cwd);
+      if (combined.checks.length > 0) combined.exit = exitTrust(splitCommand(text), parts);
+      return combined;
+    });
+    if (this.visited.size > 0)
+      info.failurePatterns = [...this.visited].flatMap((r) => r.failurePatterns);
     return info;
+  }
+  /** Runs `classify` with the rules of the repo `dir` is in. */
+  within(dir, classify) {
+    const rules = this.rulesAt?.(dir) ?? this.sessionRules;
+    if (rules === this.rules) return classify();
+    if (rules !== this.sessionRules) this.visited.add(rules);
+    const outer = this.rules;
+    this.rules = rules;
+    try {
+      return classify();
+    } finally {
+      this.rules = outer;
+    }
   }
   isTestFile(file) {
     return matchesAny(file, this.rules.testFiles);
@@ -9891,7 +9937,7 @@ var Classifier = class {
     simples.forEach((simple, index) => {
       if (simple.argv[0] === "cd") return;
       const where = simple.cd.reduce((dir, target) => resolvePath(dir, target), cwd);
-      const made = this.simple(simple, where, depth);
+      const made = this.within(where, () => this.simple(simple, where, depth));
       if (depth === 0) for (const part of made) part.index = index;
       parts.push(...made);
     });
@@ -10288,7 +10334,7 @@ var Classifier = class {
         if (info.decidedBy) step.decidedBy = info.decidedBy;
         if (info.exit) step.exit = info.exit;
         if (step.kind === "tool") shellCwd.set(ctx, nextCwd(step.command, cwd, home));
-        this.markFailures(step);
+        this.markFailures(step, info.failurePatterns);
       } else {
         this.tool(step, hasChildren);
       }
@@ -10374,14 +10420,15 @@ var Classifier = class {
    * `;` or `|| true` hid it, or when a command chained after the checks may have failed instead.
    * A tool's own pattern names the check that failed.
    */
-  markFailures(step) {
+  markFailures(step, others = []) {
     if (step.checks.length === 0) return;
     const exit = step.exit ?? "full";
     const stopped = step.flags.includes("interrupted") || step.flags.includes("denied");
     const known = step.ok !== void 0 && !stopped;
     const passed = known && step.ok === true && exit !== "none";
     const output = step.detail?.output;
-    const byTool = (tool) => this.rules.failurePatterns.filter((p) => p.tool === tool);
+    const patterns = [...others, ...this.rules.failurePatterns];
+    const byTool = (tool) => patterns.filter((p) => p.tool === tool);
     const named = output ? step.checks.filter((c) => byTool(c.tool).some((p) => p.pattern.test(output))) : [];
     const generic = output ? byTool("*").some((p) => p.pattern.test(output)) : false;
     const top = () => [...step.checks].sort((a, b) => RANK[b.phase] - RANK[a.phase])[0];
@@ -12314,10 +12361,14 @@ function loadOne(ctx, ref, options, detail) {
 }
 function classifier(files2 = diskFiles()) {
   const cache = /* @__PURE__ */ new Map();
+  const rulesAt = repoRules(files2);
   return (session) => {
     const key = session.cwd ?? "";
     let c = cache.get(key);
-    if (!c) cache.set(key, c = new Classifier(loadRules(session.cwd, files2), files2));
+    if (!c) {
+      const rules = (session.cwd ? rulesAt(session.cwd) : void 0) ?? defaultRules();
+      cache.set(key, c = new Classifier(rules, files2, rulesAt));
+    }
     return c.session(session);
   };
 }
@@ -14256,7 +14307,7 @@ import {
   writeFileSync as writeFileSync3
 } from "node:fs";
 import path21 from "node:path";
-var FORMAT = 1;
+var FORMAT = 2;
 var MAX_WIDTH = 64;
 var KEEP_MS = 30 * 864e5;
 var SHORT_NAME = {
@@ -14286,12 +14337,29 @@ var COLOR = {
   unclassified: "#8c8b84"
 };
 var FAILED_COLOR = "#d03b3b";
-function statusParts(summary, top = 3) {
+var DEFAULT_PIN = ["tests"];
+function parsePin(value) {
+  if (value === void 0) return DEFAULT_PIN;
+  const byName = /* @__PURE__ */ new Map();
+  for (const [id, name] of Object.entries(SHORT_NAME)) {
+    byName.set(id, id);
+    byName.set(name, id);
+  }
+  const pins = value.split(",").map((name) => byName.get(name.trim()));
+  return [...new Set(pins)].filter((p) => p !== void 0 && p !== "waiting");
+}
+function statusParts(summary, top = 3, pinned = DEFAULT_PIN) {
   const working = summary.phases.filter((p) => p.phase !== "waiting");
   const workingMs = working.reduce((n, p) => n + p.ms, 0);
-  const phases = working.filter((p) => p.ms > 0).sort((a, b) => b.ms - a.ms).slice(0, top).map((p) => ({ phase: p.phase, ms: p.ms, share: workingMs > 0 ? p.ms / workingMs : 0 }));
+  const share = (ms) => workingMs > 0 ? ms / workingMs : 0;
+  const pins = pinned.map((phase) => {
+    const ms = working.find((p) => p.phase === phase)?.ms ?? 0;
+    return { phase, ms, share: share(ms), pinned: true };
+  });
+  const others = working.filter((p) => p.ms > 0 && !pinned.includes(p.phase)).sort((a, b) => b.ms - a.ms).slice(0, Math.max(0, top - pins.length)).map((p) => ({ phase: p.phase, ms: p.ms, share: share(p.ms) }));
   return {
-    phases,
+    // Nothing worked yet: no line rather than "tests 0%".
+    phases: workingMs > 0 ? [...pins, ...others] : [],
     failed: summary.phases.reduce((n, p) => n + (p.failed ?? 0), 0),
     reworkMs: summary.phases.find((p) => p.phase === "rework")?.ms ?? 0,
     workingMs
@@ -14305,6 +14373,7 @@ function shortDuration(ms) {
   return `${Math.floor(m / 60)}h${String(m % 60).padStart(2, "0")}m`;
 }
 function percent(share) {
+  if (share === 0) return "0%";
   const n = Math.round(share * 100);
   return n === 0 ? "<1%" : `${n}%`;
 }
@@ -14330,7 +14399,8 @@ function renderStatus(parts, mode) {
   const phases = parts.phases.map((p) => ({
     name: SHORT_NAME[p.phase],
     color: COLOR[p.phase],
-    value: percent(p.share)
+    value: percent(p.share),
+    ...p.pinned ? { pinned: true } : {}
   }));
   if (phases.length === 0) return "";
   const tail = [];
@@ -14339,7 +14409,11 @@ function renderStatus(parts, mode) {
     tail.push({ name: "rework", color: COLOR.rework, value: shortDuration(parts.reworkMs) });
   const text = (item) => item.value ? `${item.name} ${item.value}` : item.name;
   const width = (items) => items.map(text).join(" \xB7 ").length;
-  while (phases.length > 1 && width([...phases, ...tail]) > MAX_WIDTH) phases.pop();
+  while (phases.length > 1 && width([...phases, ...tail]) > MAX_WIDTH) {
+    const last = phases.map((p) => !p.pinned).lastIndexOf(true);
+    if (last < 0) break;
+    phases.splice(last, 1);
+  }
   const separator = mode === "none" ? " \xB7 " : " \x1B[2m\xB7\x1B[22m ";
   return [...phases, ...tail].map((item) => paint(item.name, item.color, mode) + (item.value ? ` ${item.value}` : "")).join(separator);
 }
@@ -14387,7 +14461,7 @@ function writeCache(file, key, line, now) {
   } catch {
   }
 }
-function statusLine(ctx, input, json) {
+function statusLine(ctx, input, json, pin) {
   const payload = JSON.parse(input);
   const transcript = payload?.transcript_path;
   if (typeof transcript !== "string" || !transcript.endsWith(".jsonl")) return "";
@@ -14401,6 +14475,7 @@ function statusLine(ctx, input, json) {
     FORMAT,
     VERSION,
     mode,
+    pin.join(","),
     stamp(transcriptStat),
     stamp(eventsStat),
     subagentStamp(transcript)
@@ -14414,7 +14489,7 @@ function statusLine(ctx, input, json) {
   if (eventsStat?.isFile())
     ref.events = { id, path: events, mtimeMs: eventsStat.mtimeMs, size: eventsStat.size };
   const { summary } = summarize(classifier()(loadSession(ref, { detail: true, env: ctx.env })));
-  const parts = statusParts(summary);
+  const parts = statusParts(summary, 3, pin);
   if (json) {
     return JSON.stringify(
       {
@@ -14440,13 +14515,14 @@ function statusLine(ctx, input, json) {
 }
 var statuslineCommand = {
   summary: "One short line for Claude Code's status line: the session's phase split so far",
-  usage: `Usage: awf statusline [--json]
+  usage: `Usage: awf statusline [--pin tests] [--json]
 
 For Claude Code's status line. Reads the JSON Claude Code sends on stdin (session_id,
-transcript_path), and prints one line: the three phases that took the most time so far, then
-failed lint, test and build runs, and rework time when it isn't one of the three:
+transcript_path), and prints one line: Running tests, always and first, then the phases that
+took the most time so far (three phases in all), then failed lint, test and build runs, and
+rework time when it isn't one of the phases shown:
 
-  tests 36% \xB7 explore 29% \xB7 scripts 15% \xB7 15 failed \xB7 rework 2m
+  tests 3% \xB7 build 32% \xB7 scripts 26% \xB7 9 failed \xB7 rework 9s
 
 Shares are of the time the agent worked, without Waiting on you, so they hold still while you're
 away. Phases are named code, test code, lint, tests, build, rework, explore, scripts, plan and
@@ -14459,8 +14535,10 @@ recorder's events or a subagent's transcript changes.
 Set it up in ~/.claude/settings.json:
   "statusLine": { "type": "command", "command": "awf statusline", "padding": 0 }
 
-  --json   print the phases, failures and rework as JSON (not cached)`,
-  options: { json: { type: "boolean" } },
+  --pin <phases>  the phases always shown, first: ids or short names, comma-separated
+                  (default tests; "tests,build"; "none" for only the top three)
+  --json          print the phases, failures and rework as JSON (not cached)`,
+  options: { json: { type: "boolean" }, pin: { type: "string" } },
   run(ctx, _args, options) {
     let input;
     try {
@@ -14475,7 +14553,8 @@ Set it up in ~/.claude/settings.json:
       return 0;
     }
     try {
-      const line = statusLine(ctx, input, Boolean(options.json));
+      const pin = parsePin(typeof options.pin === "string" ? options.pin : void 0);
+      const line = statusLine(ctx, input, Boolean(options.json), pin);
       if (line) ctx.io.out(line);
     } catch (error) {
       if (ctx.env.AWF_DEBUG)
