@@ -111,6 +111,8 @@ export function subagentFiles(
 export interface ActiveTranscript extends TranscriptFile {
   /** The latest change to the transcript or to one of its subagents' transcripts. */
   activityMs: number;
+  /** The latest change to one of its subagents' transcripts. */
+  subagentsMs?: number;
 }
 
 /**
@@ -122,7 +124,10 @@ export function activeTranscripts(env: Env, sinceMs: number): ActiveTranscript[]
   for (const file of listTranscripts(env)) {
     const subagents = subagentFiles(file.path);
     const activityMs = Math.max(file.mtimeMs, subagents?.mtimeMs ?? 0);
-    if (activityMs >= sinceMs) active.push({ ...file, activityMs });
+    if (activityMs < sinceMs) continue;
+    active.push(
+      subagents ? { ...file, activityMs, subagentsMs: subagents.mtimeMs } : { ...file, activityMs },
+    );
   }
   return active.sort((a, b) => b.activityMs - a.activityMs);
 }

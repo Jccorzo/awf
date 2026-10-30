@@ -1,12 +1,4 @@
-import {
-  cpSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  utimesSync,
-  writeFileSync,
-} from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
@@ -115,12 +107,22 @@ function setup() {
     utimesSync(agent, new Date(now - 10 * MIN), new Date(now - 10 * MIN));
     write('old', 'dddd', [promptAt(now - 4 * 3_600_000, home, 'old')], now - 3 * 3_600_000);
   };
-  const fixture = (mtimeMs: number) => {
+  /** The fixture's transcript, its times moved so its last entry is at `lastMs`. */
+  const fixture = (lastMs: number) => {
     const dir = path.join(projects, '-tmp-demo');
     mkdirSync(dir, { recursive: true });
     const file = path.join(dir, `${FIXTURE_ID}.jsonl`);
-    cpSync(FIXTURE, file);
-    utimesSync(file, new Date(mtimeMs), new Date(mtimeMs));
+    const text = readFileSync(FIXTURE, 'utf8');
+    const STAMP = /"timestamp":"([^"]+)"/g;
+    const last = Math.max(...[...text.matchAll(STAMP)].map((m) => Date.parse(m[1]!)));
+    writeFileSync(
+      file,
+      text.replace(
+        STAMP,
+        (_, iso: string) => `"timestamp":"${stamp(Date.parse(iso) - last + lastMs)}"`,
+      ),
+    );
+    utimesSync(file, new Date(lastMs), new Date(lastMs));
     return file;
   };
   return { root, home, projects, env, write, sessions, fixture };
@@ -149,6 +151,40 @@ describe('awf live: which sessions', () => {
     expect(await ids('--limit', '2')).toEqual(['aaaa', 'cccc']);
     expect(await ids('--since', '4h')).toEqual(['aaaa', 'cccc', 'bbbb', 'dddd']);
     expect(await ids('--since', '20m')).toEqual(['aaaa', 'cccc']);
+  });
+
+  it("goes by the transcript's last entry, not the time its file changed", async () => {
+    const { env, sessions, write, home } = setup();
+    sessions();
+    // Last worked on 3h ago; the app reopened it a minute ago, adding entries without a time.
+    write(
+      'reopened',
+      'eeee',
+      [
+        promptAt(now - 3 * 3_600_000, home, 'reopened'),
+        endAt(now - 3 * 3_600_000 + MIN),
+        { type: 'cost-state', sessionId: 'eeee' },
+        { type: 'last-prompt', lastPrompt: 'reopened', sessionId: 'eeee' },
+      ],
+      now - MIN,
+    );
+    const pass = async (...args: string[]) =>
+      JSON.parse((await live(env, '--json', ...args)).out.join('\n')).map(
+        (row: { id: string; activityMs: number }) => [row.id, (now - row.activityMs) / MIN],
+      );
+    expect(await pass()).toEqual([
+      ['aaaa', 1],
+      ['cccc', 10],
+      ['bbbb', 30],
+    ]);
+    expect((await pass('--since', '4h')).map(([id]: [string]) => id)).toEqual([
+      'aaaa',
+      'cccc',
+      'bbbb',
+      'eeee',
+      'dddd',
+    ]);
+    expect((await live(env, '--once')).out[0]).toMatch(/^awf live · 3 active · /);
   });
 
   it('says so when nothing is active', async () => {
@@ -194,7 +230,7 @@ describe('awf live --once and --json', () => {
     expect(rows).toEqual([
       'acme-billing/web | CI pipeline | working | tests 100%',
       'deploys | background research | working',
-      `…/scratchpad/demo | ‹text› | idle 7h25m | ${FIXTURE_LINE}`,
+      `…/scratchpad/demo | ‹text› | idle 20m | ${FIXTURE_LINE}`,
       'deploys | Cache key rollout | idle 30m | tests 0% · plan 100%',
     ]);
   });

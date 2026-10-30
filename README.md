@@ -28,7 +28,14 @@ pnpm install && pnpm build
 
 That writes `dist/awf.mjs` (the CLI: `node dist/awf.mjs`, or link it as `awf`) and the Claude Code plugin's scripts in `plugin/`.
 
-**The plugin** records every new Claude Code session through hooks and adds `/awf:waterfall`, which opens the current session's report. Try it for one session with `claude --plugin-dir plugin`, or install it from a plugin marketplace that lists this repository. Without the plugin, awf still reads past sessions from their transcripts.
+**The plugin** records every new Claude Code session through hooks and adds `/awf:waterfall`, which opens the current session's report. Try it for one session with `claude --plugin-dir plugin`, or install it for every session, the desktop app's included, from this repository's marketplace:
+
+```bash
+claude plugin marketplace add /path/to/awf
+claude plugin install awf@awf
+```
+
+Claude Code installs a copy, so after rebuilding run `claude plugin marketplace update awf && claude plugin update awf@awf`. Sessions already running don't load it until they restart. Without the plugin, awf still reads past sessions from their transcripts.
 
 ## Use
 
@@ -99,9 +106,9 @@ notes-website      how does this work…          working     tests 18% · scrip
 acme-billing/api   PR checks for …              idle 12m    tests 0% · unclassified 52% · explore 24%
 ```
 
-It lists the sessions whose transcript, or a subagent's transcript, changed in the last 2 hours (`--since`), newest first, at most 10 (`--limit`). Each row has the folder the session started in (relative to your home, without `Documents` and other folders that only hold projects), the session's title or first prompt, its state, and the status line's phase split (`--pin` works as it does there). The state comes from the end of the transcript:
+It lists the sessions active in the last 2 hours (`--since`), newest first, at most 10 (`--limit`). Activity is the transcript's last entry, or a subagent's transcript changing, not the time the transcript's file changed: Claude Code adds entries without a time when a session's process exits or the app reopens it, which would bring back sessions untouched for days. Each row has the folder the session started in (relative to your home, without `Documents` and other folders that only hold projects), the session's title or first prompt, its state, and the status line's phase split (`--pin` works as it does there). The state comes from the end of the transcript:
 
-- **working**: a turn is under way (a model or tool call is open), or background tasks or subagents it started are still running.
+- **working**: a turn is under way (a model or tool call is open), or background tasks or subagents it started are still running. A server left running in the background (`pnpm dev`, `next dev`, `cloud-sql-proxy`, `PORT=8080 ./api`) doesn't count: the agent comes back when background work ends, and a server doesn't end. `--json` counts them in `servers`.
 - **approval?**: a permission prompt is waiting. Only the awf plugin's recorder sees these; without it, a call waiting for your approval reads as working.
 - **your turn**: the turn ended, or a question waits for your answer.
 - **idle 12m**: your turn for 5 minutes or more.

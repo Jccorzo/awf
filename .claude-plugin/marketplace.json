@@ -1,0 +1,16 @@
+{
+  "name": "awf",
+  "owner": {
+    "name": "Camilo Corzo"
+  },
+  "metadata": {
+    "description": "awf, the agent waterfall: where a coding agent's time goes, by phase."
+  },
+  "plugins": [
+    {
+      "name": "awf",
+      "source": "./plugin",
+      "description": "Records where Claude Code's time goes (timings, tool names and commands; never prompts or output) and draws the session as a waterfall with /awf:waterfall."
+    }
+  ]
+}
