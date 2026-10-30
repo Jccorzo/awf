@@ -608,6 +608,7 @@ const GAP_CASES: Array<[PhaseId, string[]]> = [
       'bundle install',
       'npx create-next-app@latest web --ts',
       'xcode-select --install',
+      'npx tsc-alias -p tsconfig.build.json',
     ],
   ],
   [
@@ -695,6 +696,21 @@ describe('rules', () => {
     expect(byName('make deploy-staging')).toMatchObject({ phase: 'running' });
     expect(byName('just dev')).toMatchObject({ phase: 'running' });
     expect(byName('make frobnicate')).toMatchObject({ phase: 'unclassified' });
+  });
+
+  it('reads a build script that rewrites path aliases after tsc as one build', () => {
+    const app = new Classifier(
+      defaultRules(),
+      memoryFiles({
+        '/app/.git/HEAD': 'ref: refs/heads/main\n',
+        '/app/package.json': JSON.stringify({
+          scripts: { build: 'tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json' },
+        }),
+      }),
+    );
+    const info = app.command('pnpm build', '/app');
+    expect(info.phase).toBe('build');
+    expect(info.tags.filter((t) => t.startsWith('unmatched:'))).toEqual([]);
   });
 });
 

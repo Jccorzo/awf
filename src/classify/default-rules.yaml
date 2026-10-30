@@ -110,7 +110,7 @@ commands:
 
   # Build
   - { phase: running, program: [webpack, rspack], args: ['serve|dev|watch'] }
-  - { phase: build, program: [tsc, vue-tsc, tsup, unbuild, swc, babel, rollup, webpack, esbuild, parcel, rspack, rolldown, microbundle, ncc, pkg, electron-builder] }
+  - { phase: build, program: [tsc, vue-tsc, tsc-alias, tsup, unbuild, swc, babel, rollup, webpack, esbuild, parcel, rspack, rolldown, microbundle, ncc, pkg, electron-builder] }
   - { phase: build, program: [vite, next, nuxt, astro, remix, svelte-kit, react-router, gatsby, ng, react-scripts, vue-cli-service, expo, storybook, craco], args: [build] }
   - { phase: build, program: remix, args: ['vite:build'] }
   - { phase: build, program: expo, args: ['export|prebuild'] }
