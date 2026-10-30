@@ -2,7 +2,12 @@ import { cpSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
+import { Classifier } from '../src/classify/classify';
+import { memoryFiles } from '../src/classify/resolve';
+import { defaultRules } from '../src/classify/rules';
+import { bashStats } from '../src/cli/commands/stats';
 import { main } from '../src/cli/main';
+import type { Step } from '../src/model/types';
 import { captureIo } from './helpers';
 
 const FIXTURE = path.resolve(__dirname, '../fixtures/claude-code/cc-2.1.312-test-fix');
@@ -71,5 +76,53 @@ describe('analysis commands', () => {
     const missing = await run('classify', 'nope');
     expect(missing.code).toBe(1);
     expect(missing.err).toContain('no session "nope"');
+  });
+});
+
+describe('stats by program', () => {
+  const classifier = new Classifier(defaultRules(), memoryFiles({}));
+  const bash = (id: string, command: string, seconds: number): Step => ({
+    id,
+    parentId: null,
+    kind: 'tool',
+    tool: 'Bash',
+    command,
+    startMs: 0,
+    endMs: seconds * 1000,
+    flags: [],
+  });
+  const classified = classifier.session({
+    id: 's',
+    agent: 'claude-code',
+    sources: ['transcript'],
+    cwd: '/repo',
+    startMs: 0,
+    endMs: 600_000,
+    steps: [
+      bash('a', 'T=$(gh auth token --user me); GH_TOKEN=$T xcodebuild test -scheme App', 300),
+      bash('b', "python3 - <<'EOF'\nprint(1)\nEOF\nxcodebuild test -scheme App | tail -5", 200),
+      bash('c', 'cat > notes.txt <<EOF\nx\nEOF\ncargo fmt && cargo test', 100),
+      bash('d', 'node --test test/', 50),
+      bash('e', 'until gh run view 1 --json status | grep -q done; do sleep 30; done', 40),
+      bash('f', 'python3 gen.py && frobnicate --all', 30),
+    ],
+  });
+
+  it('names a phase by the part of each command that decided it', () => {
+    const tests = bashStats([classified], 10, 'tests').topUnclassified;
+    expect(tests).toEqual([
+      { program: 'xcodebuild test', ms: 500_000, calls: 2 },
+      { program: 'cargo test', ms: 100_000, calls: 1 },
+      { program: 'node --test', ms: 50_000, calls: 1 },
+    ]);
+    expect(bashStats([classified], 10, 'running').topUnclassified).toEqual([
+      { program: '(polling: sleep in a loop, or a long sleep)', ms: 40_000, calls: 1 },
+    ]);
+  });
+
+  it('names unclassified time by the program no rule matched', () => {
+    expect(bashStats([classified], 10).topUnclassified).toEqual([
+      { program: 'frobnicate', ms: 30_000, calls: 1 },
+    ]);
   });
 });

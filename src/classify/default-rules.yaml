@@ -84,6 +84,11 @@ commands:
   - { phase: tests, program: [gotestsum, ginkgo] }
   - { phase: tests, program: [cargo, cross], args: ['test|nextest|bench|miri|llvm-cov|tarpaulin|insta|mutants'], tool: cargo test }
   - { phase: tests, program: cargo, args: ['xtask|make', 'test|tests|ci'], tool: cargo test }
+  - { phase: exploring, program: cargo, args: ['fuzz', 'list'] }
+  - { phase: build, program: cargo, args: ['fuzz', 'build|check'], tool: cargo fuzz build }
+  - { phase: writing, program: cargo, args: ['fuzz', 'init|add|new'] }
+  - { phase: tests, program: cargo, args: ['fuzz', 'run|coverage|cmin|tmin'], tool: cargo fuzz }
+  - { phase: tests, program: cargo-mutants, tool: cargo test }
   - { phase: tests, program: dotnet, args: ['test|vstest'], tool: dotnet test }
   - { phase: tests, program: dotnet, args: ['watch', 'test'], tool: dotnet test }
   - { phase: tests, program: xcodebuild, with: [test], tool: xcodebuild test }
@@ -98,9 +103,10 @@ commands:
   - { phase: tests, program: mix, args: ['test'] }
   - { phase: tests, program: [flutter, dart], args: ['test'] }
   - { phase: tests, program: [k6, artillery], args: ['run'] }
-  # Waiting on CI: the remote run of the same checks
-  - { phase: tests, program: gh, args: ['run', 'watch'], tool: ci }
-  - { phase: tests, program: gh, args: ['pr', 'checks'], with: [--watch], tool: ci }
+  # Watching CI waits for something outside the session, like an `until gh run view ...; do sleep
+  # 30; done` loop: Running scripts, polling. (Before the exploring gh rules below.)
+  - { phase: running, program: gh, args: ['run', 'watch'], tag: polling }
+  - { phase: running, program: gh, args: ['pr', 'checks'], with: [--watch], tag: polling }
 
   # Build
   - { phase: running, program: [webpack, rspack], args: ['serve|dev|watch'] }
@@ -115,6 +121,7 @@ commands:
   - { phase: build, program: vite, args: ['optimize'] }
   - { phase: build, program: go, args: ['build|install|generate'], tool: 'go {1}' }
   - { phase: build, program: [cargo, cross], args: ['build|install|doc'], tool: 'cargo {1}' }
+  - { phase: build, program: cargo, args: ['clean'], tool: cargo clean }
   - { phase: build, program: dotnet, args: ['build|publish|pack|msbuild'], tool: 'dotnet {1}' }
   - { phase: build, program: [msbuild, MSBuild, xbuild] }
   - { phase: build, program: xcodebuild, with: [-resolvePackageDependencies], tag: install, tool: install }
@@ -139,6 +146,8 @@ commands:
   - { phase: build, program: xcodegen, only: [] }
   - { phase: build, program: fastlane, args: ['gym|build|build_app'] }
   - { phase: build, program: deno, args: ['compile'] }
+  - { phase: exploring, match: '^lipo\s(.*\s)?-(info|archs|detailed_info|verify_arch)(\s|$)' }
+  - { phase: build, program: lipo }
   - { phase: build, program: bun, args: ['build'] }
 
   # Installing dependencies counts as Build, tagged install
@@ -149,7 +158,13 @@ commands:
   - { phase: build, program: uv, args: ['pip', 'install|sync|compile'], tag: install, tool: install }
   - { phase: build, program: uv, args: ['tool', 'install|upgrade'], tag: install, tool: install }
   - { phase: build, program: [conda, mamba, micromamba], args: ['env', 'create|update'], tag: install, tool: install }
-  - { phase: build, program: [bundle, gem, composer], args: ['install|update|add|require'], tag: install, tool: install }
+  - { phase: exploring, program: bundle, args: ['check|list|info|show|outdated|platform|doctor|config'] }
+  - { phase: exploring, program: gem, args: ['list|contents|which|info|search|environment|env|specification|query|outdated|dependency'] }
+  - { phase: build, program: [bundle, gem, composer], args: ['install|update|add|require|lock'], tag: install, tool: install }
+  - { phase: build, program: gem, args: ['build'] }
+  - { phase: build, program: [create-next-app, create-vite], tag: install, tool: install }
+  - { phase: exploring, match: '^xcode-select\s+(-p|--print-path)$' }
+  - { phase: build, program: xcode-select, with: [--install], tag: install, tool: install }
   - { phase: build, match: '^bundle(\s+(--?[a-z][a-z-]*|\d+))*$', tag: install, tool: install }
   - { phase: build, program: swift, args: ['package', 'resolve|update'], tag: install, tool: install }
   - { phase: exploring, program: go, args: ['mod', 'why|graph|verify'] }
@@ -173,14 +188,14 @@ commands:
   # Shell commands that only read
   - phase: exploring
     program: [ls, ll, la, lsd, eza, exa, tree, cat, bat, batcat, head, tail, less, more, grep, egrep, fgrep, rg, ag, ack, find, fd, fzf, wc, file, stat, du, df, which, whereis, type, pwd, realpath, readlink, basename, dirname, diff, colordiff, cmp, comm, jq, yq, gron, sort, uniq, cut, column, strings, xxd, hexdump, od, nl, tac, md5, md5sum, shasum, sha1sum, sha256sum, cksum, lsof, ps, pgrep, env, printenv, uname, sw_vers, whoami, id, hostname, date, man, tldr, history, tokei, cloc, scc, ldd, otool, nm, objdump, plutil, defaults, mdfind, xmllint, pdftotext, identify, exiftool, codesign, security, ioreg, system_profiler, vm_stat, sysctl, netstat, ifconfig, lsblk, free, top, htop, uptime, w, last, journalctl, dmesg, tput]
-  - { phase: exploring, program: [tr, base64, fold, paste, rev, iconv, expand, unexpand, fmt, seq, tsort, numfmt, look, uuidgen] }
+  - { phase: exploring, program: [tr, base64, fold, paste, rev, iconv, expand, unexpand, fmt, seq, tsort, numfmt, look, uuidgen, swift-demangle, c++filt] }
   - { phase: exploring, program: command, with: [-v] }
   - { phase: exploring, program: [make, gmake], with: [-n] }
   - { phase: exploring, match: '^(gcloud|aws|az|doctl|flyctl|heroku|vercel|netlify)\s(\S+\s)*(list|describe|read|get|show|status|logs|print-access-token|print-identity-token|info|get-[a-z-]+|describe-[a-z-]+|list-[a-z-]+)(\s|$)' }
   - { phase: exploring, program: [sed, gsed, awk, gawk, nawk, mawk, perl] }
   - phase: exploring
     program: git
-    args: ['status|log|diff|show|blame|annotate|rev-parse|ls-files|ls-tree|ls-remote|grep|describe|shortlog|reflog|cat-file|whatchanged|range-diff|merge-base|name-rev|rev-list|count-objects|check-ignore|show-ref|for-each-ref|var|help|version|fetch|clone']
+    args: ['status|log|diff|show|blame|annotate|rev-parse|ls-files|ls-tree|ls-remote|grep|describe|shortlog|reflog|cat-file|whatchanged|range-diff|merge-base|name-rev|rev-list|count-objects|check-ignore|show-ref|for-each-ref|var|help|version|fetch|clone|merge-tree|cherry|archive|diff-tree|diff-index|diff-files|show-branch|verify-commit|verify-tag|check-attr|check-ref-format|fsck|hash-object']
   - { phase: exploring, program: git, args: ['stash|worktree|submodule|notes', 'list|show|status'] }
   - { phase: exploring, match: '^git config\s(.*\s)?(--get(-all|-regexp|-urlmatch|-color|colorbool)?|--list|-l)(\s|$)' }
   - { phase: exploring, match: '^git config(\s+--(global|local|system|worktree|show-origin|show-scope|includes|null|name-only))*\s+[A-Za-z][\w-]*\.[\w.-]+$' }
@@ -188,6 +203,7 @@ commands:
   - { phase: exploring, match: '^git (branch|tag|remote)( -[a-zA-Z-]+)*$' }
   - { phase: exploring, match: '^git (branch|tag)\s(.*\s)?--(list|contains|no-contains|merged|no-merged|sort|points-at|show-current|format)(\s|=|$)' }
   - { phase: exploring, program: git, args: ['remote', 'get-url|show'] }
+  - { phase: exploring, match: '^git symbolic-ref(\s+(-q|--quiet|--short|--no-recurse))*\s+\S+$' }
   - { phase: running, match: '^\S*(gh|glab)\s+api\s(.*\s)?(-X|--method)[\s=]*(POST|PUT|PATCH|DELETE)\b' }
   - { phase: exploring, program: [gh, glab], args: ['pr|mr|issue|run|ci|pipeline|job|repo|release|workflow|search|api|gist|label|cache|variable', 'view|list|ls|diff|checks|status|watch|search|download|trace|get'] }
   - { phase: exploring, program: [gh, glab], args: ['api'] }
@@ -208,6 +224,11 @@ commands:
   - { phase: exploring, program: xcrun }
   - { phase: exploring, program: [terraform, tofu], args: ['show|output|state|providers|version|graph'] }
   - { phase: exploring, program: coverage, args: ['report|html|xml|json'] }
+  # Coverage reports read what a test run measured, like `coverage report` and xcresulttool. A
+  # coverage gate script is classified by what else it runs (see docs/phases.md).
+  - { phase: exploring, program: [llvm-cov, xccov, llvm-profdata], tag: coverage }
+  - { phase: exploring, program: [pdfinfo, pbpaste] }
+  - { phase: exploring, match: '^pmset\s+-g' }
   - { phase: exploring, match: '^tar\s+-?[a-zA-Z]*t' }
 
   # Shell commands that change files
@@ -215,7 +236,7 @@ commands:
   - { phase: writing, program: tar }
   - phase: writing
     program: git
-    args: ['add|commit|checkout|switch|restore|reset|stash|merge|rebase|cherry-pick|revert|mv|rm|tag|apply|am|init|clean|branch|worktree|submodule|notes|config|remote|pull']
+    args: ['add|commit|checkout|switch|restore|reset|stash|merge|rebase|cherry-pick|revert|mv|rm|tag|apply|am|init|clean|branch|worktree|submodule|notes|config|remote|pull|symbolic-ref|write-tree|commit-tree|update-ref|read-tree|update-index|mktree|replace']
     tool: git
 
   # Running scripts: running something that isn't a check, an edit or a read. Scripts and programs,
@@ -228,7 +249,9 @@ commands:
   - { phase: running, program: [go, cargo, mix], args: ['run|watch|phx.server|ecto.*'] }
   - { phase: running, program: [vite, next, nuxt, nuxi, astro, remix, gatsby, react-scripts, vue-cli-service, ng, expo, storybook, react-native, flutter, tauri, wrangler], args: ['dev|develop|start|serve|preview|run|run-ios|run-android|run:ios|run:android|attach'] }
   - { phase: running, program: vite }
-  - { phase: running, program: [nodemon, pm2, forever, serve, http-server, live-server, json-server, browser-sync, wait-on, http.server, uvicorn, gunicorn, hypercorn, daphne, flask, fastapi, streamlit, gradio, jupyter, ipython, celery, puma, rackup, foreman, overmind, air, ngrok, cloudflared, caddy] }
+  - { phase: running, program: [nodemon, pm2, forever, serve, http-server, live-server, json-server, browser-sync, wait-on, http.server, uvicorn, gunicorn, hypercorn, daphne, flask, fastapi, streamlit, gradio, jupyter, ipython, celery, puma, rackup, foreman, overmind, air, ngrok, cloudflared, caddy, cloud-sql-proxy, mkcert] }
+  # Another agent run from the shell (claude -p) does work awf can't see into.
+  - { phase: running, program: claude }
   - { phase: running, program: rails, args: ['server|s|console|c|runner|r|dbconsole|db|db:*'] }
   - { phase: running, program: [curl, wget, http, https, xh, curlie, grpcurl, websocat, wscat, nc, ncat, netcat, telnet, ssh, mosh, ping, traceroute, mtr, dig, nslookup, host, whois, openssl] }
   - { phase: running, program: [psql, pg_ctl, pg_dump, pg_dumpall, pg_restore, pg_isready, createdb, dropdb, createuser, dropuser, initdb, postgres, mysql, mysqldump, mysqladmin, mariadb, sqlite3, duckdb, redis-cli, redis-server, mongosh, mongo, mongod, mongodump, mongorestore, clickhouse, sqlcmd, cqlsh, alembic, flyway, liquibase, dbmate, goose, atlas] }
@@ -241,7 +264,7 @@ commands:
   - { phase: running, program: twine }
   - { phase: running, program: git, args: ['push'] }
   - { phase: running, program: [gh, glab] }
-  - { phase: running, program: [playwright, lighthouse, ffmpeg, magick, sips, screencapture] }
+  - { phase: running, program: [playwright, lighthouse, ffmpeg, magick, sips, screencapture, pdftoppm, pmset] }
   # A script file, or a program run by its path (./run, bin/dev, .build/release/app): the project's
   # own scripts and binaries.
   - { phase: running, match: '^\S*\.(sh|bash|zsh|py|js|mjs|cjs|ts|mts|cts|rb|pl|php|lua|swift|kts|exs|ps1|command)(\s|$)' }
@@ -249,7 +272,7 @@ commands:
 
   # Changes nothing on its own, or takes no time worth a phase
   - phase: neutral
-    program: [cd, pushd, popd, echo, printf, print, export, unset, set, source, '.', 'true', 'false', ':', sleep, wait, exit, return, read, alias, unalias, trap, shift, local, declare, typeset, readonly, ulimit, umask, '[', '[[', test, clear, reset, hash, shopt, setopt, bindkey, eval, let, break, continue, osascript, say, afplay, notify-send, terminal-notifier, open, xdg-open, kill, pkill, killall, disown, jobs, fg, bg]
+    program: [cd, pushd, popd, echo, printf, print, export, unset, set, source, '.', 'true', 'false', ':', sleep, wait, exit, return, read, alias, unalias, trap, shift, local, declare, typeset, readonly, ulimit, umask, '[', '[[', test, clear, reset, hash, shopt, setopt, bindkey, eval, let, break, continue, osascript, say, afplay, notify-send, terminal-notifier, open, xdg-open, kill, pkill, killall, disown, jobs, fg, bg, mktemp, pbcopy, xcode-select, caffeinate]
 
 # Gradle tasks, Maven goals, and task names given to turbo, nx, sbt and similar runners.
 # Tested against each task name, and against its last part for qualified names like :app:testDebug.
@@ -363,5 +386,4 @@ failurePatterns:
   - { tool: dotnet build, pattern: 'Build FAILED|error [A-Z]{2,}\d+' }
   - { tool: dotnet test, pattern: 'Failed!\s+-\s+Failed:\s+[1-9]' }
   - { tool: swift test, pattern: '(?m)^(\S+:\d+:\d+: )?error: |Test Suite .\S+. failed|✘ Test run with .* failed' }
-  - { tool: ci, pattern: 'completed with .failure.|X .* failed|run failed' }
   - { tool: '*', pattern: '(?m)ELIFECYCLE\s+(Command|Test) failed|npm ERR! (code|Test failed)|npm error (code \d|Lifecycle script)|error Command failed with exit code|ERR_PNPM_\w+|^\s*ERROR\s+run failed|make(\[\d+\])?: \*\*\* \[.*\] Error \d+|^FAILED\b|BUILD FAILED|^error\[' }

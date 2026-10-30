@@ -26,11 +26,12 @@ One JSON object per line. Most carry `type`, `timestamp` (ISO 8601, ms), `uuid`,
 | `assistant`       | One content block per line: `thinking`, `text` or `tool_use`. Lines of one model response share `message.id` and `message.usage`                                                                                                                                            |
 | `system`          | `subtype` `turn_duration` and `stop_hook_summary` (a turn ended), `compact_boundary` (a compaction, with `compactMetadata.durationMs` and `trigger`); `api_error`, `away_summary`, `local_command`, `informational`, `agents_killed`, `bridge_status` are known and skipped |
 | `queue-operation` | `operation: "enqueue"` with a `<task-notification>` in `content`: when a background task finished                                                                                                                                                                           |
+| `api-request`     | When a model request was sent (2.1.300 and later). An assistant line's `requestRef` names the one it answers. A request sent again after an API error, a timeout or a rate limit repeats the entry                                                                          |
 | `attachment`      | Skipped, except `<task-notification>` text inside it. Over 40 attachment types exist (`hook_success` with `durationMs`, `queued_command`, `edited_text_file`, ...)                                                                                                          |
 
-Known and skipped: `summary`, `last-prompt`, `ai-title`, `custom-title`, `agent-name`, `mode`, `permission-mode`, `atis-latch`, `cost-state`, `pr-link`, `file-history-snapshot`, `file-history-delta`, `api-request`, `api-request-blob`, `api-request-shape`, `bridge-session`, `relocated`, `frame-link`, `artifact-autoreact-ledger`, `artifact-comment-monitor`, `tools-used`, `fork-context-ref`, `progress`.
+Known and skipped: `summary`, `last-prompt`, `ai-title`, `custom-title`, `agent-name`, `mode`, `permission-mode`, `atis-latch`, `cost-state`, `pr-link`, `file-history-snapshot`, `file-history-delta`, `api-request-blob`, `api-request-shape`, `bridge-session`, `relocated`, `frame-link`, `artifact-autoreact-ledger`, `artifact-comment-monitor`, `tools-used`, `fork-context-ref`, `progress`.
 
-`api-request` (2.1.30x and later, about half of recent transcripts) marks when each model request was sent; assistant lines point to it with `requestRef`. awf doesn't need it: model time is measured the same way as from hooks (below), which keeps the two sources comparable.
+`api-request` (2.1.300 and later) marks when each model request was sent; assistant lines point to the one they answer with `requestRef`. A request normally goes out within a second of the result it answers (median 30 ms), so model time is measured the same way as from hooks (below), which keeps the two sources comparable. The exception: when the same request was sent more than once since the agent's last input (identical requests, at backoff intervals, sometimes for an hour, often with a cold cache on the answer), the agent wasn't generating until the send that was answered, and model time starts there. In 30 days of transcripts, 443 answers had a resent request and 78 waited more than a minute, mostly in subagents.
 
 ## Prompts
 
@@ -70,7 +71,9 @@ A background Bash call returns `Command running in background with ID: <id>` and
 <task-notification><task-id>…</task-id><tool-use-id>…</tool-use-id><status>completed|failed|killed|stopped</status><summary>…</summary>…</task-notification>
 ```
 
-It appears in a `queue-operation` (`enqueue`, when the task ended), often again in an attachment, and as a `user` prompt with `origin.kind: "task-notification"` (when it reached the model). awf takes the earliest as the end of the background step.
+It appears in a `queue-operation` (`enqueue`, when the task ended), often again in an attachment (a `queued_command`, also in a subagent's transcript for its own tasks, timestamped when the task ended but written when the agent read it), and as a `user` prompt with `origin.kind: "task-notification"` (when it reached the model). awf takes the earliest as the end of the background step.
+
+A task stopped with TaskStop (KillShell in older versions) gets no notification; its background step ends at the stop's result.
 
 ## Version notes
 

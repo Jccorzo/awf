@@ -40,8 +40,13 @@ export interface Summary {
   startMs: number;
   endMs: number;
   totalMs: number;
-  /** Total without the idle time between turns. */
-  activeMs: number;
+  /** Time inside turns, from each prompt (or notice) to the end of the agent's answer. */
+  turnsMs: number;
+  /**
+   * Time between turns that background work took: subagents, builds and tests left running while
+   * the agent waited for you. The rest of the time between turns is idle (Waiting on you).
+   */
+  awayWorkMs: number;
   phases: PhaseLine[];
   modelCalls: number;
   toolCalls: number;
@@ -133,7 +138,8 @@ export function summarize(classified: ClassifiedSession): Analysis {
     startMs: session.startMs,
     endMs: session.startMs + totals.totalMs,
     totalMs: totals.totalMs,
-    activeMs: Math.max(0, totals.totalMs - idleMs),
+    turnsMs: Math.max(0, totals.totalMs - idleMs),
+    awayWorkMs: totals.awayWorkMs,
     phases,
     modelCalls: session.steps.filter((s) => s.kind === 'model').length,
     toolCalls: tools.length,
@@ -150,6 +156,21 @@ export function summarize(classified: ClassifiedSession): Analysis {
 }
 
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+
+/**
+ * The session's length, and how much of it was turns and background work between them:
+ * "8h 37m 33s (1h 20m 01s in turns, 5h 35m 12s background work between turns)".
+ */
+export function formatDurationLine(
+  summary: Pick<Summary, 'totalMs' | 'turnsMs' | 'awayWorkMs'>,
+): string {
+  const total = formatDuration(summary.totalMs);
+  if (summary.turnsMs >= summary.totalMs) return total;
+  const parts = [`${formatDuration(summary.turnsMs)} in turns`];
+  if (summary.awayWorkMs > 0)
+    parts.push(`${formatDuration(summary.awayWorkMs)} background work between turns`);
+  return `${total} (${parts.join(', ')})`;
+}
 
 /** "3 runs, 2 failed", "11 edits after 4 failed checks", ... */
 export function phaseDetail(line: PhaseLine): string {

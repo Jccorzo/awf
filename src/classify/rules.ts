@@ -39,6 +39,11 @@ export interface CommandRule {
   match?: RegExp;
   tag?: string;
   tool?: string;
+  /**
+   * From a repo's `.awf/rules.yaml`: it decides before awf reads what a command runs (a script's
+   * contents, a package script, a make recipe), so a repo can name its own scripts.
+   */
+  repo?: boolean;
 }
 
 export interface NameRule {
@@ -142,6 +147,7 @@ export function compileRules(docs: Array<{ text: string; source: string }>): Rul
       if (r.tag !== undefined) rule.tag = String(r.tag);
       if (r.tool !== undefined) rule.tool = String(r.tool);
       if (!rule.programs && !rule.match) throw new Error(`${where}: needs program or match`);
+      if (source !== DEFAULT_RULES_SOURCE) rule.repo = true;
       rules.commands.push(rule);
     });
     for (const key of ['tasks', 'scripts'] as const) {

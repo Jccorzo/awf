@@ -1,6 +1,6 @@
 import os from 'node:os';
-import { formatSummaryLines, summarize } from '../../analyze/summary';
-import { formatClock, formatDuration } from '../../model/time';
+import { formatDurationLine, formatSummaryLines, summarize } from '../../analyze/summary';
+import { formatClock } from '../../model/time';
 import { classifier, loadOne } from '../load';
 import type { Command } from '../main';
 import { shareSession } from '../share';
@@ -37,9 +37,7 @@ or a transcript or events file.
     const header = [
       `Session ${summary.id.slice(0, 8)}`,
       formatClock(summary.startMs),
-      summary.activeMs < summary.totalMs
-        ? `${formatDuration(summary.totalMs)} (active ${formatDuration(summary.activeMs)})`
-        : formatDuration(summary.totalMs),
+      formatDurationLine(summary),
       ...(summary.cwd ? [homeRelative(summary.cwd, home)] : []),
     ].join(' · ');
     ctx.io.out(header);

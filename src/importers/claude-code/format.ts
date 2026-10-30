@@ -3,7 +3,14 @@
 // is counted as unknown and reported by `awf import` and `awf doctor`, never fatal.
 
 /** Entry types awf reads. */
-export const READ_TYPES = new Set(['user', 'assistant', 'system', 'queue-operation', 'attachment']);
+export const READ_TYPES = new Set([
+  'user',
+  'assistant',
+  'system',
+  'queue-operation',
+  'attachment',
+  'api-request',
+]);
 
 /** Entry types awf knows and skips: metadata, UI state, request logs, file history. */
 export const SKIPPED_TYPES = new Set([
@@ -19,7 +26,6 @@ export const SKIPPED_TYPES = new Set([
   'pr-link',
   'file-history-snapshot',
   'file-history-delta',
-  'api-request',
   'api-request-blob',
   'api-request-shape',
   'bridge-session',

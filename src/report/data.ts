@@ -68,7 +68,10 @@ export interface ReportData {
     sources: string[];
     startMs: number;
     totalMs: number;
-    activeMs: number;
+    /** Time inside turns. */
+    turnsMs: number;
+    /** Time between turns that background work took. */
+    awayWorkMs: number;
   };
   phases: ReportPhase[];
   counts: {
@@ -352,7 +355,8 @@ export function buildReportData(
       sources: session.sources,
       startMs: t0,
       totalMs: summary.totalMs,
-      activeMs: summary.activeMs,
+      turnsMs: summary.turnsMs,
+      awayWorkMs: summary.awayWorkMs,
     },
     phases: summary.phases.map((p) => ({
       id: p.phase,

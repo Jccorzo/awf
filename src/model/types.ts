@@ -37,7 +37,12 @@ export type StepFlag =
   /** Model time that ended without a tool call. */
   | 'answer'
   /** A turn started by a background task's completion notice, or another notice, not by you. */
-  | 'notification';
+  | 'notification'
+  /**
+   * Model steps: the request was sent more than once (after an API error, a timeout or a rate
+   * limit). The step starts at the send that was answered; the agent wasn't generating before it.
+   */
+  | 'resent';
 
 export interface TokenUsage {
   input: number;

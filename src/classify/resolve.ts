@@ -48,7 +48,11 @@ export type Resolution =
   | { kind: 'make-name'; target?: string }
   | { kind: 'tasks'; runner: string; tasks: string[] }
   | { kind: 'hook'; name: string; hook: 'pre-commit' | 'pre-push'; commands: string[]; cwd: string }
-  | { kind: 'file'; file: string; commands: string[]; cwd: string };
+  | { kind: 'file'; file: string; commands: string[]; cwd: string }
+  /** A fastlane lane read from the Fastfile: commands standing for its actions. */
+  | { kind: 'lane'; name: string; commands: string[]; cwd: string }
+  /** A fastlane lane awf can't read: its name decides. */
+  | { kind: 'lane-name'; name: string };
 
 export function findUp(
   start: string,
@@ -831,6 +835,8 @@ export function resolve(argv: string[], cwd: string, files: Files): Resolution |
       return resolveTasks(program, args);
     case 'git':
       return resolveGitHook(args, cwd, files);
+    case 'fastlane':
+      return resolveFastlane(args, cwd, files);
   }
   const file = scriptFile(argv);
   if (file) {
@@ -841,6 +847,158 @@ export function resolve(argv: string[], cwd: string, files: Files): Resolution |
       return { kind: 'file', file, commands: [text], cwd };
   }
   return undefined;
+}
+
+/** fastlane's own commands and tools, run by name (`fastlane scan` runs scan): not lanes. */
+const FASTLANE_COMMANDS = new Set([
+  'run',
+  'init',
+  'lanes',
+  'list',
+  'docs',
+  'env',
+  'action',
+  'actions',
+  'new_action',
+  'add_plugin',
+  'install_plugins',
+  'update_plugins',
+  'new_plugin',
+  'search_plugins',
+  'enable_auto_complete',
+  'update_fastlane',
+  'help',
+  'socket_server',
+  'trigger',
+  'spaceauth',
+  'scan',
+  'gym',
+  'match',
+  'snapshot',
+  'frameit',
+  'deliver',
+  'pilot',
+  'supply',
+  'cert',
+  'sigh',
+  'pem',
+  'produce',
+  'precheck',
+  'screengrab',
+]);
+const FASTLANE_PLATFORMS = new Set(['ios', 'android', 'mac']);
+
+/** fastlane actions awf knows, as the command each stands for (the rules classify those). */
+const FASTLANE_ACTIONS: Record<string, string> = {
+  scan: 'fastlane scan',
+  run_tests: 'fastlane scan',
+  multi_scan: 'fastlane scan',
+  gym: 'fastlane gym',
+  build_app: 'fastlane gym',
+  build_ios_app: 'fastlane gym',
+  build_mac_app: 'fastlane gym',
+  xcodebuild: 'xcodebuild build',
+  xcbuild: 'xcodebuild build',
+  xctest: 'xcodebuild test',
+  swiftlint: 'swiftlint',
+  cocoapods: 'pod install',
+  carthage: 'carthage bootstrap',
+  spm: 'swift build',
+  // Uploads, signing and distribution: Running scripts, like `fastlane deliver`.
+  upload_to_testflight: 'fastlane pilot',
+  pilot: 'fastlane pilot',
+  testflight: 'fastlane pilot',
+  deliver: 'fastlane deliver',
+  upload_to_app_store: 'fastlane deliver',
+  appstore: 'fastlane deliver',
+  supply: 'fastlane supply',
+  upload_to_play_store: 'fastlane supply',
+  match: 'fastlane match',
+  sync_code_signing: 'fastlane match',
+  firebase_app_distribution: 'fastlane deliver',
+  appcenter_upload: 'fastlane deliver',
+};
+
+/**
+ * The lanes of a Fastfile and their bodies. A lane runs from `lane :name do` to the `end` at its
+ * own indentation, as Fastfiles are written.
+ */
+export function parseFastfile(text: string): Map<string, string> {
+  const lanes = new Map<string, string>();
+  const lines = text.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const match = /^(\s*)(?:private_)?lane\s+:([A-Za-z_]\w*)\b.*\bdo\b/.exec(lines[i] ?? '');
+    if (!match) continue;
+    const indent = (match[1] as string).length;
+    const body: string[] = [];
+    for (let j = i + 1; j < lines.length; j++) {
+      const line = lines[j] ?? '';
+      const own = (/^\s*/.exec(line)?.[0] ?? '').length;
+      if (line.trim() && own <= indent) break; // its `end`, or the next lane if that's missing
+      body.push(line);
+    }
+    if (!lanes.has(match[2] as string)) lanes.set(match[2] as string, body.join('\n'));
+  }
+  return lanes;
+}
+
+const RUBY_STRING = /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g;
+
+/** A lane's actions as commands, and its `sh` steps, following the lanes it calls. */
+function laneSteps(
+  name: string,
+  lanes: Map<string, string>,
+  seen = new Set<string>(),
+): { actions: string[]; shell: string[] } {
+  const out = { actions: [] as string[], shell: [] as string[] };
+  const body = lanes.get(name);
+  if (body === undefined || seen.has(name)) return out;
+  seen.add(name);
+  const code = body
+    .split('\n')
+    .filter((line) => !line.trim().startsWith('#'))
+    .join('\n');
+  for (const m of code.matchAll(/\bsh\s*\(?\s*(?:command:\s*)?(["'])((?:\\.|(?!\1).)*)\1/g))
+    out.shell.push((m[2] as string).replace(/\\(["'\\])/g, '$1'));
+  for (const m of code.matchAll(/\b(?:gradle|build_android_app)\s*\(([^)]*)\)/g)) {
+    const task = /\btask:\s*["']([\w:-]+)["']/.exec(m[1] as string)?.[1];
+    if (task) out.actions.push(`gradle ${task}`);
+  }
+  // Calls: a name not after `.` or `:`, followed by `(`, by keyword arguments, or by the line's end.
+  const plain = code.replace(RUBY_STRING, '""');
+  for (const m of plain.matchAll(
+    /(?<![.:\w])([a-z_][a-z0-9_]*)(?=\s*\(|[ \t]+[a-z_]+:|[ \t]*$)/gm,
+  )) {
+    const call = m[1] as string;
+    const command = FASTLANE_ACTIONS[call];
+    if (command) out.actions.push(command);
+    else if (lanes.has(call) && call !== name) {
+      const inner = laneSteps(call, lanes, seen);
+      out.actions.push(...inner.actions);
+      out.shell.push(...inner.shell);
+    }
+  }
+  return out;
+}
+
+/**
+ * `fastlane <lane>`, `fastlane ios <lane>`: the lane's actions from the Fastfile decide (scan is a
+ * test run, gym a build); its `sh` steps only when it has no action awf knows. Without the
+ * Fastfile, or with neither, the lane's name decides.
+ */
+function resolveFastlane(args: string[], cwd: string, files: Files): Resolution | undefined {
+  const words = positionals(args, ['--env']).filter((w) => !w.includes(':'));
+  let name = words[0];
+  if (name && FASTLANE_PLATFORMS.has(name) && words[1]) name = words[1];
+  if (!name || FASTLANE_COMMANDS.has(name)) return undefined;
+  const found = findUp(cwd, ['fastlane/Fastfile', 'Fastfile', '.fastlane/Fastfile'], files);
+  const lanes = found ? parseFastfile(found.text) : undefined;
+  if (found && lanes?.has(name)) {
+    const steps = laneSteps(name, lanes);
+    const commands = steps.actions.length > 0 ? steps.actions : steps.shell;
+    if (commands.length > 0) return { kind: 'lane', name, commands, cwd: path.dirname(found.file) };
+  }
+  return { kind: 'lane-name', name };
 }
 
 const SHELL_SHEBANG = /^#!\s*\S*\/(env\s+)?(sh|bash|zsh|dash|ksh)\b/;

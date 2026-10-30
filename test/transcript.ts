@@ -96,6 +96,29 @@ export function notification(t: number, taskId: string, status: string): Entry {
   };
 }
 
+/** A model request being sent (Claude Code 2.1.30x and later). Resending one repeats the entry. */
+export function request(t: number, id: string): Entry {
+  return {
+    type: 'api-request',
+    timestamp: at(t),
+    id,
+    querySource: 'agent:builtin:general-purpose',
+  };
+}
+
+/** A background task's completion notice queued for an agent, as an attachment. */
+export function queuedNotice(t: number, taskId: string, status: string): Entry {
+  return {
+    type: 'attachment',
+    timestamp: at(t),
+    attachment: {
+      type: 'queued_command',
+      commandMode: 'task-notification',
+      prompt: `<task-notification><task-id>${taskId}</task-id><status>${status}</status><summary>Background command finished</summary></task-notification>`,
+    },
+  };
+}
+
 /** Writes a transcript (and optional subagent transcripts) in Claude Code's layout; returns its path. */
 export function writeTranscript(
   id: string,

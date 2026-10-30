@@ -11,7 +11,9 @@ export interface Side {
   label: string;
   sessions: number;
   totalMs: number;
-  activeMs: number;
+  /** Time inside turns, and background work between them (see Summary). */
+  turnsMs: number;
+  awayWorkMs: number;
   phases: Array<{ phase: PhaseId; label: string; ms: number; share: number }>;
   modelCalls: number;
   toolCalls: number;
@@ -49,7 +51,8 @@ function sideOf(label: string, summaries: Summary[]): Side {
     label,
     sessions: summaries.length,
     totalMs,
-    activeMs: sum((s) => s.activeMs),
+    turnsMs: sum((s) => s.turnsMs),
+    awayWorkMs: sum((s) => s.awayWorkMs),
     phases: PHASES.map(({ id, label: name }) => {
       const ms = sum((s) => s.phases.find((p) => p.phase === id)?.ms ?? 0);
       return { phase: id, label: name, ms, share: totalMs > 0 ? ms / totalMs : 0 };

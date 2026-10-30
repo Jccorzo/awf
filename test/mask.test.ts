@@ -37,6 +37,16 @@ describe('maskSecrets', () => {
   });
 });
 
+describe('flags inside a word', () => {
+  it("doesn't take the end of a subcommand's name for a secret flag", () => {
+    const command =
+      'T=$(gcloud auth application-default print-access-token 2>/dev/null); if [ -n "$T" ]; then echo ok; fi';
+    expect(maskSecrets(command)).toBe(command);
+    expect(maskSecrets('gh api --token abc123 x')).toBe(`gh api --token ${MASK} x`);
+    expect(maskSecrets('cli "--password=hunter2"')).toBe(`cli "--password=${MASK}"`);
+  });
+});
+
 describe('dropHeredocBodies', () => {
   it('keeps the command and drops the file content', () => {
     const command =
@@ -51,6 +61,11 @@ describe('dropHeredocBodies', () => {
 
   it('leaves commands without heredocs alone', () => {
     expect(dropHeredocBodies('echo "a << b"')).toBe('echo "a << b"');
+  });
+
+  it('keeps the lines after a here-string, which has no body', () => {
+    const command = 'IFS="|" read A B <<< "$pair"\ncurl -s "$B/health"\necho done';
+    expect(dropHeredocBodies(command)).toBe(command);
   });
 });
 

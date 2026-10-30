@@ -57,7 +57,8 @@ function heredocTags(line: string, stack: string[]): string[] {
       }
       continue;
     }
-    // top, cmd or a subshell: quotes, substitutions and heredocs are live here.
+    // top, cmd or a subshell: quotes, substitutions, heredocs and comments are live here.
+    if (c === '#' && (i === 0 || /[\s;&|(]/.test(line[i - 1] ?? ''))) break; // `# it's`
     if (c === "'") stack.push('sq');
     else if (c === '"') stack.push('dq');
     else if (c === '$' && line[i + 1] === '(') {
@@ -170,6 +171,14 @@ export function tokenize(text: string): Token[] {
       i = end;
       continue;
     }
+    if (c === '$' && text[i + 1] === '{') {
+      // ${p%% *}: a parameter expansion is one word, spaces and all.
+      const end = closingBrace(text, i + 1);
+      word += text.slice(i, end + 1);
+      inWord = true;
+      i = end;
+      continue;
+    }
     if (c === '`') {
       const end = text.indexOf('`', i + 1);
       const stop = end === -1 ? text.length : end;
@@ -247,6 +256,23 @@ function closingQuote(text: string, open: number): number {
   return text.length;
 }
 
+/** Index of the `}` closing the `{` at `open`, skipping quoted text. */
+function closingBrace(text: string, open: number): number {
+  let depth = 0;
+  for (let i = open; i < text.length; i++) {
+    const c = text[i];
+    if (c === '\\') i++;
+    else if (c === "'") {
+      const end = text.indexOf("'", i + 1);
+      i = end === -1 ? text.length : end;
+    } else if (c === '"') i = closingQuote(text, i);
+    else if (c === '\n') return i - 1;
+    else if (c === '{') depth++;
+    else if (c === '}' && --depth === 0) return i;
+  }
+  return text.length - 1;
+}
+
 /** Index of the `)` closing the `(` at `open`, skipping quoted text and nested substitutions. */
 function closingParen(text: string, open: number): number {
   let depth = 0;
@@ -278,36 +304,104 @@ const LEADING_KEYWORDS = new Set([
 const SKIPPED_HEADS = new Set(['fi', 'done', 'esac', 'for', 'select', 'case', 'function']);
 const ASSIGNMENT = /^[A-Za-z_][A-Za-z0-9_]*(\[[^\]]*\])?\+?=/;
 
+/** What one command line defines for the rest of it, substitutions included. */
+interface Scope {
+  /** Functions defined in it: calling one runs its body, which is counted where it's defined. */
+  functions: Set<string>;
+  /** Variables set to a plain value (`R=./build/app`, `G="git -C ../x"`), for `$R tree`. */
+  vars: Map<string, string>;
+}
+
+type Word = { value: string; quoted: boolean; subs?: string[] };
+
+const VAR_HEAD = /^\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))$/;
+const VAR_REF = /\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))/g;
+const DECLARES = new Set(['export', 'local', 'declare', 'typeset', 'readonly']);
+
+/** Index of the first word that isn't a leading keyword like `then` or `do`. */
+function firstWord(words: Word[]): number {
+  let i = 0;
+  while (i < words.length && !words[i]?.quoted && LEADING_KEYWORDS.has(words[i]?.value ?? '')) i++;
+  return i;
+}
+
+/**
+ * Notes `NAME=value` set on a line of its own (or by export), and expands a command whose program
+ * is such a variable: `G="git -C ../x"; $G status` runs git. A value from a command substitution
+ * isn't known, and neither is an assignment in front of a command (`A=1 cmd` sets it for cmd only).
+ */
+function expandVariables(words: Word[], scope: Scope): Word[] {
+  let i = firstWord(words);
+  const assignments: Word[] = [];
+  if (words[i]?.value && DECLARES.has(words[i]?.value as string) && !words[i]?.quoted) {
+    assignments.push(...words.slice(i + 1).filter((w) => ASSIGNMENT.test(w.value)));
+    i = words.length;
+  }
+  while (i < words.length && ASSIGNMENT.test(words[i]?.value ?? ''))
+    assignments.push(words[i++] as Word);
+  if (i >= words.length) {
+    for (const word of assignments) {
+      const at = word.value.indexOf('=');
+      const name = word.value.slice(0, at).replace(/\+$/, '');
+      const value = word.value.slice(at + 1);
+      // A command substitution's output isn't known; variables in the value are expanded if known.
+      if (word.subs?.length || /`|\$\(/.test(value)) scope.vars.delete(name);
+      else
+        scope.vars.set(
+          name,
+          value.replace(VAR_REF, (ref, a, b) => scope.vars.get((a ?? b) as string) ?? ref),
+        );
+    }
+    return words;
+  }
+  const head = words[i] as Word;
+  const match = VAR_HEAD.exec(head.value);
+  const value = match ? scope.vars.get((match[1] ?? match[2]) as string) : undefined;
+  if (value === undefined || !value.trim()) return words;
+  // Unquoted, the value splits into words; quoted ("$CHROME"), it stays one.
+  const expanded = (head.quoted ? [value] : value.split(/\s+/).filter(Boolean)).map((v) => ({
+    value: v,
+    quoted: true,
+  }));
+  return [...words.slice(0, i), ...expanded, ...words.slice(i + 1)];
+}
+
 /**
  * Splits a command line into simple commands, in order. `case` patterns are skipped, and calls of
  * functions defined in the same line are dropped: their bodies are counted where they are defined.
  */
-export function splitCommand(text: string, depth = 0): SimpleCommand[] {
+export function splitCommand(
+  text: string,
+  depth = 0,
+  scope: Scope = { functions: new Set(), vars: new Map() },
+): SimpleCommand[] {
   const commands: SimpleCommand[] = [];
-  let words: Array<{ value: string; quoted: boolean; subs?: string[] }> = [];
+  let words: Word[] = [];
   let writes: string[] = [];
   let piped = false;
   let redirect: string | null = null;
   const cd: string[] = [];
   /** cd's length at each open parenthesis: a subshell's cd ends with it. */
   const scopes: number[] = [];
-  const functions = new Set<string>();
+  const functions = scope.functions;
   let caseDepth = 0;
   let inPattern = false;
 
   const end = (operator: string | null) => {
     // `function name { body`: the body's first command shares the line with the definition.
-    if (words[0]?.value === 'function' && words[1] && words[2]?.value === '{') {
-      functions.add(words[1].value.replace(/\(\)$/, ''));
-      words = words.slice(3);
+    const head = firstWord(words);
+    if (words[head]?.value === 'function' && words[head + 1] && words[head + 2]?.value === '{') {
+      functions.add((words[head + 1] as Word).value.replace(/\(\)$/, ''));
+      words = words.slice(head + 3);
     }
+    if (words[firstWord(words)]?.value === 'function' && words[firstWord(words) + 1])
+      functions.add((words[firstWord(words) + 1] as Word).value.replace(/\(\)$/, ''));
+    words = expandVariables(words, scope);
     const argv = clean(words);
-    if (words[0]?.value === 'function' && words[1])
-      functions.add(words[1].value.replace(/\(\)$/, ''));
     // Substitutions run first, as commands of their own.
     if (depth < 4) {
       for (const sub of words.flatMap((w) => w.subs ?? [])) {
-        for (const inner of splitCommand(sub, depth + 1)) {
+        for (const inner of splitCommand(sub, depth + 1, scope)) {
           commands.push({
             ...inner,
             cd: [...cd, ...inner.cd],
@@ -370,12 +464,12 @@ export function splitCommand(text: string, depth = 0): SimpleCommand[] {
     if (
       token.kind === 'op' &&
       token.value === '(' &&
-      words.length === 1 &&
+      words.length === firstWord(words) + 1 &&
       tokens[t + 1]?.kind === 'op' &&
       tokens[t + 1]?.value === ')'
     ) {
-      // `name() { ... }`: a function definition.
-      functions.add(words[0]?.value as string);
+      // `name() { ... }`: a function definition, also after `then`, `else` or `do`.
+      functions.add(words[words.length - 1]?.value as string);
       words = [];
       t++;
       continue;
@@ -399,6 +493,27 @@ export function splitCommand(text: string, depth = 0): SimpleCommand[] {
     }
     if (token.kind === 'redirect') {
       redirect = token.value;
+      continue;
+    }
+    const last = words[words.length - 1];
+    if (
+      token.kind === 'op' &&
+      token.value === '(' &&
+      last &&
+      !last.quoted &&
+      /^[A-Za-z_][A-Za-z0-9_]*\+?=$/.test(last.value)
+    ) {
+      // `ARGS=(-a "$b")`, `OBJECTS+=("$x")`: an array's values, not a subshell. Substitutions in
+      // them still run.
+      const subs = [...(last.subs ?? [])];
+      for (let open = 1; t + 1 < tokens.length && open > 0;) {
+        const inner = tokens[++t] as Token;
+        if (inner.kind === 'op' && inner.value === '(') open++;
+        else if (inner.kind === 'op' && inner.value === ')') open--;
+        else if (inner.kind === 'word') subs.push(...(inner.subs ?? []));
+      }
+      last.value += '(…)';
+      if (subs.length) last.subs = subs;
       continue;
     }
     if (token.kind === 'op') {
@@ -429,8 +544,14 @@ function clean(words: Array<{ value: string; quoted: boolean }>): string[] {
   }
   const head = at(start);
   if (head && !head.quoted && SKIPPED_HEADS.has(head.value)) return [];
-  // VAR=value, VAR="a b" and VAR=$(cmd) before the command (the name itself is never quoted).
-  while (start < words.length && ASSIGNMENT.test(at(start)?.value ?? '')) {
+  // What awf stored in place of a heredoc body (`‹12 lines›`) isn't a command.
+  if (/^‹\d+$/.test(head?.value ?? '') && /^lines?›$/.test(at(start + 1)?.value ?? '')) return [];
+  // VAR=value, VAR="a b" and VAR=$(cmd) before the command (the name itself is never quoted), and
+  // a masked secret (`TOKEN= ‹masked› cmd`): it was a value, never the program.
+  while (
+    start < words.length &&
+    (ASSIGNMENT.test(at(start)?.value ?? '') || at(start)?.value === '‹masked›')
+  ) {
     start++;
   }
   return words.slice(start).map((w) => w.value);
@@ -491,6 +612,7 @@ const WRAPPERS: Record<
   },
   chronic: {},
   corepack: {},
+  'sandbox-exec': { valueOptions: ['-f', '-n', '-p', '-D'] },
   xcrun: { valueOptions: ['--sdk', '-sdk', '--toolchain', '-toolchain'] },
 };
 
