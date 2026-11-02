@@ -56,4 +56,32 @@ describe('awf purge', () => {
     expect(await main(['purge', '--yes'], io, env)).toBe(0);
     expect(existsSync(dir)).toBe(false);
   });
+
+  it('says in JSON what happened, whether it deleted, refused or found nothing', async () => {
+    const home = mkdtempSync(path.join(os.tmpdir(), 'awf-purge-'));
+    const dir = path.join(home, '.awf');
+    const env = { AWF_HOME: dir, HOME: home };
+
+    let io = captureIo();
+    expect(await main(['purge', '--json'], io, env)).toBe(0);
+    expect(JSON.parse(io.stdout.join('\n'))).toEqual({
+      dir,
+      parts: [],
+      foreign: [],
+      deleted: false,
+    });
+
+    mkdirSync(path.join(dir, 'events'), { recursive: true });
+    writeFileSync(path.join(dir, 'notes.txt'), 'mine');
+    io = captureIo();
+    expect(await main(['purge', '--yes', '--json'], io, env)).toBe(1);
+    expect(io.stdout).toEqual([]);
+    expect(existsSync(dir)).toBe(true);
+
+    rmSync(path.join(dir, 'notes.txt'));
+    io = captureIo();
+    expect(await main(['purge', '--yes', '--json'], io, env)).toBe(0);
+    expect(JSON.parse(io.stdout.join('\n'))).toMatchObject({ dir, deleted: true });
+    expect(existsSync(dir)).toBe(false);
+  });
 });

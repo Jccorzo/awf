@@ -11,7 +11,8 @@ import { makeScrubber } from '../src/importers/claude-code/scrub';
 const args = process.argv.slice(2);
 const outIndex = args.indexOf('--out');
 const out = outIndex >= 0 ? (args[outIndex + 1] as string) : 'fixtures/claude-code';
-const rawRoot = args.find((a, i) => !a.startsWith('--') && i !== outIndex + 1) ?? 'fixtures/raw';
+const isOutValue = (i: number) => outIndex >= 0 && i === outIndex + 1;
+const rawRoot = args.find((a, i) => !a.startsWith('--') && !isOutValue(i)) ?? 'fixtures/raw';
 const scrubber = makeScrubber({ home: os.homedir() });
 
 function walk(dir: string): string[] {
@@ -30,11 +31,8 @@ for (const name of readdirSync(rawRoot)) {
     const target = path.join(out, name, relative);
     mkdirSync(path.dirname(target), { recursive: true });
     const lines = readFileSync(file, 'utf8').split('\n');
-    // Recorder events hold no content, only paths to normalise and commands to re-mask.
     const isEvents = relative.split(path.sep)[0] === 'events';
-    const scrubbed = isEvents
-      ? lines.map((line) => scrubber.paths(line))
-      : lines.map((line) => scrubber.line(line));
+    const scrubbed = lines.map(isEvents ? scrubber.event : scrubber.line);
     writeFileSync(target, scrubbed.join('\n'));
     written++;
   }

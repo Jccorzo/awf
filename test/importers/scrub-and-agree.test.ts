@@ -122,3 +122,39 @@ describe('recorder and importer agree', () => {
     },
   );
 });
+
+describe('scrubbing recorder events', () => {
+  const scrubber = makeScrubber({ home: '/Users/jane' });
+
+  it('masks commands again, background ones too, and normalises paths', () => {
+    const line = JSON.stringify({
+      v: 1,
+      e: 'PreToolUse',
+      cwd: '/Users/jane/app',
+      cmd: 'API_TOKEN=sk-live-abcdefghijklmnop123456 pnpm test',
+      bgt: [{ id: 'b1', cmd: 'PASSWORD=hunter2hunter2 ./serve' }],
+    });
+    const scrubbed = scrubber.event(line);
+    for (const leak of ['sk-live', 'hunter2', 'jane']) expect(scrubbed).not.toContain(leak);
+    const event = JSON.parse(scrubbed);
+    expect(event.cmd).toContain('pnpm test');
+    expect(event.bgt[0].id).toBe('b1');
+    expect(event.cwd).toBe('/Users/user/app');
+  });
+
+  it('leaves an event with nothing to mask as it is, and blank lines too', () => {
+    const line = JSON.stringify({
+      v: 1,
+      e: 'PreToolUse',
+      t: 5,
+      cmd: 'npm test',
+      bgt: [{ id: 'b' }],
+    });
+    expect(scrubber.event(line)).toBe(line);
+    expect(scrubber.event('')).toBe('');
+  });
+
+  it("doesn't let a line it can't parse through", () => {
+    expect(scrubber.event('{"cmd":"TOKEN=abc')).toBe('‹bad line›');
+  });
+});

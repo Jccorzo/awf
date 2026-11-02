@@ -45,6 +45,7 @@
     "format": "prettier --write .",
     "awf": "node scripts/build.mjs --quiet --cli-only && node dist/awf.mjs",
     "scrub": "node scripts/run-ts.mjs scripts/scrub.ts",
+    "report:sample": "node scripts/run-ts.mjs scripts/sample-report.ts",
     "report:screenshots": "node scripts/run-ts.mjs scripts/report-screenshots.ts"
   },
   "pnpm": {

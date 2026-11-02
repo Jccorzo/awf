@@ -1,5 +1,7 @@
 # awf
 
+Find the build, test and lint tax on your coding agents.
+
 awf (agent waterfall) shows where a coding agent's time went, by phase. It runs on your machine and sends nothing anywhere.
 
 <picture>
@@ -29,13 +31,13 @@ Version 0.1.
 
 - Claude Code is the agent awf is built on. The importers for Codex CLI, Gemini CLI and OpenCode are experimental: they're tested only on hand-made logs, never on a real session. See [docs/other-agents.md](docs/other-agents.md).
 - `statusline` and `live` are Claude Code only.
-- Only macOS has been tried. There's CI config for Linux, but it hasn't run yet.
+- awf is used day to day on macOS. Its tests also pass on Linux. Windows hasn't been tried.
 - Claude Code's transcript format is internal and can change. `awf doctor` reports what it doesn't recognise.
 - Phases are heuristics. `awf sample` and `awf accuracy` check them against your own labels.
 
 ## Install
 
-awf needs Node 20 or later (verified on 20, 22 and 24; 18 also ran but isn't promised).
+awf needs Node 20 or later.
 
 **The Claude Code plugin** records every new session through hooks, the desktop app's included, and adds `/awf:waterfall`, which opens the current session's report:
 
