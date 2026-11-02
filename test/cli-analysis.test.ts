@@ -72,6 +72,17 @@ describe('analysis commands', () => {
     expect(report.misses).toEqual([{ command: 'ls', yours: 'writing-code', awf: 'exploring' }]);
   });
 
+  it('samples commands as JSON, the same ones the table shows', async () => {
+    const sampled = await run('sample', '--n', '1', '--seed', '7', '--json');
+    expect(sampled.code).toBe(0);
+    const steps = JSON.parse(sampled.out);
+    expect(steps).toHaveLength(1);
+    expect(Object.keys(steps[0]).sort()).toEqual(['command', 'cwd', 'phase']);
+    expect((await run('sample', '--n', '1', '--seed', '7')).out).toContain(steps[0].command);
+    // The fixture's three Bash calls hold two distinct commands.
+    expect(JSON.parse((await run('sample', '--json')).out)).toHaveLength(2);
+  });
+
   it('explains an unknown session', async () => {
     const missing = await run('classify', 'nope');
     expect(missing.code).toBe(1);

@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import os from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { main } from '../src/cli/main';
+import { COMMANDS, main } from '../src/cli/main';
 import { VERSION } from '../src/version';
 import { captureIo } from './helpers';
 
@@ -19,6 +19,11 @@ describe('cli', () => {
     const io = captureIo();
     expect(await main(['frobnicate'], io)).toBe(2);
     expect(io.stderr[0]).toContain('unknown command');
+  });
+
+  it.each(Object.entries(COMMANDS))('%s takes --json and says so in its help', (_name, command) => {
+    expect(command.options.json).toEqual({ type: 'boolean' });
+    expect(command.usage).toContain('--json');
   });
 });
 
@@ -42,6 +47,11 @@ describe('awf purge', () => {
     expect(existsSync(dir)).toBe(true);
 
     rmSync(path.join(dir, 'notes.txt'));
+    io = captureIo();
+    expect(await main(['purge', '--json'], io, env)).toBe(0);
+    expect(JSON.parse(io.stdout.join('\n'))).toMatchObject({ dir, deleted: false });
+    expect(existsSync(dir)).toBe(true);
+
     io = captureIo();
     expect(await main(['purge', '--yes'], io, env)).toBe(0);
     expect(existsSync(dir)).toBe(false);

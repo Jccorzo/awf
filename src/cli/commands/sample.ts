@@ -58,17 +58,19 @@ export function parseCsv(text: string): string[][] {
 
 export const sampleCommand: Command = {
   summary: 'Pick random Bash steps to check by hand, or to label as a CSV',
-  usage: `Usage: awf sample [--n 50] [--seed 1] [--since 30d] [--project <dir>] [--csv]
+  usage: `Usage: awf sample [--n 50] [--seed 1] [--since 30d] [--project <dir>] [--csv] [--json]
 
 Prints random Bash calls from your sessions with the phase awf gave each, for a hand check.
 With --csv it writes "command,cwd,awf_phase,your_phase": fill in your_phase with a phase id
-(${PHASES.map((p) => p.id).join(', ')}) and run "awf accuracy <file>".`,
+(${PHASES.map((p) => p.id).join(', ')}) and run "awf accuracy <file>".
+  --json   print the sample as a JSON array of { command, cwd, phase }`,
   options: {
     n: { type: 'string' },
     seed: { type: 'string' },
     since: { type: 'string' },
     project: { type: 'string' },
     csv: { type: 'boolean' },
+    json: { type: 'boolean' },
   },
   run(ctx, _args, options) {
     const n = typeof options.n === 'string' ? Number.parseInt(options.n, 10) || 50 : 50;
@@ -93,6 +95,10 @@ With --csv it writes "command,cwd,awf_phase,your_phase": fill in your_phase with
     const picked: typeof pool = [];
     while (picked.length < n && pool.length > 0)
       picked.push(...pool.splice(Math.floor(next() * pool.length), 1));
+    if (options.json) {
+      ctx.io.out(JSON.stringify(picked, null, 2));
+      return 0;
+    }
     if (options.csv) {
       ctx.io.out('command,cwd,awf_phase,your_phase');
       for (const p of picked) ctx.io.out([p.command, p.cwd, p.phase, ''].map(csvCell).join(','));

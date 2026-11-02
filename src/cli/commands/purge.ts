@@ -24,12 +24,13 @@ function human(bytes: number): string {
 
 export const purgeCommand: Command = {
   summary: "Delete everything awf stored (~/.awf); Claude Code's own files stay",
-  usage: `Usage: awf purge [--yes]
+  usage: `Usage: awf purge [--yes] [--json]
 
 Deletes awf's folder (~/.awf, or $AWF_HOME): recorded timings, the import cache, reports and the
 status line's cache.
 Claude Code's transcripts are never touched. Without --yes it only lists what it would delete.
-  --yes   delete it`,
+  --yes    delete it
+  --json   print the folder's contents as JSON (it still deletes only with --yes)`,
   options: { yes: { type: 'boolean' }, json: { type: 'boolean' } },
   run(ctx, _args, options) {
     const home = ctx.env.HOME ?? os.homedir();
