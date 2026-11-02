@@ -13,9 +13,10 @@ const preload = path.join(root, 'test/setup/no-network.cjs');
 function runHook(
   input: unknown,
   home: string,
+  file = hookFile,
 ): { ms: number; status: number | null; stdout: string } {
   const started = performance.now();
-  const result = spawnSync(process.execPath, [hookFile], {
+  const result = spawnSync(process.execPath, [file], {
     input: JSON.stringify(input),
     env: { ...process.env, AWF_HOME: home, NODE_OPTIONS: `--require ${preload}` },
     encoding: 'utf8',
@@ -67,8 +68,14 @@ describe('recorder hook', () => {
     expect(result.stdout.toString()).toBe('');
   });
 
-  it('adds no visible delay: median run under 50 ms', () => {
+  // A run is nearly all node starting, which swings with whatever else the machine is doing: 23 ms
+  // alone, over 50 ms in a busy moment. The hook adds about 1 ms, so compare it with bare node runs
+  // taken alongside, by the fastest of each: a busy machine only ever adds time, so the fastest run
+  // is the steadiest. 15 ms on top of a 35 ms start is the 50 ms budget.
+  it('adds no visible delay: under 15 ms on top of starting node', () => {
     const home = mkdtempSync(path.join(tmp, 'home-'));
+    const bareNode = path.join(tmp, 'bare-node.cjs');
+    writeFileSync(bareNode, '');
     const input = {
       session_id: 'timing',
       hook_event_name: 'PreToolUse',
@@ -76,11 +83,21 @@ describe('recorder hook', () => {
       tool_use_id: 'toolu_t',
       tool_input: { command: 'pnpm lint && pnpm test' },
     };
-    runHook(input, home); // warm the file cache
-    const times = Array.from({ length: 15 }, () => runHook(input, home).ms).sort((a, b) => a - b);
-    const median = times[Math.floor(times.length / 2)] ?? Infinity;
-    writeFileSync(path.join(tmp, 'timings.json'), JSON.stringify(times));
-    expect(median).toBeLessThan(50);
+    // Warm the file cache.
+    runHook(input, home);
+    runHook(input, home, bareNode);
+    const hook: number[] = [];
+    const node: number[] = [];
+    for (let i = 0; i < 15; i++) {
+      node.push(runHook(input, home, bareNode).ms);
+      hook.push(runHook(input, home).ms);
+    }
+    writeFileSync(path.join(tmp, 'timings.json'), JSON.stringify({ hook, node }));
+    const [fastestHook, fastestNode] = [Math.min(...hook), Math.min(...node)];
+    expect(
+      fastestHook - fastestNode,
+      `fastest hook ${fastestHook} ms, fastest bare node ${fastestNode} ms`,
+    ).toBeLessThan(15);
   });
 
   it('matches the committed plugin bundle', async () => {
