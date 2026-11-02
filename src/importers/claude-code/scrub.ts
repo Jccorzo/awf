@@ -14,6 +14,10 @@ export interface ScrubOptions {
 
 const TEXT = '‹text›';
 
+interface RecordedCommand {
+  cmd?: unknown;
+}
+
 /** String fields kept as they are (after path and secret masking). */
 const KEEP = new Set([
   'type',
@@ -207,6 +211,19 @@ export function makeScrubber(options: ScrubOptions) {
       if (!line.trim()) return line;
       try {
         return JSON.stringify(scrub(JSON.parse(line), ''));
+      } catch {
+        return '‹bad line›';
+      }
+    },
+    /** A recorder event holds no content: only paths to normalise and commands to mask again. */
+    event: (line: string): string => {
+      if (!line.trim()) return line;
+      try {
+        const event = JSON.parse(paths(line)) as RecordedCommand & { bgt?: RecordedCommand[] };
+        for (const entry of [event, ...(event.bgt ?? [])]) {
+          if (typeof entry.cmd === 'string') entry.cmd = cleanCommand(entry.cmd);
+        }
+        return JSON.stringify(event);
       } catch {
         return '‹bad line›';
       }
