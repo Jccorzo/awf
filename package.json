@@ -1,9 +1,28 @@
 {
-  "name": "awf",
+  "name": "agent-waterfall",
   "version": "0.1.0",
   "description": "Agent waterfall: see where a coding agent's time went, by phase.",
   "type": "module",
   "license": "MIT",
+  "author": "Camilo Corzo",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jccorzo/awf.git"
+  },
+  "homepage": "https://github.com/Jccorzo/awf#readme",
+  "bugs": {
+    "url": "https://github.com/Jccorzo/awf/issues"
+  },
+  "keywords": [
+    "claude-code",
+    "coding-agent",
+    "ai-agent",
+    "cli",
+    "timing",
+    "profiling",
+    "waterfall",
+    "developer-tools"
+  ],
   "bin": {
     "awf": "dist/awf.mjs"
   },
@@ -18,6 +37,8 @@
   "packageManager": "pnpm@10.33.2",
   "scripts": {
     "build": "node scripts/build.mjs",
+    "prepack": "node scripts/build.mjs",
+    "prepublishOnly": "pnpm lint && pnpm test",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint . && prettier --check . && tsc --noEmit",
