@@ -6,3 +6,4 @@ fixtures/
 pnpm-lock.yaml
 PLAN.md
 src/classify/default-rules.yaml
+docs/sample-report.html

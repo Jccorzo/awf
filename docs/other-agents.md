@@ -2,7 +2,11 @@
 
 awf reads three more agents' session logs, read-only, into the same steps as Claude Code. Each importer turns the agent's log into the recorder's events, so the same rules make the steps: model time is time with no call in flight, idle time sits between turns. Tool names are mapped to Claude Code's (a shell call is `Bash`, a file edit `Edit`), so the phase rules apply unchanged.
 
-The fixtures in `fixtures/codex`, `fixtures/gemini` and `fixtures/opencode` are hand-made from each format, not recorded sessions: the same small task (a failing test, a look at the code, one edit, the test passing). Replace them with a scrubbed real session from each agent when you have one (`pnpm scrub`).
+**These three importers are experimental.** They're tested only on the hand-made logs in `fixtures/codex`, `fixtures/gemini` and `fixtures/opencode`, written from each format: the same small task (a failing test, a look at the code, one edit, the test passing). None has read a real session yet, so expect gaps.
+
+**You can help.** If you use one of these agents, run `awf import --agent <name>` (`codex`, `gemini` or `opencode`), then `awf report <id> --open`, and [open an issue](https://github.com/Jccorzo/awf/issues) saying what looks wrong. `awf summary <id> --share` prints the phases without the task, folder, commands or files, so you can paste that.
+
+A scrubbed real log would help most, so that it can become a fixture. Never post a raw one: logs hold your prompts, file contents, tool output and paths. Replace those by hand and keep the structure, keys, timestamps and tool names. `pnpm scrub` doesn't do this yet. It's written for Claude Code: it skips Gemini's and OpenCode's `.json` files, and on Codex logs it also blanks the commands and call IDs an importer needs.
 
 | Agent      | Where                                                          | What gives the timings                                                                                                                                                                                                                                                                     |
 | ---------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
