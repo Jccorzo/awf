@@ -1,12 +1,14 @@
 // Opens reports in headless Chromium: they draw in under two seconds, make no network requests,
-// log no errors, and their filters and keyboard navigation work. Skipped when Playwright's
-// Chromium isn't installed (npx playwright install chromium).
+// log no errors, and their filters and keyboard navigation work. Skipped, with a note, when
+// Playwright's Chromium isn't installed (pnpm exec playwright-core install chromium).
+import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { type Browser, chromium, type Page } from 'playwright-core';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { root } from '../../scripts/build-options.mjs';
 import { analyze } from '../../src/analyze/summary';
 import { memoryFiles } from '../../src/classify/resolve';
 import { importAgentFile, detectAgentFile } from '../../src/importers/agents';
@@ -24,6 +26,13 @@ const installed = (() => {
   }
 })();
 
+if (!installed) {
+  // Not console.warn: Vitest's minimal reporter, its default under a coding agent, hides that.
+  process.stderr.write(
+    "Skipping the browser tests: Chromium isn't installed. Run: pnpm exec playwright-core install chromium\n",
+  );
+}
+
 const dir = mkdtempSync(path.join(os.tmpdir(), 'awf-browser-'));
 const TEST_FIX = path.resolve(
   __dirname,
@@ -38,6 +47,25 @@ function write(name: string, session: Session): string {
   writeFileSync(file, renderReportHtml(data));
   return pathToFileURL(file).href;
 }
+
+describe('pnpm report:screenshots', () => {
+  it("says how to install Chromium when it isn't there, and draws nothing", () => {
+    const result = spawnSync(
+      process.execPath,
+      ['scripts/run-ts.mjs', 'scripts/report-screenshots.ts'],
+      {
+        cwd: root,
+        encoding: 'utf8',
+        env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: mkdtempSync(path.join(dir, 'none-')) },
+      },
+    );
+    expect(result.status).toBe(1);
+    expect(result.stderr.trim()).toBe(
+      "Chromium isn't installed. Run: pnpm exec playwright-core install chromium",
+    );
+    expect(result.stdout).toBe('');
+  });
+});
 
 describe.skipIf(!installed)('report in a browser', () => {
   let browser: Browser;

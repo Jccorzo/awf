@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { hookOptions, root } from '../../scripts/build-options.mjs';
+import { cliOptions, hookOptions, root } from '../../scripts/build-options.mjs';
 
 const tmp = mkdtempSync(path.join(os.tmpdir(), 'awf-hook-'));
 const hookFile = path.join(tmp, 'record.cjs');
@@ -93,5 +93,27 @@ describe('recorder hook', () => {
     expect(committed, 'run pnpm build and commit plugin/scripts/record.cjs').toBe(
       fresh.outputFiles?.[0]?.text,
     );
+  });
+});
+
+describe('plugin CLI', () => {
+  it('matches the committed plugin bundle', async () => {
+    const fresh = await build({
+      ...cliOptions('plugin/scripts/awf.mjs'),
+      write: false,
+      logLevel: 'silent',
+    });
+    const committed = readFileSync(path.join(root, 'plugin/scripts/awf.mjs'), 'utf8');
+    // Not toBe: on a mismatch that would print both bundles and bury the message.
+    expect(
+      committed === fresh.outputFiles?.[0]?.text,
+      'src/ changed but plugin/scripts/awf.mjs did not: run pnpm build and commit plugin/scripts/awf.mjs',
+    ).toBe(true);
+  });
+
+  it("doesn't carry the path of the clone it was built in", () => {
+    const committed = readFileSync(path.join(root, 'plugin/scripts/awf.mjs'), 'utf8');
+    expect(committed).toContain('// raw:src/classify/default-rules.yaml\n');
+    expect(committed).not.toContain(root);
   });
 });

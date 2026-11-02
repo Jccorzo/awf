@@ -6,6 +6,8 @@
   "author": {
     "name": "Camilo Corzo"
   },
+  "homepage": "https://github.com/Jccorzo/awf#readme",
+  "repository": "https://github.com/Jccorzo/awf",
   "license": "MIT",
   "keywords": ["timing", "profiling", "waterfall", "build", "tests", "lint"]
 }

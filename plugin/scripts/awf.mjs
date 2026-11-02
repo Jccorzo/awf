@@ -12326,7 +12326,11 @@ function resolveSession(input, env = process.env, project) {
   if (input === "last" || input === "latest" || input === "current") {
     const candidates = [...index.values()].filter((ref) => !project || refProject(ref) === project);
     const last = candidates.sort((a, b) => latestMs(b) - latestMs(a))[0];
-    if (!last) throw new Error("no sessions found");
+    if (!last) {
+      throw new Error(
+        'no sessions found. Run "awf import" to read past sessions, or install the plugin to record new ones.'
+      );
+    }
     return last;
   }
   const exact = index.get(input);
@@ -13166,7 +13170,11 @@ Claude Code update. It reads what "awf import" stored, so run that first.`,
       return 0;
     }
     const home = ctx.env.HOME ?? os5.homedir();
-    const recorder = events.length === 0 ? "no events yet. Install the plugin: claude plugin install awf@awf" : `${events.length} sessions, last event ${formatDuration(ctx.now - lastEvent)} ago`;
+    const recorder = events.length === 0 ? [
+      "no events yet. Install the plugin:",
+      "          claude plugin marketplace add Jccorzo/awf",
+      "          claude plugin install awf@awf"
+    ].join("\n") : `${events.length} sessions, last event ${formatDuration(ctx.now - lastEvent)} ago`;
     ctx.io.out(
       [
         `awf ${VERSION} on Node ${process.version}`,
@@ -14375,12 +14383,13 @@ function human(bytes) {
 }
 var purgeCommand = {
   summary: "Delete everything awf stored (~/.awf); Claude Code's own files stay",
-  usage: `Usage: awf purge [--yes]
+  usage: `Usage: awf purge [--yes] [--json]
 
 Deletes awf's folder (~/.awf, or $AWF_HOME): recorded timings, the import cache, reports and the
 status line's cache.
 Claude Code's transcripts are never touched. Without --yes it only lists what it would delete.
-  --yes   delete it`,
+  --yes    delete it
+  --json   print the folder's contents as JSON (it still deletes only with --yes)`,
   options: { yes: { type: "boolean" }, json: { type: "boolean" } },
   run(ctx, _args, options) {
     const home = ctx.env.HOME ?? os8.homedir();
@@ -15026,17 +15035,19 @@ function parseCsv(text) {
 }
 var sampleCommand = {
   summary: "Pick random Bash steps to check by hand, or to label as a CSV",
-  usage: `Usage: awf sample [--n 50] [--seed 1] [--since 30d] [--project <dir>] [--csv]
+  usage: `Usage: awf sample [--n 50] [--seed 1] [--since 30d] [--project <dir>] [--csv] [--json]
 
 Prints random Bash calls from your sessions with the phase awf gave each, for a hand check.
 With --csv it writes "command,cwd,awf_phase,your_phase": fill in your_phase with a phase id
-(${PHASES.map((p) => p.id).join(", ")}) and run "awf accuracy <file>".`,
+(${PHASES.map((p) => p.id).join(", ")}) and run "awf accuracy <file>".
+  --json   print the sample as a JSON array of { command, cwd, phase }`,
   options: {
     n: { type: "string" },
     seed: { type: "string" },
     since: { type: "string" },
     project: { type: "string" },
-    csv: { type: "boolean" }
+    csv: { type: "boolean" },
+    json: { type: "boolean" }
   },
   run(ctx, _args, options) {
     const n = typeof options.n === "string" ? Number.parseInt(options.n, 10) || 50 : 50;
@@ -15061,6 +15072,10 @@ With --csv it writes "command,cwd,awf_phase,your_phase": fill in your_phase with
     const picked = [];
     while (picked.length < n && pool.length > 0)
       picked.push(...pool.splice(Math.floor(next() * pool.length), 1));
+    if (options.json) {
+      ctx.io.out(JSON.stringify(picked, null, 2));
+      return 0;
+    }
     if (options.csv) {
       ctx.io.out("command,cwd,awf_phase,your_phase");
       for (const p of picked) ctx.io.out([p.command, p.cwd, p.phase, ""].map(csvCell).join(","));

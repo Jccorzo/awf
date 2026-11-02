@@ -10,7 +10,15 @@
     {
       "name": "awf",
       "source": "./plugin",
-      "description": "Records where Claude Code's time goes (timings, tool names and commands; never prompts or output) and draws the session as a waterfall with /awf:waterfall."
+      "description": "Records where Claude Code's time goes (timings, tool names and commands; never prompts or output) and draws the session as a waterfall with /awf:waterfall.",
+      "author": {
+        "name": "Camilo Corzo"
+      },
+      "homepage": "https://github.com/Jccorzo/awf#readme",
+      "repository": "https://github.com/Jccorzo/awf",
+      "license": "MIT",
+      "keywords": ["timing", "profiling", "waterfall", "build", "tests", "lint"],
+      "category": "productivity"
     }
   ]
 }

@@ -69,7 +69,11 @@ export function resolveSession(
   if (input === 'last' || input === 'latest' || input === 'current') {
     const candidates = [...index.values()].filter((ref) => !project || refProject(ref) === project);
     const last = candidates.sort((a, b) => latestMs(b) - latestMs(a))[0];
-    if (!last) throw new Error('no sessions found');
+    if (!last) {
+      throw new Error(
+        'no sessions found. Run "awf import" to read past sessions, or install the plugin to record new ones.',
+      );
+    }
     return last;
   }
   const exact = index.get(input);
