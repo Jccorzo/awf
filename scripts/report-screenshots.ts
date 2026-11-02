@@ -6,7 +6,7 @@ import { mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from
 import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { chromium } from 'playwright-core';
+import { type Browser, chromium } from 'playwright-core';
 import { analyze } from '../src/analyze/summary';
 import { attachBuildTimings } from '../src/build/drilldown';
 import type { Session } from '../src/model/types';
@@ -17,12 +17,29 @@ import { buildReportData } from '../src/report/data';
 import { renderReportHtml } from '../src/report/html';
 import { syntheticSession } from '../test/report/synthetic';
 
+/** Playwright's own message for a missing browser suggests a command that doesn't work here. */
+async function launchChromium(): Promise<Browser> {
+  try {
+    return await chromium.launch();
+  } catch (error) {
+    if (!String(error).includes("Executable doesn't exist")) throw error;
+    console.error("Chromium isn't installed. Run: pnpm exec playwright-core install chromium");
+    process.exit(1);
+  }
+}
+
+// First, so a missing browser stops the script before it draws anything.
+const browser = await launchChromium();
+
 const root = process.cwd();
 const outDir = path.join(root, 'test-results/screenshots');
 const work = mkdtempSync(path.join(os.tmpdir(), 'awf-shots-'));
 mkdirSync(outDir, { recursive: true });
 
 const silent = { out: () => {}, err: (text: string) => console.error(text) };
+// awf only ever sees the fixtures here, never the real home. Playwright still needs that one, to
+// find its browsers, so the script's own HOME stays as it is.
+const env = { ...process.env, AWF_HOME: path.join(work, 'home'), HOME: work };
 const reports: Array<{ name: string; file: string }> = [];
 const fixtures = path.join(root, 'fixtures/claude-code');
 for (const name of readdirSync(fixtures).sort()) {
@@ -32,7 +49,6 @@ for (const name of readdirSync(fixtures).sort()) {
   for (const share of [false, true]) {
     if (share && name !== 'cc-2.1.312-test-fix') continue;
     const file = path.join(work, `${name}${share ? '-share' : ''}.html`);
-    const env = { ...process.env, AWF_HOME: path.join(work, 'home'), HOME: os.homedir() };
     const code = await main(
       ['report', input, '--out', file, ...(share ? ['--share'] : [])],
       silent,
@@ -52,7 +68,6 @@ for (const fixture of [
   const agent = detectAgentFile(input);
   if (!agent) throw new Error(`not an agent file: ${fixture}`);
   const file = path.join(work, `${agent.agent}.html`);
-  const env = { ...process.env, AWF_HOME: path.join(work, 'home'), HOME: os.homedir() };
   if ((await main(['report', input, '--out', file], silent, env, root)) !== 0)
     throw new Error(`awf report failed for ${fixture}`);
   reports.push({ name: path.dirname(fixture).split('/')[1] ?? agent.agent, file });
@@ -144,7 +159,6 @@ const analysis = analyze(syntheticSession(), { files: memoryFiles({}) });
 writeFileSync(synthetic, renderReportHtml(buildReportData(analysis, { home: os.homedir() })));
 reports.push({ name: 'synthetic-1h', file: synthetic });
 
-const browser = await chromium.launch();
 const problems: string[] = [];
 try {
   for (const report of reports) {
