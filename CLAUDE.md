@@ -1,18 +1,14 @@
-# awf
+@AGENTS.md
 
-Local CLI that shows where a coding agent's time goes, by phase.
+## Claude Code
 
-## Commands
+Skills in this repo. Only the user starts them:
 
-- pnpm test · pnpm lint · pnpm build
-- pnpm awf report <session> --out /tmp/report.html
-- pnpm report:screenshots (every fixture's report, light and dark, laptop and phone)
+- /add-rule <tool>: add classifier rules for one tool, with a fixture, a test and an update to docs/phases.md.
+- /dogfood: run awf on this repo's own recent sessions and report the phase split and anything unclassified.
+- /next-step: take the first unticked step in PLAN.md, propose a plan, implement it after approval, run the checks, tick the box and commit.
 
-## Rules
+Subagents:
 
-- No network calls anywhere in src/. Lint enforces it.
-- Real sessions stay in fixtures/raw/ (gitignored). Commit only scrubbed copies.
-- Every classifier rule ships with a fixture test.
-- The HTML report is one self-contained file.
-- Phases are defined in docs/phases.md. Don't add new ones without asking.
-- Work from PLAN.md. Tick a step only when its checks pass.
+- rules-reviewer: read-only review of classifier changes. Use after editing src/classify or default-rules.yaml.
+- report-checker: renders every fixture's report and lists layout problems. Use after changing src/report.
