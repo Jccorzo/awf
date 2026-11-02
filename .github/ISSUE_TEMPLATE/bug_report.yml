@@ -1,0 +1,79 @@
+name: Bug report
+description: awf crashed, printed something wrong, or drew a wrong report.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > [!WARNING]
+        > **Keep your sessions private.** Full reports and `awf classify` show commands, file paths, the first prompt and tool output. Attach only `awf report <session> --share` copies and [scrubbed logs](https://github.com/Jccorzo/awf/blob/main/CONTRIBUTING.md#real-session-fixtures). `awf doctor --json` includes local paths, so review it before you paste it.
+
+        A wrong phase for a command or tool has its own template: **Rule request**.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: Include the command you ran and any error. Remove private names and paths.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. awf import
+        2. awf report last --share
+    validations:
+      required: true
+  - type: input
+    id: awf-version
+    attributes:
+      label: awf version
+      description: Output of `awf --version`.
+    validations:
+      required: true
+  - type: input
+    id: agent-version
+    attributes:
+      label: Agent and version
+      placeholder: Claude Code 2.1.312
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      placeholder: macOS 15.5
+    validations:
+      required: true
+  - type: input
+    id: node-version
+    attributes:
+      label: Node version
+      description: Output of `node --version`.
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of `awf doctor`
+      description: If you paste `awf doctor --json` instead, review it first. It includes local paths.
+      render: text
+  - type: textarea
+    id: attachments
+    attributes:
+      label: Attachments
+      description: A `--share` report or a scrubbed log, if they help. If GitHub refuses the file type, zip it first.
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy
+      options:
+        - label: Nothing here shows a real session's prompts, tool output, private paths or secrets.
+          required: true

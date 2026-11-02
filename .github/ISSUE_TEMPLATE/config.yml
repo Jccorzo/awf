@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security problem
+    url: https://github.com/Jccorzo/awf/security/advisories/new
+    about: Report secrets that survive masking, or code execution from a project's files, in private.
