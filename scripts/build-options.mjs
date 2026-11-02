@@ -8,12 +8,14 @@ export const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '
 export const rawPlugin = {
   name: 'raw',
   setup(build) {
-    build.onResolve({ filter: /\?raw$/ }, (args) => ({
-      path: path.resolve(args.resolveDir, args.path.slice(0, -'?raw'.length)),
-      namespace: 'raw',
-    }));
+    // esbuild prints this path in a comment in the committed bundle, so it can't depend on where
+    // the repo is: it's relative to the root, with forward slashes on every platform.
+    build.onResolve({ filter: /\?raw$/ }, (args) => {
+      const file = path.resolve(args.resolveDir, args.path.slice(0, -'?raw'.length));
+      return { path: path.relative(root, file).split(path.sep).join('/'), namespace: 'raw' };
+    });
     build.onLoad({ filter: /.*/, namespace: 'raw' }, async (args) => ({
-      contents: (await import('node:fs')).readFileSync(args.path, 'utf8'),
+      contents: (await import('node:fs')).readFileSync(path.join(root, args.path), 'utf8'),
       loader: 'text',
     }));
   },
