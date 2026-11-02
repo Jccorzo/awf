@@ -185,6 +185,8 @@ awf summary: /path/to/repo/.awf/rules.yaml commands[0]: unknown phase "test"; us
 
 **The status line shows nothing.** On any error it prints nothing and exits 0, so it can't break Claude Code's status line. It's also empty until the session has some working time. To see the error, run it with `AWF_DEBUG=1`, as in [Try it by hand](docs/statusline.md#try-it-by-hand).
 
+**A context bar or your own status line is gone.** Claude Code runs one status line command, so setting `awf statusline` replaces yours, and awf's line doesn't show context use. Installing the plugin doesn't touch it. [Keep your status line](docs/statusline.md#keep-your-status-line) runs both.
+
 ## Documentation
 
 [docs/README.md](docs/README.md) lists everything.

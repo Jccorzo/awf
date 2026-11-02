@@ -387,6 +387,9 @@ recorder's events or a subagent's transcript changes.
 Set it up in ~/.claude/settings.json:
   "statusLine": { "type": "command", "command": "awf statusline", "padding": 0 }
 
+Claude Code runs one status line command, so this replaces yours. To run both, see
+https://github.com/Jccorzo/awf/blob/main/docs/statusline.md#keep-your-status-line
+
   --pin <phases>  the phases always shown, first: ids or short names, comma-separated
                   (default tests; "tests,build"; "none" for only the top three)
   --json          print the phases, failures and rework as JSON (not cached)`,
