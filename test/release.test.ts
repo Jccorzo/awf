@@ -33,4 +33,21 @@ describe('the release', () => {
     expect(json('plugin/.claude-plugin/plugin.json').repository).toBe(repo);
     expect(json('.claude-plugin/marketplace.json').plugins[0].repository).toBe(repo);
   });
+
+  it("doesn't auto-approve anything that pushes or rewrites history for people who open the repo", () => {
+    const { allow, deny } = json('.claude/settings.json').permissions as {
+      allow: string[];
+      deny: string[];
+    };
+    const git = allow
+      .filter((rule) => rule.startsWith('Bash(git'))
+      .map((rule) => rule.replace(/^Bash\(git ?/, '').split(/[ )]/)[0]);
+    expect(git).toContain('status');
+    // No blanket rule, and none of the commands that can lose work or reach another machine.
+    for (const risky of ['*', '', 'push', 'reset', 'rebase', 'filter-branch', 'clean', 'config'])
+      expect(git).not.toContain(risky);
+    expect(deny).toEqual(
+      expect.arrayContaining(['Bash(curl *)', 'Bash(wget *)', 'Read(~/.claude/projects/**)']),
+    );
+  });
 });
