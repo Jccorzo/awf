@@ -54,7 +54,11 @@ Claude Code update. It reads what "awf import" stored, so run that first.`,
     const home = ctx.env.HOME ?? os.homedir();
     const recorder =
       events.length === 0
-        ? 'no events yet. Install the plugin: claude plugin install awf@awf'
+        ? [
+            'no events yet. Install the plugin:',
+            '          claude plugin marketplace add Jccorzo/awf',
+            '          claude plugin install awf@awf',
+          ].join('\n')
         : `${events.length} sessions, last event ${formatDuration(ctx.now - lastEvent)} ago`;
     ctx.io.out(
       [

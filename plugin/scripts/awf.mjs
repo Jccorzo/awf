@@ -12326,7 +12326,11 @@ function resolveSession(input, env = process.env, project) {
   if (input === "last" || input === "latest" || input === "current") {
     const candidates = [...index.values()].filter((ref) => !project || refProject(ref) === project);
     const last = candidates.sort((a, b) => latestMs(b) - latestMs(a))[0];
-    if (!last) throw new Error("no sessions found");
+    if (!last) {
+      throw new Error(
+        'no sessions found. Run "awf import" to read past sessions, or install the plugin to record new ones.'
+      );
+    }
     return last;
   }
   const exact = index.get(input);
@@ -13166,7 +13170,11 @@ Claude Code update. It reads what "awf import" stored, so run that first.`,
       return 0;
     }
     const home = ctx.env.HOME ?? os5.homedir();
-    const recorder = events.length === 0 ? "no events yet. Install the plugin: claude plugin install awf@awf" : `${events.length} sessions, last event ${formatDuration(ctx.now - lastEvent)} ago`;
+    const recorder = events.length === 0 ? [
+      "no events yet. Install the plugin:",
+      "          claude plugin marketplace add Jccorzo/awf",
+      "          claude plugin install awf@awf"
+    ].join("\n") : `${events.length} sessions, last event ${formatDuration(ctx.now - lastEvent)} ago`;
     ctx.io.out(
       [
         `awf ${VERSION} on Node ${process.version}`,

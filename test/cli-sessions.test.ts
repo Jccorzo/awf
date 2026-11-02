@@ -68,3 +68,37 @@ describe('awf sessions', () => {
     });
   });
 });
+
+describe('before there are any sessions', () => {
+  const empty = mkdtempSync(path.join(os.tmpdir(), 'awf-empty-'));
+  const env = {
+    AWF_HOME: path.join(empty, 'awf'),
+    AWF_CLAUDE_PROJECTS: path.join(empty, 'projects'),
+    HOME: empty,
+  };
+
+  it.each(['summary', 'report', 'classify'])('awf %s last says what to do next', async (name) => {
+    const io = captureIo();
+    expect(await main([name, 'last'], io, env)).toBe(1);
+    expect(io.stderr).toEqual([
+      `awf ${name}: no sessions found. Run "awf import" to read past sessions, or install the plugin to record new ones.`,
+    ]);
+  });
+
+  it('awf sessions says what to do next', async () => {
+    const io = captureIo();
+    expect(await main(['sessions'], io, env)).toBe(0);
+    expect(io.stdout.join('\n')).toContain('run "awf import"');
+  });
+
+  it('awf doctor gives both commands the plugin takes to install', async () => {
+    const io = captureIo();
+    expect(await main(['doctor'], io, env)).toBe(0);
+    const lines = io.stdout.join('\n').split('\n');
+    const marketplace = lines.findIndex(
+      (l) => l.trim() === 'claude plugin marketplace add Jccorzo/awf',
+    );
+    expect(marketplace).toBeGreaterThan(0);
+    expect(lines[marketplace + 1]?.trim()).toBe('claude plugin install awf@awf');
+  });
+});
