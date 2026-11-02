@@ -13,4 +13,4 @@ Add classifier rules for `$ARGUMENTS`.
 4. Add a fixture test in test/classify/rules.test.ts: one positive case per command shape, plus at least one known false positive that must not match.
 5. If the tool reports failures in its output, add its failure pattern under `failurePatterns`, with a test.
 6. Update the tool list for that phase in docs/phases.md.
-7. Run `pnpm test` and `pnpm lint`, then commit.
+7. Run `pnpm build`, `pnpm test` and `pnpm lint`, then commit, with plugin/scripts/: the rules are bundled into it.

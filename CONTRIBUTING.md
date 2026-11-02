@@ -4,28 +4,29 @@ The most useful contribution is a classifier rule for a tool awf gets wrong. See
 
 ## Setup
 
-You need Node 20 or later, and pnpm through corepack. Corepack uses the pnpm version in `package.json`'s `packageManager` field.
+You need Node 22, and pnpm through corepack. Corepack uses the pnpm version in `package.json`'s `packageManager` field.
 
 ```bash
 corepack enable
 pnpm install --frozen-lockfile
 ```
 
-`.node-version` holds 22, the version this repo is developed on. Version managers such as fnm pick it up in this folder. It doesn't limit users: awf runs on Node 20 or later (`engines` in `package.json`), and CI tests both 20 and 22. On Node 20, use 20.19 or later, which ESLint and Vite need.
+`.node-version` holds 22, the version this repo is developed on. Version managers such as fnm pick it up in this folder. It doesn't limit users: awf runs on Node 20 or later (`engines` in `package.json`), and CI tests both 20 and 22. Vitest no longer supports Node 20, so a Vitest update could break those CI jobs, though the suite passes on 20.19 and later today.
 
 ## Commands
 
-| Command                                 | What it does                                                                            |
-| --------------------------------------- | --------------------------------------------------------------------------------------- |
-| `pnpm test`                             | Unit, fixture and browser tests, with the network blocked                               |
-| `pnpm test test/classify/rules.test.ts` | One test file                                                                           |
-| `pnpm test:watch`                       | Tests in watch mode                                                                     |
-| `pnpm lint`                             | ESLint (with the no-network rule), Prettier, tsc                                        |
-| `pnpm format`                           | Prettier, writing its fixes                                                             |
-| `pnpm build`                            | `dist/awf.mjs` and the plugin's scripts                                                 |
-| `pnpm awf <command>`                    | Builds the CLI and runs it: `pnpm awf report <session> --out /tmp/report.html`          |
-| `pnpm scrub`                            | Scrubbed copies of `fixtures/raw/`, see [Real session fixtures](#real-session-fixtures) |
-| `pnpm report:screenshots`               | Every fixture's report, light and dark, laptop and phone                                |
+| Command                                 | What it does                                                                                                         |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `pnpm test`                             | Unit, fixture and browser tests, with the network blocked                                                            |
+| `pnpm test test/classify/rules.test.ts` | One test file                                                                                                        |
+| `pnpm test:watch`                       | Tests in watch mode                                                                                                  |
+| `pnpm lint`                             | ESLint (with the no-network rule), Prettier, tsc                                                                     |
+| `pnpm format`                           | Prettier, writing its fixes                                                                                          |
+| `pnpm build`                            | `dist/awf.mjs` and the plugin's scripts                                                                              |
+| `pnpm awf <command>`                    | Builds the CLI and runs it: `pnpm awf report <session> --out /tmp/report.html`                                       |
+| `pnpm scrub`                            | Scrubbed copies of `fixtures/raw/`, see [Real session fixtures](#real-session-fixtures)                              |
+| `pnpm report:sample`                    | Rewrites `docs/sample-report.html` and its screenshots from a made-up session; run it when the report's look changes |
+| `pnpm report:screenshots`               | Every fixture's report, light and dark, laptop and phone                                                             |
 
 ## Repo rules
 
@@ -98,7 +99,7 @@ Run `pnpm scrub` as yourself: it takes your home folder from the OS to replace i
 | Your user name as `user`, wherever it's a whole word in what's kept | Any string in a field not on the keep list, so a new field is dropped by default           |
 | Browser action names                                                | Git branches: `main`                                                                       |
 
-Files under `events/` only get their paths replaced. The recorder masked their commands when it wrote them, and `pnpm scrub` doesn't mask them again.
+Files under `events/` get their paths replaced and their commands masked again, on top of the masking the recorder did when it wrote them.
 
 ### Review before you commit
 
@@ -118,7 +119,7 @@ Running `pnpm scrub` again overwrites hand edits, so clear a session's folder fr
 
 ### Trying it without a real session
 
-Pass an input folder together with `--out`. Without `--out`, `pnpm scrub` ignores the folder you named and reads `fixtures/raw/`.
+Name an input folder, and pass `--out` so the copies don't land in `fixtures/claude-code/`.
 
 ```bash
 pnpm scrub fixtures/claude-code --out /tmp/scrub-check
