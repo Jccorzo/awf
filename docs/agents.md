@@ -123,7 +123,7 @@ Give the user that file's path. It keeps phases, durations and tool names: no ta
 | 1    | Error: no such session, a bad rule, a missing or wrong argument         |
 | 2    | Bad usage: an unknown command or option. awf prints the usage on stderr |
 
-Errors go to stderr, as `awf <command>: <message>`. With `--json`, stdout is JSON when the exit code is 0. The one exception is `purge`: see [its entry](#purge).
+Errors go to stderr, as `awf <command>: <message>`. With `--json`, stdout is JSON when the exit code is 0.
 
 - A missing or wrong argument is 1, not 2: `awf summary` with no session, `awf compare last` with one side.
 - `awf import` prints its report and then exits 1 if any log failed. Read `errors`.
@@ -331,8 +331,9 @@ Counts in `phases`: `runs` and `failed` on `lint`, `tests` and `build`. `edits` 
 
 `awf purge --json` lists what awf stored and deletes nothing. It prints `dir`, `parts` (`{ name, bytes }`), `foreign` (files awf didn't make, which stop a delete) and `deleted`.
 
-- `deleted` is always `false`, because it's printed before any delete. With `--yes`, the exit code says what happened.
-- If `~/.awf` doesn't exist, it prints a plain sentence, not JSON.
+- With `--yes` it deletes the folder, and `deleted` is `true`.
+- If `foreign` isn't empty, `--yes` deletes nothing, prints no JSON and exits 1.
+- If `~/.awf` doesn't exist, `parts` and `foreign` are empty.
 
 Only run `awf purge --yes` when the user asks. It deletes recorded timings, which can't be read back.
 

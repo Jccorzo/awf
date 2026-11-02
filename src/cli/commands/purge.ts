@@ -37,7 +37,11 @@ Claude Code's transcripts are never touched. Without --yes it only lists what it
     const dir = awfHome(ctx.env);
     const shown = homeRelative(dir, home);
     if (!existsSync(dir)) {
-      ctx.io.out(`Nothing to delete: ${shown} doesn't exist.`);
+      if (options.json) {
+        ctx.io.out(JSON.stringify({ dir, parts: [], foreign: [], deleted: false }, null, 2));
+      } else {
+        ctx.io.out(`Nothing to delete: ${shown} doesn't exist.`);
+      }
       return 0;
     }
     const entries = readdirSync(dir);
@@ -45,9 +49,11 @@ Claude Code's transcripts are never touched. Without --yes it only lists what it
     const parts = entries
       .filter((name) => OURS.has(name) && name !== '.DS_Store')
       .map((name) => ({ name, bytes: size(path.join(dir, name)) }));
-    if (options.json) {
-      ctx.io.out(JSON.stringify({ dir, parts, foreign, deleted: false }, null, 2));
-      if (!options.yes) return 0;
+    const report = (deleted: boolean) =>
+      ctx.io.out(JSON.stringify({ dir, parts, foreign, deleted }, null, 2));
+    if (options.json && !options.yes) {
+      report(false);
+      return 0;
     }
     if (foreign.length) {
       ctx.io.err(
@@ -62,7 +68,8 @@ Claude Code's transcripts are never touched. Without --yes it only lists what it
       return 0;
     }
     rmSync(dir, { recursive: true, force: true });
-    if (!options.json) ctx.io.out(`Deleted ${shown}.`);
+    if (options.json) report(true);
+    else ctx.io.out(`Deleted ${shown}.`);
     return 0;
   },
 };

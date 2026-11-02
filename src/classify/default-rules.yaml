@@ -274,7 +274,7 @@ commands:
   - phase: neutral
     program: [cd, pushd, popd, echo, printf, print, export, unset, set, source, '.', 'true', 'false', ':', sleep, wait, exit, return, read, alias, unalias, trap, shift, local, declare, typeset, readonly, ulimit, umask, '[', '[[', test, clear, reset, hash, shopt, setopt, bindkey, eval, let, break, continue, osascript, say, afplay, notify-send, terminal-notifier, open, xdg-open, kill, pkill, killall, disown, jobs, fg, bg, mktemp, pbcopy, xcode-select, caffeinate]
 
-# Gradle tasks, Maven goals, and task names given to turbo, nx, sbt and similar runners.
+# Gradle tasks, Maven goals and sbt tasks. turbo, nx, lerna and the other runners go by scripts:.
 # Tested against each task name, and against its last part for qualified names like :app:testDebug.
 tasks:
   - { phase: exploring, match: '^(tasks|help|dependencies|dependencyInsight|properties|projects|buildEnvironment|outgoingVariants|resolvableConfigurations|javaToolchains|model|dependency:tree|dependency:list|help:effective-pom|versions:display-dependency-updates)$' }
