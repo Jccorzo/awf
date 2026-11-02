@@ -250,6 +250,8 @@ Counts in `phases`: `runs` and `failed` on `lint`, `tests` and `build`. `edits` 
 
 `awf statusline --json` reads Claude Code's JSON on stdin, with `transcript_path` and `session_id`.
 
+Claude Code runs one `statusLine` command. Before you set it for a user, read the one in their settings: replacing it loses what it shows. [Keep your status line](statusline.md#keep-your-status-line) runs both.
+
 | Field       | Meaning                                                                            |
 | ----------- | ---------------------------------------------------------------------------------- |
 | `id`        | Session ID                                                                         |

@@ -197,6 +197,15 @@ describe('awf statusline', () => {
     expect(await main(['statusline', '--help'], help)).toBe(0);
     expect(help.stdout[0]).toContain('"statusLine"');
   });
+
+  it('warns before its setup replaces a status line', async () => {
+    const help = captureIo();
+    expect(await main(['statusline', '--help'], help)).toBe(0);
+    expect(help.stdout[0]).toContain('this replaces yours');
+    expect(help.stdout[0]).toContain('statusline.md#keep-your-status-line');
+    const docs = readFileSync(new URL('../docs/statusline.md', import.meta.url), 'utf8');
+    expect(docs).toContain('## Keep your status line');
+  });
 });
 
 describe('the status line format', () => {

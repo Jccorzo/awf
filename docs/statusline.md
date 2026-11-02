@@ -16,6 +16,8 @@ Shares are of the time the agent worked, without Waiting on you, so they hold st
 
 ## Set it up
 
+Claude Code runs one status line command, so this replaces yours. What it showed, such as a context bar, goes away, and awf's line doesn't show context use. To keep it, see [Keep your status line](#keep-your-status-line).
+
 Add a `statusLine` to `~/.claude/settings.json`. With the npm install (`npm install -g agent-waterfall`):
 
 ```json
@@ -43,6 +45,50 @@ From source, use the path to your build:
 If you ran `npm link` in your clone, `awf statusline` works there too.
 
 **The plugin alone isn't enough.** Claude Code runs this command from your settings, so it needs a path that stays put, and the plugin's folder changes with each version. Install the npm CLI for the status line, next to the plugin. They share `~/.awf/`, so the line uses the plugin's recorded events.
+
+## Keep your status line
+
+Installing the plugin doesn't touch your `statusLine`. Only the setup above replaces it.
+
+Claude Code shows each line the command prints on its own row, so one script can run both. Save this as `~/.claude/statusline.sh`, with your old command on the third line, and run `chmod +x ~/.claude/statusline.sh`:
+
+```bash
+#!/bin/bash
+input=$(cat)
+printf '%s' "$input" | ~/.claude/your-status-line.sh
+printf '%s' "$input" | awf statusline
+```
+
+From source, use `node /path/to/awf/dist/awf.mjs statusline` in place of `awf statusline`. Then point `statusLine` at the script:
+
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline.sh",
+    "padding": 0
+  }
+}
+```
+
+For a context bar above awf's line, use this script instead. It needs `jq`:
+
+```bash
+#!/bin/bash
+input=$(cat)
+pct=$(printf '%s' "$input" | jq -r '.context_window.used_percentage // 0' | cut -d. -f1)
+printf -v used '%*s' "$((pct / 10))" ''
+printf -v left '%*s' "$((10 - pct / 10))" ''
+echo "context ${used// /▓}${left// /░} $pct%"
+printf '%s' "$input" | awf statusline
+```
+
+```text
+context ▓▓▓░░░░░░░ 34%
+tests 3% · build 32% · scripts 26% · 9 failed · rework 9s
+```
+
+Claude Code doesn't draw this bar itself. On its own it only shows context use near the limit, as `12% until auto-compact`.
 
 ## How it works
 
