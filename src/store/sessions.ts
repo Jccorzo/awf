@@ -155,7 +155,7 @@ export interface LoadOptions {
 /**
  * Loads a session, merging what each source knows. The recorder's timings win; the transcript adds
  * details the hooks don't store (output, tokens, background completions), and fills in what the
- * recorder never saw: whole sessions, and the turns before it started.
+ * recorder never saw: whole sessions, and the turns it missed.
  */
 export function loadSession(ref: SessionRef, options: LoadOptions = {}): Session {
   const env = options.env ?? process.env;
@@ -171,11 +171,11 @@ export function loadSession(ref: SessionRef, options: LoadOptions = {}): Session
     }
   }
   if (events && recorded && transcript) {
-    const earlier = eventsBeforeRecorder(transcript.events, events);
-    const whole = earlier.length > 0 ? eventsToSession(ref.id, [...earlier, ...events]) : recorded;
+    const missed = eventsRecorderMissed(transcript, events);
+    const whole = missed.length > 0 ? eventsToSession(ref.id, [...missed, ...events]) : recorded;
     return mergeSessions(whole, transcript.session);
   }
-  if (recorded) return recorded;
+  if (recorded) return fullerImport(recorded, env);
   if (transcript) return transcript.session;
   if (ref.external && existsSync(ref.external.path)) {
     try {
@@ -193,35 +193,80 @@ function existing(file: string | undefined): string | undefined {
   return file && existsSync(file) ? file : undefined;
 }
 
+/** With the transcript gone, `awf import`'s copy may hold turns the recorder missed. */
+function fullerImport(recorded: Session, env: Env): Session {
+  const imported = readImported(recorded.id, env);
+  if (!imported || imported.session.steps.length <= recorded.steps.length) return recorded;
+  return { ...imported.session, sources: ['import-cache'] };
+}
+
 /** They say a process started or ended, not that the recorder saw the session work. */
 const PROCESS_EVENTS = new Set(['SessionStart', 'SessionEnd']);
+/** How long after a turn's last transcript entry its hooks can still start. */
+const HOOK_GRACE_MS = 5000;
+/** How a session starts when nothing came before it. */
+const FRESH_STARTS = new Set(['startup', 'clear']);
 
 /**
- * The transcript's events from before the recorder saw the session work: a session older than the
- * plugin, resumed after installing it. The recorder's first event belongs to a turn, and that turn
- * and the ones after it stay the recorder's. So does anything after the recorder stops: `/exit` is
- * a prompt in the transcript with no hook behind it, and reading it would add waiting time.
+ * The transcript's events for the turns the recorder missed: a session older than the plugin, or
+ * one carried on with the plugin off. A turn is missed when the agent worked in it and the recorder
+ * wrote nothing from its prompt until just after its end. Slash commands that never reach the model
+ * don't count: `/exit` is a prompt in the transcript with no hook behind it, and reading it would
+ * add waiting time.
  */
-export function eventsBeforeRecorder(
-  transcript: RecorderEvent[],
+export function eventsRecorderMissed(
+  { session, events }: TranscriptRead,
   recorded: RecorderEvent[],
 ): RecorderEvent[] {
-  let first = Infinity;
-  for (const event of recorded) {
-    if (!PROCESS_EVENTS.has(event.e)) first = Math.min(first, event.t);
-  }
-  if (first === Infinity) return transcript;
-  let prompt = -Infinity;
-  for (const event of transcript) {
-    if (event.e === 'UserPromptSubmit' && event.t <= first) prompt = Math.max(prompt, event.t);
-  }
-  // That prompt's turn had ended: the first event was a compaction, or a hook ahead of its entry.
-  const ended = transcript.some(
-    (event) =>
-      (event.e === 'Stop' || event.e === 'StopFailure') && event.t > prompt && event.t < first,
+  const work = recorded
+    .filter((event) => !PROCESS_EVENTS.has(event.e))
+    .map((event) => event.t)
+    .sort((a, b) => a - b);
+  const turns = session.steps.filter((step) => step.kind === 'turn');
+  const worked = new Set(
+    session.steps.filter((step) => step.kind === 'tool' || step.model).map((s) => s.parentId),
   );
-  const cut = ended || prompt === -Infinity ? first : prompt;
-  return transcript.filter((event) => event.t < cut);
+  // What came before the first turn, then each missed turn, up to the next turn or recorder event.
+  const first = Math.min(turns[0]?.startMs ?? Infinity, work[0] ?? Infinity);
+  const spans: Array<[number, number]> = [[-Infinity, first]];
+  let next = 0;
+  turns.forEach((turn, i) => {
+    while ((work[next] ?? Infinity) < turn.startMs) next++;
+    const seen = work[next] ?? Infinity;
+    if (!worked.has(turn.id) || seen <= turn.endMs + HOOK_GRACE_MS) return;
+    const end = Math.min(seen, turns[i + 1]?.startMs ?? Infinity);
+    const last = spans.at(-1) as [number, number];
+    if (last[1] === turn.startMs) last[1] = end;
+    else spans.push([turn.startMs, end]);
+  });
+  return events.filter((event) => spans.some(([from, to]) => event.t >= from && event.t < to));
+}
+
+/**
+ * Whether the recorder may have missed turns, told without reading the transcript. A transcript can
+ * change with no work in it (docs/transcript-format.md), which only costs a read.
+ */
+function mayHaveMissed(events: RecorderEvent[], transcript: TranscriptFile | undefined): boolean {
+  const [first] = events;
+  if (first?.e !== 'SessionStart' || !FRESH_STARTS.has(first.src ?? '')) return true;
+  const last = events.at(-1) as RecorderEvent;
+  return !!transcript && transcript.mtimeMs > last.t + HOOK_GRACE_MS;
+}
+
+/**
+ * A session's timings for commands that read many: the recorder's events alone or the import cache,
+ * and the transcript only when the recorder may have missed turns.
+ */
+export function quickSession(ref: SessionRef, env: Env): Session | undefined {
+  if (!ref.events) return ref.imported ? readImported(ref.id, env)?.session : undefined;
+  const events = readEvents(ref.events.path);
+  if (mayHaveMissed(events, ref.transcript)) return loadSession(ref, { env });
+  const recorded = eventsToSession(ref.id, events);
+  if (!recorded.cwd && ref.imported) {
+    const cwd = readImported(ref.id, env)?.session.cwd;
+    if (cwd) recorded.cwd = cwd;
+  }
+  return recorded;
 }
 
 export function mergeSessions(recorded: Session, transcript: Session): Session {
