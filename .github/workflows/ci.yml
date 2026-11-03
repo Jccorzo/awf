@@ -59,7 +59,7 @@ jobs:
 
       # Each variant gets its own check name, so it skips only on its own pass: hushrun doesn't
       # compare the OS or Node version. Same command as package.json's test script.
-      - run: pnpm exec hushrun run test-${{ matrix.os }}-node${{ matrix.node }} -- vitest run
+      - run: npx hushrun run test-${{ matrix.os }}-node${{ matrix.node }} -- vitest run
 
       - run: pnpm build
 
