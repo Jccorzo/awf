@@ -23,6 +23,9 @@ importers:
       globals:
         specifier: ^17.13.0
         version: 17.13.0
+      hushrun:
+        specifier: ^0.7.0
+        version: 0.7.0
       playwright-core:
         specifier: ^1.64.1
         version: 1.64.1
@@ -264,6 +267,36 @@ packages:
   '@humanwhocodes/retry@0.4.3':
     resolution: {integrity: sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ==}
     engines: {node: '>=18.18'}
+
+  '@hushrun/cli-darwin-arm64@0.7.0':
+    resolution: {integrity: sha512-CBuqWiGt5ZgC1snlgsSlhwVLy8oaBkuElZjge4n/gpJl+wwreix44UHsrmqg2ef2b23Xri8zPpTCHV+e1/nOAg==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@hushrun/cli-darwin-x64@0.7.0':
+    resolution: {integrity: sha512-e5a3hd7Xx0EHTeDqECSDq6KvztP3ulojXE5mx22eTUBJITSuxpOj9sqSmNDhHD24XFYsbmfbPaRCMzwlERBZQg==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@hushrun/cli-linux-arm64@0.7.0':
+    resolution: {integrity: sha512-4wWvzic+s7jFF3CpobjMv2EUU3JQaJCaI56eOI5+2u2TWO9EuO/0ysTkMqRcNIjD+eckPUrG2si9c7JI8uZ5CQ==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@hushrun/cli-linux-x64@0.7.0':
+    resolution: {integrity: sha512-mpmejM0nVmIgVZLbsbFucmGMJgHWEahM+xMep0r3+UhIUsxIf2i+smPjyd2uxT6qSywHMacalPGqidJWLh4g0Q==}
+    cpu: [x64]
+    os: [linux]
+
+  '@hushrun/cli-win32-arm64@0.7.0':
+    resolution: {integrity: sha512-IENxB4Fek1IW03yCrS4meeRXL7aHkgsQK4AIwXCnIh72kYa2bFu07rwtmrQc8I+HdBr+tuKlgko7jr6bIxv5qA==}
+    cpu: [arm64]
+    os: [win32]
+
+  '@hushrun/cli-win32-x64@0.7.0':
+    resolution: {integrity: sha512-RE9JUNnUcowfxvgzOdoWHDzkAeStzpfB2aD1D4+w7yPTzrdGShTL6RbFLxk7ecmLJH0pCc48hCgdRLHfXc/4qQ==}
+    cpu: [x64]
+    os: [win32]
 
   '@jridgewell/resolve-uri@3.1.2':
     resolution: {integrity: sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw==}
@@ -643,6 +676,11 @@ packages:
 
   hookified@2.2.0:
     resolution: {integrity: sha512-p/LgFzRN5FeoD3DLS6bkUapeye6E4SI6yJs6KetENd18S+FBthqYq2amJUWpt5z0EQwwHemidjY5OqJGEKm5uA==}
+
+  hushrun@0.7.0:
+    resolution: {integrity: sha512-qTXR3m2KDZ8IdJecGJqtDAefwyGUw+x1eg/CrMtoCZhlV2WWyZcBtxmrPyEE1P2pt7oSamodhLYZbJ0sVs8M6g==}
+    engines: {node: '>=18'}
+    hasBin: true
 
   ignore@5.3.2:
     resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
@@ -1147,6 +1185,24 @@ snapshots:
 
   '@humanwhocodes/retry@0.4.3': {}
 
+  '@hushrun/cli-darwin-arm64@0.7.0':
+    optional: true
+
+  '@hushrun/cli-darwin-x64@0.7.0':
+    optional: true
+
+  '@hushrun/cli-linux-arm64@0.7.0':
+    optional: true
+
+  '@hushrun/cli-linux-x64@0.7.0':
+    optional: true
+
+  '@hushrun/cli-win32-arm64@0.7.0':
+    optional: true
+
+  '@hushrun/cli-win32-x64@0.7.0':
+    optional: true
+
   '@jridgewell/resolve-uri@3.1.2': {}
 
   '@jridgewell/sourcemap-codec@1.6.0': {}
@@ -1523,6 +1579,15 @@ snapshots:
   hookified@1.15.1: {}
 
   hookified@2.2.0: {}
+
+  hushrun@0.7.0:
+    optionalDependencies:
+      '@hushrun/cli-darwin-arm64': 0.7.0
+      '@hushrun/cli-darwin-x64': 0.7.0
+      '@hushrun/cli-linux-arm64': 0.7.0
+      '@hushrun/cli-linux-x64': 0.7.0
+      '@hushrun/cli-win32-arm64': 0.7.0
+      '@hushrun/cli-win32-x64': 0.7.0
 
   ignore@5.3.2: {}
 

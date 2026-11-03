@@ -1,0 +1,8 @@
+# hushrun.yaml: where this repository's events go.
+version: 1
+repository: github.com/Jccorzo/awf
+repository_url: https://api.hushrun.com/l/jccorzot/awf
+
+transparency_log:   # the server's log key
+  origin: api.hushrun.com/l/jccorzot/awf
+  key: "ed25519:QxvdiuCUaZ6CwTV5eM/y9n/ZW7FOUUwJ5FKu/9flHz8="
