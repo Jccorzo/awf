@@ -25,5 +25,6 @@ The first public release, planned as 0.1.0.
 - A Claude Code plugin that records new sessions through hooks and adds `/awf:waterfall`.
 - A pane in the plugin with the current session's phase split: it opens by itself in the desktop app, and with `/awf-panel` in a terminal.
 - Project rules in `.awf/rules.yaml`.
+- Dart and Flutter rules: `flutter`/`dart` analyze, format, fix, test, drive, build, compile and `pub`, build_runner, custom_lint, dcm, patrol and very_good, with failure patterns for tests, the analyzer and builds. `fvm flutter ...` and `dart run <package>` are read like `npx`, and melos scripts are read from `melos.yaml` or the workspace's `pubspec.yaml`.
 
 [Unreleased]: https://github.com/Jccorzo/awf/commits/main

@@ -294,6 +294,114 @@ describe('fastlane lanes', () => {
   });
 });
 
+describe('melos scripts', () => {
+  const melos = [
+    'name: mono',
+    'packages:',
+    '  - packages/**',
+    'scripts:',
+    '  analyze:',
+    '    run: melos exec -- dart analyze .',
+    '  test:',
+    '    run: flutter test --coverage',
+    '    exec:',
+    '      concurrency: 1',
+    '    packageFilters:',
+    '      dirExists: test',
+    '  gen:',
+    '    exec: dart run build_runner build -d',
+    '  lint:',
+    '    steps:',
+    '      - analyze',
+    '      - dart format --set-exit-if-changed .',
+    '  ci:',
+    '    steps: [lint, test]',
+    '  loop:',
+    '    steps: [loop]',
+    // A step can be one of melos's own commands.
+    '  precommit:',
+    '    steps:',
+    '      - format --set-exit-if-changed',
+    '      - analyze --fatal-infos',
+    '  setup:',
+    '    steps: [bootstrap, gen]',
+  ].join('\n');
+  const c = classifier({
+    '/mono/melos.yaml': melos,
+    '/mono/packages/app/pubspec.yaml': 'name: app\n',
+    // melos 7 reads its config from the workspace's pubspec.yaml.
+    '/ws/pubspec.yaml':
+      'name: ws\nworkspace:\n  - packages/a\nmelos:\n  scripts:\n    test: flutter test\n',
+    '/ws/packages/a/pubspec.yaml': 'name: a\nresolution: workspace\n',
+  });
+
+  it('classifies a script by its run or exec command, with or without `run`', () => {
+    for (const command of ['melos run test', 'melos test', 'melos run test --no-select'])
+      expect(c.command(command, '/mono'), command).toMatchObject({
+        phase: 'tests',
+        tags: ['script:test'],
+        checks: [
+          { key: 'tests:flutter test', phase: 'tests', tool: 'flutter test', failed: false },
+        ],
+      });
+    expect(c.command('melos run gen', '/mono').checks[0]?.key).toBe('build:build_runner');
+  });
+
+  it("follows a script's steps, by name or as commands, and melos exec", () => {
+    const lint = c.command('melos run lint', '/mono');
+    expect(lint.phase).toBe('lint');
+    expect(lint.checks.map((k) => k.key)).toEqual(['lint:dart analyze', 'lint:dart format']);
+    expect(lint.tags).toEqual(expect.arrayContaining(['script:lint', 'via:melos']));
+    expect(c.command('melos run ci', '/mono')).toMatchObject({
+      phase: 'tests',
+      tags: expect.arrayContaining(['lint']),
+    });
+    // A script that only calls itself runs nothing awf knows.
+    expect(c.command('melos run loop', '/mono').phase).toBe('unclassified');
+    expect(c.command('melos run precommit', '/mono').checks.map((k) => k.key)).toEqual([
+      'lint:melos format',
+      'lint:melos analyze',
+    ]);
+    expect(c.command('melos run setup', '/mono')).toMatchObject({
+      phase: 'build',
+      tags: expect.arrayContaining(['install']),
+    });
+  });
+
+  it("finds the workspace from a package's folder, and in melos 7's pubspec.yaml", () => {
+    expect(c.command('melos run test', '/mono/packages/app').phase).toBe('tests');
+    expect(c.command('cd packages/a && melos test', '/ws')).toMatchObject({
+      phase: 'tests',
+      tags: ['script:test'],
+    });
+  });
+
+  it("decides by the script's name without its config, and leaves melos's commands to the rules", () => {
+    expect(c.command('melos run test', '/elsewhere')).toMatchObject({
+      phase: 'tests',
+      tags: ['by-name', 'script:test'],
+    });
+    expect(c.command('melos run toString', '/mono').phase).toBe('unclassified');
+    expect(c.command('melos bootstrap', '/mono')).toMatchObject({
+      phase: 'build',
+      tags: ['install'],
+    });
+    expect(c.command('melos analyze', '/mono').checks[0]?.key).toBe('lint:melos analyze');
+  });
+
+  it('counts integration_test, test_driver and patrol_test as test code', () => {
+    for (const file of [
+      '/r/app/test/widget_test.dart',
+      '/r/app/integration_test/app_test.dart',
+      '/r/app/test_driver/integration_test.dart',
+      '/r/app/patrol_test/login_test.dart',
+    ])
+      expect(c.isTestFile(file), file).toBe(true);
+    for (const file of ['/r/app/lib/main.dart', '/r/app/lib/src/test_utils.dart'])
+      expect(c.isTestFile(file), file).toBe(false);
+  });
+});
+
 describe("a repo's own rules", () => {
   const files = {
     '/app/scripts/test.sh':

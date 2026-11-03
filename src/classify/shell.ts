@@ -655,6 +655,7 @@ const WRAPPER_PAIRS: Record<string, Record<string, string[]>> = {
   mise: { exec: [], x: [] },
   direnv: { exec: [] },
   fnm: { exec: ['--using'] },
+  fvm: { exec: [] },
   nvm: { exec: [] },
   volta: { run: ['--node', '--npm', '--yarn', '--pnpm'] },
   op: { run: ['--env-file'] },
@@ -814,6 +815,26 @@ export function unwrap(input: string[]): Unwrapped {
     if (program === 'php' && /(^|\/)(vendor\/)?bin\/[\w.-]+$/.test(rest[0] ?? '')) {
       wrappers.push('php');
       argv = rest;
+      continue;
+    }
+    // fvm runs the project's pinned Flutter SDK: `fvm flutter test`, `fvm dart run`, and
+    // `fvm spawn 3.24.0 test`, which runs that version's flutter.
+    if (program === 'fvm' && (rest[0] === 'flutter' || rest[0] === 'dart')) {
+      wrappers.push('fvm');
+      argv = rest;
+      continue;
+    }
+    if (program === 'fvm' && rest[0] === 'spawn' && rest.length > 2) {
+      wrappers.push('fvm spawn');
+      argv = ['flutter', ...rest.slice(2)];
+      continue;
+    }
+    // `flutter packages` is `flutter pub`, and `flutter pub pub <args>` hands <args> to pub.
+    if (
+      program === 'flutter' &&
+      (rest[0] === 'packages' || (rest[0] === 'pub' && rest[1] === 'pub'))
+    ) {
+      argv = [argv[0] as string, 'pub', ...rest.slice(rest[1] === 'pub' ? 2 : 1)];
       continue;
     }
     if (program === 'go' && rest[0] === 'tool' && rest[1] && !GO_TOOLS.has(rest[1])) {

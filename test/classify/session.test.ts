@@ -193,6 +193,77 @@ describe('failure detection: whose exit code is it', () => {
     expect(steps.map((s) => s.failed)).toEqual([false, true, false, true]);
   });
 
+  it('reads Dart and Flutter failures a pipe hid, and only real ones', () => {
+    const cases: Array<[string, string, boolean]> = [
+      ['flutter test 2>&1 | tail -5', '00:04 +12 -1: Some tests failed.', true],
+      ['flutter test | tail', '00:04 +13: All tests passed!', false],
+      // A passing test whose name says so: no -N failure count before it.
+      [
+        'dart test | tail',
+        '00:01 +1: prints Some tests failed. when one fails\n00:01 +2: All tests passed!',
+        false,
+      ],
+      [
+        'flutter analyze | tail',
+        "  error • Undefined name 'x' • lib/main.dart:3:5 • undefined_identifier\n\n1 issue found. (ran in 1.9s)",
+        true,
+      ],
+      [
+        'dart analyze | tail',
+        '  info - lib/a.dart:1:7 - Use const. - prefer_const_constructors\n\n1 issue found.',
+        false,
+      ],
+      [
+        'dart analyze lib | tail',
+        "  warning - lib/a.dart:2:3 - Unused import: 'x'. - unused_import\n\n1 issue found.",
+        true,
+      ],
+      [
+        'flutter build apk 2>&1 | tail',
+        "lib/main.dart:7:3: Error: Undefined name 'foo'.\nGradle task assembleRelease failed with exit code 1",
+        true,
+      ],
+      [
+        'flutter build ios --no-codesign | tail',
+        "Warning (Xcode): Run script build phase 'x' will be run during every build\n✓ Built build/ios/iphoneos/Runner.app (21.4MB)",
+        false,
+      ],
+      [
+        'dart run build_runner build 2>&1 | tail',
+        '[SEVERE] mockito:mockBuilder on test/a_test.dart:\nInvalid @GenerateMocks annotation',
+        true,
+      ],
+      ['very_good test | tail', '00:09 +12 -1: Some tests failed.', true],
+      ['patrol test | tail', '📝 Total: 3\n✅ Successful: 2\n❌ Failed: 1', true],
+      ['patrol test | tail', '📝 Total: 3\n✅ Successful: 3\n❌ Failed: 0', false],
+      [
+        'flutter drive --target=integration_test/app_test.dart | tail',
+        'Failure Details:\n...',
+        true,
+      ],
+      // melos exec puts the package before each line; the bullet depends on the terminal.
+      [
+        'melos exec -- dart analyze . | tail',
+        "[app]:   error • Undefined name 'x' • lib/main.dart:3:5 • undefined_identifier",
+        true,
+      ],
+      [
+        'dart compile js web/main.dart | tail',
+        "web/main.dart:3:3:\nError: Method not found: 'foo'.\nError: Compilation failed.",
+        true,
+      ],
+      [
+        'dart compile exe bin/main.dart | tail',
+        "bin/main.dart:3:3: Error: Method not found: 'run'.\nError: AOT compilation failed",
+        true,
+      ],
+    ];
+    const steps = classify(
+      session(cases.map(([command, output]) => bash(command, true, output))),
+    ).steps;
+    expect(steps.map((s) => s.failed)).toEqual(cases.map(([, , failed]) => failed));
+  });
+
   it('reads a failure that `|| true` hid from the output', () => {
     const [run] = classify(
       session([bash('pnpm test || true', true, ' Tests  1 failed | 20 passed (21)')]),

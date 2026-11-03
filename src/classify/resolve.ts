@@ -837,6 +837,11 @@ export function resolve(argv: string[], cwd: string, files: Files): Resolution |
       return resolveGitHook(args, cwd, files);
     case 'fastlane':
       return resolveFastlane(args, cwd, files);
+    case 'melos':
+      return resolveMelos(args, cwd, files);
+    case 'dart':
+    case 'flutter':
+      return resolveDartRun(program, args, cwd, files);
   }
   const file = scriptFile(argv);
   if (file) {
@@ -999,6 +1004,171 @@ function resolveFastlane(args: string[], cwd: string, files: Files): Resolution 
     if (commands.length > 0) return { kind: 'lane', name, commands, cwd: path.dirname(found.file) };
   }
   return { kind: 'lane-name', name };
+}
+
+/** The package's own name, from the nearest pubspec.yaml. */
+function pubspecName(cwd: string, files: Files): string | undefined {
+  const found = findUp(cwd, ['pubspec.yaml'], files);
+  return found ? /^name:\s*['"]?([\w-]+)/m.exec(found.text)?.[1] : undefined;
+}
+
+/**
+ * `dart run <package>[:<executable>]`, and `pub run` and `pub global run`, run a dependency's
+ * executable, as npx does: `dart run build_runner build`, `dart run melos bootstrap`. `dart run test`
+ * is package:test's runner, `dart test`. A file, no target, or the package's own executable runs
+ * the project itself, and is left to the rules (Running scripts).
+ */
+function resolveDartRun(
+  program: string,
+  args: string[],
+  cwd: string,
+  files: Files,
+): Resolution | undefined {
+  const global = args[0] === 'pub' && args[1] === 'global' && args[2] === 'run';
+  let at: number;
+  if (program === 'dart' && args[0] === 'run') at = 1;
+  else if (args[0] === 'pub' && args[1] === 'run') at = 2;
+  else if (global) at = 3;
+  else return undefined;
+  while (at < args.length && (args[at] as string).startsWith('-')) at++;
+  const target = args[at];
+  if (!target || target.startsWith(':') || target.includes('/') || target.endsWith('.dart'))
+    return undefined;
+  const [pkg = target, exe] = target.split(':');
+  if (!global && pkg === pubspecName(cwd, files)) return undefined;
+  const rest = args.slice(at + 1);
+  if (pkg === 'test' && (!exe || exe === 'test'))
+    return { kind: 'bin', argv: ['dart', 'test', ...rest] };
+  return { kind: 'bin', argv: [exe && exe !== pkg ? target : pkg, ...rest] };
+}
+
+/** melos's own commands: `melos <name>` runs the script of that name only when it isn't one of these. */
+const MELOS_COMMANDS = new Set([
+  'analyze',
+  'bootstrap',
+  'bs',
+  'clean',
+  'completion',
+  'exec',
+  'format',
+  'help',
+  'init',
+  'list',
+  'ls',
+  'publish',
+  'run',
+  'version',
+]);
+
+/** Options of `melos exec` that take a value. The command follows them, usually after `--`. */
+const MELOS_EXEC_VALUE_OPTIONS = [
+  '-c',
+  '--concurrency',
+  '--scope',
+  '--ignore',
+  '--diff',
+  '--since',
+  '--category',
+  '--dir-exists',
+  '--file-exists',
+  '--depends-on',
+  '--no-depends-on',
+];
+
+/**
+ * A melos workspace's scripts: `scripts:` in melos.yaml or, from melos 7, in the `melos:` section of
+ * the workspace's pubspec.yaml. A package's own pubspec.yaml has no `melos:`, so the search goes on up.
+ */
+function melosScripts(
+  cwd: string,
+  files: Files,
+): { scripts: Record<string, unknown>; dir: string } | undefined {
+  let dir = path.resolve(cwd);
+  for (let i = 0; i < 16; i++) {
+    for (const name of ['melos.yaml', 'pubspec.yaml']) {
+      const text = files.read(path.join(dir, name));
+      if (text === undefined) continue;
+      let doc: unknown;
+      try {
+        doc = YAML.parse(text);
+      } catch {
+        continue;
+      }
+      const config = name === 'melos.yaml' ? doc : (doc as { melos?: unknown } | null)?.melos;
+      if (config && typeof config === 'object') {
+        const scripts = (config as { scripts?: unknown }).scripts;
+        return {
+          scripts:
+            scripts && typeof scripts === 'object' ? (scripts as Record<string, unknown>) : {},
+          dir,
+        };
+      }
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) return undefined;
+    dir = parent;
+  }
+  return undefined;
+}
+
+/**
+ * A melos script's commands: its `run` or `exec` command, or its `steps`. A step is another script,
+ * one of melos's own commands (`format --set-exit-if-changed` runs `melos format ...`), or a command.
+ */
+function melosCommands(
+  scripts: Record<string, unknown>,
+  name: string,
+  seen = new Set<string>(),
+): string[] {
+  if (seen.has(name)) return [];
+  seen.add(name);
+  const script = scripts[name];
+  if (typeof script === 'string') return [script];
+  if (!script || typeof script !== 'object') return [];
+  const { run, exec, steps } = script as { run?: unknown; exec?: unknown; steps?: unknown };
+  if (typeof run === 'string') return [run];
+  if (typeof exec === 'string') return [exec];
+  if (!Array.isArray(steps)) return [];
+  return steps.flatMap((step): string[] => {
+    if (typeof step !== 'string') return [];
+    if (Object.hasOwn(scripts, step)) return melosCommands(scripts, step, seen);
+    const first = step.trim().split(/\s+/)[0] ?? '';
+    return [MELOS_COMMANDS.has(first) ? `melos ${step.trim()}` : step];
+  });
+}
+
+/**
+ * `melos run <script>` and `melos <script>`: the script's commands from the workspace's config, or
+ * its name when awf can't read them. `melos exec -- <command>` runs the command in each package.
+ */
+function resolveMelos(args: string[], cwd: string, files: Files): Resolution | undefined {
+  const i = firstPositional(args, ['--sdk-path']);
+  if (i < 0) return undefined;
+  const sub = args[i] as string;
+  if (sub === 'exec') {
+    const rest = args.slice(i + 1);
+    let at = 0;
+    while (at < rest.length && rest[at] !== '--' && (rest[at] as string).startsWith('-'))
+      at += MELOS_EXEC_VALUE_OPTIONS.includes(rest[at] as string) ? 2 : 1;
+    const command = rest[at] === '--' ? rest.slice(at + 1) : rest.slice(at);
+    if (command.length === 0) return undefined;
+    // `melos exec -- "flutter test --coverage"`: one quoted word holds the whole command.
+    if (command.length === 1 && /\s/.test(command[0] as string))
+      return { kind: 'bin', argv: ['sh', '-c', command[0] as string] };
+    return { kind: 'bin', argv: command };
+  }
+  const run = sub === 'run';
+  if (!run && MELOS_COMMANDS.has(sub)) return undefined;
+  const at = run ? firstPositional(args.slice(i + 1), []) : 0;
+  const name = run ? (at < 0 ? undefined : args[i + 1 + at]) : sub;
+  if (!name) return undefined;
+  const workspace = melosScripts(cwd, files);
+  if (workspace && Object.hasOwn(workspace.scripts, name)) {
+    const commands = melosCommands(workspace.scripts, name);
+    return { kind: 'script', runner: 'melos', name, commands, cwd: workspace.dir };
+  }
+  // A name that isn't melos's own command can only be a script: without its config, the name decides.
+  return { kind: 'script-name', runner: 'melos', name, rest: args.slice(run ? i + 2 + at : i + 1) };
 }
 
 const SHELL_SHEBANG = /^#!\s*\S*\/(env\s+)?(sh|bash|zsh|dash|ksh)\b/;

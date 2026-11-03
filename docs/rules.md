@@ -69,7 +69,7 @@ On a command of your own, `writing` gives Writing code: awf can't tell which fil
 
 ## commands
 
-Bash commands. awf splits a compound command, removes wrappers (`env FOO=1`, `sudo`, `time`, `timeout`, `npx`, `pnpm exec`, `uv run`, `poetry run`, `bundle exec`, `python -m` and others), and matches each simple command. A rule needs `program` or `match`. With both, both must match.
+Bash commands. awf splits a compound command, removes wrappers (`env FOO=1`, `sudo`, `time`, `timeout`, `npx`, `pnpm exec`, `uv run`, `poetry run`, `bundle exec`, `python -m`, `fvm` and others), and matches each simple command. A rule needs `program` or `match`. With both, both must match.
 
 | Field     | Value          | Meaning                                                                                                         |
 | --------- | -------------- | --------------------------------------------------------------------------------------------------------------- |
