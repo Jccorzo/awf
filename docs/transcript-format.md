@@ -29,7 +29,7 @@ One JSON object per line. Most carry `type`, `timestamp` (ISO 8601, ms), `uuid`,
 | `api-request`     | When a model request was sent (2.1.300 and later). An assistant line's `requestRef` names the one it answers. A request sent again after an API error, a timeout or a rate limit repeats the entry                                                                                                           |
 | `attachment`      | Skipped, except `<task-notification>` text inside it. Over 40 attachment types exist (`hook_success` with `durationMs`, `queued_command`, `edited_text_file`, ...)                                                                                                                                           |
 
-Known and skipped: `summary`, `last-prompt`, `ai-title`, `custom-title`, `agent-name`, `mode`, `permission-mode`, `atis-latch`, `cost-state`, `pr-link`, `file-history-snapshot`, `file-history-delta`, `api-request-blob`, `api-request-shape`, `bridge-session`, `relocated`, `frame-link`, `artifact-autoreact-ledger`, `artifact-comment-monitor`, `tools-used`, `fork-context-ref`, `progress`.
+Known and skipped: `summary`, `last-prompt`, `ai-title`, `custom-title`, `agent-name`, `mode`, `permission-mode`, `atis-latch`, `cost-state`, `pr-link`, `file-history-snapshot`, `file-history-delta`, `api-request-blob`, `api-request-shape`, `bridge-session`, `relocated`, `frame-link`, `artifact-autoreact-ledger`, `artifact-comment-monitor`, `tools-used`, `fork-context-ref`, `continued-in`, `progress`.
 
 `api-request` (2.1.300 and later) marks when each model request was sent; assistant lines point to the one they answer with `requestRef`. A request normally goes out within a second of the result it answers (median 30 ms), so model time is measured the same way as from hooks (below), which keeps the two sources comparable. The exception: when the same request was sent more than once since the agent's last input (identical requests, at backoff intervals, sometimes for an hour, often with a cold cache on the answer), the agent wasn't generating until the send that was answered, and model time starts there. In 30 days of transcripts, 443 answers had a resent request and 78 waited more than a minute, mostly in subagents.
 
@@ -92,16 +92,29 @@ A `system` entry with `subtype: "compact_boundary"`, written when the compaction
 | While idle (2.1.292 and later)  | `trigger: "auto"` after the turn ended, about 54 minutes later, before the prompt cache expires, then a `system` `informational` entry: "Compacted while idle, before the prompt cache expired". Nothing in `compactMetadata` says so: no turn is running | No turn running and not `manual`: Waiting on you between turns, left out after the last turn ([phases](phases.md)) |
 | Precomputed (2.1.308 and later) | A summary written while you were away, applied at your next prompt: `trigger: "auto"`, `precomputed: true`, a `durationMs` of a few milliseconds, and an `informational` entry: "Compacted using a summary written while you were away"                   | Inside the turn, like any other                                                                                    |
 
+## Resumed sessions
+
+Resuming can write a new file under a new session ID that repeats entries of the old one, with the same `tool_use` IDs and the same timestamps. Three shapes, from `awf import`'s timings for the last 30 days (2.1.309 to 2.1.316) and a recorder file, not from the entries themselves:
+
+| Shape               | What's there                                                                                                                                                                                |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A copy left behind  | The new file stops where it was written and the old one carries on. The recorder has one event under the new ID: `SessionStart` with `source: "resume"`. Seen on 2.1.309 in the desktop app |
+| The whole history   | The new file repeats every call of the old one, then carries on. The old file holds one `continued-in` entry (2.1.316)                                                                      |
+| Part of the history | The same, repeating only the old session's later calls: 251 of 1,357 in the one seen, where the old session's recorder events stop 4 calls short of its transcript                          |
+
+Start times don't tell these from sessions started together: of the 11 pairs in those 30 days that started within 2 seconds of each other in one folder, 9 shared no calls. A `toolu_` ID does: each belongs to one model response. `sessions`, `stats`, `sample`, `compare` on ranges and `live` use it to count repeated work once. `summary`, `classify` and `report` show a session's file as it is.
+
 ## Version notes
 
-| Versions               | Difference                                                                                          |
-| ---------------------- | --------------------------------------------------------------------------------------------------- |
-| 2.1.18x and later      | Subagents in `subagents/agent-*.jsonl`; `system` `turn_duration` entries                            |
-| about 2.1.28 and later | `origin.kind` on prompts, `permissionDecision` on tool results                                      |
-| 2.1.283 and later      | `Monitor` calls                                                                                     |
-| 2.1.292 and later      | Compactions while idle                                                                              |
-| 2.1.30x and later      | `api-request`, `api-request-blob`, `api-request-shape` entries                                      |
-| 2.1.309                | Assistant lines carry `wireToolInputs`, a copy of tool inputs; the scrubber treats it as tool input |
+| Versions               | Difference                                                                                            |
+| ---------------------- | ----------------------------------------------------------------------------------------------------- |
+| 2.1.18x and later      | Subagents in `subagents/agent-*.jsonl`; `system` `turn_duration` entries                              |
+| about 2.1.28 and later | `origin.kind` on prompts, `permissionDecision` on tool results                                        |
+| 2.1.283 and later      | `Monitor` calls                                                                                       |
+| 2.1.292 and later      | Compactions while idle                                                                                |
+| 2.1.30x and later      | `api-request`, `api-request-blob`, `api-request-shape` entries                                        |
+| 2.1.309                | Assistant lines carry `wireToolInputs`, a copy of tool inputs; the scrubber treats it as tool input   |
+| 2.1.316                | `continued-in` entries in a session carried on under a new ID ([Resumed sessions](#resumed-sessions)) |
 
 ## What `awf live` reads
 

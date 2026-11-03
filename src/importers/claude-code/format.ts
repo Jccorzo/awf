@@ -35,6 +35,7 @@ export const SKIPPED_TYPES = new Set([
   'artifact-comment-monitor',
   'tools-used',
   'fork-context-ref',
+  'continued-in',
   'progress',
 ]);
 
@@ -153,3 +154,11 @@ export function parseNotification(text: string, ms: number): TaskNotification | 
 }
 
 export const EXIT_CODE = /^(?:Error: )?Exit code (\d+)/;
+
+/**
+ * Whether a tool call's ID is Claude's own. Each belongs to one model response, so two sessions
+ * holding one hold the same history. The recorder's `tool:1` and other agents' IDs say nothing.
+ */
+export function isClaudeCall(id: string): boolean {
+  return id.startsWith('toolu_');
+}

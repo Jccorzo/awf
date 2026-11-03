@@ -3,6 +3,7 @@
 import {
   contentBlocks,
   type Entry,
+  isClaudeCall,
   messageText,
   obj,
   promptKind,
@@ -92,6 +93,8 @@ export interface TranscriptFacts {
   openCalls: OpenCall[];
   /** Background shells, background subagents, monitors and workflows not finished yet. */
   background: OpenCall[];
+  /** The IDs of the main agent's Claude tool calls: a session's copy holds the same ones. */
+  calls: string[];
   /** When the agent last wrote something: a prompt, a reply, a request, a notice. */
   lastMs?: number;
 }
@@ -256,6 +259,7 @@ export function transcriptFacts(text: string): TranscriptFacts {
     turnOpen,
     openCalls: [...open.values()],
     background: [...background.values()],
+    calls: [...calls.keys()].filter(isClaudeCall),
   };
   if (cwd) facts.cwd = cwd;
   const title = oneLine(customTitle ?? '') || oneLine(aiTitle ?? '') || firstPrompt || firstCommand;

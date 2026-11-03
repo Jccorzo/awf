@@ -2,7 +2,7 @@ import os from 'node:os';
 import path from 'node:path';
 import type { Session } from '../../model/types';
 import { formatClock, formatDuration, parseSince } from '../../model/time';
-import { quickSession, sessionIndex } from '../../store/sessions';
+import { quickSessions } from '../../store/sessions';
 import type { Command } from '../main';
 import { homeRelative, table } from '../table';
 
@@ -49,11 +49,9 @@ export function inFolder(cwd: string | undefined, dir: string | undefined): bool
 /** Rows for every session awf has timings for: recorded by the hooks, imported from transcripts, or both. */
 export function listSessionRows(env: Record<string, string | undefined>): SessionRow[] {
   const rows: SessionRow[] = [];
-  for (const ref of sessionIndex(env).values()) {
-    const base = quickSession(ref, env);
-    if (!base || base.steps.length === 0) continue;
-    const row = sessionRow(base);
-    const fromTranscript = ref.imported || base.sources.includes('transcript');
+  for (const { ref, session } of quickSessions(env)) {
+    const row = sessionRow(session);
+    const fromTranscript = ref.imported || session.sources.includes('transcript');
     row.sources = [...(ref.events ? ['hooks'] : []), ...(fromTranscript ? ['transcript'] : [])];
     rows.push(row);
   }

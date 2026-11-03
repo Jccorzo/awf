@@ -303,6 +303,7 @@ describe('live state', () => {
       turnOpen: false,
       openCalls: [],
       background: [],
+      calls: [],
     });
   });
 

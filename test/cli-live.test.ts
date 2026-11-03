@@ -187,6 +187,18 @@ describe('awf live: which sessions', () => {
     expect((await live(env, '--once')).out[0]).toMatch(/^awf live · 3 active · /);
   });
 
+  it('leaves out the copy a resume left behind, which would read as working', async () => {
+    const { env, write, home } = setup();
+    const opening = [promptAt(now - 3 * MIN, home, 'task'), callAt(now - 3 * MIN, 'toolu_1')];
+    write('web', 'real', [...opening, callAt(now - MIN, 'toolu_2')], now - MIN);
+    write('web', 'copy', opening, now - 3 * MIN);
+    write('web', 'other', [promptAt(now - 2 * MIN, home, 'x'), callAt(now - MIN, 't1')], now - MIN);
+    write('web', 'twin', [promptAt(now - 2 * MIN, home, 'y'), callAt(now - MIN, 't1')], now - MIN);
+    const rows = JSON.parse((await live(env, '--json')).out.join('\n'));
+    expect(rows.map((row: { id: string }) => row.id).sort()).toEqual(['other', 'real', 'twin']);
+    expect((await live(env, '--once')).out[0]).toMatch(/^awf live · 3 active · /);
+  });
+
   it('says so when nothing is active', async () => {
     const { env } = setup();
     const run = await live(env, '--once');
