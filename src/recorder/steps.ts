@@ -52,6 +52,10 @@ class Builder {
   private readonly linkedCalls = new Set<string>();
   private readonly subagents = new Map<string, Step>();
   private readonly compactions: Step[] = [];
+  /** Calls already ended, by ID: a PreToolUse stamped after its call's end finds it here. */
+  private readonly ended = new Map<string, Step>();
+  /** Calls a PostToolBatch ended before their PostToolUse: one stamped the same moment still comes. */
+  private readonly endedByBatch = new Map<string, { ctx: Ctx; step: Step }>();
   private turn: Step | null = null;
   private compaction: Step | null = null;
   private lastTurnEnd: number | null = null;
@@ -285,6 +289,20 @@ class Builder {
   }
 
   private preTool(e: RecorderEvent): void {
+    // Async hooks are spawned side by side, so a fast call's PostToolUse can be stamped before its
+    // own PreToolUse. The call is already built from its duration: take what only this event has.
+    const done = e.tuid ? this.ended.get(e.tuid) : undefined;
+    if (done) {
+      if (e.tool) done.tool ??= e.tool;
+      if (e.cmd) done.command ??= e.cmd;
+      if (e.files) done.files ??= e.files;
+      if (e.act) done.actions ??= e.act;
+      if (e.sub) done.agentType ??= e.sub;
+      if (e.tool && AGENT_TOOLS.has(e.tool) && !this.agentCalls.includes(done)) {
+        this.agentCalls.push(done);
+      }
+      return;
+    }
     const ctx = this.ctxFor(e);
     if (!ctx.agentId) this.ensureTurn(e.t);
     let producers: Step[] = [];
@@ -345,8 +363,17 @@ class Builder {
     this.toolClosed(found.ctx, found.step, e.t);
   }
 
+  /** A call its batch ended first: the batch's hook was stamped at or before this call's own end. */
+  private reopen(id: string): { ctx: Ctx; step: Step } | undefined {
+    const found = this.endedByBatch.get(id);
+    if (!found) return undefined;
+    this.endedByBatch.delete(id);
+    found.step.flags = found.step.flags.filter((flag) => flag !== 'unfinished');
+    return found;
+  }
+
   private postTool(e: RecorderEvent): void {
-    const found = e.tuid ? this.findOpen(e.tuid) : undefined;
+    const found = e.tuid ? (this.findOpen(e.tuid) ?? this.reopen(e.tuid)) : undefined;
     let ctx: Ctx;
     let step: Step;
     if (found) {
@@ -386,6 +413,7 @@ class Builder {
 
   private toolClosed(ctx: Ctx, step: Step, t: number): void {
     ctx.open.delete(step.id);
+    this.ended.set(step.id, step);
     ctx.lastToolEnd = Math.max(ctx.lastToolEnd ?? t, t);
     if (ctx.open.size === 0) ctx.modelStart = t;
   }
@@ -399,6 +427,17 @@ class Builder {
           step.flags.push('parallel');
         }
       }
+    }
+    // Every call of a resolved batch has ended. One stopped before it ran (a deny rule, a hook, an
+    // approval you rejected, input that failed validation) gets no PostToolUse: it ends here. One
+    // whose PostToolUse was only stamped after the batch's takes its own end when that comes.
+    for (const id of ids) {
+      const found = this.findOpen(id);
+      if (!found) continue;
+      found.step.endMs = Math.max(found.step.startMs, e.t);
+      if (!found.step.flags.includes('unfinished')) found.step.flags.push('unfinished');
+      this.toolClosed(found.ctx, found.step, e.t);
+      this.endedByBatch.set(id, found);
     }
     ctx.batchOpen = false;
     if (ctx.open.size === 0 && ctx.modelStart === null) ctx.modelStart = ctx.lastToolEnd ?? e.t;
