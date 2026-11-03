@@ -30,7 +30,7 @@ Total                   9.9s · 100% · 6 model calls, 5 tool calls, 1 failure
 Version 0.1.
 
 - Claude Code is the agent awf is built on. The importers for Codex CLI, Gemini CLI and OpenCode are experimental: they're tested only on hand-made logs, never on a real session. See [docs/other-agents.md](docs/other-agents.md).
-- `statusline` and `live` are Claude Code only.
+- `statusline`, `live` and the pane are Claude Code only.
 - awf is used day to day on macOS. Its tests also pass on Linux. Windows hasn't been tried.
 - Claude Code's transcript format is internal and can change. `awf doctor` reports what it doesn't recognise.
 - Phases are heuristics. `awf sample` and `awf accuracy` check them against your own labels.
@@ -127,6 +127,8 @@ awf stats --since 30d       # Bash time by phase, and what has no rule yet
 **Status line.** `awf statusline` shows the current session's phase split in Claude Code's status line. It needs the npm CLI or a build from source. Set it up with [docs/statusline.md](docs/statusline.md).
 
 **Live board.** `awf live` shows every active Claude Code session in a terminal tab, the desktop app's included. See [docs/live.md](docs/live.md).
+
+**Pane.** The plugin keeps the current session's phase split in a pane beside the chat, updated while the agent works. In the desktop app, which shows no status line, it opens by itself. In a terminal, `/awf-panel` opens it.
 
 ## Using awf from an agent
 

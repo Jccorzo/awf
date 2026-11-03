@@ -23,6 +23,7 @@ The first public release, planned as 0.1.0.
 - `awf doctor`: what awf can read, and log entries it doesn't recognise.
 - `awf purge`: deletes everything awf stored.
 - A Claude Code plugin that records new sessions through hooks and adds `/awf:waterfall`.
+- A pane in the plugin with the current session's phase split: it opens by itself in the desktop app, and with `/awf-panel` in a terminal.
 - Project rules in `.awf/rules.yaml`.
 
 [Unreleased]: https://github.com/Jccorzo/awf/commits/main

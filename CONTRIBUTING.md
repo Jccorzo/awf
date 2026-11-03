@@ -148,6 +148,17 @@ git add plugin/scripts
 
 Tests fail if either bundle is stale, and CI runs `git diff --exit-code plugin/scripts` after building. `pnpm awf` rebuilds only `dist/`, not the plugin.
 
+## Changing the pane
+
+`plugin/hooks/panel.tsx` draws the pane beside the chat. It's written by hand and runs inside Claude Code, not Node, so it isn't bundled, and neither `pnpm test` nor CI reaches it. `plugin/types/index.d.ts` declares what it keeps in `$.state`. With Claude Code installed:
+
+```bash
+claude plugin validate plugin
+claude plugin test plugin
+```
+
+The second runs `plugin/tests/`. Claude Code's plugin API is in early access and can change between releases, so check again after an update.
+
 ## Browser tests
 
 `test/report/browser.test.ts` opens reports in Chromium, and `pnpm report:screenshots` writes screenshots to `test-results/screenshots/`. Both need Chromium:

@@ -13,3 +13,7 @@ fixtures/raw/*
 
 # Local labels made from your own sessions
 fixtures/labels.csv
+
+# What Claude Code lays beside a plugin it loads from this folder
+plugin/.claude-plugin/types/
+plugin/tsconfig.json

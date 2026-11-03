@@ -11,6 +11,7 @@ This file is for agents working on this repo, whichever agent you are. To use aw
 - pnpm report:screenshots (every fixture's report, light and dark, laptop and phone)
 - pnpm format (runs Prettier; pnpm lint fails on unformatted files)
 - pnpm scrub (writes scrubbed copies of fixtures/raw/ to fixtures/claude-code/)
+- claude plugin validate plugin · claude plugin test plugin (the pane, plugin/hooks/panel.tsx; pnpm test doesn't reach it)
 
 ## Rules
 
