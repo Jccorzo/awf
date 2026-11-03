@@ -7473,6 +7473,10 @@ var Builder = class {
   linkedCalls = /* @__PURE__ */ new Set();
   subagents = /* @__PURE__ */ new Map();
   compactions = [];
+  /** Calls already ended, by ID: a PreToolUse stamped after its call's end finds it here. */
+  ended = /* @__PURE__ */ new Map();
+  /** Calls a PostToolBatch ended before their PostToolUse: one stamped the same moment still comes. */
+  endedByBatch = /* @__PURE__ */ new Map();
   turn = null;
   compaction = null;
   lastTurnEnd = null;
@@ -7671,6 +7675,18 @@ var Builder = class {
     return this.push(step);
   }
   preTool(e) {
+    const done = e.tuid ? this.ended.get(e.tuid) : void 0;
+    if (done) {
+      if (e.tool) done.tool ??= e.tool;
+      if (e.cmd) done.command ??= e.cmd;
+      if (e.files) done.files ??= e.files;
+      if (e.act) done.actions ??= e.act;
+      if (e.sub) done.agentType ??= e.sub;
+      if (e.tool && AGENT_TOOLS.has(e.tool) && !this.agentCalls.includes(done)) {
+        this.agentCalls.push(done);
+      }
+      return;
+    }
     const ctx = this.ctxFor(e);
     if (!ctx.agentId) this.ensureTurn(e.t);
     let producers = [];
@@ -7725,8 +7741,16 @@ var Builder = class {
     found.step.flags.push("denied");
     this.toolClosed(found.ctx, found.step, e.t);
   }
+  /** A call its batch ended first: the batch's hook was stamped at or before this call's own end. */
+  reopen(id) {
+    const found = this.endedByBatch.get(id);
+    if (!found) return void 0;
+    this.endedByBatch.delete(id);
+    found.step.flags = found.step.flags.filter((flag) => flag !== "unfinished");
+    return found;
+  }
   postTool(e) {
-    const found = e.tuid ? this.findOpen(e.tuid) : void 0;
+    const found = e.tuid ? this.findOpen(e.tuid) ?? this.reopen(e.tuid) : void 0;
     let ctx;
     let step;
     if (found) {
@@ -7763,6 +7787,7 @@ var Builder = class {
   }
   toolClosed(ctx, step, t) {
     ctx.open.delete(step.id);
+    this.ended.set(step.id, step);
     ctx.lastToolEnd = Math.max(ctx.lastToolEnd ?? t, t);
     if (ctx.open.size === 0) ctx.modelStart = t;
   }
@@ -7775,6 +7800,14 @@ var Builder = class {
           step.flags.push("parallel");
         }
       }
+    }
+    for (const id of ids) {
+      const found = this.findOpen(id);
+      if (!found) continue;
+      found.step.endMs = Math.max(found.step.startMs, e.t);
+      if (!found.step.flags.includes("unfinished")) found.step.flags.push("unfinished");
+      this.toolClosed(found.ctx, found.step, e.t);
+      this.endedByBatch.set(id, found);
     }
     ctx.batchOpen = false;
     if (ctx.open.size === 0 && ctx.modelStart === null) ctx.modelStart = ctx.lastToolEnd ?? e.t;

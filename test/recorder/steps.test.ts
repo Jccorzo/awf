@@ -296,6 +296,64 @@ describe('eventsToSession', () => {
     expect(eventsToSession('s', shuffled)).toEqual(eventsToSession('s', events));
   });
 
+  it('ends a call that never ran when its batch resolves, not when the turn ends', () => {
+    // b2 was stopped before it ran (a deny rule, say): Claude Code sends no PostToolUse for it.
+    const session = eventsToSession('s', [
+      ev('UserPromptSubmit', 1000),
+      ev('PreToolUse', 2000, { tool: 'Bash', tuid: 'b1', cmd: 'pnpm test' }),
+      ev('PreToolUse', 2001, { tool: 'Bash', tuid: 'b2', cmd: 'curl https://example.com' }),
+      ev('PostToolUseFailure', 2500, { tuid: 'b1', ok: false }),
+      ev('PostToolBatch', 2510, { ids: ['b1', 'b2'] }),
+      ev('PreToolUse', 3000, { tool: 'Read', tuid: 'r1' }),
+      ev('PostToolUse', 3100, { tuid: 'r1', ok: true }),
+      ev('PostToolBatch', 3110, { ids: ['r1'] }),
+      ev('Stop', 1_200_000),
+    ]);
+    const call = session.steps.find((s) => s.id === 'b2');
+    expect(span(call)).toEqual([2001, 2510]);
+    expect(call?.flags).toEqual(['parallel', 'unfinished']);
+    expect(models(session.steps).map(span)).toEqual([
+      [1000, 2000],
+      [2510, 3000],
+      [3100, 1_200_000],
+    ]);
+  });
+
+  it("keeps a call's own end when its batch was stamped first", () => {
+    const session = eventsToSession('s', [
+      ev('UserPromptSubmit', 1000),
+      ev('PreToolUse', 2000, { tool: 'Bash', tuid: 'b1', cmd: 'pnpm build' }),
+      ev('PostToolBatch', 9000, { ids: ['b1'] }),
+      ev('PostToolUse', 9000, { tuid: 'b1', ok: true, dur: 7000 }),
+      ev('Stop', 12_000),
+    ]);
+    const calls = session.steps.filter((s) => s.id === 'b1');
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toMatchObject({ startMs: 2000, endMs: 9000, ok: true, flags: [] });
+    expect(models(session.steps).map(span)).toEqual([
+      [1000, 2000],
+      [9000, 12_000],
+    ]);
+  });
+
+  it('builds a call once when its PostToolUse is stamped before its PreToolUse', () => {
+    const session = eventsToSession('s', [
+      ev('UserPromptSubmit', 1000),
+      ev('PostToolUse', 2000, { tool: 'Read', tuid: 'r1', ok: true, dur: 3 }),
+      ev('PreToolUse', 2002, { tool: 'Read', tuid: 'r1', files: ['/a'] }),
+      ev('PostToolBatch', 2005, { ids: ['r1'] }),
+      ev('Stop', 5000),
+    ]);
+    const calls = session.steps.filter((s) => s.id === 'r1');
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toMatchObject({ startMs: 1997, endMs: 2000, ok: true, files: ['/a'] });
+    expect(calls[0]?.flags).not.toContain('unfinished');
+    expect(models(session.steps).map(span)).toEqual([
+      [1000, 1997],
+      [2000, 5000],
+    ]);
+  });
+
   it('flags a turn that ended on an API error', () => {
     const session = eventsToSession('s', [
       ev('UserPromptSubmit', 1000),
