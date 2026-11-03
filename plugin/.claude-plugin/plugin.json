@@ -9,5 +9,6 @@
   "homepage": "https://github.com/Jccorzo/awf#readme",
   "repository": "https://github.com/Jccorzo/awf",
   "license": "MIT",
-  "keywords": ["timing", "profiling", "waterfall", "build", "tests", "lint"]
+  "keywords": ["timing", "profiling", "waterfall", "build", "tests", "lint"],
+  "types": "./types/index.d.ts"
 }

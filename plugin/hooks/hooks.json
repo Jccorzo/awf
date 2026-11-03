@@ -1,5 +1,6 @@
 {
   "description": "awf recorder: one timing line per event in ~/.awf/events/<session_id>.jsonl. No prompts or output.",
+  "modules": ["./panel.tsx"],
   "hooks": {
     "SessionStart": [
       {
