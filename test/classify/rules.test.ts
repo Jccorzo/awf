@@ -10,6 +10,7 @@ import { defaultRules } from '../../src/classify/rules';
 const files = memoryFiles({
   '/repo/.git/HEAD': 'ref: refs/heads/main\n',
   '/repo/package.json': JSON.stringify({ scripts: { 'build:test': 'tsc -p tsconfig.test.json' } }),
+  '/repo/pubspec.yaml': 'name: my_cli\n',
 });
 const classifier = new Classifier(defaultRules(), files);
 const hit = new Set<string>();
@@ -664,8 +665,152 @@ const GAP_CASES: Array<[PhaseId, string[]]> = [
   ],
 ];
 
+// Dart and Flutter: the SDKs' own commands, fvm, melos, build_runner, patrol, very_good and dcm.
+const DART_CASES: Array<[PhaseId, string[]]> = [
+  [
+    'lint',
+    [
+      'dart analyze --fatal-infos',
+      'dart format --output=none --set-exit-if-changed .',
+      'dart fix --apply',
+      'fvm flutter analyze --no-fatal-infos',
+      'dart run custom_lint',
+      'flutter pub run custom_lint',
+      'dcm analyze lib',
+      'dcm check-unused-code lib',
+      'melos analyze',
+      'melos format --set-exit-if-changed',
+      'melos --sdk-path /opt/flutter analyze',
+      'melos exec --fail-fast -- flutter analyze',
+    ],
+  ],
+  [
+    'tests',
+    [
+      'fvm flutter test',
+      'fvm spawn 3.24.0 test',
+      'flutter -d macos test integration_test',
+      'flutter test --coverage test/widget_test.dart',
+      'flutter drive --driver=test_driver/integration_test.dart --target=integration_test/app_test.dart',
+      'dart test -p chrome',
+      'dart run test',
+      'flutter pub run test',
+      'dart run build_runner test',
+      'dart test/widget_test.dart',
+      'dart run test/widget_test.dart',
+      'dart run coverage:test_with_coverage',
+      'dart pub global run melos run test',
+      'patrol test -t patrol_test/app_test.dart',
+      'very_good test --coverage',
+      'xvfb-run flutter test',
+      'melos exec -c 2 -- "flutter test --coverage"',
+    ],
+  ],
+  [
+    'build',
+    [
+      'dart run build_runner build --delete-conflicting-outputs',
+      'dart run build_runner clean',
+      'flutter build --flavor prod appbundle',
+      'flutter build ipa --export-options-plist=ios/ExportOptions.plist',
+      'flutter clean',
+      'flutter gen-l10n',
+      'dart compile exe bin/main.dart -o build/app',
+      'dart compile js web/main.dart',
+      'dart doc',
+      'patrol build android',
+      'melos clean',
+      'flutter pub run flutter_launcher_icons',
+      'dart run flutter_native_splash:create',
+      'dart run pigeon --input pigeons/api.dart',
+      'flutter packages pub run build_runner build',
+      'flutter pub get',
+      'flutter packages get',
+      'dart run melos bootstrap',
+      'fvm dart pub get',
+      'dart pub add --dev build_runner',
+      'flutter pub upgrade --major-versions',
+      'dart pub global activate melos',
+      'dart pub cache repair',
+      'flutter create my_app',
+      'dart create -t console cli',
+      'flutter upgrade',
+      'flutter precache --ios',
+      'flutter channel stable',
+      'melos bootstrap',
+      'melos bs',
+      'fvm exec melos bootstrap',
+      'very_good create flutter_app my_app',
+      'very_good packages get --recursive',
+      'fvm install 3.24.0',
+      'fvm use 3.24.0',
+    ],
+  ],
+  [
+    'exploring',
+    [
+      'flutter pub outdated',
+      'dart pub deps --style=compact',
+      'dart pub workspace list',
+      'dart pub cache list',
+      'dart pub global list',
+      'dart pub token list',
+      'flutter channel',
+      'fvm list',
+      'fvm releases',
+      'flutter doctor -v',
+      'flutter devices',
+      'dart info',
+      'flutter config',
+      'flutter config --list',
+      'flutter emulators',
+      'melos list --long',
+      'genhtml coverage/lcov.info -o coverage/html',
+      'lcov --summary coverage/lcov.info',
+      'flutter pub global run coverage:format_coverage --lcov -i coverage -o coverage/lcov.info',
+      'flutter --version',
+    ],
+  ],
+  [
+    'running',
+    [
+      'melos version',
+      'melos version --yes',
+      'melos publish --no-dry-run',
+      'flutter pub run build_runner watch',
+      'dart run build_runner serve web:8080',
+      'flutter pub publish --dry-run',
+      'dart pub publish',
+      'flutter run -d chrome',
+      'flutter -d emulator-5554 run',
+      'flutter attach',
+      'flutter emulators --launch Pixel_8',
+      'flutter install',
+      'flutter logs',
+      'dart run bin/server.dart',
+      'dart bin/server.dart',
+      // The package's own executable, by its name in pubspec.yaml.
+      'dart run my_cli serve',
+      'dartaotruntime build/app.aot',
+      './tool/generate.dart',
+      'flutterfire configure',
+      'shorebird release android',
+    ],
+  ],
+  [
+    'unclassified',
+    [
+      'flutter config --enable-web',
+      'fvm global 3.24.0',
+      'dart pub token add https://pub.example',
+      // A dependency's executable awf has no rule for, as with npx.
+      'dart run frobnicate --all',
+    ],
+  ],
+];
+
 describe('rules', () => {
-  for (const [phase, commands] of [...CASES, ...REVIEW_CASES, ...GAP_CASES]) {
+  for (const [phase, commands] of [...CASES, ...REVIEW_CASES, ...GAP_CASES, ...DART_CASES]) {
     it.each(commands)(`%s is ${phase}`, (command) => {
       check(command, phase);
     });
@@ -696,6 +841,11 @@ describe('rules', () => {
     expect(byName('make deploy-staging')).toMatchObject({ phase: 'running' });
     expect(byName('just dev')).toMatchObject({ phase: 'running' });
     expect(byName('make frobnicate')).toMatchObject({ phase: 'unclassified' });
+    expect(byName('just analyze')).toMatchObject({
+      phase: 'lint',
+      tags: ['by-name', 'task:analyze'],
+    });
+    expect(byName('make gen')).toMatchObject({ phase: 'build' });
   });
 
   it('reads a build script that rewrites path aliases after tsc as one build', () => {
@@ -728,8 +878,31 @@ describe('known false positives', () => {
     ['open coverage/index.html', 'unclassified'],
     ['tsc', 'build'],
     ['git push origin main', 'running'],
+    // A CLI's own `test` subcommand isn't package:test, and watching isn't building.
+    ['dart run bin/cli.dart test', 'running'],
+    ['dart run my_cli test', 'running'],
+    ['dart run build_runner watch', 'running'],
+    ['melos version', 'running'],
+    ['flutter emulators --create', 'running'],
   ] as Array<[string, PhaseId]>)('%s is %s', (command, phase) => {
     check(command, phase);
+  });
+
+  it('counts adding build_runner as an install, not a build_runner run', () => {
+    const info = check('dart pub add --dev build_runner', 'build');
+    expect(info.tags).toContain('install');
+    expect(info.checks.map((c) => c.key)).toEqual(['build:install']);
+  });
+
+  it('gives each Dart and Flutter check its own key, so rework waits for the same one', () => {
+    const key = (command: string) => classifier.command(command, '/repo').checks[0]?.key;
+    expect(key('flutter analyze')).toBe('lint:flutter analyze');
+    expect(key('dart analyze')).toBe('lint:dart analyze');
+    expect(key('dart format .')).toBe('lint:dart format');
+    expect(key('flutter test')).toBe('tests:flutter test');
+    expect(key('dart run test')).toBe('tests:dart test');
+    expect(key('flutter build apk')).toBe('build:flutter build');
+    expect(key('dart run build_runner build')).toBe('build:build_runner');
   });
 });
 

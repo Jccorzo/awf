@@ -22,13 +22,15 @@ version: 1
 #   tag       an extra tag on the step, like install
 #   tool      the check's name, when it isn't the program (go test is "go test")
 commands:
+  # `melos version` bumps the packages' versions; it doesn't print melos's.
+  - { phase: running, match: '^(\S*/)?melos\s+version$' }
   # --version, --help and friends only read. For these programs -v and -V mean verbose.
   - { phase: exploring, match: '^(?!(pytest|py\.test|unittest|tox|nox|ctest|ninja|mypy|flake8|black|isort|pylint|behave|ansible-lint)\s)\S+\s+(--version|-v|-V|--help|-h|version|help|-version|--usage)$' }
 
   # Lint and format
   - { phase: exploring, program: eslint, with: [--print-config] }
   - phase: lint
-    program: [eslint, prettier, oxlint, standard, xo, stylelint, markdownlint, markdownlint-cli2, htmlhint, jsonlint, yamllint, hadolint, shellcheck, shfmt, actionlint, editorconfig-checker, eclint, lint-staged, commitlint, knip, depcheck, sort-package-json, syncpack, cspell, swift-format]
+    program: [eslint, prettier, oxlint, standard, xo, stylelint, markdownlint, markdownlint-cli2, htmlhint, jsonlint, yamllint, hadolint, shellcheck, shfmt, actionlint, editorconfig-checker, eclint, lint-staged, commitlint, knip, depcheck, sort-package-json, syncpack, cspell, swift-format, custom_lint]
   - { phase: lint, program: biome, args: ['check|lint|format|ci'] }
   - { phase: lint, program: ruff, args: ['check|format'] }
   - { phase: lint, program: [black, isort, flake8, pylint, mypy, pyright, basedpyright, pyflakes, pycodestyle, pydocstyle, bandit, autopep8, yapf, pyre, pytype, vulture] }
@@ -47,7 +49,10 @@ commands:
   - { phase: lint, program: astro, args: ['check'] }
   - { phase: lint, program: terraform, args: ['fmt|validate'] }
   - { phase: lint, program: deno, args: ['lint|fmt|check'] }
-  - { phase: lint, program: [flutter, dart], args: ['analyze|format'] }
+  - { phase: lint, program: dart, args: ['analyze|format|fix'], tool: 'dart {1}' }
+  - { phase: lint, program: flutter, args: ['analyze|format'], tool: 'flutter {1}' }
+  - { phase: lint, program: dcm, args: ['analyze|check-*|fix|format|run'], tool: 'dcm {1}' }
+  - { phase: lint, program: melos, args: ['analyze|format'], tool: 'melos {1}' }
   - { phase: lint, program: mix, args: ['format|credo|dialyzer'] }
   - { phase: lint, program: pre-commit, args: ['run'] }
   - { phase: lint, program: [ty, pyrefly], args: ['check'] }
@@ -101,7 +106,13 @@ commands:
   - { phase: tests, program: ninja, args: ['test|check'] }
   - { phase: tests, match: '^cmake\s.*--target\s+(test|check|RUN_TESTS)(\s|$)', tool: ctest }
   - { phase: tests, program: mix, args: ['test'] }
-  - { phase: tests, program: [flutter, dart], args: ['test'] }
+  - { phase: tests, program: flutter, args: ['test|drive'], tool: 'flutter {1}' }
+  - { phase: tests, program: dart, args: ['test'], tool: dart test }
+  # A test file run directly runs its tests. `build_runner test` builds, then runs `dart test`.
+  - { phase: tests, match: '^(\S*/)?dart\s+(run\s+)?\S*_test\.dart(\s|$)', tool: dart test }
+  - { phase: tests, program: build_runner, args: ['test'], tool: build_runner test }
+  - { phase: tests, program: [test_with_coverage, 'coverage:test_with_coverage'], tool: test_with_coverage }
+  - { phase: tests, program: [patrol, very_good], args: ['test|develop'] }
   - { phase: tests, program: [k6, artillery], args: ['run'] }
   # Watching CI waits for something outside the session, like an `until gh run view ...; do sleep
   # 30; done` loop: Running scripts, polling. (Before the exploring gh rules below.)
@@ -134,12 +145,16 @@ commands:
   - { phase: build, program: [docker, podman], args: ['buildx|compose|image', 'build'], tool: docker build }
   - { phase: build, program: docker-compose, args: ['build'], tool: docker build }
   - { phase: build, match: '^(docker\s+compose|docker-compose)\s(.*\s)?up\s(.*\s)?--build', tool: docker build }
-  - { phase: build, program: [protoc, flatc, thrift, graphql-codegen, openapi-generator, openapi-generator-cli, sqlc, wire, mockgen, stringer] }
+  - { phase: build, program: [protoc, flatc, thrift, graphql-codegen, openapi-generator, openapi-generator-cli, sqlc, wire, mockgen, stringer, pigeon, ffigen, slang, flutter_launcher_icons, 'flutter_launcher_icons:main', 'flutter_native_splash:create', 'intl_utils:generate'] }
   - { phase: build, program: buf, args: ['generate'] }
   - { phase: build, program: prisma, args: ['generate'] }
-  - { phase: build, program: [dart, flutter], args: ['run|pub', 'build_runner'] }
-  - { phase: build, program: flutter, args: ['build|pub'] }
-  - { phase: build, program: dart, args: ['pub', 'get|upgrade|add|remove|downgrade'], tag: install, tool: install }
+  # build_runner generates code; watch, serve and daemon keep running, like a dev server.
+  - { phase: running, program: build_runner, args: ['watch|serve|daemon'] }
+  - { phase: build, program: build_runner, tool: build_runner }
+  - { phase: build, program: flutter, args: ['build|clean|gen-l10n|assemble'], tool: 'flutter {1}' }
+  - { phase: build, program: dart, args: ['compile|doc'], tool: 'dart {1}' }
+  - { phase: build, program: patrol, args: ['build'], tool: patrol build }
+  - { phase: build, program: melos, args: ['clean'], tool: melos clean }
   - { phase: build, program: mix, args: ['compile|deps.get|release'] }
   - { phase: build, program: [pod, carthage], args: ['install|update|bootstrap'], tag: install }
   - { phase: build, program: [tuist, xcodegen], args: ['generate|install|fetch|build'] }
@@ -172,6 +187,19 @@ commands:
   - { phase: build, program: go, args: ['mod', 'tidy|download|vendor'], tag: install, tool: install }
   - { phase: build, program: go, args: ['get'], tag: install, tool: install }
   - { phase: build, program: cargo, args: ['fetch|update|add|vendor'], tag: install, tool: install }
+  # Dart and Flutter packages and SDKs: pub's reads first, then what it runs, then installs.
+  - { phase: exploring, program: [dart, flutter], args: ['pub', 'deps|outdated|workspace'] }
+  - { phase: exploring, program: [dart, flutter], args: ['pub', 'cache|global|token', 'list'] }
+  - { phase: neutral, program: [dart, flutter], args: ['pub', 'token'] }
+  - { phase: build, program: [dart, flutter], args: ['pub', 'get|upgrade|add|remove|downgrade|unpack|cache|global'], tag: install, tool: install }
+  - { phase: build, program: [dart, flutter], args: ['create'], tag: install, tool: install }
+  - { phase: exploring, match: '^(\S*/)?flutter\s+channel$' }
+  - { phase: build, program: flutter, args: ['upgrade|downgrade|precache|channel'], tag: install, tool: install }
+  - { phase: build, program: melos, args: ['bootstrap|bs'], tag: install, tool: install }
+  - { phase: build, match: '^(\S*/)?very_good\s+(create|packages\s+get)(\s|$)', tag: install, tool: install }
+  - { phase: exploring, program: fvm, args: ['list|ls|releases|doctor|api'] }
+  - { phase: build, program: fvm, args: ['install|i|use'], tag: install, tool: install }
+  - { phase: neutral, program: fvm, args: ['global'] }
   - { phase: writing, program: dotnet, args: ['add|remove', 'reference'] }
   - { phase: build, program: dotnet, args: ['restore|add|tool'], tag: install, tool: install }
   - { phase: build, program: [brew, apt, apt-get, dnf, yum, apk, port], args: ['install|upgrade|reinstall'], tag: install, tool: install }
@@ -215,6 +243,11 @@ commands:
   - { phase: exploring, program: swift, args: ['package', 'describe|dump-package|show-dependencies|show-executables|tools-version'] }
   - { phase: exploring, program: go, args: ['list|env|doc|version|tool'] }
   - { phase: exploring, program: cargo, args: ['tree|metadata|search|locate-project|pkgid|info'] }
+  - { phase: exploring, program: [dart, flutter], args: ['doctor|devices|info'] }
+  - { phase: exploring, match: '^(\S*/)?flutter\s+config(\s+--list)?$' }
+  - { phase: neutral, program: flutter, args: ['config'] }
+  - { phase: exploring, program: flutter, args: ['emulators'], without: [--launch, --create] }
+  - { phase: exploring, program: melos, args: ['list|ls'] }
   - { phase: exploring, program: [docker, podman], args: ['ps|images|logs|inspect|stats|top|port|history|version|info|context'] }
   - { phase: exploring, program: [docker, podman], args: ['compose', 'ps|logs|config|images|ls'] }
   - { phase: exploring, program: docker-compose, args: ['ps|logs|config|images|ls|top|version'] }
@@ -226,7 +259,7 @@ commands:
   - { phase: exploring, program: coverage, args: ['report|html|xml|json'] }
   # Coverage reports read what a test run measured, like `coverage report` and xcresulttool. A
   # coverage gate script is classified by what else it runs (see docs/phases.md).
-  - { phase: exploring, program: [llvm-cov, xccov, llvm-profdata], tag: coverage }
+  - { phase: exploring, program: [llvm-cov, xccov, llvm-profdata, lcov, genhtml, format_coverage, 'coverage:format_coverage', collect_coverage, 'coverage:collect_coverage'], tag: coverage }
   - { phase: exploring, program: [pdfinfo, pbpaste] }
   - { phase: exploring, match: '^pmset\s+-g' }
   - { phase: exploring, match: '^tar\s+-?[a-zA-Z]*t' }
@@ -244,10 +277,11 @@ commands:
   # pushes and CI actions. These come after the rules above, so `gh pr view` still explores and
   # `docker build` still builds. Waiting in a loop counts here too (polling, decided in code).
   - { phase: running, match: '^(\S*/)?(python[23]?(\.\d+)?|pypy3?|py)(\s|$)' }
-  - { phase: running, program: [node, nodejs, tsx, ts-node, ts-node-esm, vite-node, esno, bun, deno, ruby, php, java, kotlin, groovy, scala, jshell, swift, dotnet, Rscript, julia, lua, luajit, elixir, escript, electron] }
+  - { phase: running, program: [node, nodejs, tsx, ts-node, ts-node-esm, vite-node, esno, bun, deno, ruby, php, java, kotlin, groovy, scala, jshell, swift, dotnet, Rscript, julia, lua, luajit, elixir, escript, electron, dart, dartaotruntime] }
   - { phase: running, program: [bash, sh, zsh, dash, ksh, fish, pwsh, powershell] }
   - { phase: running, program: [go, cargo, mix], args: ['run|watch|phx.server|ecto.*'] }
   - { phase: running, program: [vite, next, nuxt, nuxi, astro, remix, gatsby, react-scripts, vue-cli-service, ng, expo, storybook, react-native, flutter, tauri, wrangler], args: ['dev|develop|start|serve|preview|run|run-ios|run-android|run:ios|run:android|attach'] }
+  - { phase: running, program: flutter, args: ['emulators|install|logs|screenshot|devtools|symbolize'] }
   - { phase: running, program: vite }
   - { phase: running, program: [nodemon, pm2, forever, serve, http-server, live-server, json-server, browser-sync, wait-on, http.server, uvicorn, gunicorn, hypercorn, daphne, flask, fastapi, streamlit, gradio, jupyter, ipython, celery, puma, rackup, foreman, overmind, air, ngrok, cloudflared, caddy, cloud-sql-proxy, mkcert] }
   # Another agent run from the shell (claude -p) does work awf can't see into.
@@ -257,17 +291,19 @@ commands:
   - { phase: running, program: [psql, pg_ctl, pg_dump, pg_dumpall, pg_restore, pg_isready, createdb, dropdb, createuser, dropuser, initdb, postgres, mysql, mysqldump, mysqladmin, mariadb, sqlite3, duckdb, redis-cli, redis-server, mongosh, mongo, mongod, mongodump, mongorestore, clickhouse, sqlcmd, cqlsh, alembic, flyway, liquibase, dbmate, goose, atlas] }
   - { phase: running, program: [prisma, drizzle-kit], args: ['migrate|db|studio|push|up|seed'] }
   - { phase: running, program: [docker, podman, docker-compose, nerdctl, colima, minikube, kind, k3d, kubectl, helm, skaffold, tilt, terraform, tofu, pulumi, ansible, ansible-playbook] }
-  - { phase: running, program: [gcloud, gsutil, bq, aws, az, doctl, flyctl, fly, heroku, vercel, netlify, firebase, wrangler, railway, supabase, eas, fastlane] }
+  - { phase: running, program: [gcloud, gsutil, bq, aws, az, doctl, flyctl, fly, heroku, vercel, netlify, firebase, wrangler, railway, supabase, eas, fastlane, flutterfire, shorebird] }
   - { phase: running, program: [simctl, devicectl, adb, emulator, ios-deploy, idb] }
   - { phase: running, program: [npm, pnpm, yarn, bun], args: ['publish|unpublish|deprecate|dist-tag|login|logout|adduser'] }
   - { phase: running, program: [cargo, poetry, uv, pdm, hatch, flit, gem], args: ['publish|push|yank|login|owner'] }
   - { phase: running, program: twine }
+  - { phase: running, program: [dart, flutter], args: ['pub', 'run|publish|lish|login|logout'] }
+  - { phase: running, program: melos, args: ['publish|version'] }
   - { phase: running, program: git, args: ['push'] }
   - { phase: running, program: [gh, glab] }
   - { phase: running, program: [playwright, lighthouse, ffmpeg, magick, sips, screencapture, pdftoppm, pmset] }
   # A script file, or a program run by its path (./run, bin/dev, .build/release/app): the project's
   # own scripts and binaries.
-  - { phase: running, match: '^\S*\.(sh|bash|zsh|py|js|mjs|cjs|ts|mts|cts|rb|pl|php|lua|swift|kts|exs|ps1|command)(\s|$)' }
+  - { phase: running, match: '^\S*\.(sh|bash|zsh|py|js|mjs|cjs|ts|mts|cts|rb|pl|php|lua|swift|kts|exs|ps1|command|dart)(\s|$)' }
   - { phase: running, match: '^\S*/' }
 
   # Changes nothing on its own, or takes no time worth a phase
@@ -286,9 +322,9 @@ tasks:
 # Names of npm/pnpm/yarn/bun scripts and make targets, used only when the file that defines them
 # can't be read. Steps decided this way are tagged by-name.
 scripts:
-  - { phase: lint, match: '^(lint|lint:.*|.*:lint|format|format:.*|fmt|prettier|eslint|typecheck|type-check|types|tsc|check-types|check:types|stylelint|biome|rubocop|ruff|black|mypy|pylint|flake8|clippy|style)$' }
+  - { phase: lint, match: '^(lint|lint:.*|.*:lint|format|format:.*|fmt|prettier|eslint|typecheck|type-check|types|tsc|check-types|check:types|stylelint|biome|rubocop|ruff|black|mypy|pylint|flake8|clippy|style|analyze|analyse)$' }
   - { phase: tests, match: '^(test|tests|test:.*|.*:test|spec|specs|e2e|e2e:.*|unit|integration|coverage|cy:run|vitest|jest|pytest|check|verify|validate|ci)$' }
-  - { phase: build, match: '^(build|build:.*|.*:build|compile|bundle|dist|prepare|prepack|package|generate|codegen|install|deps|all)$' }
+  - { phase: build, match: '^(build|build:.*|.*:build|compile|bundle|dist|prepare|prepack|package|generate|gen|codegen|install|deps|all)$' }
   - { phase: running, match: '^(dev|develop|start|serve|server|preview|watch|storybook|seed|migrate|db|deploy|release|publish|up|down|ios|android|web|tauri|electron)$' }
 
 # Tool calls other than Bash, by name: exact names, or a regex in match. action: the call's action
@@ -345,6 +381,9 @@ testFiles:
   - '**/__snapshots__/**'
   - '**/e2e/**'
   - '**/*_test.{c,cc,cpp,rs,exs,dart}'
+  - '**/integration_test/**'
+  - '**/test_driver/**'
+  - '**/patrol_test/**'
   - '**/*.test.{c,cc,cpp}'
 
 # Failure patterns, matched against a check's output when the transcript has it, to catch failures
@@ -386,4 +425,20 @@ failurePatterns:
   - { tool: dotnet build, pattern: 'Build FAILED|error [A-Z]{2,}\d+' }
   - { tool: dotnet test, pattern: 'Failed!\s+-\s+Failed:\s+[1-9]' }
   - { tool: swift test, pattern: '(?m)^(\S+:\d+:\d+: )?error: |Test Suite .\S+. failed|✘ Test run with .* failed' }
+  # package:test ends with `00:04 +12 -1: Some tests failed.`: the -N count rules out a test named so.
+  - { tool: flutter test, pattern: ' -\d+: Some tests failed\.' }
+  - { tool: dart test, pattern: ' -\d+: Some tests failed\.' }
+  - { tool: very_good, pattern: ' -\d+: Some tests failed\.' }
+  # integration_test's driver prints `Failure Details:` instead.
+  - { tool: flutter drive, pattern: '(?m) -\d+: Some tests failed\.|^Failure Details:' }
+  - { tool: patrol, pattern: '❌ Failed: [1-9]' }
+  # Errors and warnings fail the analyzer by default. Infos fail flutter analyze too, but projects
+  # often pass --no-fatal-infos, so they aren't matched. melos exec puts `[package]: ` before each
+  # line; the bullet is • or -, by platform and terminal.
+  - { tool: flutter analyze, pattern: '(?m)^(\[[^\]\s]+\]: )?\s*(error|warning) (•|-) ' }
+  - { tool: dart analyze, pattern: '(?m)^(\[[^\]\s]+\]: )?\s*(error|warning) (•|-) ' }
+  - { tool: melos analyze, pattern: '(?m)^(\[[^\]\s]+\]: )?\s*(error|warning) (•|-) ' }
+  - { tool: flutter build, pattern: '(?m)^\S+\.dart:\d+:\d+: Error: |Gradle task \S+ failed with exit code \d|Failed to build (iOS|macOS) app|^Error \(Xcode\): |^Target \S+ failed: |^Build process failed' }
+  - { tool: dart compile, pattern: '(?m)^\S+\.dart:\d+:\d+: Error: |^Error: (AOT compilation|Compilation) failed' }
+  - { tool: build_runner, pattern: '(?m)^\[SEVERE\]|^\[INFO\] .*Failed after \d|^Failed to build with build_runner' }
   - { tool: '*', pattern: '(?m)ELIFECYCLE\s+(Command|Test) failed|npm ERR! (code|Test failed)|npm error (code \d|Lifecycle script)|error Command failed with exit code|ERR_PNPM_\w+|^\s*ERROR\s+run failed|make(\[\d+\])?: \*\*\* \[.*\] Error \d+|^FAILED\b|BUILD FAILED|^error\[' }

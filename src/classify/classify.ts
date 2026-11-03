@@ -181,6 +181,29 @@ const VALUE_OPTIONS: Record<string, string[]> = {
   ],
   tox: ['-e', '-c', '--conf'],
   nox: ['-s', '--session', '-f', '--noxfile'],
+  melos: ['--sdk-path'],
+  // `flutter -d chrome run`: the device is a global option.
+  flutter: [
+    '-d',
+    '--device-id',
+    '-t',
+    '--target',
+    '--flavor',
+    '--dart-define',
+    '--dart-define-from-file',
+    '--plain-name',
+    '--name',
+    '--tags',
+    '--exclude-tags',
+    '--reporter',
+    '--coverage-path',
+    '--build-name',
+    '--build-number',
+    '--target-platform',
+    '--local-engine',
+    '--local-engine-src-path',
+    '--local-engine-host',
+  ],
 };
 
 /** Arguments that aren't options or an option's value. */
