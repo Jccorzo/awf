@@ -1,6 +1,6 @@
 import { build } from 'esbuild';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
@@ -9,19 +9,41 @@ import { cliOptions, hookOptions, root } from '../../scripts/build-options.mjs';
 const tmp = mkdtempSync(path.join(os.tmpdir(), 'awf-hook-'));
 const hookFile = path.join(tmp, 'record.cjs');
 const preload = path.join(root, 'test/setup/no-network.cjs');
+const reportCpu = path.join(root, 'test/setup/report-cpu.cjs');
 
-function runHook(
-  input: unknown,
-  home: string,
-  file = hookFile,
-): { ms: number; status: number | null; stdout: string } {
-  const started = performance.now();
-  const result = spawnSync(process.execPath, [file], {
+/** What any hook has to do, and nothing else: read its input and append it to a file. */
+const BARE_HOOK = `
+const { appendFileSync, mkdirSync, readFileSync } = require('node:fs');
+const path = require('node:path');
+const input = readFileSync(0, 'utf8');
+const dir = path.join(process.env.AWF_HOME, 'events');
+mkdirSync(dir, { recursive: true });
+appendFileSync(path.join(dir, 'bare.jsonl'), input + '\\n');
+`;
+
+function runHook(input: unknown, home: string): { status: number | null; stdout: string } {
+  const result = spawnSync(process.execPath, [hookFile], {
     input: JSON.stringify(input),
     env: { ...process.env, AWF_HOME: home, NODE_OPTIONS: `--require ${preload}` },
     encoding: 'utf8',
   });
-  return { ms: performance.now() - started, status: result.status, stdout: result.stdout };
+  return { status: result.status, stdout: result.stdout };
+}
+
+/** The CPU time of one run of a script, in ms. */
+function cpuMs(input: unknown, home: string, file: string): number {
+  const report = path.join(tmp, 'cpu');
+  rmSync(report, { force: true });
+  spawnSync(process.execPath, [file], {
+    input: JSON.stringify(input),
+    env: {
+      ...process.env,
+      AWF_HOME: home,
+      AWF_TEST_CPU_FILE: report,
+      NODE_OPTIONS: `--require ${preload} --require ${reportCpu}`,
+    },
+  });
+  return Number(readFileSync(report, 'utf8'));
 }
 
 beforeAll(async () => {
@@ -68,14 +90,15 @@ describe('recorder hook', () => {
     expect(result.stdout.toString()).toBe('');
   });
 
-  // A run is nearly all node starting, which swings with whatever else the machine is doing: 23 ms
-  // alone, over 50 ms in a busy moment. The hook adds about 1 ms, so compare it with bare node runs
-  // taken alongside, by the fastest of each: a busy machine only ever adds time, so the fastest run
-  // is the steadiest. 15 ms on top of a 35 ms start is the 50 ms budget.
-  it('adds no visible delay: under 15 ms on top of starting node', () => {
+  // What the hook costs is its own work, about 3 ms on top of node starting and the append. A run's
+  // duration can't show that: 23 ms alone, over 500 ms on a busy machine, where one wait for the CPU
+  // or the disk outweighs the budget. CPU time leaves the waiting out, so compare that with a bare
+  // script doing the same reads and writes, by the fastest run of each. 15 ms on top of a 35 ms start
+  // is the 50 ms budget. Time the hook spends asleep doesn't show here, so it must never sleep.
+  it('adds no visible delay: under 15 ms of CPU on top of starting node and appending', () => {
     const home = mkdtempSync(path.join(tmp, 'home-'));
-    const bareNode = path.join(tmp, 'bare-node.cjs');
-    writeFileSync(bareNode, '');
+    const bare = path.join(tmp, 'bare-hook.cjs');
+    writeFileSync(bare, BARE_HOOK);
     const input = {
       session_id: 'timing',
       hook_event_name: 'PreToolUse',
@@ -83,22 +106,18 @@ describe('recorder hook', () => {
       tool_use_id: 'toolu_t',
       tool_input: { command: 'pnpm lint && pnpm test' },
     };
-    // Warm the file cache.
-    runHook(input, home);
-    runHook(input, home, bareNode);
     const hook: number[] = [];
-    const node: number[] = [];
+    const control: number[] = [];
     for (let i = 0; i < 15; i++) {
-      node.push(runHook(input, home, bareNode).ms);
-      hook.push(runHook(input, home).ms);
+      control.push(cpuMs(input, home, bare));
+      hook.push(cpuMs(input, home, hookFile));
     }
-    writeFileSync(path.join(tmp, 'timings.json'), JSON.stringify({ hook, node }));
-    const [fastestHook, fastestNode] = [Math.min(...hook), Math.min(...node)];
+    const [fastestHook, fastestBare] = [Math.min(...hook), Math.min(...control)];
     expect(
-      fastestHook - fastestNode,
-      `fastest hook ${fastestHook} ms, fastest bare node ${fastestNode} ms`,
+      fastestHook - fastestBare,
+      `fastest hook ${fastestHook} ms of CPU, fastest bare script ${fastestBare} ms`,
     ).toBeLessThan(15);
-  });
+  }, 60_000); // Thirty runs, each up to a second on a busy machine.
 
   it('matches the committed plugin bundle', async () => {
     const fresh = await build({

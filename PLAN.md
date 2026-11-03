@@ -225,7 +225,7 @@ flags) and src/recorder, which turns an events file into steps.
 
 - [x] The plugin is installed and a real session produces an events file (checked with `claude -p --plugin-dir plugin`)
 - [x] `awf sessions` shows the right duration, checked against your clock (9.86 s session = 15.32 s wall clock minus 4.87 s startup and 0.60 s teardown)
-- [x] Hooks add no visible delay: about 1 ms on top of Node's start, held under 15 ms so a run stays inside the 50 ms budget (test/recorder/hook.test.ts)
+- [x] Hooks add no visible delay: about 3 ms of CPU on top of Node's start and the append, held under 15 ms so a run stays inside the 50 ms budget (test/recorder/hook.test.ts)
 
 ### M2 · Importer for past sessions
 
