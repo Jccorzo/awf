@@ -59,6 +59,7 @@ HOME="$TMPHOME" node dist/awf.mjs summary last
 The step-by-step checklists in `.claude/skills/add-rule/SKILL.md` and `.claude/skills/next-step/SKILL.md` work for any agent.
 
 <!-- hushrun:start (hushrun init writes this block; run it again to update it) -->
+
 ## Before you push: hushrun
 
 This repository's checks run through hushrun, which skips a check in CI when this exact code

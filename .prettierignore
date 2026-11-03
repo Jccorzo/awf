@@ -7,3 +7,6 @@ pnpm-lock.yaml
 PLAN.md
 src/classify/default-rules.yaml
 docs/sample-report.html
+
+# Written by hushrun init; left as hushrun writes it
+hushrun.yaml
