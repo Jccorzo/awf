@@ -6,6 +6,7 @@ import {
   importAgentFile,
   listAgentSessions,
 } from '../importers/agents';
+import { isClaudeCall } from '../importers/claude-code/format';
 import { readClaudeCodeTranscript, type TranscriptRead } from '../importers/claude-code/import';
 import { listTranscripts, type TranscriptFile } from '../importers/claude-code/locate';
 import type { Session, Step } from '../model/types';
@@ -267,6 +268,75 @@ export function quickSession(ref: SessionRef, env: Env): Session | undefined {
     if (cwd) recorded.cwd = cwd;
   }
   return recorded;
+}
+
+function claudeCalls(session: Session): Step[] {
+  return session.steps
+    .filter((step) => step.kind === 'tool' && isClaudeCall(step.id))
+    .sort((a, b) => a.startMs - b.startMs);
+}
+
+/** What's left of a session after `cutMs`. */
+function sessionAfter(session: Session, cutMs: number): Session {
+  const steps = session.steps
+    .filter((step) => step.endMs > cutMs)
+    .map((step) => (step.startMs < cutMs ? { ...step, startMs: cutMs } : step));
+  return { ...session, startMs: cutMs, steps };
+}
+
+/**
+ * Counts every stretch of work once. A session resumed under a new ID repeats calls of the old one
+ * (docs/transcript-format.md, "Resumed sessions"). Sessions keep a call in the order their first
+ * calls ran, the longest first among those opening with the same call. Any other session holding
+ * that call starts at the turn of its first call after the last one it repeats (at the call, if
+ * it's in no turn), or right after that repeated call if both are in one turn, and goes if it has
+ * no such call. Not by start time: a copy and its original can differ by a few ms, the recorder's
+ * times against the transcript's.
+ */
+export function countOnce<T extends { session: Session }>(loaded: T[]): T[] {
+  const entries = loaded.map((item) => ({ item, calls: claudeCalls(item.session) }));
+  const earliest = new Map<string, number>();
+  for (const { calls } of entries) {
+    for (const call of calls) {
+      earliest.set(call.id, Math.min(call.startMs, earliest.get(call.id) ?? Infinity));
+    }
+  }
+  const opensAt = (calls: Step[]) => earliest.get(calls[0]?.id ?? '') ?? Infinity;
+  entries.sort(
+    (a, b) =>
+      opensAt(a.calls) - opensAt(b.calls) ||
+      b.calls.length - a.calls.length ||
+      a.item.session.id.localeCompare(b.item.session.id),
+  );
+  const seen = new Set<string>();
+  const counted: T[] = [];
+  for (const { item, calls } of entries) {
+    const repeated = calls.filter((call) => seen.has(call.id));
+    for (const call of calls) seen.add(call.id);
+    if (repeated.length === 0) {
+      counted.push(item);
+      continue;
+    }
+    const repeatedMs = Math.max(...repeated.map((call) => call.endMs));
+    const own = calls.find((call) => call.endMs > repeatedMs);
+    if (!own) continue;
+    const turn = item.session.steps.find(
+      (s) => s.kind === 'turn' && s.startMs <= own.startMs && s.endMs >= own.startMs,
+    );
+    const cutMs = Math.max(repeatedMs, turn?.startMs ?? own.startMs);
+    counted.push({ ...item, session: sessionAfter(item.session, cutMs) });
+  }
+  return counted;
+}
+
+/** Every session with timings, cheaply (see `quickSession`), with each stretch of work once. */
+export function quickSessions(env: Env): Array<{ ref: SessionRef; session: Session }> {
+  const loaded: Array<{ ref: SessionRef; session: Session }> = [];
+  for (const ref of sessionIndex(env).values()) {
+    const session = quickSession(ref, env);
+    if (session && session.steps.length > 0) loaded.push({ ref, session });
+  }
+  return countOnce(loaded);
 }
 
 export function mergeSessions(recorded: Session, transcript: Session): Session {

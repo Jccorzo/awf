@@ -57,6 +57,8 @@ A session is in a range if it started there. `sessions`, `stats`, `import` and `
 
 `sessions`, `stats`, `sample` and date ranges in `compare` only see sessions the plugin recorded or `awf import` read. With neither, `sessions` and `stats` say so and exit 0, and `compare` exits 1. So run `awf import --since 30d` before them.
 
+Resuming can write a session's work again under a new ID. These commands and `live` count it once: a copy left behind isn't listed, and a session that repeats part of an older one starts after what it repeats. `summary`, `classify` and `report` show that ID's log as it is.
+
 `awf import` only reads agents' logs. It writes timings and commands to `~/.awf/imported/`, never prompts or output, and `--dry-run` writes nothing. `--agent` limits it to `claude-code`, `codex`, `gemini` or `opencode`.
 
 If sessions are missing, `awf doctor` shows where awf reads and writes, and whether the plugin is recording.
@@ -224,7 +226,7 @@ Counts in `phases`: `runs` and `failed` on `lint`, `tests` and `build`. `edits` 
 | Field                | Meaning                                                          |
 | -------------------- | ---------------------------------------------------------------- |
 | `id`                 | Session ID                                                       |
-| `startMs`, `endMs`   | Start and end                                                    |
+| `startMs`, `endMs`   | Start and end, without what it repeats of an older session       |
 | `durationMs`         | Length                                                           |
 | `turnsMs`            | Time inside turns                                                |
 | `turns`, `toolCalls` | Counts                                                           |

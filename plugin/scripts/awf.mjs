@@ -11482,42 +11482,6 @@ function importAgentFile(file, options = {}) {
   }
 }
 
-// src/importers/claude-code/import.ts
-import { existsSync as existsSync4, readdirSync as readdirSync3, readFileSync as readFileSync6 } from "node:fs";
-import path8 from "node:path";
-
-// src/recorder/event.ts
-function str2(value) {
-  return typeof value === "string" && value.length > 0 ? value : void 0;
-}
-function obj2(value) {
-  return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
-}
-var ACTION_NAME = /^[A-Za-z][\w.-]{0,63}$/;
-var MAX_ACTIONS = 50;
-function toolActions(tool, input) {
-  if (!tool.startsWith("mcp__")) return void 0;
-  const short = tool.slice(tool.lastIndexOf("__") + 2);
-  const named = (name, action2) => {
-    const n = str2(name);
-    if (!n || !ACTION_NAME.test(n)) return void 0;
-    const a = str2(action2);
-    return a && ACTION_NAME.test(a) ? `${n}:${a}` : n;
-  };
-  if (short.endsWith("batch") && Array.isArray(input.actions)) {
-    const out = [];
-    for (const item of input.actions.slice(0, MAX_ACTIONS)) {
-      const call = obj2(item);
-      if (!call) continue;
-      const action2 = call.name !== void 0 ? named(call.name, obj2(call.input)?.action) : named(call.action, void 0);
-      if (action2) out.push(action2);
-    }
-    return out.length > 0 ? out : void 0;
-  }
-  const action = named(short, input.action);
-  return action?.includes(":") ? [action] : void 0;
-}
-
 // src/importers/claude-code/format.ts
 var READ_TYPES = /* @__PURE__ */ new Set([
   "user",
@@ -11549,6 +11513,7 @@ var SKIPPED_TYPES = /* @__PURE__ */ new Set([
   "artifact-comment-monitor",
   "tools-used",
   "fork-context-ref",
+  "continued-in",
   "progress"
 ]);
 var SYSTEM_SUBTYPES = /* @__PURE__ */ new Set([
@@ -11573,40 +11538,40 @@ var BLOCK_TYPES = /* @__PURE__ */ new Set([
   "server_tool_use",
   "web_search_tool_result"
 ]);
-function str3(value) {
+function str2(value) {
   return typeof value === "string" && value.length > 0 ? value : void 0;
 }
-function obj3(value) {
+function obj2(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
 }
 function timestampMs(entry) {
-  const raw = str3(entry.timestamp);
+  const raw = str2(entry.timestamp);
   if (!raw) return void 0;
   const ms = Date.parse(raw);
   return Number.isFinite(ms) ? ms : void 0;
 }
 function contentBlocks(entry) {
-  const content = obj3(entry.message)?.content;
-  return Array.isArray(content) ? content.filter((b) => !!obj3(b)) : [];
+  const content = obj2(entry.message)?.content;
+  return Array.isArray(content) ? content.filter((b) => !!obj2(b)) : [];
 }
 function messageText(entry) {
-  const content = obj3(entry.message)?.content;
+  const content = obj2(entry.message)?.content;
   if (typeof content === "string") return content;
   if (!Array.isArray(content)) return "";
-  return content.map((b) => obj3(b)?.type === "text" ? String(obj3(b)?.text ?? "") : "").filter(Boolean).join("\n");
+  return content.map((b) => obj2(b)?.type === "text" ? String(obj2(b)?.text ?? "") : "").filter(Boolean).join("\n");
 }
 function resultText(block) {
   const content = block.content;
   if (typeof content === "string") return content;
   if (!Array.isArray(content)) return "";
-  return content.map((b) => obj3(b)?.type === "text" ? String(obj3(b)?.text ?? "") : "").filter(Boolean).join("\n");
+  return content.map((b) => obj2(b)?.type === "text" ? String(obj2(b)?.text ?? "") : "").filter(Boolean).join("\n");
 }
 function promptKind(entry) {
   if (entry.isCompactSummary === true || entry.isVisibleInTranscriptOnly === true) return "none";
   if (contentBlocks(entry).some((b) => b.type === "tool_result")) return "none";
   const text = messageText(entry).trimStart();
   if (text.startsWith("[Request interrupted")) return "none";
-  const origin = str3(obj3(entry.origin)?.kind);
+  const origin = str2(obj2(entry.origin)?.kind);
   if (origin) return origin === "human" ? "human" : "notification";
   if (entry.isMeta === true || !text) return "none";
   if (text.startsWith("<task-notification>")) return "notification";
@@ -11627,6 +11592,45 @@ function parseNotification(text, ms) {
   return notice;
 }
 var EXIT_CODE = /^(?:Error: )?Exit code (\d+)/;
+function isClaudeCall(id) {
+  return id.startsWith("toolu_");
+}
+
+// src/importers/claude-code/import.ts
+import { existsSync as existsSync4, readdirSync as readdirSync3, readFileSync as readFileSync6 } from "node:fs";
+import path8 from "node:path";
+
+// src/recorder/event.ts
+function str3(value) {
+  return typeof value === "string" && value.length > 0 ? value : void 0;
+}
+function obj3(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
+}
+var ACTION_NAME = /^[A-Za-z][\w.-]{0,63}$/;
+var MAX_ACTIONS = 50;
+function toolActions(tool, input) {
+  if (!tool.startsWith("mcp__")) return void 0;
+  const short = tool.slice(tool.lastIndexOf("__") + 2);
+  const named = (name, action2) => {
+    const n = str3(name);
+    if (!n || !ACTION_NAME.test(n)) return void 0;
+    const a = str3(action2);
+    return a && ACTION_NAME.test(a) ? `${n}:${a}` : n;
+  };
+  if (short.endsWith("batch") && Array.isArray(input.actions)) {
+    const out = [];
+    for (const item of input.actions.slice(0, MAX_ACTIONS)) {
+      const call = obj3(item);
+      if (!call) continue;
+      const action2 = call.name !== void 0 ? named(call.name, obj3(call.input)?.action) : named(call.action, void 0);
+      if (action2) out.push(action2);
+    }
+    return out.length > 0 ? out : void 0;
+  }
+  const action = named(short, input.action);
+  return action?.includes(":") ? [action] : void 0;
+}
 
 // src/importers/claude-code/import.ts
 var FILE_KEYS = ["file_path", "notebook_path", "path"];
@@ -11705,7 +11709,7 @@ var TranscriptReader = class {
       if (!line.trim()) continue;
       try {
         const entry = JSON.parse(line);
-        if (obj3(entry)) entries2.push(entry);
+        if (obj2(entry)) entries2.push(entry);
         else this.diagnostics.badLines++;
       } catch {
         this.diagnostics.badLines++;
@@ -11715,11 +11719,11 @@ var TranscriptReader = class {
   }
   /** Checks an entry's type, notes its version and cwd; returns false for entries to skip. */
   accept(entry) {
-    const type = str3(entry.type) ?? "<no type>";
-    const version = str3(entry.version);
+    const type = str2(entry.type) ?? "<no type>";
+    const version = str2(entry.version);
     if (version && (!this.version || compareVersions(version, this.version) > 0))
       this.version = version;
-    if (!this.cwd && str3(entry.cwd)) this.cwd = str3(entry.cwd);
+    if (!this.cwd && str2(entry.cwd)) this.cwd = str2(entry.cwd);
     if (SKIPPED_TYPES.has(type)) return false;
     if (!READ_TYPES.has(type)) {
       this.count(type);
@@ -11733,7 +11737,7 @@ var TranscriptReader = class {
       const ms = timestampMs(entry);
       if (ms === void 0) continue;
       this.lastMs = Math.max(this.lastMs, ms);
-      const agentId = entry.isSidechain === true ? str3(entry.agentId) ?? "sidechain" : void 0;
+      const agentId = entry.isSidechain === true ? str2(entry.agentId) ?? "sidechain" : void 0;
       switch (entry.type) {
         case "user":
           this.user(entry, ms, agentId);
@@ -11749,7 +11753,7 @@ var TranscriptReader = class {
           break;
         case "queue-operation":
         case "attachment": {
-          const text = entry.type === "attachment" ? JSON.stringify(entry.attachment ?? "") : str3(entry.content) ?? "";
+          const text = entry.type === "attachment" ? JSON.stringify(entry.attachment ?? "") : str2(entry.content) ?? "";
           const notice = parseNotification(text, ms);
           if (notice && (entry.type === "attachment" || entry.operation === "enqueue")) {
             this.notifications.push(notice);
@@ -11765,7 +11769,7 @@ var TranscriptReader = class {
     const first = entries2[0];
     const last = entries2[entries2.length - 1];
     if (!first || !last) return;
-    const at = this.agentTypes.get(agentId) ?? str3(first.agentType);
+    const at = this.agentTypes.get(agentId) ?? str2(first.agentType);
     this.emit({
       e: "SubagentStart",
       t: timestampMs(first),
@@ -11828,19 +11832,19 @@ var TranscriptReader = class {
     this.turnOpen = false;
   }
   toolResults(entry, ms, agentId) {
-    const result2 = obj3(entry.toolUseResult);
-    const decision = obj3(entry.permissionDecision);
+    const result2 = obj2(entry.toolUseResult);
+    const decision = obj2(entry.permissionDecision);
     for (const block of contentBlocks(entry)) {
       if (block.type !== "tool_result") {
         if (!BLOCK_TYPES.has(String(block.type))) this.count(`block:${String(block.type)}`);
         continue;
       }
-      const tuid = str3(block.tool_use_id);
+      const tuid = str2(block.tool_use_id);
       if (!tuid) continue;
       if (!agentId) this.lastActivity = Math.max(this.lastActivity, ms);
       const text = resultText(block);
       const failed = block.is_error === true;
-      const source = str3(decision?.source) ?? "";
+      const source = str2(decision?.source) ?? "";
       const use = this.toolUses.get(tuid);
       if (source.startsWith("user")) {
         const startEvent = this.startEvents.get(tuid);
@@ -11853,7 +11857,7 @@ var TranscriptReader = class {
             ...agentId ? { aid: agentId } : {}
           });
       }
-      if (str3(decision?.decision) === "reject") {
+      if (str2(decision?.decision) === "reject") {
         this.emit({ e: "PermissionDenied", t: ms, tuid, ...agentId ? { aid: agentId } : {} });
         this.resolveBatch(use, tuid, ms);
         continue;
@@ -11869,17 +11873,17 @@ var TranscriptReader = class {
       if (agentId) event.aid = agentId;
       if (code) event.code = Number(code[1]);
       if (result2?.interrupted === true) event.intr = true;
-      const child = str3(result2?.agentId);
+      const child = str2(result2?.agentId);
       if (child && use && (use.name === "Agent" || use.name === "Task")) {
         event.child = child;
-        const type = str3(result2?.agentType);
+        const type = str2(result2?.agentType);
         if (type && !this.agentTypes.has(child)) this.agentTypes.set(child, type);
       }
-      let bgid = str3(result2?.backgroundTaskId);
+      let bgid = str2(result2?.backgroundTaskId);
       if (!bgid && !failed && use?.name === "Bash") bgid = SHELL_STARTED.exec(text)?.[1];
       const monitor = this.monitors.get(tuid);
       if (monitor && !failed) {
-        bgid ??= str3(result2?.taskId) ?? MONITOR_STARTED.exec(text)?.[1];
+        bgid ??= str2(result2?.taskId) ?? MONITOR_STARTED.exec(text)?.[1];
         if (typeof result2?.timeoutMs === "number") monitor.timeoutMs = result2.timeoutMs;
         if (result2?.persistent === true) monitor.persistent = true;
       }
@@ -11908,8 +11912,8 @@ var TranscriptReader = class {
     }
   }
   assistant(entry, ms, agentId) {
-    const message = obj3(entry.message) ?? {};
-    const messageId = str3(message.id) ?? str3(entry.uuid);
+    const message = obj2(entry.message) ?? {};
+    const messageId = str2(message.id) ?? str2(entry.uuid);
     if (!agentId && (!this.turnOpen || this.turnEndMark !== void 0 && ms > this.turnEndMark)) {
       if (this.turnOpen) this.closeTurn();
       this.startTurn(Math.min(this.pendingPrompt ?? ms, ms), "system");
@@ -11919,14 +11923,14 @@ var TranscriptReader = class {
       const known = this.messages.get(messageId);
       const record = known ?? { lastMs: ms };
       if (!known) {
-        const sentMs = this.resentAt(agentId ?? "", str3(entry.requestRef), ms);
+        const sentMs = this.resentAt(agentId ?? "", str2(entry.requestRef), ms);
         if (sentMs !== void 0) record.sentMs = sentMs;
       }
       record.lastMs = Math.max(record.lastMs, ms);
       if (agentId) record.agentId = agentId;
-      const model = str3(message.model);
+      const model = str2(message.model);
       if (model && model !== "<synthetic>") record.model = model;
-      const usage2 = obj3(message.usage);
+      const usage2 = obj2(message.usage);
       if (usage2) record.tokens = tokens4(usage2);
       this.messages.set(messageId, record);
     }
@@ -11938,10 +11942,10 @@ var TranscriptReader = class {
     for (const block of contentBlocks(entry)) {
       if (!BLOCK_TYPES.has(String(block.type))) this.count(`block:${String(block.type)}`);
       if (block.type !== "tool_use") continue;
-      const tuid = str3(block.id);
-      const name = str3(block.name);
+      const tuid = str2(block.id);
+      const name = str2(block.name);
       if (!tuid || !name) continue;
-      const input = obj3(block.input) ?? {};
+      const input = obj2(block.input) ?? {};
       const event = {
         e: "PreToolUse",
         t: ms,
@@ -11949,16 +11953,16 @@ var TranscriptReader = class {
         tuid,
         ih: tuid
       };
-      const command = str3(input.command);
+      const command = str2(input.command);
       if (command) event.cmd = cleanCommand(command);
-      const files2 = FILE_KEYS.map((key) => str3(input[key])).filter((f) => !!f);
+      const files2 = FILE_KEYS.map((key) => str2(input[key])).filter((f) => !!f);
       if (files2.length > 0) event.files = files2;
       if (input.run_in_background === true) event.bg = true;
-      const sub = str3(input.subagent_type);
+      const sub = str2(input.subagent_type);
       if (sub) event.sub = sub;
       const act = toolActions(name, input);
       if (act) event.act = act;
-      const ref = str3(input.task_id) ?? str3(input.bash_id) ?? str3(input.shell_id);
+      const ref = str2(input.task_id) ?? str2(input.bash_id) ?? str2(input.shell_id);
       if (ref) event.bgid = ref;
       if (name === "Monitor") {
         const asked = typeof input.timeout_ms === "number" ? input.timeout_ms : MONITOR_TIMEOUT_MS;
@@ -11986,14 +11990,14 @@ var TranscriptReader = class {
       if (agentId) use.agentId = agentId;
       this.toolUses.set(tuid, use);
       if (this.options.detail) {
-        const description = str3(input.description);
+        const description = str2(input.description);
         if (description) this.details.set(tuid, { description: oneLine2(description) });
       }
     }
   }
   /** An `api-request` entry: a model request sent by the main agent or a subagent. */
   request(entry, ms, agentId) {
-    const id = str3(entry.id);
+    const id = str2(entry.id);
     if (id) this.requests.set(id, ms);
     const key = agentId ?? "";
     this.sends.set(key, [...this.sends.get(key) ?? [], ms]);
@@ -12013,7 +12017,7 @@ var TranscriptReader = class {
     return sends.some((s) => s < sentMs) ? sentMs : void 0;
   }
   system(entry, ms) {
-    const subtype = str3(entry.subtype) ?? "<none>";
+    const subtype = str2(entry.subtype) ?? "<none>";
     if (!SYSTEM_SUBTYPES.has(subtype)) {
       this.count(`system:${subtype}`);
       return;
@@ -12021,9 +12025,9 @@ var TranscriptReader = class {
     if (subtype === "turn_duration" || subtype === "stop_hook_summary") {
       this.turnEndMark = Math.max(this.turnEndMark ?? 0, ms);
     } else if (subtype === "compact_boundary") {
-      const meta = obj3(entry.compactMetadata) ?? {};
+      const meta = obj2(entry.compactMetadata) ?? {};
       const duration = typeof meta.durationMs === "number" ? meta.durationMs : 0;
-      const trigger = str3(meta.trigger);
+      const trigger = str2(meta.trigger);
       this.emit({ e: "PreCompact", t: ms - duration, ...trigger ? { trigger } : {} });
       this.emit({ e: "PostCompact", t: ms, ...trigger ? { trigger } : {} });
     }
@@ -12256,7 +12260,7 @@ import {
   writeFileSync
 } from "node:fs";
 import path12 from "node:path";
-var IMPORT_VERSION = 5;
+var IMPORT_VERSION = 6;
 function cacheFile(id, env = process.env) {
   return path12.join(importedDir(env), `${safeId(id)}.json`);
 }
@@ -12265,7 +12269,7 @@ function readImported(id, env = process.env) {
   if (!existsSync7(file)) return void 0;
   try {
     const parsed = JSON.parse(readFileSync8(file, "utf8"));
-    return [1, 2, 3, 4, IMPORT_VERSION].includes(parsed.version) && parsed.session ? parsed : void 0;
+    return [1, 2, 3, 4, 5, IMPORT_VERSION].includes(parsed.version) && parsed.session ? parsed : void 0;
   } catch {
     return void 0;
   }
@@ -12459,6 +12463,53 @@ function quickSession(ref, env) {
   }
   return recorded;
 }
+function claudeCalls(session) {
+  return session.steps.filter((step) => step.kind === "tool" && isClaudeCall(step.id)).sort((a, b) => a.startMs - b.startMs);
+}
+function sessionAfter(session, cutMs) {
+  const steps = session.steps.filter((step) => step.endMs > cutMs).map((step) => step.startMs < cutMs ? { ...step, startMs: cutMs } : step);
+  return { ...session, startMs: cutMs, steps };
+}
+function countOnce(loaded) {
+  const entries2 = loaded.map((item) => ({ item, calls: claudeCalls(item.session) }));
+  const earliest = /* @__PURE__ */ new Map();
+  for (const { calls } of entries2) {
+    for (const call of calls) {
+      earliest.set(call.id, Math.min(call.startMs, earliest.get(call.id) ?? Infinity));
+    }
+  }
+  const opensAt = (calls) => earliest.get(calls[0]?.id ?? "") ?? Infinity;
+  entries2.sort(
+    (a, b) => opensAt(a.calls) - opensAt(b.calls) || b.calls.length - a.calls.length || a.item.session.id.localeCompare(b.item.session.id)
+  );
+  const seen = /* @__PURE__ */ new Set();
+  const counted = [];
+  for (const { item, calls } of entries2) {
+    const repeated = calls.filter((call) => seen.has(call.id));
+    for (const call of calls) seen.add(call.id);
+    if (repeated.length === 0) {
+      counted.push(item);
+      continue;
+    }
+    const repeatedMs = Math.max(...repeated.map((call) => call.endMs));
+    const own = calls.find((call) => call.endMs > repeatedMs);
+    if (!own) continue;
+    const turn = item.session.steps.find(
+      (s) => s.kind === "turn" && s.startMs <= own.startMs && s.endMs >= own.startMs
+    );
+    const cutMs = Math.max(repeatedMs, turn?.startMs ?? own.startMs);
+    counted.push({ ...item, session: sessionAfter(item.session, cutMs) });
+  }
+  return counted;
+}
+function quickSessions(env) {
+  const loaded = [];
+  for (const ref of sessionIndex(env).values()) {
+    const session = quickSession(ref, env);
+    if (session && session.steps.length > 0) loaded.push({ ref, session });
+  }
+  return countOnce(loaded);
+}
 function mergeSessions(recorded, transcript) {
   const fromTranscript = new Map(transcript.steps.map((s) => [s.id, s]));
   const producerOf = /* @__PURE__ */ new Map();
@@ -12535,9 +12586,8 @@ function loadMany(ctx, options) {
   const since = typeof options.since === "string" ? ctx.now - parseSince(options.since) : -Infinity;
   const project = typeof options.project === "string" ? path14.resolve(ctx.cwd, options.project) : void 0;
   const sessions = [];
-  for (const ref of sessionIndex(ctx.env).values()) {
-    const session = quickSession(ref, ctx.env);
-    if (!session || session.steps.length === 0 || session.startMs < since) continue;
+  for (const { session } of quickSessions(ctx.env)) {
+    if (session.startMs < since) continue;
     if (project && !(session.cwd && (session.cwd === project || session.cwd.startsWith(project + path14.sep))))
       continue;
     sessions.push(session);
@@ -13477,10 +13527,10 @@ function transcriptFacts(text) {
     } catch {
       continue;
     }
-    const entry = obj3(parsed);
+    const entry = obj2(parsed);
     if (!entry) continue;
-    if (entry.type === "custom-title") customTitle = str3(entry.customTitle) ?? customTitle;
-    if (entry.type === "ai-title") aiTitle = str3(entry.aiTitle) ?? aiTitle;
+    if (entry.type === "custom-title") customTitle = str2(entry.customTitle) ?? customTitle;
+    if (entry.type === "ai-title") aiTitle = str2(entry.aiTitle) ?? aiTitle;
     if (entry.type === "cost-state") {
       if (turnOpen && lastMs !== void 0) end(lastMs);
       open.clear();
@@ -13490,7 +13540,7 @@ function transcriptFacts(text) {
     if (entry.isSidechain === true) continue;
     const ms = timestampMs(entry);
     if (ms === void 0 || !ACTIVITY.has(String(entry.type))) continue;
-    cwd ??= str3(entry.cwd);
+    cwd ??= str2(entry.cwd);
     lastMs = Math.max(lastMs ?? ms, ms);
     switch (entry.type) {
       case "user": {
@@ -13511,16 +13561,16 @@ function transcriptFacts(text) {
           end(ms);
           break;
         }
-        const result2 = obj3(entry.toolUseResult);
+        const result2 = obj2(entry.toolUseResult);
         for (const block of contentBlocks(entry)) {
           if (block.type !== "tool_result") continue;
-          const id = str3(block.tool_use_id);
+          const id = str2(block.tool_use_id);
           if (!id) continue;
           if (open.delete(id)) work();
           const call = calls.get(id);
           const tool = call?.tool;
           if (block.is_error === true || !result2 || !tool || TASK_REFS2.has(tool)) continue;
-          const taskId = str3(result2.backgroundTaskId) ?? (result2.isAsync === true || result2.status === "async_launched" ? str3(result2.agentId) : void 0) ?? (TASK_TOOLS.has(tool) ? str3(result2.taskId) : void 0);
+          const taskId = str2(result2.backgroundTaskId) ?? (result2.isAsync === true || result2.status === "async_launched" ? str2(result2.agentId) : void 0) ?? (TASK_TOOLS.has(tool) ? str2(result2.taskId) : void 0);
           if (taskId && !finished.has(taskId)) background.set(taskId, { ...call, ms });
         }
         if (text2.trimStart().startsWith("[Request interrupted")) end(ms);
@@ -13535,20 +13585,20 @@ function transcriptFacts(text) {
         let used = false;
         for (const block of contentBlocks(entry)) {
           if (block.type !== "tool_use") continue;
-          const id = str3(block.id);
-          const tool = str3(block.name);
+          const id = str2(block.id);
+          const tool = str2(block.name);
           if (!id || !tool) continue;
           used = true;
-          const input = obj3(block.input) ?? {};
-          const command = tool === "Bash" ? str3(input.command) : void 0;
+          const input = obj2(block.input) ?? {};
+          const command = tool === "Bash" ? str2(input.command) : void 0;
           const call = command ? { id, tool, ms, command } : { id, tool, ms };
           open.set(id, call);
           calls.set(id, call);
           if (STOP_TOOLS2.has(tool)) {
-            finish(str3(input.task_id) ?? str3(input.bash_id) ?? str3(input.shell_id));
+            finish(str2(input.task_id) ?? str2(input.bash_id) ?? str2(input.shell_id));
           }
         }
-        const reason = str3(obj3(entry.message)?.stop_reason);
+        const reason = str2(obj2(entry.message)?.stop_reason);
         if (!used && reason && END_REASONS.has(reason) && open.size === 0) end(ms);
         break;
       }
@@ -13556,12 +13606,12 @@ function transcriptFacts(text) {
         work();
         break;
       case "system": {
-        const subtype = str3(entry.subtype);
+        const subtype = str2(entry.subtype);
         if (subtype === "turn_duration" || subtype === "stop_hook_summary") end(ms);
         break;
       }
       case "queue-operation":
-        if (entry.operation === "enqueue") notices(str3(entry.content) ?? "");
+        if (entry.operation === "enqueue") notices(str2(entry.content) ?? "");
         break;
       case "attachment":
         notices(JSON.stringify(entry.attachment ?? ""));
@@ -13571,7 +13621,8 @@ function transcriptFacts(text) {
   const facts = {
     turnOpen,
     openCalls: [...open.values()],
-    background: [...background.values()]
+    background: [...background.values()],
+    calls: [...calls.keys()].filter(isClaudeCall)
   };
   if (cwd) facts.cwd = cwd;
   const title = oneLine3(customTitle ?? "") || oneLine3(aiTitle ?? "") || firstPrompt || firstCommand;
@@ -14134,14 +14185,25 @@ function scan(ctx, options, memo, now) {
     }
     if (row && row.activityMs >= sinceMs) active.push(row);
   }
-  const rows = active.sort((a, b) => b.activityMs - a.activityMs).slice(0, options.limit);
+  const current = withoutCopies(active, memo);
+  const rows = current.sort((a, b) => b.activityMs - a.activityMs).slice(0, options.limit);
   const shown = new Set(rows.map((row) => row.id));
   const files2 = new Set(changed.map((file) => file.path));
   for (const file of memo.facts.keys()) if (!files2.has(file)) memo.facts.delete(file);
   for (const id of memo.lines.keys()) if (!shown.has(id)) memo.lines.delete(id);
   for (const file of memo.events.keys())
     if (!shown.has(path18.basename(file, ".jsonl"))) memo.events.delete(file);
-  return { rows, total: active.length };
+  return { rows, total: current.length };
+}
+function withoutCopies(rows, memo) {
+  const sessions = rows.map((row) => ({
+    row,
+    calls: new Set(memo.facts.get(row.transcript)?.facts.calls)
+  }));
+  const isCopy = ({ row, calls }) => calls.size > 0 && sessions.some(
+    (other) => (other.calls.size > calls.size || other.calls.size === calls.size && other.row.id < row.id) && [...calls].every((id) => other.calls.has(id))
+  );
+  return sessions.filter((session) => !isCopy(session)).map((session) => session.row);
 }
 function readRow(ctx, file, memo, now, home) {
   const facts = readFacts(file, memo);
@@ -15250,11 +15312,9 @@ function inFolder(cwd, dir) {
 }
 function listSessionRows(env) {
   const rows = [];
-  for (const ref of sessionIndex(env).values()) {
-    const base = quickSession(ref, env);
-    if (!base || base.steps.length === 0) continue;
-    const row = sessionRow(base);
-    const fromTranscript = ref.imported || base.sources.includes("transcript");
+  for (const { ref, session } of quickSessions(env)) {
+    const row = sessionRow(session);
+    const fromTranscript = ref.imported || session.sources.includes("transcript");
     row.sources = [...ref.events ? ["hooks"] : [], ...fromTranscript ? ["transcript"] : []];
     rows.push(row);
   }

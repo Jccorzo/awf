@@ -4,13 +4,7 @@ import { diskFiles, type Files } from '../classify/resolve';
 import { defaultRules, repoRules } from '../classify/rules';
 import type { Session } from '../model/types';
 import { parseSince } from '../model/time';
-import {
-  loadSession,
-  projectKey,
-  quickSession,
-  resolveSession,
-  sessionIndex,
-} from '../store/sessions';
+import { loadSession, projectKey, quickSessions, resolveSession } from '../store/sessions';
 import type { Ctx, Options } from './main';
 
 /** One session, from its ID, prefix, `last` or a file path, with transcript details when asked. */
@@ -47,15 +41,14 @@ export function classifier(files: Files = diskFiles()) {
   };
 }
 
-/** Every session with timings, cheaply: see `quickSession`. */
+/** Every session with timings, cheaply: see `quickSessions`. */
 export function loadMany(ctx: Ctx, options: Options): Session[] {
   const since = typeof options.since === 'string' ? ctx.now - parseSince(options.since) : -Infinity;
   const project =
     typeof options.project === 'string' ? path.resolve(ctx.cwd, options.project) : undefined;
   const sessions: Session[] = [];
-  for (const ref of sessionIndex(ctx.env).values()) {
-    const session = quickSession(ref, ctx.env);
-    if (!session || session.steps.length === 0 || session.startMs < since) continue;
+  for (const { session } of quickSessions(ctx.env)) {
+    if (session.startMs < since) continue;
     if (
       project &&
       !(session.cwd && (session.cwd === project || session.cwd.startsWith(project + path.sep)))

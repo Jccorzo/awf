@@ -110,7 +110,8 @@ export function scan(
     }
     if (row && row.activityMs >= sinceMs) active.push(row);
   }
-  const rows = active.sort((a, b) => b.activityMs - a.activityMs).slice(0, options.limit);
+  const current = withoutCopies(active, memo);
+  const rows = current.sort((a, b) => b.activityMs - a.activityMs).slice(0, options.limit);
   // Sessions that left the board are forgotten, so a board left open for days doesn't grow.
   const shown = new Set(rows.map((row) => row.id));
   const files = new Set(changed.map((file) => file.path));
@@ -118,7 +119,28 @@ export function scan(
   for (const id of memo.lines.keys()) if (!shown.has(id)) memo.lines.delete(id);
   for (const file of memo.events.keys())
     if (!shown.has(path.basename(file, '.jsonl'))) memo.events.delete(file);
-  return { rows, total: active.length };
+  return { rows, total: current.length };
+}
+
+/**
+ * Leaves out sessions whose calls are all in a longer one on the board: the copy a resume left
+ * behind, which stopped where it was copied and would read as working, or the session that carried
+ * on under a new ID.
+ */
+function withoutCopies(rows: LiveRow[], memo: LiveMemo): LiveRow[] {
+  const sessions = rows.map((row) => ({
+    row,
+    calls: new Set(memo.facts.get(row.transcript)?.facts.calls),
+  }));
+  const isCopy = ({ row, calls }: (typeof sessions)[number]) =>
+    calls.size > 0 &&
+    sessions.some(
+      (other) =>
+        (other.calls.size > calls.size ||
+          (other.calls.size === calls.size && other.row.id < row.id)) &&
+        [...calls].every((id) => other.calls.has(id)),
+    );
+  return sessions.filter((session) => !isCopy(session)).map((session) => session.row);
 }
 
 function readRow(

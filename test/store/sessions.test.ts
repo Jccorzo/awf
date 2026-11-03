@@ -3,11 +3,13 @@ import os from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { readClaudeCodeTranscript } from '../../src/importers/claude-code/import';
+import type { Session, Step, StepKind } from '../../src/model/types';
 import type { RecorderEvent } from '../../src/recorder/event';
 import { eventsToSession } from '../../src/recorder/steps';
 import { readEvents } from '../../src/store/events';
 import { writeImported } from '../../src/store/imported';
 import {
+  countOnce,
   eventsRecorderMissed,
   loadSession,
   quickSession,
@@ -275,6 +277,55 @@ describe('loadSession with the plugin off for part of a session', () => {
     ]);
     expect(session.steps.filter((s) => s.kind === 'turn')).toHaveLength(3);
     expect(session.endMs).toBe(ms(203.02));
+  });
+});
+
+describe('countOnce', () => {
+  const step = (id: string, kind: StepKind, from: number, to: number): Step => ({
+    id,
+    kind,
+    parentId: null,
+    startMs: ms(from),
+    endMs: ms(to),
+    flags: [],
+  });
+  const loaded = (id: string, ...steps: Step[]): { session: Session } => ({
+    session: {
+      id,
+      agent: 'claude-code',
+      sources: ['recorder'],
+      startMs: Math.min(...steps.map((s) => s.startMs)),
+      endMs: Math.max(...steps.map((s) => s.endMs)),
+      steps,
+    },
+  });
+
+  it("skips the wait it repeats when its first call of its own is in no turn: the recorder's view of a resume", () => {
+    const old = loaded(
+      'old',
+      step('toolu_1', 'tool', 0, 1),
+      step('toolu_2', 'tool', 10, 11),
+      step('idle:1', 'idle', 11, 400),
+    );
+    const next = loaded(
+      'next',
+      step('toolu_2', 'tool', 10, 11),
+      step('turn:1', 'turn', 20, 21),
+      step('idle:2', 'idle', 21, 500),
+      step('toolu_3', 'tool', 500, 505),
+    );
+    const [first, second] = countOnce([next, old]);
+    expect(first?.session.id).toBe('old');
+    expect(second?.session).toMatchObject({ id: 'next', startMs: ms(500), endMs: ms(505) });
+    expect(second?.session.steps.map((s) => s.id)).toEqual(['toolu_3']);
+  });
+
+  it('keeps a call it runs next to the last one it repeats, from when that one ended', () => {
+    const old = loaded('old', step('toolu_0', 'tool', 0, 1), step('toolu_1', 'tool', 10, 20));
+    const next = loaded('next', step('toolu_1', 'tool', 10, 20), step('toolu_2', 'tool', 15, 30));
+    const [, second] = countOnce([old, next]);
+    expect(second?.session.startMs).toBe(ms(20));
+    expect(second?.session.steps).toEqual([{ ...step('toolu_2', 'tool', 20, 30) }]);
   });
 });
 
