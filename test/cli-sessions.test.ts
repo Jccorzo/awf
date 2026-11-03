@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { main } from '../src/cli/main';
 import type { RecorderEvent } from '../src/recorder/event';
 import { captureIo } from './helpers';
+import { ms, prompt, result, text, toolUse } from './transcript';
 
 function writeEvents(home: string, id: string, events: Array<Partial<RecorderEvent>>): void {
   mkdirSync(path.join(home, 'events'), { recursive: true });
@@ -66,6 +67,54 @@ describe('awf sessions', () => {
       turns: 2,
       toolCalls: 1,
     });
+  });
+});
+
+describe('a session the recorder only saw part of', () => {
+  const id = '33333333-cccc';
+  const root = mkdtempSync(path.join(os.tmpdir(), 'awf-partial-'));
+  const env = {
+    AWF_HOME: path.join(root, 'awf'),
+    AWF_CLAUDE_PROJECTS: path.join(root, 'projects'),
+  };
+  const entries = [
+    prompt(0, 'first'),
+    toolUse(2, 'm1', 'a', 'Bash', { command: 'pnpm test' }),
+    result(5, 'a'),
+    text(8, 'm2'),
+    prompt(100, 'second'),
+    toolUse(102, 'm3', 'b', 'Bash', { command: 'pnpm build' }),
+    result(105, 'b'),
+    text(108, 'm4'),
+  ];
+  mkdirSync(path.join(env.AWF_CLAUDE_PROJECTS, '-tmp-demo'), { recursive: true });
+  writeFileSync(
+    path.join(env.AWF_CLAUDE_PROJECTS, '-tmp-demo', `${id}.jsonl`),
+    entries.map((e) => JSON.stringify(e)).join('\n') + '\n',
+  );
+  writeEvents(env.AWF_HOME, id, [
+    { e: 'SessionStart', t: ms(50), src: 'resume', cwd: '/work/repo' },
+    { e: 'UserPromptSubmit', t: ms(100.013), cwd: '/work/repo' },
+    { e: 'PreToolUse', t: ms(102.025), tool: 'Bash', tuid: 'b', cmd: 'pnpm build' },
+    { e: 'PostToolUse', t: ms(105.02), tool: 'Bash', tuid: 'b', ok: true },
+    { e: 'Stop', t: ms(108.02) },
+  ]);
+
+  it('awf sessions counts the turns from before the recorder', async () => {
+    const io = captureIo();
+    await main(['sessions', '--json'], io, env);
+    expect(JSON.parse(io.stdout[0] ?? '[]')[0]).toMatchObject({
+      id,
+      turns: 2,
+      toolCalls: 2,
+      sources: ['hooks', 'transcript'],
+    });
+  });
+
+  it('awf stats counts their Bash calls', async () => {
+    const io = captureIo();
+    await main(['stats', '--json'], io, env);
+    expect(JSON.parse(io.stdout[0] ?? '{}')).toMatchObject({ bashCalls: 2, sessions: 1 });
   });
 });
 

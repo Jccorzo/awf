@@ -171,7 +171,7 @@ Start with `awf doctor`. It shows where awf reads and writes, whether the record
 **The recorder isn't recording.** `awf doctor` says `Recorder: no events yet`, or its last event is old. The recorder never reports its own errors, so check these:
 
 - `claude plugin list` should show `awf@awf` as enabled.
-- Only sessions started after the install are recorded. Start a new one, or run `/reload-plugins`.
+- Only sessions started after the install are recorded. Start a new one, or run `/reload-plugins`. Turns the recorder missed, before the install or while the plugin was off, still come from the session's transcript.
 - The hooks run `node`, so `node` has to be on the PATH Claude Code sees.
 - `AWF_DISABLE`, set to anything, turns the recorder off.
 

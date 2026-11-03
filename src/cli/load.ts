@@ -4,15 +4,12 @@ import { diskFiles, type Files } from '../classify/resolve';
 import { defaultRules, repoRules } from '../classify/rules';
 import type { Session } from '../model/types';
 import { parseSince } from '../model/time';
-import { eventsToSession } from '../recorder/steps';
-import { readEvents } from '../store/events';
-import { readImported } from '../store/imported';
 import {
   loadSession,
   projectKey,
+  quickSession,
   resolveSession,
   sessionIndex,
-  type SessionRef,
 } from '../store/sessions';
 import type { Ctx, Options } from './main';
 
@@ -50,14 +47,14 @@ export function classifier(files: Files = diskFiles()) {
   };
 }
 
-/** Every session with timings, cheaply: recorder events or the import cache, no transcript parsing. */
+/** Every session with timings, cheaply: see `quickSession`. */
 export function loadMany(ctx: Ctx, options: Options): Session[] {
   const since = typeof options.since === 'string' ? ctx.now - parseSince(options.since) : -Infinity;
   const project =
     typeof options.project === 'string' ? path.resolve(ctx.cwd, options.project) : undefined;
   const sessions: Session[] = [];
   for (const ref of sessionIndex(ctx.env).values()) {
-    const session = quick(ref, ctx.env);
+    const session = quickSession(ref, ctx.env);
     if (!session || session.steps.length === 0 || session.startMs < since) continue;
     if (
       project &&
@@ -67,16 +64,4 @@ export function loadMany(ctx: Ctx, options: Options): Session[] {
     sessions.push(session);
   }
   return sessions.sort((a, b) => a.startMs - b.startMs);
-}
-
-function quick(ref: SessionRef, env: Record<string, string | undefined>): Session | undefined {
-  if (ref.events) {
-    const recorded = eventsToSession(ref.id, readEvents(ref.events.path));
-    if (!recorded.cwd) {
-      const cached = ref.imported ? readImported(ref.id, env)?.session : undefined;
-      if (cached?.cwd) recorded.cwd = cached.cwd;
-    }
-    return recorded;
-  }
-  return ref.imported ? readImported(ref.id, env)?.session : undefined;
 }

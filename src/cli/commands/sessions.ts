@@ -2,10 +2,7 @@ import os from 'node:os';
 import path from 'node:path';
 import type { Session } from '../../model/types';
 import { formatClock, formatDuration, parseSince } from '../../model/time';
-import { readEvents } from '../../store/events';
-import { readImported } from '../../store/imported';
-import { sessionIndex } from '../../store/sessions';
-import { eventsToSession } from '../../recorder/steps';
+import { quickSession, sessionIndex } from '../../store/sessions';
 import type { Command } from '../main';
 import { homeRelative, table } from '../table';
 
@@ -53,13 +50,11 @@ export function inFolder(cwd: string | undefined, dir: string | undefined): bool
 export function listSessionRows(env: Record<string, string | undefined>): SessionRow[] {
   const rows: SessionRow[] = [];
   for (const ref of sessionIndex(env).values()) {
-    const recorded = ref.events ? eventsToSession(ref.id, readEvents(ref.events.path)) : undefined;
-    const imported = ref.imported ? readImported(ref.id, env)?.session : undefined;
-    const base = recorded ?? imported;
+    const base = quickSession(ref, env);
     if (!base || base.steps.length === 0) continue;
     const row = sessionRow(base);
-    row.sources = [...(recorded ? ['hooks'] : []), ...(imported ? ['transcript'] : [])];
-    if (!row.cwd && imported?.cwd) row.cwd = imported.cwd;
+    const fromTranscript = ref.imported || base.sources.includes('transcript');
+    row.sources = [...(ref.events ? ['hooks'] : []), ...(fromTranscript ? ['transcript'] : [])];
     rows.push(row);
   }
   return rows.sort((a, b) => b.startMs - a.startMs);

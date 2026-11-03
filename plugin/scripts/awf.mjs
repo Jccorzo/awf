@@ -10594,121 +10594,18 @@ function unique(items) {
   return [...new Set(items)];
 }
 
-// src/store/events.ts
-import { existsSync as existsSync2, readdirSync, readFileSync as readFileSync2, statSync as statSync2 } from "node:fs";
-import path5 from "node:path";
-
-// src/store/paths.ts
-import os2 from "node:os";
-import path4 from "node:path";
-function awfHome(env = process.env) {
-  return env.AWF_HOME || path4.join(os2.homedir(), ".awf");
-}
-function eventsDir(env = process.env) {
-  return path4.join(awfHome(env), "events");
-}
-function importedDir(env = process.env) {
-  return path4.join(awfHome(env), "imported");
-}
-function cacheDir(env = process.env) {
-  return path4.join(awfHome(env), "cache");
-}
-function claudeProjectsDir(env = process.env) {
-  if (env.AWF_CLAUDE_PROJECTS) return env.AWF_CLAUDE_PROJECTS;
-  return path4.join(env.CLAUDE_CONFIG_DIR || path4.join(os2.homedir(), ".claude"), "projects");
-}
-function safeId(id) {
-  return id.replace(/[^A-Za-z0-9_-]/g, "_").slice(0, 128);
-}
-
-// src/store/events.ts
-function listEventFiles(env = process.env) {
-  const dir = eventsDir(env);
-  if (!existsSync2(dir)) return [];
-  return readdirSync(dir).filter((name) => name.endsWith(".jsonl")).map((name) => {
-    const file = path5.join(dir, name);
-    const stat2 = statSync2(file);
-    return {
-      id: name.slice(0, -".jsonl".length),
-      path: file,
-      mtimeMs: stat2.mtimeMs,
-      size: stat2.size
-    };
-  });
-}
-function readEvents(file) {
-  const events = [];
-  for (const line of readFileSync2(file, "utf8").split("\n")) {
-    if (!line.trim()) continue;
-    try {
-      const event = JSON.parse(line);
-      if (event && typeof event.e === "string" && typeof event.t === "number") events.push(event);
-    } catch {
-    }
-  }
-  return events;
-}
-
-// src/store/imported.ts
-import {
-  existsSync as existsSync3,
-  mkdirSync,
-  readdirSync as readdirSync2,
-  readFileSync as readFileSync3,
-  renameSync,
-  writeFileSync
-} from "node:fs";
-import path6 from "node:path";
-var IMPORT_VERSION = 5;
-function cacheFile(id, env = process.env) {
-  return path6.join(importedDir(env), `${safeId(id)}.json`);
-}
-function readImported(id, env = process.env) {
-  const file = cacheFile(id, env);
-  if (!existsSync3(file)) return void 0;
-  try {
-    const parsed = JSON.parse(readFileSync3(file, "utf8"));
-    return [1, 2, 3, 4, IMPORT_VERSION].includes(parsed.version) && parsed.session ? parsed : void 0;
-  } catch {
-    return void 0;
-  }
-}
-function writeImported(entry, env = process.env) {
-  const dir = importedDir(env);
-  mkdirSync(dir, { recursive: true });
-  const file = cacheFile(entry.session.id, env);
-  const tmp = `${file}.${process.pid}.tmp`;
-  writeFileSync(tmp, JSON.stringify(entry));
-  renameSync(tmp, file);
-}
-function listImportedIds(env = process.env) {
-  const dir = importedDir(env);
-  if (!existsSync3(dir)) return [];
-  return readdirSync2(dir).filter((name) => name.endsWith(".json")).map((name) => name.slice(0, -".json".length));
-}
-function stripDetail(session) {
-  const { title: _title, ...rest } = session;
-  return {
-    ...rest,
-    steps: session.steps.map((step) => {
-      const { detail: _detail, ...kept } = step;
-      return kept;
-    })
-  };
-}
-
 // src/store/sessions.ts
 import { existsSync as existsSync8, readdirSync as readdirSync7, statSync as statSync5 } from "node:fs";
 import path13 from "node:path";
 
 // src/importers/agents.ts
-import { existsSync as existsSync5, readdirSync as readdirSync4, readFileSync as readFileSync7, statSync as statSync3 } from "node:fs";
-import os3 from "node:os";
-import path10 from "node:path";
+import { existsSync as existsSync3, readdirSync as readdirSync2, readFileSync as readFileSync5, statSync as statSync2 } from "node:fs";
+import os2 from "node:os";
+import path7 from "node:path";
 
 // src/importers/codex/import.ts
-import { readFileSync as readFileSync4 } from "node:fs";
-import path7 from "node:path";
+import { readFileSync as readFileSync2 } from "node:fs";
+import path4 from "node:path";
 
 // src/model/mask.ts
 var MASK = "\u2039masked\u203A";
@@ -10955,7 +10852,7 @@ var SessionLog = class {
 var UUID = /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;
 var INJECTED = /^\s*<(user_instructions|environment_context|user_shell_command|turn_aborted)>/;
 function codexSessionId(file) {
-  return UUID.exec(path7.basename(file))?.[1] ?? path7.basename(file, ".jsonl");
+  return UUID.exec(path4.basename(file))?.[1] ?? path4.basename(file, ".jsonl");
 }
 function parseArgs(text) {
   if (typeof text !== "string") return obj(text) ?? {};
@@ -10975,7 +10872,7 @@ function patchFiles(patch) {
   return { files: files2, adds };
 }
 function toCall(id, name, args, cwd, input) {
-  const inDir = (command, workdir) => workdir && cwd && path7.resolve(cwd, workdir) !== path7.resolve(cwd) ? `cd ${workdir} && ${command}` : command;
+  const inDir = (command, workdir) => workdir && cwd && path4.resolve(cwd, workdir) !== path4.resolve(cwd) ? `cd ${workdir} && ${command}` : command;
   switch (name) {
     case "shell":
     case "container.exec":
@@ -11051,7 +10948,7 @@ function tokens(usage2) {
   };
 }
 function importCodexRollout(file, options = {}) {
-  const lines = readFileSync4(file, "utf8").split("\n");
+  const lines = readFileSync2(file, "utf8").split("\n");
   let id = codexSessionId(file);
   let log;
   const promptsFromEvents = lines.some((l) => l.includes('"type":"user_message"'));
@@ -11187,8 +11084,8 @@ function importCodexRollout(file, options = {}) {
 
 // src/importers/gemini/import.ts
 import { createHash } from "node:crypto";
-import { readFileSync as readFileSync5 } from "node:fs";
-import path8 from "node:path";
+import { readFileSync as readFileSync3 } from "node:fs";
+import path5 from "node:path";
 var FILE_ARGS = ["absolute_path", "file_path", "path", "dir_path", "directory"];
 function files(args) {
   const out = FILE_ARGS.map((key) => str(args[key])).filter((f) => !!f);
@@ -11266,8 +11163,8 @@ function projectFolder(hash, messages) {
   for (const message of messages) {
     for (const call of Array.isArray(message.toolCalls) ? message.toolCalls : []) {
       for (const file of files(obj(obj(call)?.args) ?? {})) {
-        if (!path8.isAbsolute(file)) continue;
-        for (let dir = file; dir !== path8.dirname(dir); dir = path8.dirname(dir))
+        if (!path5.isAbsolute(file)) continue;
+        for (let dir = file; dir !== path5.dirname(dir); dir = path5.dirname(dir))
           candidates.add(dir);
       }
     }
@@ -11279,16 +11176,16 @@ function projectFolder(hash, messages) {
 }
 function geminiSessionId(file) {
   try {
-    const head2 = readFileSync5(file, "utf8").slice(0, 600);
+    const head2 = readFileSync3(file, "utf8").slice(0, 600);
     const match = /"sessionId"\s*:\s*"([^"]+)"/.exec(head2);
     if (match?.[1]) return match[1];
   } catch {
   }
-  return path8.basename(file, ".json");
+  return path5.basename(file, ".json");
 }
 function importGeminiChat(file, options = {}) {
-  const chat = obj(JSON.parse(readFileSync5(file, "utf8"))) ?? {};
-  const id = str(chat.sessionId) ?? path8.basename(file, ".json");
+  const chat = obj(JSON.parse(readFileSync3(file, "utf8"))) ?? {};
+  const id = str(chat.sessionId) ?? path5.basename(file, ".json");
   const log = new SessionLog(id, "gemini", options);
   const messages = (Array.isArray(chat.messages) ? chat.messages : []).map((m) => obj(m) ?? {});
   const folder = projectFolder(str(chat.projectHash), messages);
@@ -11337,21 +11234,21 @@ function importGeminiChat(file, options = {}) {
 }
 
 // src/importers/opencode/import.ts
-import { existsSync as existsSync4, readdirSync as readdirSync3, readFileSync as readFileSync6 } from "node:fs";
-import path9 from "node:path";
+import { existsSync as existsSync2, readdirSync, readFileSync as readFileSync4 } from "node:fs";
+import path6 from "node:path";
 function readJson(file) {
   try {
-    return obj(JSON.parse(readFileSync6(file, "utf8"))) ?? {};
+    return obj(JSON.parse(readFileSync4(file, "utf8"))) ?? {};
   } catch {
     return {};
   }
 }
 function readDir(dir) {
-  if (!existsSync4(dir)) return [];
-  return readdirSync3(dir).filter((name) => name.endsWith(".json")).sort().map((name) => readJson(path9.join(dir, name)));
+  if (!existsSync2(dir)) return [];
+  return readdirSync(dir).filter((name) => name.endsWith(".json")).sort().map((name) => readJson(path6.join(dir, name)));
 }
 function storageRoot(sessionFile) {
-  return path9.resolve(path9.dirname(sessionFile), "..", "..");
+  return path6.resolve(path6.dirname(sessionFile), "..", "..");
 }
 var time = (value, key) => num(obj(value)?.[key]);
 function toCall3(id, tool, input, agentId) {
@@ -11414,14 +11311,14 @@ function tokens3(usage2) {
 function readSession(log, root, sessionId, agentId, seen) {
   if (seen.has(sessionId)) return;
   seen.add(sessionId);
-  const messages = readDir(path9.join(root, "message", sessionId)).sort(
+  const messages = readDir(path6.join(root, "message", sessionId)).sort(
     (a, b) => (time(a.time, "created") ?? 0) - (time(b.time, "created") ?? 0)
   );
   for (const message of messages) {
     const messageId = str(message.id);
     const created = time(message.time, "created");
     if (!messageId || created === void 0) continue;
-    const parts = readDir(path9.join(root, "part", messageId));
+    const parts = readDir(path6.join(root, "part", messageId));
     if (str(message.role) === "user") {
       if (agentId) continue;
       const text = parts.map((p) => str(p.type) === "text" && !p.synthetic ? str(p.text) ?? "" : "").join("\n");
@@ -11469,7 +11366,7 @@ function readSession(log, root, sessionId, agentId, seen) {
 }
 function importOpenCodeSession(file, options = {}) {
   const info = readJson(file);
-  const id = str(info.id) ?? path9.basename(file, ".json");
+  const id = str(info.id) ?? path6.basename(file, ".json");
   const log = new SessionLog(id, "opencode", options);
   log.cwd = str(info.directory);
   log.version = str(info.version);
@@ -11486,16 +11383,16 @@ var AGENT_NAMES = {
   opencode: "OpenCode"
 };
 function agentDirs(env = process.env) {
-  const home = env.HOME || os3.homedir();
+  const home = env.HOME || os2.homedir();
   return {
-    codex: path10.join(env.CODEX_HOME || path10.join(home, ".codex"), "sessions"),
-    gemini: path10.join(env.AWF_GEMINI_DIR || path10.join(home, ".gemini"), "tmp"),
-    opencode: env.AWF_OPENCODE_STORAGE || path10.join(env.XDG_DATA_HOME || path10.join(home, ".local", "share"), "opencode", "storage")
+    codex: path7.join(env.CODEX_HOME || path7.join(home, ".codex"), "sessions"),
+    gemini: path7.join(env.AWF_GEMINI_DIR || path7.join(home, ".gemini"), "tmp"),
+    opencode: env.AWF_OPENCODE_STORAGE || path7.join(env.XDG_DATA_HOME || path7.join(home, ".local", "share"), "opencode", "storage")
   };
 }
 function stat(file) {
   try {
-    const s = statSync3(file);
+    const s = statSync2(file);
     return s.isFile() ? { mtimeMs: s.mtimeMs, size: s.size } : void 0;
   } catch {
     return void 0;
@@ -11503,14 +11400,14 @@ function stat(file) {
 }
 function isDir(file) {
   try {
-    return statSync3(file).isDirectory();
+    return statSync2(file).isDirectory();
   } catch {
     return false;
   }
 }
 function list2(dir) {
   try {
-    return readdirSync4(dir);
+    return readdirSync2(dir);
   } catch {
     return [];
   }
@@ -11524,25 +11421,25 @@ function listAgentSessions(env = process.env, sinceMs = -Infinity) {
   };
   const walk = (dir, depth) => {
     for (const name of list2(dir)) {
-      const full = path10.join(dir, name);
+      const full = path7.join(dir, name);
       if (/^rollout-.*\.jsonl$/.test(name)) add("codex", full, codexSessionId(full));
       else if (depth < 4 && isDir(full)) walk(full, depth + 1);
     }
   };
-  if (existsSync5(dirs.codex)) walk(dirs.codex, 0);
+  if (existsSync3(dirs.codex)) walk(dirs.codex, 0);
   for (const project of list2(dirs.gemini)) {
-    const chats = path10.join(dirs.gemini, project, "chats");
+    const chats = path7.join(dirs.gemini, project, "chats");
     for (const name of list2(chats)) {
       if (!/^session-.*\.json$/.test(name)) continue;
-      const full = path10.join(chats, name);
+      const full = path7.join(chats, name);
       add("gemini", full, geminiSessionId(full));
     }
   }
-  const sessions = path10.join(dirs.opencode, "session");
+  const sessions = path7.join(dirs.opencode, "session");
   for (const project of list2(sessions)) {
-    for (const name of list2(path10.join(sessions, project))) {
+    for (const name of list2(path7.join(sessions, project))) {
       if (!name.endsWith(".json")) continue;
-      const full = path10.join(sessions, project, name);
+      const full = path7.join(sessions, project, name);
       if (isChildSession(full)) continue;
       add("opencode", full, name.slice(0, -".json".length));
     }
@@ -11551,7 +11448,7 @@ function listAgentSessions(env = process.env, sinceMs = -Infinity) {
 }
 function isChildSession(file) {
   try {
-    return /"parentID"\s*:\s*"/.test(readFileSync7(file, "utf8").slice(0, 2e3));
+    return /"parentID"\s*:\s*"/.test(readFileSync5(file, "utf8").slice(0, 2e3));
   } catch {
     return false;
   }
@@ -11559,10 +11456,10 @@ function isChildSession(file) {
 function detectAgentFile(file) {
   const s = stat(file);
   if (!s) return void 0;
-  const full = path10.resolve(file);
+  const full = path7.resolve(file);
   let head2;
   try {
-    head2 = readFileSync7(full, "utf8").slice(0, 4e3);
+    head2 = readFileSync5(full, "utf8").slice(0, 4e3);
   } catch {
     return void 0;
   }
@@ -11571,7 +11468,7 @@ function detectAgentFile(file) {
   if (full.endsWith(".json") && /"sessionId"/.test(head2) && /"messages"/.test(head2))
     return { agent: "gemini", id: geminiSessionId(full), path: full, ...s };
   if (full.endsWith(".json") && /[/\\]storage[/\\]session[/\\]/.test(full))
-    return { agent: "opencode", id: path10.basename(full, ".json"), path: full, ...s };
+    return { agent: "opencode", id: path7.basename(full, ".json"), path: full, ...s };
   return void 0;
 }
 function importAgentFile(file, options = {}) {
@@ -11586,8 +11483,8 @@ function importAgentFile(file, options = {}) {
 }
 
 // src/importers/claude-code/import.ts
-import { existsSync as existsSync6, readdirSync as readdirSync5, readFileSync as readFileSync8 } from "node:fs";
-import path11 from "node:path";
+import { existsSync as existsSync4, readdirSync as readdirSync3, readFileSync as readFileSync6 } from "node:fs";
+import path8 from "node:path";
 
 // src/recorder/event.ts
 function str2(value) {
@@ -11744,20 +11641,20 @@ function importClaudeCodeTranscript(file, options = {}) {
   return readClaudeCodeTranscript(file, options).session;
 }
 function readClaudeCodeTranscript(file, options = {}) {
-  const sessionId = path11.basename(file, ".jsonl");
+  const sessionId = path8.basename(file, ".jsonl");
   const reader = new TranscriptReader(options);
   reader.readMain(readLines(file));
-  const subDir = path11.join(path11.dirname(file), sessionId, "subagents");
-  if (existsSync6(subDir)) {
-    for (const name of readdirSync5(subDir).sort()) {
+  const subDir = path8.join(path8.dirname(file), sessionId, "subagents");
+  if (existsSync4(subDir)) {
+    for (const name of readdirSync3(subDir).sort()) {
       const match = /^agent-(.+)\.jsonl$/.exec(name);
-      if (match?.[1]) reader.readSubagent(match[1], readLines(path11.join(subDir, name)));
+      if (match?.[1]) reader.readSubagent(match[1], readLines(path8.join(subDir, name)));
     }
   }
   return { session: reader.build(sessionId, file), events: reader.events };
 }
 function readLines(file) {
-  return readFileSync8(file, "utf8").split("\n");
+  return readFileSync6(file, "utf8").split("\n");
 }
 var TranscriptReader = class {
   constructor(options) {
@@ -12259,26 +12156,51 @@ function compareVersions(a, b) {
 }
 
 // src/importers/claude-code/locate.ts
-import { existsSync as existsSync7, readdirSync as readdirSync6, statSync as statSync4 } from "node:fs";
-import path12 from "node:path";
+import { existsSync as existsSync5, readdirSync as readdirSync4, statSync as statSync3 } from "node:fs";
+import path10 from "node:path";
+
+// src/store/paths.ts
+import os3 from "node:os";
+import path9 from "node:path";
+function awfHome(env = process.env) {
+  return env.AWF_HOME || path9.join(os3.homedir(), ".awf");
+}
+function eventsDir(env = process.env) {
+  return path9.join(awfHome(env), "events");
+}
+function importedDir(env = process.env) {
+  return path9.join(awfHome(env), "imported");
+}
+function cacheDir(env = process.env) {
+  return path9.join(awfHome(env), "cache");
+}
+function claudeProjectsDir(env = process.env) {
+  if (env.AWF_CLAUDE_PROJECTS) return env.AWF_CLAUDE_PROJECTS;
+  return path9.join(env.CLAUDE_CONFIG_DIR || path9.join(os3.homedir(), ".claude"), "projects");
+}
+function safeId(id) {
+  return id.replace(/[^A-Za-z0-9_-]/g, "_").slice(0, 128);
+}
+
+// src/importers/claude-code/locate.ts
 function listTranscripts(env = process.env, sinceMs = -Infinity) {
   const root = claudeProjectsDir(env);
-  if (!existsSync7(root)) return [];
+  if (!existsSync5(root)) return [];
   const files2 = [];
-  for (const project of readdirSync6(root)) {
-    const dir = path12.join(root, project);
+  for (const project of readdirSync4(root)) {
+    const dir = path10.join(root, project);
     let names;
     try {
-      if (!statSync4(dir).isDirectory()) continue;
-      names = readdirSync6(dir);
+      if (!statSync3(dir).isDirectory()) continue;
+      names = readdirSync4(dir);
     } catch {
       continue;
     }
     for (const name of names) {
       if (!name.endsWith(".jsonl")) continue;
-      const file = path12.join(dir, name);
+      const file = path10.join(dir, name);
       try {
-        const stat2 = statSync4(file);
+        const stat2 = statSync3(file);
         if (!stat2.isFile() || stat2.mtimeMs < sinceMs) continue;
         files2.push({
           id: name.slice(0, -".jsonl".length),
@@ -12292,6 +12214,84 @@ function listTranscripts(env = process.env, sinceMs = -Infinity) {
     }
   }
   return files2;
+}
+
+// src/store/events.ts
+import { existsSync as existsSync6, readdirSync as readdirSync5, readFileSync as readFileSync7, statSync as statSync4 } from "node:fs";
+import path11 from "node:path";
+function listEventFiles(env = process.env) {
+  const dir = eventsDir(env);
+  if (!existsSync6(dir)) return [];
+  return readdirSync5(dir).filter((name) => name.endsWith(".jsonl")).map((name) => {
+    const file = path11.join(dir, name);
+    const stat2 = statSync4(file);
+    return {
+      id: name.slice(0, -".jsonl".length),
+      path: file,
+      mtimeMs: stat2.mtimeMs,
+      size: stat2.size
+    };
+  });
+}
+function readEvents(file) {
+  const events = [];
+  for (const line of readFileSync7(file, "utf8").split("\n")) {
+    if (!line.trim()) continue;
+    try {
+      const event = JSON.parse(line);
+      if (event && typeof event.e === "string" && typeof event.t === "number") events.push(event);
+    } catch {
+    }
+  }
+  return events;
+}
+
+// src/store/imported.ts
+import {
+  existsSync as existsSync7,
+  mkdirSync,
+  readdirSync as readdirSync6,
+  readFileSync as readFileSync8,
+  renameSync,
+  writeFileSync
+} from "node:fs";
+import path12 from "node:path";
+var IMPORT_VERSION = 5;
+function cacheFile(id, env = process.env) {
+  return path12.join(importedDir(env), `${safeId(id)}.json`);
+}
+function readImported(id, env = process.env) {
+  const file = cacheFile(id, env);
+  if (!existsSync7(file)) return void 0;
+  try {
+    const parsed = JSON.parse(readFileSync8(file, "utf8"));
+    return [1, 2, 3, 4, IMPORT_VERSION].includes(parsed.version) && parsed.session ? parsed : void 0;
+  } catch {
+    return void 0;
+  }
+}
+function writeImported(entry, env = process.env) {
+  const dir = importedDir(env);
+  mkdirSync(dir, { recursive: true });
+  const file = cacheFile(entry.session.id, env);
+  const tmp = `${file}.${process.pid}.tmp`;
+  writeFileSync(tmp, JSON.stringify(entry));
+  renameSync(tmp, file);
+}
+function listImportedIds(env = process.env) {
+  const dir = importedDir(env);
+  if (!existsSync7(dir)) return [];
+  return readdirSync6(dir).filter((name) => name.endsWith(".json")).map((name) => name.slice(0, -".json".length));
+}
+function stripDetail(session) {
+  const { title: _title, ...rest } = session;
+  return {
+    ...rest,
+    steps: session.steps.map((step) => {
+      const { detail: _detail, ...kept } = step;
+      return kept;
+    })
+  };
 }
 
 // src/store/sessions.ts
@@ -12395,11 +12395,11 @@ function loadSession(ref, options = {}) {
     }
   }
   if (events && recorded && transcript) {
-    const earlier = eventsBeforeRecorder(transcript.events, events);
-    const whole = earlier.length > 0 ? eventsToSession(ref.id, [...earlier, ...events]) : recorded;
+    const missed = eventsRecorderMissed(transcript, events);
+    const whole = missed.length > 0 ? eventsToSession(ref.id, [...missed, ...events]) : recorded;
     return mergeSessions(whole, transcript.session);
   }
-  if (recorded) return recorded;
+  if (recorded) return fullerImport(recorded, env);
   if (transcript) return transcript.session;
   if (ref.external && existsSync8(ref.external.path)) {
     try {
@@ -12414,22 +12414,50 @@ function loadSession(ref, options = {}) {
 function existing(file) {
   return file && existsSync8(file) ? file : void 0;
 }
+function fullerImport(recorded, env) {
+  const imported = readImported(recorded.id, env);
+  if (!imported || imported.session.steps.length <= recorded.steps.length) return recorded;
+  return { ...imported.session, sources: ["import-cache"] };
+}
 var PROCESS_EVENTS = /* @__PURE__ */ new Set(["SessionStart", "SessionEnd"]);
-function eventsBeforeRecorder(transcript, recorded) {
-  let first = Infinity;
-  for (const event of recorded) {
-    if (!PROCESS_EVENTS.has(event.e)) first = Math.min(first, event.t);
-  }
-  if (first === Infinity) return transcript;
-  let prompt = -Infinity;
-  for (const event of transcript) {
-    if (event.e === "UserPromptSubmit" && event.t <= first) prompt = Math.max(prompt, event.t);
-  }
-  const ended = transcript.some(
-    (event) => (event.e === "Stop" || event.e === "StopFailure") && event.t > prompt && event.t < first
+var HOOK_GRACE_MS = 5e3;
+var FRESH_STARTS = /* @__PURE__ */ new Set(["startup", "clear"]);
+function eventsRecorderMissed({ session, events }, recorded) {
+  const work = recorded.filter((event) => !PROCESS_EVENTS.has(event.e)).map((event) => event.t).sort((a, b) => a - b);
+  const turns = session.steps.filter((step) => step.kind === "turn");
+  const worked = new Set(
+    session.steps.filter((step) => step.kind === "tool" || step.model).map((s) => s.parentId)
   );
-  const cut = ended || prompt === -Infinity ? first : prompt;
-  return transcript.filter((event) => event.t < cut);
+  const first = Math.min(turns[0]?.startMs ?? Infinity, work[0] ?? Infinity);
+  const spans = [[-Infinity, first]];
+  let next = 0;
+  turns.forEach((turn, i) => {
+    while ((work[next] ?? Infinity) < turn.startMs) next++;
+    const seen = work[next] ?? Infinity;
+    if (!worked.has(turn.id) || seen <= turn.endMs + HOOK_GRACE_MS) return;
+    const end = Math.min(seen, turns[i + 1]?.startMs ?? Infinity);
+    const last = spans.at(-1);
+    if (last[1] === turn.startMs) last[1] = end;
+    else spans.push([turn.startMs, end]);
+  });
+  return events.filter((event) => spans.some(([from, to]) => event.t >= from && event.t < to));
+}
+function mayHaveMissed(events, transcript) {
+  const [first] = events;
+  if (first?.e !== "SessionStart" || !FRESH_STARTS.has(first.src ?? "")) return true;
+  const last = events.at(-1);
+  return !!transcript && transcript.mtimeMs > last.t + HOOK_GRACE_MS;
+}
+function quickSession(ref, env) {
+  if (!ref.events) return ref.imported ? readImported(ref.id, env)?.session : void 0;
+  const events = readEvents(ref.events.path);
+  if (mayHaveMissed(events, ref.transcript)) return loadSession(ref, { env });
+  const recorded = eventsToSession(ref.id, events);
+  if (!recorded.cwd && ref.imported) {
+    const cwd = readImported(ref.id, env)?.session.cwd;
+    if (cwd) recorded.cwd = cwd;
+  }
+  return recorded;
 }
 function mergeSessions(recorded, transcript) {
   const fromTranscript = new Map(transcript.steps.map((s) => [s.id, s]));
@@ -12508,24 +12536,13 @@ function loadMany(ctx, options) {
   const project = typeof options.project === "string" ? path14.resolve(ctx.cwd, options.project) : void 0;
   const sessions = [];
   for (const ref of sessionIndex(ctx.env).values()) {
-    const session = quick(ref, ctx.env);
+    const session = quickSession(ref, ctx.env);
     if (!session || session.steps.length === 0 || session.startMs < since) continue;
     if (project && !(session.cwd && (session.cwd === project || session.cwd.startsWith(project + path14.sep))))
       continue;
     sessions.push(session);
   }
   return sessions.sort((a, b) => a.startMs - b.startMs);
-}
-function quick(ref, env) {
-  if (ref.events) {
-    const recorded = eventsToSession(ref.id, readEvents(ref.events.path));
-    if (!recorded.cwd) {
-      const cached = ref.imported ? readImported(ref.id, env)?.session : void 0;
-      if (cached?.cwd) recorded.cwd = cached.cwd;
-    }
-    return recorded;
-  }
-  return ref.imported ? readImported(ref.id, env)?.session : void 0;
 }
 
 // src/cli/share.ts
@@ -15234,13 +15251,11 @@ function inFolder(cwd, dir) {
 function listSessionRows(env) {
   const rows = [];
   for (const ref of sessionIndex(env).values()) {
-    const recorded = ref.events ? eventsToSession(ref.id, readEvents(ref.events.path)) : void 0;
-    const imported = ref.imported ? readImported(ref.id, env)?.session : void 0;
-    const base = recorded ?? imported;
+    const base = quickSession(ref, env);
     if (!base || base.steps.length === 0) continue;
     const row = sessionRow(base);
-    row.sources = [...recorded ? ["hooks"] : [], ...imported ? ["transcript"] : []];
-    if (!row.cwd && imported?.cwd) row.cwd = imported.cwd;
+    const fromTranscript = ref.imported || base.sources.includes("transcript");
+    row.sources = [...ref.events ? ["hooks"] : [], ...fromTranscript ? ["transcript"] : []];
     rows.push(row);
   }
   return rows.sort((a, b) => b.startMs - a.startMs);
