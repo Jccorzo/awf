@@ -6,9 +6,10 @@ import {
   importAgentFile,
   listAgentSessions,
 } from '../importers/agents';
-import { importClaudeCodeTranscript } from '../importers/claude-code/import';
+import { readClaudeCodeTranscript, type TranscriptRead } from '../importers/claude-code/import';
 import { listTranscripts, type TranscriptFile } from '../importers/claude-code/locate';
 import type { Session, Step } from '../model/types';
+import type { RecorderEvent } from '../recorder/event';
 import { eventsToSession } from '../recorder/steps';
 import { type EventsFile, listEventFiles, readEvents } from './events';
 import { listImportedIds, readImported } from './imported';
@@ -153,24 +154,29 @@ export interface LoadOptions {
 
 /**
  * Loads a session, merging what each source knows. The recorder's timings win; the transcript adds
- * details the hooks don't store (output, tokens, background completions), and fills in sessions the
- * recorder never saw.
+ * details the hooks don't store (output, tokens, background completions), and fills in what the
+ * recorder never saw: whole sessions, and the turns before it started.
  */
 export function loadSession(ref: SessionRef, options: LoadOptions = {}): Session {
   const env = options.env ?? process.env;
-  const recorded = ref.events ? eventsToSession(ref.id, readEvents(ref.events.path)) : undefined;
+  const events = ref.events ? readEvents(ref.events.path) : undefined;
+  const recorded = events ? eventsToSession(ref.id, events) : undefined;
   const transcriptPath = ref.transcript?.path ?? existing(recorded?.transcriptPath);
-  let transcript: Session | undefined;
+  let transcript: TranscriptRead | undefined;
   if (transcriptPath) {
     try {
-      transcript = importClaudeCodeTranscript(transcriptPath, { detail: options.detail ?? false });
+      transcript = readClaudeCodeTranscript(transcriptPath, { detail: options.detail ?? false });
     } catch {
       transcript = undefined;
     }
   }
-  if (recorded && transcript) return mergeSessions(recorded, transcript);
+  if (events && recorded && transcript) {
+    const earlier = eventsBeforeRecorder(transcript.events, events);
+    const whole = earlier.length > 0 ? eventsToSession(ref.id, [...earlier, ...events]) : recorded;
+    return mergeSessions(whole, transcript.session);
+  }
   if (recorded) return recorded;
-  if (transcript) return transcript;
+  if (transcript) return transcript.session;
   if (ref.external && existsSync(ref.external.path)) {
     try {
       return importAgentFile(ref.external, { detail: options.detail ?? false });
@@ -185,6 +191,37 @@ export function loadSession(ref: SessionRef, options: LoadOptions = {}): Session
 
 function existing(file: string | undefined): string | undefined {
   return file && existsSync(file) ? file : undefined;
+}
+
+/** They say a process started or ended, not that the recorder saw the session work. */
+const PROCESS_EVENTS = new Set(['SessionStart', 'SessionEnd']);
+
+/**
+ * The transcript's events from before the recorder saw the session work: a session older than the
+ * plugin, resumed after installing it. The recorder's first event belongs to a turn, and that turn
+ * and the ones after it stay the recorder's. So does anything after the recorder stops: `/exit` is
+ * a prompt in the transcript with no hook behind it, and reading it would add waiting time.
+ */
+export function eventsBeforeRecorder(
+  transcript: RecorderEvent[],
+  recorded: RecorderEvent[],
+): RecorderEvent[] {
+  let first = Infinity;
+  for (const event of recorded) {
+    if (!PROCESS_EVENTS.has(event.e)) first = Math.min(first, event.t);
+  }
+  if (first === Infinity) return transcript;
+  let prompt = -Infinity;
+  for (const event of transcript) {
+    if (event.e === 'UserPromptSubmit' && event.t <= first) prompt = Math.max(prompt, event.t);
+  }
+  // That prompt's turn had ended: the first event was a compaction, or a hook ahead of its entry.
+  const ended = transcript.some(
+    (event) =>
+      (event.e === 'Stop' || event.e === 'StopFailure') && event.t > prompt && event.t < first,
+  );
+  const cut = ended || prompt === -Infinity ? first : prompt;
+  return transcript.filter((event) => event.t < cut);
 }
 
 export function mergeSessions(recorded: Session, transcript: Session): Session {

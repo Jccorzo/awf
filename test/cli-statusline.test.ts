@@ -116,6 +116,31 @@ describe('awf statusline', () => {
     expect(merged.phases[1]).toMatchObject({ phase: 'planning', name: 'plan' });
   });
 
+  it('counts what a session did before the plugin, once it is resumed', async () => {
+    const { home, payload } = setup();
+    const env = { AWF_HOME: home, NO_COLOR: '1' };
+    const before = (await statusline(payload, env)).out;
+    const entries = readFileSync(path.join(FIXTURE, `${ID}.jsonl`), 'utf8')
+      .split('\n')
+      .filter(Boolean)
+      .map((line) => JSON.parse(line) as { timestamp?: string });
+    const end = Math.max(...entries.map((e) => Date.parse(e.timestamp ?? '') || 0));
+
+    // Resumed: the recorder has seen the process start and nothing else.
+    const events = path.join(home, 'events', `${ID}.jsonl`);
+    mkdirSync(path.dirname(events), { recursive: true });
+    const line = (e: string, t: number) => JSON.stringify({ v: 1, e, t, sid: ID }) + '\n';
+    writeFileSync(events, line('SessionStart', end + 60_000));
+    expect((await statusline(payload, env)).out).toEqual(before);
+
+    // Your next prompt adds to the session: the test run and its failure stay.
+    appendFileSync(events, line('UserPromptSubmit', end + 65_000) + line('Stop', end + 69_000));
+    const after = (await statusline(payload, env)).out[0];
+    expect(after).toMatch(/^tests \d+% /);
+    expect(after).not.toMatch(/^tests 0%/);
+    expect(after).toContain('1 failed');
+  });
+
   it('caches the line until the transcript or the events change', async () => {
     const { home, payload, transcript, cacheDir } = setup();
     const env = { AWF_HOME: home, NO_COLOR: '1' };

@@ -11741,6 +11741,9 @@ var MONITOR_MAX_TIMEOUT_MS = 18e5;
 var MONITOR_STARTED = /^Monitor started \(task ([\w-]+)/;
 var SHELL_STARTED = /^Command running in background with ID: ([\w-]+)/;
 function importClaudeCodeTranscript(file, options = {}) {
+  return readClaudeCodeTranscript(file, options).session;
+}
+function readClaudeCodeTranscript(file, options = {}) {
   const sessionId = path11.basename(file, ".jsonl");
   const reader = new TranscriptReader(options);
   reader.readMain(readLines(file));
@@ -11751,7 +11754,7 @@ function importClaudeCodeTranscript(file, options = {}) {
       if (match?.[1]) reader.readSubagent(match[1], readLines(path11.join(subDir, name)));
     }
   }
-  return reader.build(sessionId, file);
+  return { session: reader.build(sessionId, file), events: reader.events };
 }
 function readLines(file) {
   return readFileSync8(file, "utf8").split("\n");
@@ -12380,19 +12383,24 @@ function refProject(ref) {
 }
 function loadSession(ref, options = {}) {
   const env = options.env ?? process.env;
-  const recorded = ref.events ? eventsToSession(ref.id, readEvents(ref.events.path)) : void 0;
+  const events = ref.events ? readEvents(ref.events.path) : void 0;
+  const recorded = events ? eventsToSession(ref.id, events) : void 0;
   const transcriptPath = ref.transcript?.path ?? existing(recorded?.transcriptPath);
   let transcript;
   if (transcriptPath) {
     try {
-      transcript = importClaudeCodeTranscript(transcriptPath, { detail: options.detail ?? false });
+      transcript = readClaudeCodeTranscript(transcriptPath, { detail: options.detail ?? false });
     } catch {
       transcript = void 0;
     }
   }
-  if (recorded && transcript) return mergeSessions(recorded, transcript);
+  if (events && recorded && transcript) {
+    const earlier = eventsBeforeRecorder(transcript.events, events);
+    const whole = earlier.length > 0 ? eventsToSession(ref.id, [...earlier, ...events]) : recorded;
+    return mergeSessions(whole, transcript.session);
+  }
   if (recorded) return recorded;
-  if (transcript) return transcript;
+  if (transcript) return transcript.session;
   if (ref.external && existsSync8(ref.external.path)) {
     try {
       return importAgentFile(ref.external, { detail: options.detail ?? false });
@@ -12405,6 +12413,23 @@ function loadSession(ref, options = {}) {
 }
 function existing(file) {
   return file && existsSync8(file) ? file : void 0;
+}
+var PROCESS_EVENTS = /* @__PURE__ */ new Set(["SessionStart", "SessionEnd"]);
+function eventsBeforeRecorder(transcript, recorded) {
+  let first = Infinity;
+  for (const event of recorded) {
+    if (!PROCESS_EVENTS.has(event.e)) first = Math.min(first, event.t);
+  }
+  if (first === Infinity) return transcript;
+  let prompt = -Infinity;
+  for (const event of transcript) {
+    if (event.e === "UserPromptSubmit" && event.t <= first) prompt = Math.max(prompt, event.t);
+  }
+  const ended = transcript.some(
+    (event) => (event.e === "Stop" || event.e === "StopFailure") && event.t > prompt && event.t < first
+  );
+  const cut = ended || prompt === -Infinity ? first : prompt;
+  return transcript.filter((event) => event.t < cut);
 }
 function mergeSessions(recorded, transcript) {
   const fromTranscript = new Map(transcript.steps.map((s) => [s.id, s]));

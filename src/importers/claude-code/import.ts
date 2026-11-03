@@ -63,8 +63,21 @@ interface Message {
   sentMs?: number;
 }
 
+/** A transcript as a session, and as the recorder events that session was built from. */
+export interface TranscriptRead {
+  session: Session;
+  events: RecorderEvent[];
+}
+
 /** Turns a Claude Code transcript (and its subagents' transcripts) into a session. */
 export function importClaudeCodeTranscript(file: string, options: ImportOptions = {}): Session {
+  return readClaudeCodeTranscript(file, options).session;
+}
+
+export function readClaudeCodeTranscript(
+  file: string,
+  options: ImportOptions = {},
+): TranscriptRead {
   const sessionId = path.basename(file, '.jsonl');
   const reader = new TranscriptReader(options);
   reader.readMain(readLines(file));
@@ -75,7 +88,7 @@ export function importClaudeCodeTranscript(file: string, options: ImportOptions 
       if (match?.[1]) reader.readSubagent(match[1], readLines(path.join(subDir, name)));
     }
   }
-  return reader.build(sessionId, file);
+  return { session: reader.build(sessionId, file), events: reader.events };
 }
 
 function readLines(file: string): string[] {
@@ -83,7 +96,7 @@ function readLines(file: string): string[] {
 }
 
 class TranscriptReader {
-  private readonly events: RecorderEvent[] = [];
+  readonly events: RecorderEvent[] = [];
   private readonly diagnostics: SessionDiagnostics = {
     unknownEntries: {},
     badLines: 0,
