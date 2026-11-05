@@ -23,9 +23,10 @@ export interface PhaseLine {
   calls?: number;
   /** Running scripts: time spent in polling loops and long sleeps. */
   pollingMs?: number;
-  /** Waiting on you: approvals, questions and idle gaps between turns. */
+  /** Waiting on you: approvals, questions, plans to approve and idle gaps between turns. */
   approvals?: number;
   questions?: number;
+  plans?: number;
   gaps?: number;
   /** Unclassified: steps. */
   steps?: number;
@@ -113,6 +114,7 @@ export function summarize(classified: ClassifiedSession): Analysis {
     } else if (id === 'waiting') {
       line.approvals = tools.filter((s) => s.flags.includes('approval')).length;
       line.questions = tools.filter((s) => s.tool === 'AskUserQuestion').length;
+      line.plans = tools.filter((s) => s.tool === 'ExitPlanMode').length;
       line.gaps = session.steps.filter((s) => s.kind === 'idle').length;
     } else if (id === 'unclassified') {
       line.steps = session.steps.filter((s) => s.phase === 'unclassified').length;
@@ -198,6 +200,7 @@ export function phaseDetail(line: PhaseLine): string {
       const parts = [
         line.approvals ? plural(line.approvals, 'approval') : '',
         line.questions ? plural(line.questions, 'question') : '',
+        line.plans ? plural(line.plans, 'plan to approve', 'plans to approve') : '',
         line.gaps ? plural(line.gaps, 'idle gap') : '',
       ].filter(Boolean);
       return parts.join(', ');
