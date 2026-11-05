@@ -333,9 +333,10 @@ scripts:
 tools:
   - { phase: exploring, name: [Read, Grep, Glob, LS, WebSearch, WebFetch, NotebookRead, LSP, ToolSearch, Skill, ListMcpResourcesTool, ReadMcpResourceTool, ListAgents] }
   - { phase: writing, name: [Edit, Write, MultiEdit, NotebookEdit] }
-  - { phase: planning, name: [TodoWrite, TodoRead, TaskCreate, TaskUpdate, TaskList, TaskGet, EnterPlanMode, ExitPlanMode, StructuredOutput, SubagentHandback, SendMessage, SendUserMessage, SendUserFile, Workflow] }
+  - { phase: planning, name: [TodoWrite, TodoRead, TaskCreate, TaskUpdate, TaskList, TaskGet, EnterPlanMode, StructuredOutput, SubagentHandback, SendMessage, SendUserMessage, SendUserFile, Workflow] }
   - { phase: planning, match: '^mcp__ccd_turn__' }
-  - { phase: waiting, name: [AskUserQuestion] }
+  # A plan waits for you to approve or reject it, as a question waits for your answer.
+  - { phase: waiting, name: [AskUserQuestion, ExitPlanMode] }
   - { phase: running, name: [Monitor] }
   - { phase: lint, name: [mcp__ide__getDiagnostics] }
   # Browsers (Claude in Chrome, the desktop app's built-in browser): looking at a page is Exploring,
