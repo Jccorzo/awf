@@ -6,3 +6,9 @@ repository_url: https://api.hushrun.com/l/jccorzot/awf
 transparency_log:   # the server's log key
   origin: api.hushrun.com/l/jccorzot/awf
   key: "ed25519:QxvdiuCUaZ6CwTV5eM/y9n/ZW7FOUUwJ5FKu/9flHz8="
+
+# Tests count only from macOS on Node 22, the version in .node-version: a Mac, or CI's Test job.
+# A run anywhere else still runs, but leaves no pass, so CI runs the tests itself.
+checks:
+  test:
+    counts_from: {os: macos, node: "22"}
