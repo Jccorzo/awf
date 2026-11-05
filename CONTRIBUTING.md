@@ -11,7 +11,7 @@ corepack enable
 pnpm install --frozen-lockfile
 ```
 
-`.node-version` holds 22, the version this repo is developed on. Version managers such as fnm pick it up in this folder. It doesn't limit users: awf runs on Node 20 or later (`engines` in `package.json`), and CI tests both 20 and 22. Vitest no longer supports Node 20, so a Vitest update could break those CI jobs, though the suite passes on 20.19 and later today.
+`.node-version` holds 22, the version this repo is developed on. Version managers such as fnm pick it up in this folder. It doesn't limit users: awf runs on Node 20 or later (`engines` in `package.json`), and CI builds it on both 20 and 22, on Linux and macOS. CI runs the tests once, on macOS with Node 22, so a pass on a Mac can stand in for them (see [hushrun.yaml](hushrun.yaml)). Vitest no longer supports Node 20, though the suite passes on 20.19 and later today.
 
 ## Commands
 
@@ -169,7 +169,7 @@ pnpm exec playwright-core install chromium
 
 Without it, the browser tests are skipped, not failed, so a passing `pnpm test` may not have run them. Check the summary for skipped tests. Playwright's error message suggests `pnpm exec playwright install`, which doesn't work here: only `playwright-core` is installed.
 
-CI runs the browser tests in one job, Ubuntu on Node 22. If you change `src/report/`, run them and look at the screenshots.
+CI runs the browser tests in its Test job, macOS on Node 22. If you change `src/report/`, run them and look at the screenshots.
 
 ## When a transcript format changes
 
