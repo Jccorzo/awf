@@ -3,6 +3,7 @@ import { parseArgs, type ParseArgsConfig } from 'node:util';
 import { VERSION } from '../version';
 import { classifyCommand } from './commands/classify';
 import { compareCommand } from './commands/compare';
+import { dashCommand } from './commands/dash';
 import { doctorCommand } from './commands/doctor';
 import { importCommand } from './commands/import';
 import { liveCommand } from './commands/live';
@@ -49,6 +50,7 @@ export const COMMANDS: Record<string, Command> = {
   classify: classifyCommand,
   summary: summaryCommand,
   report: reportCommand,
+  dash: dashCommand,
   compare: compareCommand,
   stats: statsCommand,
   statusline: statuslineCommand,

@@ -114,17 +114,17 @@ var require_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP;
     visit.REMOVE = REMOVE;
-    function visit_(key, node, visitor, path24) {
-      const ctrl = callVisitor(key, node, visitor, path24);
+    function visit_(key, node, visitor, path26) {
+      const ctrl = callVisitor(key, node, visitor, path26);
       if (identity.isNode(ctrl) || identity.isPair(ctrl)) {
-        replaceNode(key, path24, ctrl);
-        return visit_(key, ctrl, visitor, path24);
+        replaceNode(key, path26, ctrl);
+        return visit_(key, ctrl, visitor, path26);
       }
       if (typeof ctrl !== "symbol") {
         if (identity.isCollection(node)) {
-          path24 = Object.freeze(path24.concat(node));
+          path26 = Object.freeze(path26.concat(node));
           for (let i = 0; i < node.items.length; ++i) {
-            const ci = visit_(i, node.items[i], visitor, path24);
+            const ci = visit_(i, node.items[i], visitor, path26);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -135,13 +135,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity.isPair(node)) {
-          path24 = Object.freeze(path24.concat(node));
-          const ck = visit_("key", node.key, visitor, path24);
+          path26 = Object.freeze(path26.concat(node));
+          const ck = visit_("key", node.key, visitor, path26);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = visit_("value", node.value, visitor, path24);
+          const cv = visit_("value", node.value, visitor, path26);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -162,17 +162,17 @@ var require_visit = __commonJS({
     visitAsync.BREAK = BREAK;
     visitAsync.SKIP = SKIP;
     visitAsync.REMOVE = REMOVE;
-    async function visitAsync_(key, node, visitor, path24) {
-      const ctrl = await callVisitor(key, node, visitor, path24);
+    async function visitAsync_(key, node, visitor, path26) {
+      const ctrl = await callVisitor(key, node, visitor, path26);
       if (identity.isNode(ctrl) || identity.isPair(ctrl)) {
-        replaceNode(key, path24, ctrl);
-        return visitAsync_(key, ctrl, visitor, path24);
+        replaceNode(key, path26, ctrl);
+        return visitAsync_(key, ctrl, visitor, path26);
       }
       if (typeof ctrl !== "symbol") {
         if (identity.isCollection(node)) {
-          path24 = Object.freeze(path24.concat(node));
+          path26 = Object.freeze(path26.concat(node));
           for (let i = 0; i < node.items.length; ++i) {
-            const ci = await visitAsync_(i, node.items[i], visitor, path24);
+            const ci = await visitAsync_(i, node.items[i], visitor, path26);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -183,13 +183,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity.isPair(node)) {
-          path24 = Object.freeze(path24.concat(node));
-          const ck = await visitAsync_("key", node.key, visitor, path24);
+          path26 = Object.freeze(path26.concat(node));
+          const ck = await visitAsync_("key", node.key, visitor, path26);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = await visitAsync_("value", node.value, visitor, path24);
+          const cv = await visitAsync_("value", node.value, visitor, path26);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -216,23 +216,23 @@ var require_visit = __commonJS({
       }
       return visitor;
     }
-    function callVisitor(key, node, visitor, path24) {
+    function callVisitor(key, node, visitor, path26) {
       if (typeof visitor === "function")
-        return visitor(key, node, path24);
+        return visitor(key, node, path26);
       if (identity.isMap(node))
-        return visitor.Map?.(key, node, path24);
+        return visitor.Map?.(key, node, path26);
       if (identity.isSeq(node))
-        return visitor.Seq?.(key, node, path24);
+        return visitor.Seq?.(key, node, path26);
       if (identity.isPair(node))
-        return visitor.Pair?.(key, node, path24);
+        return visitor.Pair?.(key, node, path26);
       if (identity.isScalar(node))
-        return visitor.Scalar?.(key, node, path24);
+        return visitor.Scalar?.(key, node, path26);
       if (identity.isAlias(node))
-        return visitor.Alias?.(key, node, path24);
+        return visitor.Alias?.(key, node, path26);
       return void 0;
     }
-    function replaceNode(key, path24, node) {
-      const parent = path24[path24.length - 1];
+    function replaceNode(key, path26, node) {
+      const parent = path26[path26.length - 1];
       if (identity.isCollection(parent)) {
         parent.items[key] = node;
       } else if (identity.isPair(parent)) {
@@ -844,10 +844,10 @@ var require_Collection = __commonJS({
     var createNode = require_createNode();
     var identity = require_identity();
     var Node = require_Node();
-    function collectionFromPath(schema, path24, value) {
+    function collectionFromPath(schema, path26, value) {
       let v = value;
-      for (let i = path24.length - 1; i >= 0; --i) {
-        const k = path24[i];
+      for (let i = path26.length - 1; i >= 0; --i) {
+        const k = path26[i];
         if (typeof k === "number" && Number.isInteger(k) && k >= 0) {
           const a = [];
           a[k] = v;
@@ -866,7 +866,7 @@ var require_Collection = __commonJS({
         sourceObjects: /* @__PURE__ */ new Map()
       });
     }
-    var isEmptyPath = (path24) => path24 == null || typeof path24 === "object" && !!path24[Symbol.iterator]().next().done;
+    var isEmptyPath = (path26) => path26 == null || typeof path26 === "object" && !!path26[Symbol.iterator]().next().done;
     var Collection = class extends Node.NodeBase {
       constructor(type, schema) {
         super(type);
@@ -896,11 +896,11 @@ var require_Collection = __commonJS({
        * be a Pair instance or a `{ key, value }` object, which may not have a key
        * that already exists in the map.
        */
-      addIn(path24, value) {
-        if (isEmptyPath(path24))
+      addIn(path26, value) {
+        if (isEmptyPath(path26))
           this.add(value);
         else {
-          const [key, ...rest] = path24;
+          const [key, ...rest] = path26;
           const node = this.get(key, true);
           if (identity.isCollection(node))
             node.addIn(rest, value);
@@ -914,8 +914,8 @@ var require_Collection = __commonJS({
        * Removes a value from the collection.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path24) {
-        const [key, ...rest] = path24;
+      deleteIn(path26) {
+        const [key, ...rest] = path26;
         if (rest.length === 0)
           return this.delete(key);
         const node = this.get(key, true);
@@ -929,8 +929,8 @@ var require_Collection = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path24, keepScalar) {
-        const [key, ...rest] = path24;
+      getIn(path26, keepScalar) {
+        const [key, ...rest] = path26;
         const node = this.get(key, true);
         if (rest.length === 0)
           return !keepScalar && identity.isScalar(node) ? node.value : node;
@@ -948,8 +948,8 @@ var require_Collection = __commonJS({
       /**
        * Checks if the collection includes a value with the key `key`.
        */
-      hasIn(path24) {
-        const [key, ...rest] = path24;
+      hasIn(path26) {
+        const [key, ...rest] = path26;
         if (rest.length === 0)
           return this.has(key);
         const node = this.get(key, true);
@@ -959,8 +959,8 @@ var require_Collection = __commonJS({
        * Sets a value in this collection. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path24, value) {
-        const [key, ...rest] = path24;
+      setIn(path26, value) {
+        const [key, ...rest] = path26;
         if (rest.length === 0) {
           this.set(key, value);
         } else {
@@ -3475,9 +3475,9 @@ var require_Document = __commonJS({
           this.contents.add(value);
       }
       /** Adds a value to the document. */
-      addIn(path24, value) {
+      addIn(path26, value) {
         if (assertCollection(this.contents))
-          this.contents.addIn(path24, value);
+          this.contents.addIn(path26, value);
       }
       /**
        * Create a new `Alias` node, ensuring that the target `node` has the required anchor.
@@ -3552,14 +3552,14 @@ var require_Document = __commonJS({
        * Removes a value from the document.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path24) {
-        if (Collection.isEmptyPath(path24)) {
+      deleteIn(path26) {
+        if (Collection.isEmptyPath(path26)) {
           if (this.contents == null)
             return false;
           this.contents = null;
           return true;
         }
-        return assertCollection(this.contents) ? this.contents.deleteIn(path24) : false;
+        return assertCollection(this.contents) ? this.contents.deleteIn(path26) : false;
       }
       /**
        * Returns item at `key`, or `undefined` if not found. By default unwraps
@@ -3574,10 +3574,10 @@ var require_Document = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path24, keepScalar) {
-        if (Collection.isEmptyPath(path24))
+      getIn(path26, keepScalar) {
+        if (Collection.isEmptyPath(path26))
           return !keepScalar && identity.isScalar(this.contents) ? this.contents.value : this.contents;
-        return identity.isCollection(this.contents) ? this.contents.getIn(path24, keepScalar) : void 0;
+        return identity.isCollection(this.contents) ? this.contents.getIn(path26, keepScalar) : void 0;
       }
       /**
        * Checks if the document includes a value with the key `key`.
@@ -3588,10 +3588,10 @@ var require_Document = __commonJS({
       /**
        * Checks if the document includes a value at `path`.
        */
-      hasIn(path24) {
-        if (Collection.isEmptyPath(path24))
+      hasIn(path26) {
+        if (Collection.isEmptyPath(path26))
           return this.contents !== void 0;
-        return identity.isCollection(this.contents) ? this.contents.hasIn(path24) : false;
+        return identity.isCollection(this.contents) ? this.contents.hasIn(path26) : false;
       }
       /**
        * Sets a value in this document. For `!!set`, `value` needs to be a
@@ -3608,13 +3608,13 @@ var require_Document = __commonJS({
        * Sets a value in this document. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path24, value) {
-        if (Collection.isEmptyPath(path24)) {
+      setIn(path26, value) {
+        if (Collection.isEmptyPath(path26)) {
           this.contents = value;
         } else if (this.contents == null) {
-          this.contents = Collection.collectionFromPath(this.schema, Array.from(path24), value);
+          this.contents = Collection.collectionFromPath(this.schema, Array.from(path26), value);
         } else if (assertCollection(this.contents)) {
-          this.contents.setIn(path24, value);
+          this.contents.setIn(path26, value);
         }
       }
       /**
@@ -5575,9 +5575,9 @@ var require_cst_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP;
     visit.REMOVE = REMOVE;
-    visit.itemAtPath = (cst, path24) => {
+    visit.itemAtPath = (cst, path26) => {
       let item = cst;
-      for (const [field, index] of path24) {
+      for (const [field, index] of path26) {
         const tok = item?.[field];
         if (tok && "items" in tok) {
           item = tok.items[index];
@@ -5586,23 +5586,23 @@ var require_cst_visit = __commonJS({
       }
       return item;
     };
-    visit.parentCollection = (cst, path24) => {
-      const parent = visit.itemAtPath(cst, path24.slice(0, -1));
-      const field = path24[path24.length - 1][0];
+    visit.parentCollection = (cst, path26) => {
+      const parent = visit.itemAtPath(cst, path26.slice(0, -1));
+      const field = path26[path26.length - 1][0];
       const coll = parent?.[field];
       if (coll && "items" in coll)
         return coll;
       throw new Error("Parent collection not found");
     };
-    function _visit(path24, item, visitor) {
-      let ctrl = visitor(item, path24);
+    function _visit(path26, item, visitor) {
+      let ctrl = visitor(item, path26);
       if (typeof ctrl === "symbol")
         return ctrl;
       for (const field of ["key", "value"]) {
         const token = item[field];
         if (token && "items" in token) {
           for (let i = 0; i < token.items.length; ++i) {
-            const ci = _visit(Object.freeze(path24.concat([[field, i]])), token.items[i], visitor);
+            const ci = _visit(Object.freeze(path26.concat([[field, i]])), token.items[i], visitor);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -5613,10 +5613,10 @@ var require_cst_visit = __commonJS({
             }
           }
           if (typeof ctrl === "function" && field === "key")
-            ctrl = ctrl(item, path24);
+            ctrl = ctrl(item, path26);
         }
       }
-      return typeof ctrl === "function" ? ctrl(item, path24) : ctrl;
+      return typeof ctrl === "function" ? ctrl(item, path26) : ctrl;
     }
     exports.visit = visit;
   }
@@ -13432,8 +13432,734 @@ Each side is a session (ID, its first characters, "last", or a file) or a range:
   }
 };
 
-// src/cli/commands/doctor.ts
+// src/cli/commands/dash.ts
+import { mkdirSync as mkdirSync3, writeFileSync as writeFileSync3 } from "node:fs";
+import os6 from "node:os";
+import path18 from "node:path";
+import { pathToFileURL as pathToFileURL2 } from "node:url";
+
+// src/dash/data.ts
+import { existsSync as existsSync9 } from "node:fs";
+import path15 from "node:path";
+var TEMP2 = /^\/(private\/)?(tmp|var\/folders)(\/|$)/;
+var TEMP_PATH = "/tmp";
+function homeRelative2(file, home) {
+  return home && (file === home || file.startsWith(home + "/")) ? "~" + file.slice(home.length) : file;
+}
+function projectRoot(cwd, home, isRepo) {
+  if (!cwd) return "";
+  for (let dir = cwd; ; ) {
+    if (isRepo(dir)) return dir;
+    const parent = path15.dirname(dir);
+    if (dir === home || parent === dir) break;
+    dir = parent;
+  }
+  return TEMP2.test(cwd) ? TEMP_PATH : cwd;
+}
+function projectNames(paths) {
+  const base = (p) => p === "~" ? "~" : p === TEMP_PATH ? "temporary folders" : path15.basename(p);
+  const count2 = /* @__PURE__ */ new Map();
+  for (const p of paths) count2.set(base(p), (count2.get(base(p)) ?? 0) + 1);
+  return paths.map((p) => {
+    if (!p) return "unknown folder";
+    const name = base(p);
+    if ((count2.get(name) ?? 0) < 2) return name;
+    return `${path15.basename(path15.dirname(p))}/${name}`;
+  });
+}
+function buildDashData(analyzed, options) {
+  const isRepo = options.isRepo ?? ((dir) => existsSync9(path15.join(dir, ".git")));
+  const roots = /* @__PURE__ */ new Map();
+  const rootOf = (cwd) => {
+    const key = cwd ?? "";
+    let root = roots.get(key);
+    if (root === void 0) roots.set(key, root = projectRoot(cwd, options.home, isRepo));
+    return root;
+  };
+  const projectPaths = [];
+  const projectIndex = /* @__PURE__ */ new Map();
+  const sessions = [];
+  for (const { session, summary } of [...analyzed].sort(
+    (a, b) => a.summary.startMs - b.summary.startMs
+  )) {
+    const cwd = summary.cwd ?? session.cwd;
+    const root = rootOf(cwd);
+    const shown = root === TEMP_PATH ? TEMP_PATH : root ? homeRelative2(root, options.home) : "";
+    let index = projectIndex.get(shown);
+    if (index === void 0) {
+      index = projectPaths.push(shown) - 1;
+      projectIndex.set(shown, index);
+    }
+    const byPhase = new Map(summary.phases.map((p) => [p.phase, p.ms]));
+    const row = {
+      id: summary.id,
+      startMs: summary.startMs,
+      endMs: summary.endMs,
+      project: index,
+      folder: cwd ? homeRelative2(cwd, options.home) : "",
+      agent: session.agent,
+      ms: PHASES.map((p) => Math.round(byPhase.get(p.id) ?? 0)),
+      turnsMs: summary.turnsMs,
+      modelCalls: summary.modelCalls,
+      toolCalls: summary.toolCalls,
+      subagents: summary.subagents,
+      failures: summary.failures,
+      reworkLoops: summary.rework.filter((w) => w.edits > 0).length
+    };
+    if (summary.agentVersion) row.agentVersion = summary.agentVersion;
+    sessions.push(row);
+  }
+  const names = projectNames(projectPaths);
+  return {
+    v: 1,
+    version: options.version,
+    generatedAt: options.now,
+    phases: PHASES.map((p) => ({ id: p.id, label: p.label })),
+    projects: projectPaths.map((p, i) => ({ name: names[i] ?? p, path: p })),
+    sessions
+  };
+}
+
+// report-assets:report-assets
+var CLIENT_JS = '"use strict";(()=>{function u(e){if(!Number.isFinite(e)||e<0)return"\\u2013";if(e<1e3)return`${Math.round(e)} ms`;if(e<1e4)return`${(e/1e3).toFixed(1)}s`;let t=Math.round(e/1e3),s=Math.floor(t/3600),a=Math.floor(t%3600/60),o=t%60;return s>0?`${s}h ${fe(a)}m ${fe(o)}s`:a>0?`${a}m ${fe(o)}s`:`${o}s`}function fe(e){return String(e).padStart(2,"0")}var Ce="0.1.0";var Qe=performance.now(),c=JSON.parse(document.getElementById("awf-data")?.textContent??"null"),b=c.steps,$=Math.max(1,c.session.totalMs),ie=b.map(()=>[]);for(let e of b)e.p>=0&&ie[e.p]?.push(e.i);var Ie=new Map(c.phases.map(e=>[e.id,e.label])),Ze=new Map(c.slowest.map((e,t)=>[e,t])),me=b.filter(e=>!e.container).length;function n(e,t={},...s){let a=document.createElement(e);for(let[o,i]of Object.entries(t))i===void 0||i===!1||(o==="class"?a.className=String(i):o==="text"?a.textContent=String(i):a.setAttribute(o,i===!0?"":String(i)));for(let o of s)o&&a.append(o);return a}var M=e=>String(e).padStart(2,"0"),j=e=>e.replace(/\\s+/g," ").trim(),V=(e,t)=>e.length>t?e.slice(0,t-1)+"\\u2026":e,P=(e,t,s=`${t}s`)=>`${e.toLocaleString("en-US")} ${e===1?t:s}`,_=e=>`var(--c-${e})`,H=e=>e?Ie.get(e)??e:"",T=e=>e.e-e.s;function E(e){return e>0&&e<.005?"<1%":`${Math.round(e*100)}%`}function S(e,t=!0){let s=Math.max(0,Math.round(e/1e3)),a=Math.floor(s/3600),o=Math.floor(s%3600/60);return $>=36e5?`${a}:${M(o)}${t?`:${M(s%60)}`:""}`:`${Math.floor(s/60)}:${M(s%60)}`}function xe(e,t=!1){let s=new Date(e),a=`${M(s.getHours())}:${M(s.getMinutes())}:${M(s.getSeconds())}`;return t?`${s.getFullYear()}-${M(s.getMonth()+1)}-${M(s.getDate())} ${a.slice(0,5)}`:a}function K(e){return e>=1e6?`${(e/1e6).toFixed(e>=1e7?0:1)}M`:e>=1e3?`${(e/1e3).toFixed(e>=1e4?0:1)}k`:String(e)}function D(e){if(e.text)return e.text;if(e.description)return e.description;if(e.kind==="turn"&&e.flags.includes("notification"))return"started by a notice, not a prompt"}var et=[...[1,2,5,10,15,30].map(e=>e*1e3),...[1,2,5,10,15,30].map(e=>e*6e4),...[1,2,3,6,12,24].map(e=>e*36e5)];function tt(){let e=b.filter(o=>o.kind!=="idle"&&o.e>o.s).map(o=>[o.s,o.e]).sort((o,i)=>o[0]-i[0]),t=Math.max(6e4,$*.03),s=[],a=0;for(let[o,i]of e)o-a>=t&&s.push({s:a,e:o}),a=Math.max(a,i);return $-a>=t&&s.push({s:a,e:$}),s}var ke=tt();function Re(e){let t=e?ke:[],s=t.reduce((x,h)=>x+h.e-h.s,0),a=$-s,o=t.length&&a>0?Math.min(1.5,12/t.length):0,i=o?t:[],d=(100-i.length*o)/(o?a:$),p=[[0,0]],m=[],f=0,w=0;for(let x of i)f+=(x.s-w)*d,p.push([x.s,f]),m.push({s:x.s,e:x.e,x0:f,x1:f+o}),f+=o,p.push([x.e,f]),w=x.e;return p.push([$,100]),{x:x=>{if(x<=0)return 0;if(x>=$)return 100;let h=0,I=p.length-1;for(;I-h>1;){let pe=h+I>>1;p[pe][0]<=x?h=pe:I=pe}let[de,ue]=p[h],[ve,Je]=p[I];return ve===de?ue:ue+(x-de)/(ve-de)*(Je-ue)},gaps:m,k:d}}function nt(e){let t=Math.round(e/6e4);return t>=60?`${Math.floor(t/60)}h ${M(t%60)}m`:t>=1?`${t}m`:`${Math.round(e/1e3)}s`}var Pe=e=>`${nt(e.e-e.s)} idle`;function st(e){let t=d=>{let p=(be(d)+22)/Math.max(e,1)*100,m=p/g.k,f=et.find(w=>w>=m)??Math.ceil(m/864e5)*864e5;return{minPct:p,step:f}},{minPct:s,step:a}=t($>=36e5?"0:00":"00:00");$>=36e5&&a<6e4&&({minPct:s,step:a}=t("0:00:00"));let o=[],i=-1/0;for(let d=0;d<=$;d+=a){if(g.gaps.some(f=>d>f.s&&d<f.e))continue;let p=g.x(d);if(p-i<s)continue;let m=g.gaps.some(f=>{let w=(be(Pe(f))/2+12)/Math.max(e,1)*100;return Math.abs(p-(f.x0+f.x1)/2)<w+s/2});d>0&&m||(o.push({x:p,text:S(d,a<6e4)}),i=p)}let r=$>=36e5?a<6e4?"h:mm:ss":"h:mm":"m:ss";return{ticks:o,unit:r}}var l={collapsed:new Set,filterCollapsed:new Set,phases:new Set,failedOnly:!1,query:"",open:-1,focus:-1,squeeze:ke.length>0};for(let e of b)e.container&&(e.kind==="subagent"||me>250&&e.kind==="turn")&&l.collapsed.add(e.i);var g=Re(l.squeeze),v=()=>l.phases.size>0||l.failedOnly||l.query!=="";function _e(e){return!(l.phases.size>0&&!(e.phase&&l.phases.has(e.phase))||l.failedOnly&&!e.failed||l.query&&![e.label,e.text,e.tool,e.agentType,e.description,...e.checks.map(s=>s.key)].filter(Boolean).join(`\n`).toLowerCase().includes(l.query))}function He(){let e=v(),t,s=new Set;if(e){t=new Set;for(let r of b)if(_e(r)){t.add(r.i);for(let d=r.p;d>=0&&!s.has(d);d=b[d]?.p??-1)t.add(d),s.add(d)}}else for(let r of b)r.container&&s.add(r.i);let a=e?l.filterCollapsed:l.collapsed,o=[],i=1/0;for(let r of b)r.depth>i||(i=1/0,!(t&&!t.has(r.i))&&(o.push(r),s.has(r.i)&&a.has(r.i)&&(i=r.depth)));return{rows:o,parents:s}}var k=He(),at=document.getElementById("app"),G=n("div",{class:"wrap"});at.append(G);var L=c.session.totalMs,W=c.session.turnsMs,U=c.session.awayWorkMs,ot=Math.max(0,L-W-U),it=c.share?`Shared session ${c.session.id.slice(0,8)}`:c.session.title??`Session ${c.session.id.slice(0,8)}`,ne=n("button",{class:"theme",type:"button"});function rt(){try{let e=localStorage.getItem("awf-theme");return e==="light"||e==="dark"?e:"auto"}catch{return"auto"}}function Be(e){e==="auto"?delete document.documentElement.dataset.theme:document.documentElement.dataset.theme=e,ne.textContent=`Theme: ${e[0]?.toUpperCase()}${e.slice(1)}`,ne.setAttribute("aria-label",`Color theme: ${e}. Change theme`)}var R=rt();Be(R);ne.addEventListener("click",()=>{R=R==="auto"?"light":R==="light"?"dark":"auto",Be(R);try{R==="auto"?localStorage.removeItem("awf-theme"):localStorage.setItem("awf-theme",R)}catch{}});var lt={"claude-code":"Claude Code",codex:"Codex CLI",gemini:"Gemini CLI",opencode:"OpenCode"},ct=lt[c.session.agent]??c.session.agent,dt=[xe(c.session.startMs,!0),W<L?`${u(L)} (${[`${u(W)} in turns`,...U>0?[`${u(U)} background work between turns`]:[]].join(", ")})`:u(L),c.session.cwd,`${ct}${c.session.agentVersion?` ${c.session.agentVersion}`:""}`].filter(e=>!!e);G.append(n("header",{class:"top"},n("div",{},n("p",{class:"brand",text:"awf \\xB7 agent waterfall"}),n("h1",{text:V(j(it),220)}),n("p",{class:"meta",text:dt.join(" \\xB7 ")})),ne));var re=c.phases.filter(e=>e.ms>0),B=n("section",{class:"card","aria-label":"Where the time went"});B.append(n("div",{class:"total"},n("span",{class:"value",text:u(L)}),n("span",{class:"sub",text:W>=L?"total":U>0?`total: ${u(W)} in turns, ${u(U)} of background work between turns, ${u(ot)} idle`:`total: ${u(W)} in turns, the rest idle between turns`})));var $e=n("div",{class:"stack",role:"img","aria-label":re.map(e=>`${e.label} ${E(e.share)}`).join(", ")});for(let e of re){let t=n("span",{"data-phase":e.id});t.style.background=_(e.id),t.style.flex=`${e.ms} 1 0`,$e.append(t)}B.append($e);var Fe=n("ul",{class:"legend","aria-label":"Phases. Pick one or more to filter steps"}),qe=new Map;for(let e of re){let t=n("button",{class:"chip",type:"button","aria-pressed":"false",title:e.detail?`${e.label}: ${e.detail}`:e.label},n("span",{class:"sw","aria-hidden":"true"}),n("span",{class:"name",text:e.label}),n("span",{class:"num",text:`${u(e.ms)} \\xB7 ${E(e.share)}`}));t.firstChild.style.background=_(e.id),t.addEventListener("click",()=>{l.phases.has(e.id)?l.phases.delete(e.id):l.phases.add(e.id),ce()}),qe.set(e.id,t),Fe.append(n("li",{},t))}B.append(Fe);var F=c.counts,ut=[[F.modelCalls,"model call"],[F.toolCalls,"tool call"],...F.subagents?[[F.subagents,"subagent"]]:[],[F.failures,"failed check"],[F.reworkLoops,"rework loop"]],we=n("p",{class:"counts"});for(let[e,t]of ut){let[s,...a]=P(e,t).split(" ");we.append(n("span",{},n("b",{text:s??""}),` ${a.join(" ")}`))}if(c.tokens){let e=c.tokens.input+c.tokens.cacheRead+c.tokens.cacheWrite,t=e>0?c.tokens.cacheRead/e:0;we.append(n("span",{},n("b",{text:K(e)}),` tokens in (${E(t)} from cache), `,n("b",{text:K(c.tokens.output)})," out"))}B.append(we);var z=n("ul",{class:"why"}),pt=[...re].sort((e,t)=>t.ms-e.ms),[q,J,Q]=pt;q&&z.append(n("li",{},"Most time went to ",n("b",{text:q.label}),`: ${u(q.ms)} (${E(q.share)})${q.detail?`, ${q.detail}`:""}.`,J?` Then ${J.label} ${u(J.ms)} (${E(J.share)})${Q?` and ${Q.label} ${u(Q.ms)} (${E(Q.share)})`:""}.`:""));if(c.slowest.length){let e=n("li",{},"Slowest steps: ");c.slowest.forEach((t,s)=>{let a=b[t];if(!a)return;let o=a.kind==="model"?b[a.produces?.[0]??-1]:void 0,i=o?D(o):a.kind==="model"?void 0:D(a),r=n("button",{class:"link",type:"button",title:"Show this step"},o?`${a.label} ${u(T(a))}, writing ${o.label}`:a.label,i?n("code",{text:V(j(i),60)}):null,o?"":` ${u(T(a))}`,a.failed?" \\u2715 failed":"");r.addEventListener("click",()=>Xe(t)),e.append(s>0?", ":"",r)}),e.append("."),z.append(e)}if(c.rework.length){let e=c.rework.filter(s=>s.edits>0),t=n("li",{},e.length?"Rework: ":"Rework: none. ");e.slice(0,3).forEach((s,a)=>{t.append(a>0?"; ":"",n("code",{text:s.check}),` failed at ${S(s.failedAt)}`,s.passedAt!==void 0?` and passed at ${S(s.passedAt)} after ${P(s.edits,"edit")}`:` and hadn\'t passed by the end (${P(s.edits,"edit")})`)}),e.length>3&&t.append(`; ${e.length-3} more`),e.length?t.append("."):t.append("checks failed, but no edits followed before they ran again."),z.append(t)}else z.append(n("li",{text:"No rework: no check failed and then got fixed."}));var Z=c.phases.find(e=>e.id==="unclassified");Z&&Z.share>=.05&&c.unclassified.length&&z.append(n("li",{},`Unclassified ${u(Z.ms)} (${E(Z.share)}): `,...c.unclassified.slice(0,3).flatMap((e,t)=>[t>0?", ":"",n("code",{text:e.name}),` ${u(e.ms)}`]),c.unclassifiedModelMs>=1e3?`, and ${u(c.unclassifiedModelMs)} of model time writing those calls`:"",". Rules in ",n("code",{text:".awf/rules.yaml"})," can sort them."));B.append(z);var ye=n("table",{},n("caption",{class:"sr",text:"Time by phase"}));ye.append(n("thead",{},n("tr",{},n("th",{scope:"col",text:"Phase"}),n("th",{scope:"col",class:"n",text:"Time"}),n("th",{scope:"col",class:"n",text:"Share"}),n("th",{scope:"col",text:"Detail"}))));var Me=n("tbody");for(let e of c.phases)Me.append(n("tr",{},n("td",{text:e.label}),n("td",{class:"n",text:u(e.ms)}),n("td",{class:"n",text:E(e.share)}),n("td",{text:e.detail})));Me.append(n("tr",{class:"sum"},n("td",{text:"Total"}),n("td",{class:"n",text:u(L)}),n("td",{class:"n",text:"100%"}),n("td",{})));ye.append(Me);B.append(n("details",{class:"table"},n("summary",{text:"Phase table"}),ye));G.append(B);var se=n("input",{type:"checkbox"}),ae=n("input",{type:"search",placeholder:c.share?"Search tools and phases":"Search commands, files, tools","aria-label":"Search steps"}),oe=n("input",{type:"checkbox"});oe.checked=l.squeeze;var Ne=n("span",{class:"count","aria-live":"polite"}),le=n("button",{class:"link",type:"button",text:"Clear filters"}),We=n("button",{class:"link",type:"button",text:"Expand all"}),De=n("button",{class:"link",type:"button",text:"Collapse all"}),ft=n("div",{class:"filters"},ae,n("label",{},se,"Failed only"),ke.length?n("label",{title:"Squeeze long idle stretches to a sliver"},oe,"Squeeze idle gaps"):null,We,De,le,Ne);G.append(ft);se.addEventListener("change",()=>{l.failedOnly=se.checked,ce()});var Te=0;ae.addEventListener("input",()=>{clearTimeout(Te),Te=window.setTimeout(()=>{l.query=ae.value.trim().toLowerCase(),ce()},120)});oe.addEventListener("change",()=>{l.squeeze=oe.checked,g=Re(l.squeeze),Ve(),C()});le.addEventListener("click",()=>{l.phases.clear(),l.failedOnly=!1,l.query="",se.checked=!1,ae.value="",ce()});We.addEventListener("click",()=>{(v()?l.filterCollapsed:l.collapsed).clear(),C()});De.addEventListener("click",()=>{let e=v()?l.filterCollapsed:l.collapsed;for(let t of k.parents)e.add(t);C()});function ce(){l.filterCollapsed.clear();for(let[e,t]of qe)t.setAttribute("aria-pressed",String(l.phases.has(e))),t.classList.toggle("dim",l.phases.size>0&&!l.phases.has(e));for(let e of $e.children){let t=e.dataset.phase;e.style.opacity=l.phases.size>0&&!l.phases.has(t)?"0.3":""}C()}var Se=n("section",{class:"fall","aria-label":"Waterfall of every step"}),N=n("div",{class:"axis","aria-hidden":"true"}),ee=n("div",{class:"strip",role:"img"}),ze=n("div",{class:"hl"});Se.append(n("div",{class:"head"},ze,N,n("div",{class:"hl sub",text:"Phase at each moment"}),ee));var te=n("div",{class:"lines","aria-hidden":"true"}),A=n("div",{class:"rows",role:"list","aria-label":"Steps"});Se.append(n("div",{class:"body"},te,A));G.append(Se);function Ee(e,t,s){let a=g.x(t);e.style.left=`${a}%`,e.style.width=`${Math.max(0,g.x(s)-a)}%`}var Y=0,Oe=64,he=document.createElement("canvas").getContext("2d"),Le=new Map;function be(e){let t=Le.get(e);return t===void 0&&(he?(he.font=`11.5px ${getComputedStyle(document.body).fontFamily}`,t=he.measureText(e).width):t=e.length*7,Le.set(e,t)),t}function je(){Y=N.clientWidth,Oe=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--pad"))||64;let{ticks:e,unit:t}=st(Y||800);ze.textContent=`Step \\xB7 elapsed ${t}`,N.replaceChildren(),te.replaceChildren();for(let s of e){let a=n("span",{class:`tick${s.x===0?" start":s.x>94?" end":""}`,text:s.text});a.style.left=`${s.x}%`,N.append(a);let o=n("i");o.style.left=`${s.x}%`,te.append(o)}for(let s of g.gaps){let a=n("span",{class:"brk",title:`${u(s.e-s.s)} idle, squeezed`});a.style.left=`${s.x0}%`,a.style.width=`${s.x1-s.x0}%`;let o=n("span",{class:"gapl",text:Pe(s)});o.style.left=`${(s.x0+s.x1)/2}%`,N.append(a,o);let i=n("i",{class:"gap"});i.style.left=`${s.x0}%`,i.style.width=`${s.x1-s.x0}%`,te.append(i)}}function Ve(){je(),ee.replaceChildren(),c.timeline.forEach(([e,t,s],a)=>{if(g.x(t)-g.x(e)<.02)return;let o=n("span",{"data-seg":a});o.style.background=_(s),Ee(o,e,t),ee.append(o)}),ee.setAttribute("aria-label",`Phase over time, from 0 to ${u(L)}. The phase table lists the totals.`)}function Ge(e){let t=[];if(e.kind==="turn")for(let[s,a,o]of c.timeline)a>e.s&&s<e.e&&t.push([Math.max(s,e.s),Math.min(a,e.e),o]);else{let s=a=>{for(let o of ie[a]??[]){let i=b[o];i&&(i.container?s(o):i.phase&&i.e>i.s&&t.push([i.s,i.e,i.phase]))}};s(e.i)}return t}function ht(e){let t=new Map;for(let[s,a,o]of Ge(e))t.set(o,(t.get(o)??0)+a-s);return[...t].sort((s,a)=>a[1]-s[1])}var Ke=(e,t=3)=>ht(e).slice(0,t).map(([s,a])=>`${H(s)} ${u(a)}`).join(" \\xB7 ");function mt(e){let t=n("span",{class:"mix"});Ee(t,e.s,e.e);let s=g.x(e.e)-g.x(e.s);if(s<=0)return t;let a=Ge(e),o=g.x(e.s);for(let[i,r,d]of a){let p=(g.x(i)-o)/s*100,m=(g.x(r)-o)/s*100;if(m-p<.05)continue;let f=n("span");f.style.left=`${p}%`,f.style.width=`${m-p}%`,f.style.background=_(d),t.append(f)}return t}var Ue={approval:"approval",denied:"denied",interrupted:"interrupted",background:"background","api-error":"API error",resent:"request resent",unfinished:"no end seen"};function bt(e){let t=D(e);return[e.label,t?V(j(t),120):"",H(e.phase),u(T(e)),e.failed?"failed":""].filter(Boolean).join(", ")}function gt(e){let t=v(),s=k.parents.has(e.i),a=(t?l.filterCollapsed:l.collapsed).has(e.i),o=n("div",{class:`row${e.container&&!e.phase?" group":""}${e.kind==="idle"?" idle":""}${e.kind==="build-task"?" task":""}${l.open===e.i?" sel":""}`,role:"listitem","data-i":e.i}),i=n("div",{class:"name"});if(i.style.paddingLeft=`calc(6px + ${e.depth} * var(--indent))`,s){let h=ie[e.i]?.length??0;i.append(n("button",{class:"tw",type:"button",tabindex:-1,"aria-expanded":String(!a),"aria-label":`${a?"Show":"Hide"} ${P(h,"step")} inside ${e.label}`,text:a?"\\u25B8":"\\u25BE"}))}else i.append(n("span",{class:"tw","aria-hidden":"true"}));let r=n("button",{class:"pick",type:"button",tabindex:l.focus===e.i?0:-1,"aria-expanded":String(l.open===e.i),"aria-label":bt(e)});if(e.phase&&!e.container){let h=n("span",{class:"dot","aria-hidden":"true"});h.style.background=_(e.phase),r.append(h)}r.append(n("span",{class:"kind",text:e.label}));let d=D(e);d&&r.append(n("span",{class:"text",text:V(j(d),300)})),e.failed&&r.append(n("span",{class:"fail"},"\\u2715",n("span",{class:"w",text:" failed"})));let p=Ze.get(e.i);p!==void 0&&r.append(n("span",{class:"badge",text:p===0?"slowest":`#${p+1} slowest`}));for(let h of e.flags){let I=Ue[h];I&&!(h==="background"&&e.kind==="background")&&r.append(n("span",{class:"badge soft",text:I}))}i.append(r),o.append(i);let m=n("div",{class:"track","aria-hidden":"true"});if(e.container&&a)m.append(mt(e));else{let h=n("span",{class:`bar${e.failed?" failed":""}`});e.failed?h.style.background="var(--critical)":e.phase&&(h.style.background=_(e.phase)),e.started===!1&&h.classList.add("unstarted"),Ee(h,e.s,e.e),m.append(h)}let f=n("span",{class:"dur"},e.failed?n("span",{class:"x",text:"\\u2715 "}):null,u(T(e))),w=g.x(e.s),X=g.x(e.e),x=be(f.textContent??"")+6;return(100-X)/100*Y+Oe>=x+4?f.style.left=`calc(${X}% + 6px)`:w/100*Y>=x+4?f.style.right=`calc(${100-w}% + 6px)`:(f.classList.add("in"),f.style.right=`calc(${100-X}% + 4px)`),m.append(f),o.append(m),l.open===e.i&&o.append(kt(e)),o}function xt(e){let t=e.indexOf(":"),s=t>0?e.slice(0,t):e,a=t>0?e.slice(t+1):"";switch(s){case"script":return`runs the package script "${a}"`;case"make":return`runs the make target "${a}"`;case"task":return`runs the task "${a}"`;case"hook":return`runs the git hook ${a}`;case"file":return`runs the script ${a}`;case"via":return`through ${a}`;case"unmatched":return`no rule for "${a}"`;case"was":return`was ${H(a)||a} before a check failed`}let o={"by-name":"phase guessed from a script or task name",install:"installs dependencies",polling:"waits in a loop",neutral:"only commands that say nothing about the phase","failure-unattributed":"the failure could not be pinned on one check","background-task":"waits on a background task",compaction:"context compaction",subagent:"ran a subagent","no-command":"no command recorded"};return o[e]?o[e]:Ie.has(e)?`also ${H(e)}`:e}function kt(e){let t=n("div",{class:"more",role:"region","aria-label":`Details: ${e.label}`}),s=n("dl"),a=(r,...d)=>s.append(n("dt",{text:r}),n("dd",{},...d));if(e.phase){let r=n("span",{class:"sw","aria-hidden":"true"});r.style.background=_(e.phase),a("Phase",r,H(e.phase),e.reworkFor?` (after ${e.reworkFor} failed)`:"")}if(a("When",`${S(e.s)} \\u2192 ${S(e.e)} \\xB7 ${u(T(e))} \\xB7 ${xe(c.session.startMs+e.s)}`),e.waitMs&&a("Waited for you",u(e.waitMs)),e.runMs!==void 0&&e.waitMs&&a("Ran",u(e.runMs)),e.kind==="tool"||e.kind==="background"){let r=e.failed?n("span",{class:"status-failed",text:"\\u2715 Failed"}):e.ok===!0?"OK":e.ok===!1?"Error":"Unknown";a("Result",r,e.exitCode!==void 0?` \\xB7 exit code ${e.exitCode}`:"")}if(e.tool&&a("Tool",e.tool),e.agentType&&a("Agent type",e.agentType),e.model&&a("Model",e.model),e.tokens){let r=e.tokens,d=T(e)/1e3;a("Tokens",`${K(r.input+r.cacheRead+r.cacheWrite)} in (${K(r.cacheRead)} cached) \\xB7 ${K(r.output)} out`,e.kind==="model"&&d>=1&&r.output>0?` \\xB7 ${Math.round(r.output/d)} tokens/s out`:"")}e.checks.length&&a("Checks",e.checks.map(r=>`${r.key} ${r.failed?"failed":"passed"}`).join(", ")),e.flags.length&&a("Flags",e.flags.map(r=>Ue[r]??r).join(", "));let o=e.tags.map(xt).filter(Boolean);if(o.length&&a("Notes",o.join("; ")),e.kind==="build-task"&&(a("Build tool",e.tool??""),e.started===!1&&a("Start",`not recorded by ${e.tool}: drawn from the build\'s start. Tasks may have run in parallel.`)),e.container){a("Inside",P(ie[e.i]?.length??0,e.kind==="tool"?"build task":"step"));let r=Ke(e,5);r&&a("By phase",r)}e.kind==="tool"&&!c.session.sources.includes("recorder")&&!e.waitMs&&a("Note","May include waiting for your approval: only the recorder (the plugin) sees approvals."),t.append(s);let i=(r,d)=>t.append(n("h3",{text:r}),n("pre",{text:d}));if(e.kind==="model"&&e.produces?.length){t.append(n("h3",{text:"Wrote these calls"}));let r=n("ul",{class:"made"});for(let d of e.produces){let p=b[d];if(!p)continue;let m=D(p),f=n("button",{class:"link",type:"button"},p.label,m?n("code",{text:V(j(m),100)}):null,` ${u(T(p))}`);f.addEventListener("click",w=>{w.stopPropagation(),Xe(d)}),r.append(n("li",{},f))}t.append(r)}else e.text&&e.tool==="Bash"&&i("Command",e.text);return e.files?.length&&i(e.files.length===1?"File":"Files",e.files.join(`\n`)),e.description&&e.description!==e.text&&i("Description",e.description),e.output&&i(`Output (secrets masked${e.output.length>=4e3?", first 4,000 characters":""})`,e.output),c.share&&t.append(n("p",{class:"note",text:"Shared report: commands, files and output are left out."})),t}function C(){let e=A.contains(document.activeElement);k=He(),k.rows.some(a=>a.i===l.focus)||(l.focus=k.rows[0]?.i??-1);let t=document.createDocumentFragment();for(let a of k.rows)t.append(gt(a));k.rows.length||t.append(n("p",{class:"empty",text:b.length?"No steps match these filters.":"This session has no steps."})),A.replaceChildren(t);let s=k.rows.filter(a=>!a.container).length;Ne.textContent=v()?`${P(s,"step")} match, of ${me.toLocaleString("en-US")}`:P(me,"step"),le.hidden=!v(),e&&O(l.focus)}function O(e){l.focus=e;for(let s of A.querySelectorAll(".pick"))s.tabIndex=-1;let t=A.querySelector(`.row[data-i="${e}"] .pick`);t&&(t.tabIndex=0,t.focus({preventScroll:!1}))}function ge(e){let t=v()?l.filterCollapsed:l.collapsed;t.has(e)?t.delete(e):t.add(e),l.focus=e,C(),O(e)}function Ye(e){l.open=l.open===e?-1:e,l.focus=e,C(),O(e)}function Xe(e){let t=b[e];if(t){v()&&!_e(t)&&le.click();for(let s=t.p;s>=0;s=b[s]?.p??-1)l.collapsed.delete(s),l.filterCollapsed.delete(s);l.open=e,l.focus=e,C(),O(e),A.querySelector(`.row[data-i="${e}"]`)?.scrollIntoView({block:"center"})}}A.addEventListener("click",e=>{let t=e.target;if(t.closest(".more"))return;let s=t.closest(".row");if(!s)return;let a=Number(s.getAttribute("data-i"));t.closest(".tw")?ge(a):Ye(a)});A.addEventListener("keydown",e=>{let t=e.target.closest(".row");if(!t||!e.target.closest(".pick"))return;let s=Number(t.getAttribute("data-i")),a=k.rows.findIndex(d=>d.i===s),o=b[s];if(!o)return;let i=(v()?l.filterCollapsed:l.collapsed).has(s),r=d=>{let p=k.rows[Math.max(0,Math.min(k.rows.length-1,d))];p&&O(p.i)};switch(e.key){case"ArrowDown":r(a+1);break;case"ArrowUp":r(a-1);break;case"Home":r(0);break;case"End":r(k.rows.length-1);break;case"ArrowRight":k.parents.has(s)&&i?ge(s):k.parents.has(s)&&r(a+1);break;case"ArrowLeft":k.parents.has(s)&&!i?ge(s):o.p>=0&&O(o.p);break;case"Escape":l.open>=0&&Ye(l.open);break;default:return}e.preventDefault()});var y=n("div",{class:"tip",role:"tooltip",hidden:!0});document.body.append(y);var $t=window.matchMedia("(hover: hover)").matches;function wt(e){let t=e.closest("[data-phase]");if(t){let i=c.phases.find(r=>r.id===t.dataset.phase);if(i)return[n("b",{text:i.label}),n("span",{text:`${u(i.ms)} \\xB7 ${E(i.share)}${i.detail?` \\xB7 ${i.detail}`:""}`})]}let s=e.closest("[data-seg]");if(s){let i=c.timeline[Number(s.dataset.seg)];if(i)return[n("b",{text:H(i[2])}),n("span",{text:`${S(i[0])} \\u2192 ${S(i[1])} \\xB7 ${u(i[1]-i[0])}`})]}let o=e.closest(".track")?.closest(".row");if(o){let i=b[Number(o.getAttribute("data-i"))];if(!i)return;let r=D(i);return[n("b",{text:i.label}),r?n("code",{text:V(j(r),160)}):null,n("span",{text:[H(i.phase),u(T(i)),`${S(i.s)} \\u2192 ${S(i.e)}`,i.failed?"\\u2715 failed":""].filter(Boolean).join(" \\xB7 ")}),i.container?n("span",{text:Ke(i)}):null]}}$t&&(document.addEventListener("mousemove",e=>{let t=e.target instanceof Element?wt(e.target):void 0;if(!t){y.hidden=!0;return}y.replaceChildren(...t.filter(r=>!!r)),y.hidden=!1;let s=y.offsetWidth,a=y.offsetHeight,o=Math.min(e.clientX+14,window.innerWidth-s-8),i=e.clientY+18+a>window.innerHeight?e.clientY-a-12:e.clientY+18;y.style.left=`${Math.max(8,o)}px`,y.style.top=`${Math.max(8,i)}px`}),document.addEventListener("mouseleave",()=>y.hidden=!0));G.append(n("footer",{class:"foot"},`Made by awf ${Ce} on ${xe(c.generatedAt,!0)}. `,c.share?"Shared report: phases, durations and tool names only.":"This file holds commands, file paths and tool output from the session, with secrets masked. Make a version without them with --share."));Ve();C();var Ae=0;window.addEventListener("resize",()=>{cancelAnimationFrame(Ae),Ae=requestAnimationFrame(()=>{N.clientWidth!==Y&&(je(),C())})});document.body.dataset.ready="1";document.body.dataset.renderMs=String(Math.round(performance.now()-Qe));})();';
+var CLIENT_CSS = ':root{color-scheme:light;--page: #f9f9f7;--surface: #fcfcfb;--raised: #ffffff;--ink: #0b0b0b;--ink-2: #52514e;--muted: #6f6d68;--grid: #e8e7e1;--axis: #c3c2b7;--ring: rgba(11, 11, 11, .12);--hover: rgba(11, 11, 11, .04);--selected: rgba(42, 120, 214, .08);--focus: #2a78d6;--link: #1f63b5;--critical: #d03b3b;--critical-ink: #b42323;--container: #a3a29b;--c-writing-code: #2a78d6;--c-writing-tests: #eb6834;--c-lint: #1baf7a;--c-tests: #eda100;--c-build: #e87ba4;--c-rework: #6250d6;--c-exploring: #008300;--c-running: #0b5f73;--c-planning: #7b8494;--c-waiting: repeating-linear-gradient(135deg, #a9a8a0 0 2px, #e2e1da 2px 5px);--c-unclassified: #a5a49d;--mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;--sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;--label: 34%;--pad: 64px;--indent: 14px;--row: 28px}@media(prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;--page: #0d0d0d;--surface: #1a1a19;--raised: #222220;--ink: #f0efec;--ink-2: #c3c2b7;--muted: #9c9a92;--grid: #2a2a28;--axis: #383835;--ring: rgba(255, 255, 255, .12);--hover: rgba(255, 255, 255, .05);--selected: rgba(57, 135, 229, .14);--focus: #3987e5;--link: #7fb1ef;--critical: #e05252;--critical-ink: #f08080;--container: #6e6d68;--c-writing-code: #3987e5;--c-writing-tests: #d95926;--c-lint: #199e70;--c-tests: #c98500;--c-build: #d55181;--c-rework: #9085e9;--c-exploring: #008300;--c-running: #86cfe0;--c-planning: #8a93a3;--c-waiting: repeating-linear-gradient(135deg, #7a7973 0 2px, #33332f 2px 5px);--c-unclassified: #6e6d68}}:root[data-theme=dark]{color-scheme:dark;--page: #0d0d0d;--surface: #1a1a19;--raised: #222220;--ink: #f0efec;--ink-2: #c3c2b7;--muted: #9c9a92;--grid: #2a2a28;--axis: #383835;--ring: rgba(255, 255, 255, .12);--hover: rgba(255, 255, 255, .05);--selected: rgba(57, 135, 229, .14);--focus: #3987e5;--link: #7fb1ef;--critical: #e05252;--critical-ink: #f08080;--container: #6e6d68;--c-writing-code: #3987e5;--c-writing-tests: #d95926;--c-lint: #199e70;--c-tests: #c98500;--c-build: #d55181;--c-rework: #9085e9;--c-exploring: #008300;--c-running: #86cfe0;--c-planning: #8a93a3;--c-waiting: repeating-linear-gradient(135deg, #7a7973 0 2px, #33332f 2px 5px);--c-unclassified: #6e6d68}*{box-sizing:border-box}html,body{margin:0;background:var(--page);color:var(--ink);font:14px/1.45 var(--sans);-webkit-text-size-adjust:100%}button,input{font:inherit;color:inherit}:focus-visible{outline:2px solid var(--focus);outline-offset:2px}[hidden]{display:none!important}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}.wrap{max-width:1440px;margin:0 auto;padding:20px 24px 48px}code{font-family:var(--mono);font-size:12.5px;background:var(--hover);border-radius:4px;padding:1px 4px;overflow-wrap:anywhere}.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.brand{font-size:12px;color:var(--muted);letter-spacing:.02em;margin:0 0 6px}h1{font-size:20px;line-height:1.3;font-weight:600;margin:0 0 6px;overflow-wrap:anywhere}.meta{color:var(--ink-2);margin:0;overflow-wrap:anywhere}.theme{flex:none;border:1px solid var(--ring);background:var(--surface);border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--ink-2)}.theme:hover{background:var(--hover)}.card{background:var(--surface);border:1px solid var(--ring);border-radius:12px;padding:16px;margin-top:16px}.total{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px;margin-bottom:12px}.total .value{font-size:28px;font-weight:600;font-variant-numeric:tabular-nums}.total .sub{color:var(--ink-2)}.stack{display:flex;gap:2px;height:18px;width:100%}.stack span{height:100%;min-width:2px}.stack span:first-child{border-radius:4px 0 0 4px}.stack span:last-child{border-radius:0 4px 4px 0}.stack span:only-child{border-radius:4px}.legend{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0;padding:0;list-style:none}.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--ring);background:var(--raised);border-radius:999px;padding:4px 10px 4px 8px;cursor:pointer;min-height:30px;text-align:left}.chip:hover{background:var(--hover)}.chip[aria-pressed=true]{border-color:var(--ink-2);box-shadow:inset 0 0 0 1px var(--ink-2)}.chip.dim{opacity:.5}.sw{display:inline-block;width:10px;height:10px;border-radius:3px;flex:none}.chip .num{color:var(--ink-2);font-variant-numeric:tabular-nums}.counts{display:flex;flex-wrap:wrap;gap:4px 18px;margin:14px 0 0;color:var(--ink-2)}.counts b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}.why{margin:12px 0 0;padding:0 0 0 18px}.why li{margin:5px 0}.why b{font-weight:600}.link{border:0;background:none;color:var(--link);cursor:pointer;padding:2px 0;text-align:left}.link:hover{text-decoration:underline}.link code{margin:0 3px;color:var(--ink)}details.table{margin-top:12px}details.table summary{cursor:pointer;color:var(--ink-2)}details.table table{border-collapse:collapse;margin-top:8px;width:100%;max-width:680px}details.table th,details.table td{text-align:left;padding:4px 8px;border-bottom:1px solid var(--grid);font-variant-numeric:tabular-nums}details.table th{color:var(--muted);font-weight:500}details.table .n{text-align:right}details.table .sum td{font-weight:600;border-bottom:0}.filters{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin:20px 0 10px}.filters label{display:inline-flex;align-items:center;gap:6px;cursor:pointer;min-height:32px}.filters input[type=search]{border:1px solid var(--ring);background:var(--surface);border-radius:8px;padding:6px 10px;flex:1 1 240px;max-width:360px;min-height:34px}.filters .count{color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums}.fall{background:var(--surface);border:1px solid var(--ring);border-radius:12px;overflow:clip}.head{position:sticky;top:0;z-index:3;display:grid;grid-template-columns:var(--label) 1fr;background:var(--surface);border-bottom:1px solid var(--grid)}.hl{padding:6px 12px 0;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hl.sub{padding:2px 12px 8px}.axis{position:relative;height:26px;margin-right:var(--pad)}.tick{position:absolute;top:6px;transform:translate(-50%);font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}.tick.start{transform:none}.tick.end{transform:translate(-100%)}.brk{position:absolute;top:4px;bottom:2px;background:repeating-linear-gradient(135deg,transparent 0 3px,var(--axis) 3px 4px);border-radius:2px}.strip{position:relative;height:10px;margin:4px var(--pad) 10px 0;border-radius:3px;overflow:hidden;background:var(--grid)}.strip span{position:absolute;top:0;bottom:0}.body{position:relative}.lines{position:absolute;top:0;bottom:0;left:var(--label);right:var(--pad);pointer-events:none}.lines i{position:absolute;top:0;bottom:0;width:1px;background:var(--grid)}.lines i.gap{background:repeating-linear-gradient(135deg,transparent 0 5px,var(--grid) 5px 6px)}.rows{position:relative}.row{display:grid;grid-template-columns:var(--label) 1fr;align-items:center;cursor:pointer}.row:hover{background:var(--hover)}.row.sel{background:var(--selected)}.name{display:flex;align-items:center;gap:4px;min-width:0;min-height:var(--row);padding-right:8px}.tw{width:18px;height:22px;flex:none;color:var(--muted);text-align:center;font-size:11px;border:0;background:none;padding:0;border-radius:4px;cursor:pointer}button.tw:hover{background:var(--hover);color:var(--ink)}.pick{display:flex;align-items:center;gap:6px;min-width:0;flex:1 1 auto;border:0;background:none;padding:2px 0;text-align:left;cursor:pointer;white-space:nowrap;border-radius:4px}.dot{width:8px;height:8px;border-radius:2px;flex:none}.kind{flex:0 0 auto;max-width:60%;overflow:hidden;text-overflow:ellipsis}.text{flex:0 1 auto;min-width:0;color:var(--ink-2);font-family:var(--mono);font-size:12px;overflow:hidden;text-overflow:ellipsis}.row.group .kind{font-weight:600}.row.idle .kind{color:var(--muted)}.fail{flex:none;color:var(--critical-ink);font-weight:600;font-size:12.5px}.badge{flex:none;border:1px solid var(--ring);background:var(--raised);color:var(--ink);border-radius:999px;font-size:10.5px;padding:0 6px;line-height:16px}.badge.soft{color:var(--ink-2);background:none}.track{position:relative;height:var(--row);margin-right:var(--pad)}.bar,.mix{position:absolute;top:calc(50% - 6px);height:12px;min-width:2px;border-radius:3px}.row.group .bar{top:calc(50% - 2px);height:4px;background:var(--container);border-radius:2px}.mix{top:calc(50% - 4px);height:8px;overflow:hidden;background:var(--grid);border-radius:2px}.mix span{position:absolute;top:0;bottom:0}.row.task .bar{top:calc(50% - 4px);height:8px;opacity:.85}.row.task .bar.unstarted{background-image:repeating-linear-gradient(90deg,transparent 0 6px,var(--surface) 6px 7px)!important}.row.task .kind{font-family:var(--mono);font-size:12px;color:var(--ink-2)}.gapl{position:absolute;top:5px;transform:translate(-50%);font-size:11px;color:var(--ink-2);background:var(--surface);border:1px solid var(--grid);border-radius:4px;padding:0 4px;white-space:nowrap}.made{margin:6px 0 0;padding-left:18px}.dur{position:absolute;top:calc(50% - 9px);font-size:11.5px;line-height:18px;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums;pointer-events:none}.dur .x{color:var(--critical-ink);font-weight:600}.dur.in{background:var(--surface);border-radius:4px;padding:0 4px}.empty{padding:24px 16px;margin:0;color:var(--muted)}.more{grid-column:1 / -1;position:relative;z-index:1;margin:2px 12px 10px;background:var(--raised);border:1px solid var(--ring);border-radius:10px;padding:12px 14px;cursor:auto}.more dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:0}.more dt{color:var(--muted)}.more dd{margin:0;overflow-wrap:anywhere}.more dd .sw{margin-right:6px;vertical-align:-1px}.more h3{font-size:12.5px;font-weight:600;margin:14px 0 0;color:var(--ink-2)}.more pre{font-family:var(--mono);font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--surface);border:1px solid var(--ring);border-radius:8px;padding:8px 10px;margin:6px 0 0;max-height:360px;overflow:auto}.status-failed{color:var(--critical-ink);font-weight:600}.note,.foot{color:var(--muted);font-size:12.5px;margin:10px 0 0}.foot{margin-top:20px}.tip{position:fixed;z-index:20;pointer-events:none;display:flex;flex-direction:column;gap:2px;background:var(--raised);border:1px solid var(--ring);border-radius:8px;padding:6px 9px;box-shadow:0 6px 20px #00000024;font-size:12.5px;max-width:360px}.tip span{color:var(--ink-2)}.tip code{align-self:flex-start}@media(max-width:760px){:root{--label: 44%;--pad: 52px;--indent: 8px;--row: 36px}.wrap{padding:14px 16px 40px}h1{font-size:17px}.top{flex-direction:column-reverse;gap:10px}.theme{align-self:flex-end}.pick{flex-wrap:wrap;row-gap:0;padding:4px 0}.text{flex:1 0 100%;order:10;padding-left:14px;font-size:11.5px}.badge.soft,.fail .w{display:none}.filters input[type=search]{max-width:none;flex-basis:100%}.filters .count{margin-left:0}.more{margin:2px 6px 10px}.legend{display:grid;grid-template-columns:1fr 1fr}.chip{display:grid;grid-template-columns:auto 1fr;column-gap:6px;align-items:center;width:100%;height:100%;border-radius:10px;padding:5px 8px;font-size:13px}.chip .num{grid-column:2;font-size:12px}.more dl{grid-template-columns:1fr;gap:0}.more dd{margin-bottom:6px}}@media print{.filters,.theme{display:none}.row{break-inside:avoid}}';
+var DASH_JS = '"use strict";(()=>{var y=JSON.parse(document.getElementById("awf-dash")?.textContent??"null"),A=y.phases,D=new Map(A.map((e,s)=>[e.id,s])),I=new Map(A.map(e=>[e.id,e.label])),W=A.map(e=>e.id),be=W.filter(e=>e!=="waiting"),V=36e5,ye=864e5;function t(e,s={},...n){let a=document.createElement(e);for(let[i,r]of Object.entries(s))r===void 0||r===!1||(i==="class"?a.className=String(r):i==="text"?a.textContent=String(r):a.setAttribute(i,r===!0?"":String(r)));for(let i of n)i&&a.append(i);return a}var ue=e=>String(e).padStart(2,"0"),we=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],Je=["January","February","March","April","May","June","July","August","September","October","November","December"],Ve=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],ce=e=>`${we[e.getMonth()]} ${e.getDate()}`,S=e=>`${ce(e)}, ${e.getFullYear()}`,ae=e=>`${ue(e.getHours())}:${ue(e.getMinutes())}`,U=e=>Math.round(e).toLocaleString("en-US");function v(e){let s=e/V;return!Number.isFinite(s)||s<=0?"0h":s<1?`${Math.max(1,Math.round(s*60))}m`:s<10?`${s.toFixed(1)}h`:`${U(s)}h`}function C(e){return!Number.isFinite(e)||e<=0?"0%":e<.01?"<1%":`${Math.round(e*100)}%`}var P=(e,s,n=`${s}s`)=>`${U(e)} ${e===1?s:n}`;function Z(e){let s=t("span",{class:"sw","aria-hidden":"true"});return s.style.background=`var(--c-${e})`,s}function Y(e,s){let n=new Date(e);return n.setHours(0,0,0,0),s==="week"&&n.setDate(n.getDate()-(n.getDay()+6)%7),s==="month"&&n.setDate(1),n.getTime()}function Ye(e,s){let n=new Date(e);return s==="day"?n.setDate(n.getDate()+1):s==="week"?n.setDate(n.getDate()+7):n.setMonth(n.getMonth()+1),n.getTime()}function _e(e,s=4){if(!(e>0))return[0,1];let n=e/s,a=10**Math.floor(Math.log10(n)),i=[1,2,2.5,5,10].map(c=>c*a).find(c=>c>=n)??n,r=[];for(let c=0;c<e+i*.999;c+=i)r.push(Number(c.toPrecision(12)));return r}var H={phases:be,project:-1,range:"all",bucket:"week",mode:"hours",sort:{key:"start",dir:"desc"},query:""},ke="awf-dash";function Ke(){try{let e=JSON.parse(localStorage.getItem(ke)??"null");return e?{phases:Array.isArray(e.phases)?e.phases.filter(s=>D.has(s)):H.phases,project:typeof e.project=="number"&&y.projects[e.project]?e.project:-1,range:["all","7","14","30","90"].includes(e.range)?e.range:"all",bucket:["day","week","month"].includes(e.bucket)?e.bucket:"week",mode:e.mode==="share"?"share":"hours",sort:H.sort,query:""}:{...H}}catch{return{...H}}}var d=Ke();function M(e){d={...d,...e};try{let{phases:s,project:n,range:a,bucket:i,mode:r}=d;localStorage.setItem(ke,JSON.stringify({phases:s,project:n,range:a,bucket:i,mode:r}))}catch{}Oe()}var G=y.sessions.reduce((e,s)=>Math.max(e,s.startMs),0),Ue=y.sessions.reduce((e,s)=>Math.min(e,s.startMs),1/0);function F(){let e=A.map(l=>l.id).filter(l=>d.phases.includes(l)),s=d.range==="all"?-1/0:Y(G,"day")-(Number(d.range)-1)*ye,n=[];for(let l of y.sessions){if(l.startMs<s)continue;let u,f=0;for(let b of e){let m=l.ms[D.get(b)??0]??0;f+=m,m>0&&(!u||m>(l.ms[D.get(u)??0]??0))&&(u=b)}n.push({s:l,picked:f,total:l.ms.reduce((b,m)=>b+m,0),...u?{top:u}:{}})}let a=d.project<0?n:n.filter(l=>l.s.project===d.project),i=new Map;for(let l of W){let u=D.get(l)??0;i.set(l,a.reduce((f,b)=>f+(b.s.ms[u]??0),0))}let r=e.reduce((l,u)=>l+(i.get(u)??0),0),c=W.reduce((l,u)=>l+(i.get(u)??0),0),o=a.reduce((l,u)=>Math.min(l,u.s.startMs),1/0),p=a.reduce((l,u)=>Math.max(l,u.s.startMs),-1/0);return{inRange:n,rows:a,picked:e,totals:i,pickedTotal:r,grand:c,from:o,to:p}}var $=t("div",{class:"tip",role:"tooltip",hidden:!0});document.body.append($);var Ge=window.matchMedia("(hover: hover)").matches;function xe(e,...s){if(!Ge)return;$.replaceChildren(...s),$.hidden=!1;let n=$.offsetWidth,a=$.offsetHeight,i=Math.min(e.clientX+14,window.innerWidth-n-8),r=e.clientY+18+a>window.innerHeight?e.clientY-a-12:e.clientY+18;$.style.left=`${Math.max(8,i)}px`,$.style.top=`${Math.max(8,r)}px`}var ve=()=>{$.hidden=!0},Se=e=>t("div",{class:"tip-h",text:e});function X(e,s,n,a=!1){return t("div",{class:`tip-r${a?" total":""}`},e?Z(e):t("span"),t("span",{text:s}),t("b",{text:n}))}var Xe=document.getElementById("app"),j=t("div",{class:"wrap"});Xe.append(j);var z=t("button",{class:"btn theme",type:"button"});function ze(){try{let e=localStorage.getItem("awf-theme");return e==="light"||e==="dark"?e:"auto"}catch{return"auto"}}var T=ze();function Me(e){e==="auto"?delete document.documentElement.dataset.theme:document.documentElement.dataset.theme=e,z.textContent=`Theme: ${e[0]?.toUpperCase()}${e.slice(1)}`,z.setAttribute("aria-label",`Color theme: ${e}. Change theme`)}Me(T);z.addEventListener("click",()=>{T=T==="auto"?"light":T==="light"?"dark":"auto",Me(T);try{T==="auto"?localStorage.removeItem("awf-theme"):localStorage.setItem("awf-theme",T)}catch{}});var J=new Date(y.generatedAt);j.append(t("header",{class:"top",id:"summary"},t("div",{},t("p",{class:"brand",text:"awf \\xB7 agent waterfall"}),t("h1",{text:"Agent time by phase"}),t("p",{class:"meta",text:y.sessions.length?`${P(y.sessions.length,"session")} \\xB7 ${S(new Date(Ue))} \\u2013 ${S(new Date(G))} \\xB7 made ${S(J)}, ${ae(J)}`:`No sessions yet \\xB7 made ${S(J)}, ${ae(J)}`})),z));var _=t("p",{class:"take","aria-live":"polite"});j.append(_);var le=(e,s,n,a)=>{let i=t("select",{id:e,class:"select","aria-label":s});for(let[r,c]of n)i.append(new Option(c,r));return i.addEventListener("change",()=>a(i.value)),{field:t("label",{class:"field",for:e},t("span",{text:s}),i),el:i}},$e=le("f-range","Period",[["all","All time"],["7","Last 7 days"],["14","Last 14 days"],["30","Last 30 days"],["90","Last 90 days"]],e=>M({range:e})),Qe=y.projects.map((e,s)=>({i:s,name:e.name})).sort((e,s)=>e.name.localeCompare(s.name)),je=le("f-project","Project",[["-1","All projects"],...Qe.map(e=>[String(e.i),e.name])],e=>M({project:Number(e)})),Ee=le("f-bucket","Chart by",[["week","Week"],["day","Day"],["month","Month"]],e=>M({bucket:e})),Le=["hours","share"].map(e=>{let s=t("button",{class:"btn",type:"button",text:e==="hours"?"Hours":"Share"});return s.addEventListener("click",()=>M({mode:e})),{m:e,b:s}}),Te=t("button",{class:"btn",type:"button",text:"Reset filters"});Te.addEventListener("click",()=>M({...H,sort:d.sort,query:d.query}));var De=t("span",{class:"period"}),Ze=[["All",W],["Working time (no waiting)",be],["Only waiting on you",["waiting"]],["None",[]]],Ce=Ze.map(([e,s])=>{let n=t("button",{class:"btn",type:"button",text:e});return n.addEventListener("click",()=>M({phases:s})),{list:s,b:n}}),Pe=A.map(e=>{let s=t("span",{class:"num"}),n=t("button",{class:"chip",type:"button"},Z(e.id),t("span",{text:e.label}),s);return n.addEventListener("click",()=>{let a=d.phases.includes(e.id);M({phases:W.filter(i=>i===e.id?!a:d.phases.includes(i))})}),{id:e.id,b:n,num:s}});j.append(t("section",{class:"card filters",id:"filters","aria-label":"Filters"},t("div",{class:"row"},$e.field,je.field,Ee.field,t("div",{class:"field"},t("span",{text:"Show as"}),t("div",{class:"seg",role:"group","aria-label":"Show as"},...Le.map(e=>e.b))),Te,De),t("div",{class:"phases",role:"group","aria-label":"Phases"},t("div",{class:"presets"},t("span",{class:"label",text:"Phases"}),...Ce.map(e=>e.b)),t("ul",{class:"chips"},...Pe.map(e=>t("li",{},e.b))))));var K=(e,s,n,a,...i)=>t("section",{class:"card",id:e,"aria-labelledby":`${e}-h`},t("div",{class:"card-h"},t("h2",{id:`${e}-h`,text:s}),t("p",{class:"note",text:n})),...i,a),ne=()=>t("p",{class:"note empty",text:"Pick at least one phase above."}),oe=t("div",{class:"bars"}),R=t("div",{class:"bars"}),de=t("button",{class:"link",type:"button",text:"Show every project"});de.addEventListener("click",()=>M({project:-1}));var he=10,Q=!1,O=t("button",{class:"link",type:"button"});O.addEventListener("click",()=>{Q=!Q,Re(F())});var B=t("div",{class:"tchart"});j.append(t("div",{class:"grid2"},K("phases","Where the time went","Time in each phase you picked, and its share of them.",oe,ne()),K("projects","By project","Picked phases in each repository. Click one to filter the page to it.",t("div",{class:"stackv"},R,O),ne(),de)),K("over-time","Over time","Picked phases, counted on the day each session started. Hover a bar for its split.",B,ne()));var re=t("input",{type:"search",class:"search",id:"t-search",placeholder:"Search sessions","aria-label":"Search sessions by ID, project, folder or version"});re.addEventListener("input",()=>{d={...d,query:re.value},pe(F())});var Ae=t("span",{class:"note"}),Ie=[{key:"id",label:"Session"},{key:"start",label:"Started"},{key:"project",label:"Project"},{key:"picked",label:"Picked phases",num:!0},{key:"top",label:"Biggest picked phase"},{key:"turns",label:"In turns",num:!0,wide:!0},{key:"tools",label:"Tool calls",num:!0,wide:!0},{key:"failures",label:"Failed checks",num:!0,wide:!0}],Ne=Ie.map(e=>{let s=t("button",{class:"sort",type:"button",text:e.label});return s.addEventListener("click",()=>{let n=e.key==="id"||e.key==="project"||e.key==="top";d={...d,sort:d.sort.key===e.key?{key:e.key,dir:d.sort.dir==="asc"?"desc":"asc"}:{key:e.key,dir:n?"asc":"desc"}},pe(F())}),{c:e,th:t("th",{scope:"col",class:[e.num?"n":"",e.wide?"wide":""].filter(Boolean).join(" ")},s)}}),ie=t("tbody");j.append(K("sessions","Sessions","Every session in this view. Sort by any column. Copy a session\\u2019s ID to open its waterfall with awf report.",t("div",{class:"tablebox"},t("table",{},t("caption",{class:"sr",text:"Sessions"}),t("thead",{},t("tr",{},...Ne.map(e=>e.th))),ie)),t("div",{class:"tools"},re,Ae)));j.append(t("details",{class:"card method",id:"method"},t("summary",{text:"How these numbers are counted"}),t("dl",{},t("dt",{text:"Sessions"}),t("dd",{text:"Every session awf has: recorded by its hooks, or read from the agents\\u2019 logs by awf import. Each one counts on the day it started, even when it ran for several days."}),t("dt",{text:"Phases"}),t("dd",{text:"The same phases as awf summary, defined in docs/phases.md. Shares are of the phases you picked, so leaving out Waiting on you shows how the working time splits."}),t("dt",{text:"Projects"}),t("dd",{text:"The repository a session ran in: the nearest folder above it with a .git. Outside a repository it\\u2019s the session\\u2019s own folder, and every temporary folder counts as one project."}),t("dt",{text:"What\\u2019s left out"}),t("dd",{text:"Sessions on other machines and in the cloud, and logs the agents deleted before awf imported them. Run awf import now and then to keep your history."}))),t("footer",{class:"foot",text:`Made by awf ${y.version}. This file holds session IDs, folder names and timings; no prompts, commands or output.`}));function et(e){if(!e.picked.length){_.replaceChildren("Pick at least one phase to see where the time went.");return}if(!e.rows.length){_.replaceChildren("No sessions in this view. Widen the period or pick another project.");return}let s=e.picked.slice().sort((a,i)=>(e.totals.get(i)??0)-(e.totals.get(a)??0))[0],n=a=>t("b",{text:a});_.replaceChildren("The phases you picked add up to ",n(v(e.pickedTotal))," over ",n(P(e.rows.length,"session")),", ",n(C(e.grand?e.pickedTotal/e.grand:0))," of all the time in this view.",...s&&e.pickedTotal>0?[" ",n(I.get(s)??s)," takes the most, with ",n(C((e.totals.get(s)??0)/e.pickedTotal))," of it."]:[])}function tt(e){$e.el.value=d.range,je.el.value=String(d.project),Ee.el.value=d.bucket;for(let{m:s,b:n}of Le)n.setAttribute("aria-pressed",String(d.mode===s));for(let{list:s,b:n}of Ce){let a=s.length===d.phases.length&&s.every(i=>d.phases.includes(i));n.setAttribute("aria-pressed",String(a))}for(let s of Pe){let n=d.phases.includes(s.id);s.b.setAttribute("aria-pressed",String(n)),s.b.classList.toggle("off",!n),s.num.textContent=v(e.totals.get(s.id)??0)}De.textContent=e.rows.length?`${S(new Date(e.from))} \\u2013 ${S(new Date(e.to))} \\xB7 ${P(e.rows.length,"session")}`:"No sessions",de.hidden=d.project<0;for(let s of j.querySelectorAll(".empty"))s.hidden=e.picked.length>0}function He(e,s,n,a){let i=s.reduce((o,p)=>o+p.ms,0),r=t("span",{class:"track"}),c=t("span",{class:"fill"});c.style.width=`${Math.max(0,Math.min(100,n))}%`;for(let o of s){if(o.ms<=0)continue;let p=t("span",{"data-phase":o.id});p.style.flexGrow=String(o.ms/(i||1)),p.style.background=`var(--c-${o.id})`,c.append(p)}return r.append(c),[t("span",{class:"name"},...e),r,t("span",{class:"val"},...a)]}function st(e){if(oe.replaceChildren(),!e.picked.length)return;let s=e.picked.map(a=>({id:a,ms:e.totals.get(a)??0})).sort((a,i)=>i.ms-a.ms),n=Math.max(1,...s.map(a=>a.ms));for(let a of s){let i=t("div",{class:"brow"});i.append(...He([Z(a.id),t("span",{class:"label",text:I.get(a.id)??a.id})],[{id:a.id,ms:a.ms}],a.ms/n*100,[t("b",{text:v(a.ms)})," ",t("span",{class:"muted",text:C(e.pickedTotal?a.ms/e.pickedTotal:0)})])),oe.append(i)}}function Re(e){if(R.replaceChildren(),O.hidden=!0,!e.picked.length)return;let s=new Map;for(let r of e.inRange){let c=s.get(r.s.project)??{ms:A.map(()=>0),n:0};r.s.ms.forEach((o,p)=>c.ms[p]=(c.ms[p]??0)+o),c.n+=1,s.set(r.s.project,c)}let n=[...s].map(([r,c])=>{let o=e.picked.map(p=>({id:p,ms:c.ms[D.get(p)??0]??0}));return{index:r,segments:o,n:c.n,total:o.reduce((p,l)=>p+l.ms,0)}}).filter(r=>r.total>0).sort((r,c)=>c.total-r.total);if(!n.length){R.append(t("p",{class:"note",text:"No time in these phases in this period."}));return}let a=Math.max(1,...n.map(r=>r.total));R.classList.toggle("picking",d.project>=0);let i=Q?n:n.filter((r,c)=>c<he||r.index===d.project);n.length>he&&(O.hidden=!1,O.textContent=Q?"Show the top 10":`Show all ${n.length} projects`);for(let r of i){let c=y.projects[r.index],o=c?.name??"unknown folder",p=t("button",{class:"brow prow",type:"button","aria-pressed":String(d.project===r.index),title:c?.path||void 0});p.append(...He([t("span",{class:"label",text:o})],r.segments,d.mode==="share"?100:r.total/a*100,[t("b",{text:v(r.total)})," ",t("span",{class:"muted",text:P(r.n,"session")})])),p.addEventListener("click",()=>M({project:d.project===r.index?-1:r.index})),p.addEventListener("pointermove",l=>{let u=l.target.closest("[data-phase]"),f=[Se(c?.path||o)],b=u?r.segments.filter(m=>m.id===u.dataset.phase):r.segments.filter(m=>m.ms>0);for(let m of b)f.push(X(m.id,I.get(m.id)??m.id,`${v(m.ms)} \\xB7 ${C(m.ms/r.total)}`));f.push(X(null,P(r.n,"session"),v(r.total),!0)),xe(l,...f)}),p.addEventListener("pointerleave",ve),R.append(p)}}function Be(e){if(B.replaceChildren(),!e.picked.length||!e.rows.length)return;let s=d.bucket,n=d.range==="all"?e.from:Y(G,"day")-(Number(d.range)-1)*ye,a=[];for(let h=Y(n,s);h<=G;h=Ye(h,s))a.push(h);let i=new Map(a.map((h,g)=>[h,g])),r=a.map(()=>({ms:e.picked.map(()=>0),n:0}));for(let h of e.rows){let g=r[i.get(Y(h.s.startMs,s))??-1];g&&(e.picked.forEach((w,x)=>g.ms[x]=(g.ms[x]??0)+(h.s.ms[D.get(w)??0]??0)),g.n+=1)}let c=r.map(h=>h.ms.reduce((g,w)=>g+w,0)),o=d.mode==="share",p=o?[0,.25,.5,.75,1]:_e(Math.max(...c)/V),l=p[p.length-1]??1,u=h=>o?C(h)||"0%":v(h*V),f=t("div",{class:"yaxis","aria-hidden":"true"}),b=t("div",{class:"plot"});for(let h of p){let g=`${h/l*100}%`,w=t("span",{text:h===0?o?"0%":"0":u(h)});w.style.bottom=g,f.append(w);let x=t("i",{class:h===0?"base":""});x.style.bottom=g,b.append(x)}let m=t("div",{class:"cols"}),ee=t("div",{class:"xaxis","aria-hidden":"true"}),te=h=>s==="month"?we[new Date(h).getMonth()]??"":ce(new Date(h));a.forEach((h,g)=>{let w=c[g]??0,x=t("div",{class:"col"}),se=t("div",{class:"bar"});se.style.height=`${o?w>0?100:0:w/V/l*100}%`,e.picked.forEach((N,E)=>{let q=r[g]?.ms[E]??0;if(q<=0)return;let L=t("span");L.style.flexGrow=String(q/(w||1)),L.style.background=`var(--c-${N})`,se.append(L)}),x.append(se),x.addEventListener("pointermove",N=>{m.classList.add("hovering");for(let k of m.children)k.classList.toggle("on",k===x);let E=new Date(h),q=s==="day"?`${Ve[E.getDay()]} ${S(E)}`:s==="week"?`Week of ${S(E)}`:`${Je[E.getMonth()]} ${E.getFullYear()}`,L=[Se(q)];e.picked.map((k,qe)=>({id:k,ms:r[g]?.ms[qe]??0})).filter(k=>k.ms>0).reverse().forEach(k=>L.push(X(k.id,I.get(k.id)??k.id,o?C(k.ms/(w||1)):v(k.ms)))),L.push(X(null,P(r[g]?.n??0,"session"),v(w),!0)),xe(N,...L)}),x.addEventListener("pointerleave",()=>{m.classList.remove("hovering");for(let N of m.children)N.classList.remove("on");ve()}),m.append(x),ee.append(t("span",{text:te(h)}))}),b.append(m),B.append(f,b,t("span"),ee),B.setAttribute("role","img"),B.setAttribute("aria-label",`Picked phases by ${s}, ${te(a[0]??0)} to ${te(a[a.length-1]??0)}. The table below lists every session.`);let We=m.clientWidth||600,Fe=Math.max(1,Math.ceil(a.length*52/We));[...ee.children].forEach((h,g)=>h.classList.toggle("hide",g%Fe!==0))}function me(e,s){switch(s){case"id":return e.s.id;case"start":return e.s.startMs;case"project":return y.projects[e.s.project]?.name??"";case"picked":return e.picked;case"top":return e.top?I.get(e.top)??"":"";case"turns":return e.s.turnsMs;case"tools":return e.s.toolCalls;case"failures":return e.s.failures}}function pe(e){let s=d.query.trim().toLowerCase(),n=e.rows.filter(o=>!s||[o.s.id,y.projects[o.s.project]?.name,o.s.folder,o.s.agentVersion].join(" ").toLowerCase().includes(s)),{key:a,dir:i}=d.sort;n.sort((o,p)=>{let l=me(o,a),u=me(p,a),f=typeof l=="number"&&typeof u=="number"?l-u:String(l).localeCompare(String(u));return i==="asc"?f:-f});for(let o of Ne)o.th.setAttribute("aria-sort",o.c.key===a?i==="asc"?"ascending":"descending":"none");let r=Math.max(1,...n.map(o=>o.picked)),c=document.createDocumentFragment();for(let o of n){let p=new Date(o.s.startMs),l=t("span",{class:"cellbar"}),u=t("span");u.style.width=`${o.picked/r*100}%`,o.top&&(u.style.background=`var(--c-${o.top})`),l.append(u);let f=t("button",{class:"id",type:"button",title:`Copy ${o.s.id}`,text:o.s.id.slice(0,8)});f.addEventListener("click",()=>{let m=()=>{f.textContent="Copied",window.setTimeout(()=>f.textContent=o.s.id.slice(0,8),1200)};navigator.clipboard?.writeText(o.s.id).then(m,()=>window.getSelection()?.selectAllChildren(f))});let b=y.projects[o.s.project];c.append(t("tr",{},t("td",{},f),t("td",{text:`${ce(p)}, ${ae(p)}`,title:S(p)}),t("td",{text:b?.name??"",title:o.s.folder||void 0}),t("td",{class:"n"},t("span",{class:"cell"},l,t("span",{text:v(o.picked)}))),t("td",{},o.top?t("span",{class:"pill"},Z(o.top),`${I.get(o.top)??o.top} ${C(o.picked?(o.s.ms[D.get(o.top)??0]??0)/o.picked:0)}`):""),t("td",{class:"n wide",text:v(o.s.turnsMs)}),t("td",{class:"n wide",text:U(o.s.toolCalls)}),t("td",{class:"n wide",text:U(o.s.failures)})))}ie.replaceChildren(c),n.length||ie.append(t("tr",{},t("td",{colspan:Ie.length,class:"none",text:e.rows.length?"No session matches the search.":"No sessions in this view."}))),Ae.textContent=`${P(n.length,"session")} shown`}function Oe(){let e=F();et(e),tt(e),st(e),Re(e),Be(e),pe(e)}Oe();var fe=0,ge=window.innerWidth;window.addEventListener("resize",()=>{window.innerWidth!==ge&&(ge=window.innerWidth,cancelAnimationFrame(fe),fe=requestAnimationFrame(()=>Be(F())))});document.body.dataset.ready="1";})();';
+var DASH_CSS = ':root{color-scheme:light;--page: #f9f9f7;--surface: #fcfcfb;--raised: #ffffff;--ink: #0b0b0b;--ink-2: #52514e;--muted: #6f6d68;--grid: #e8e7e1;--axis: #c3c2b7;--ring: rgba(11, 11, 11, .12);--hover: rgba(11, 11, 11, .04);--selected: rgba(42, 120, 214, .08);--focus: #2a78d6;--link: #1f63b5;--critical: #d03b3b;--critical-ink: #b42323;--container: #a3a29b;--c-writing-code: #2a78d6;--c-writing-tests: #eb6834;--c-lint: #1baf7a;--c-tests: #eda100;--c-build: #e87ba4;--c-rework: #6250d6;--c-exploring: #008300;--c-running: #0b5f73;--c-planning: #7b8494;--c-waiting: repeating-linear-gradient(135deg, #a9a8a0 0 2px, #e2e1da 2px 5px);--c-unclassified: #a5a49d;--mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;--sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;--label: 34%;--pad: 64px;--indent: 14px;--row: 28px}@media(prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;--page: #0d0d0d;--surface: #1a1a19;--raised: #222220;--ink: #f0efec;--ink-2: #c3c2b7;--muted: #9c9a92;--grid: #2a2a28;--axis: #383835;--ring: rgba(255, 255, 255, .12);--hover: rgba(255, 255, 255, .05);--selected: rgba(57, 135, 229, .14);--focus: #3987e5;--link: #7fb1ef;--critical: #e05252;--critical-ink: #f08080;--container: #6e6d68;--c-writing-code: #3987e5;--c-writing-tests: #d95926;--c-lint: #199e70;--c-tests: #c98500;--c-build: #d55181;--c-rework: #9085e9;--c-exploring: #008300;--c-running: #86cfe0;--c-planning: #8a93a3;--c-waiting: repeating-linear-gradient(135deg, #7a7973 0 2px, #33332f 2px 5px);--c-unclassified: #6e6d68}}:root[data-theme=dark]{color-scheme:dark;--page: #0d0d0d;--surface: #1a1a19;--raised: #222220;--ink: #f0efec;--ink-2: #c3c2b7;--muted: #9c9a92;--grid: #2a2a28;--axis: #383835;--ring: rgba(255, 255, 255, .12);--hover: rgba(255, 255, 255, .05);--selected: rgba(57, 135, 229, .14);--focus: #3987e5;--link: #7fb1ef;--critical: #e05252;--critical-ink: #f08080;--container: #6e6d68;--c-writing-code: #3987e5;--c-writing-tests: #d95926;--c-lint: #199e70;--c-tests: #c98500;--c-build: #d55181;--c-rework: #9085e9;--c-exploring: #008300;--c-running: #86cfe0;--c-planning: #8a93a3;--c-waiting: repeating-linear-gradient(135deg, #7a7973 0 2px, #33332f 2px 5px);--c-unclassified: #6e6d68}*{box-sizing:border-box}html,body{margin:0;background:var(--page);color:var(--ink);font:14px/1.45 var(--sans);-webkit-text-size-adjust:100%}button,input,select{font:inherit;color:inherit}:focus-visible{outline:2px solid var(--focus);outline-offset:2px}[hidden]{display:none!important}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}.wrap{max-width:1280px;margin:0 auto;padding:20px max(16px,env(safe-area-inset-right,0px)) 48px max(16px,env(safe-area-inset-left,0px));display:grid;gap:16px}@media(min-width:720px){.wrap{padding-left:24px;padding-right:24px}}.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.brand{font-size:12px;color:var(--muted);letter-spacing:.02em;margin:0 0 6px}h1{font-size:24px;line-height:1.25;font-weight:600;letter-spacing:-.01em;margin:0 0 6px;text-wrap:balance}.meta{color:var(--ink-2);margin:0;font-variant-numeric:tabular-nums}.take{margin:-4px 0 0;font-size:16px;line-height:1.5;color:var(--ink-2);max-width:64rem;text-wrap:pretty}.take b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}.card{background:var(--surface);border:1px solid var(--ring);border-radius:12px;padding:16px;display:grid;gap:12px;align-content:start;min-width:0}.card-h{display:grid;gap:2px}h2{margin:0;font-size:15px;font-weight:600}.note{margin:0;color:var(--muted);font-size:13px}.grid2{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,26rem),1fr));align-items:start}.stackv{display:grid;gap:8px}.btn{border:1px solid var(--ring);background:var(--raised);border-radius:8px;padding:5px 10px;cursor:pointer;color:var(--ink-2);font-size:13px;white-space:nowrap;min-height:32px}.btn:hover{background:var(--hover);color:var(--ink)}.btn[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:var(--page)}.theme{flex:none}.link{border:0;background:none;color:var(--link);cursor:pointer;padding:0;justify-self:start;font-size:13px}.link:hover{text-decoration:underline}.filters .row{display:flex;flex-wrap:wrap;gap:12px;align-items:end}.field{display:grid;gap:4px;font-size:12px;color:var(--muted);min-width:0}.select{appearance:none;border:1px solid var(--ring);background-color:var(--raised);background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 15px) 50%,calc(100% - 10px) 50%;background-size:5px 5px;background-repeat:no-repeat;border-radius:8px;padding:5px 30px 5px 10px;min-height:32px;font-size:13px;color:var(--ink);max-width:16rem;cursor:pointer}.seg{display:inline-flex}.seg .btn{border-radius:0}.seg .btn:first-child{border-radius:8px 0 0 8px}.seg .btn:last-child{border-radius:0 8px 8px 0;margin-left:-1px}.period{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums;align-self:center;margin-left:auto}.phases{display:grid;gap:10px;border-top:1px solid var(--grid);padding-top:12px}.presets{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.presets .label{font-size:12px;color:var(--muted);margin-right:4px}.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none}.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--ring);background:var(--raised);border-radius:999px;padding:4px 10px 4px 8px;cursor:pointer;min-height:30px;font-size:13px}.chip:hover{background:var(--hover)}.chip[aria-pressed=true]{border-color:var(--ink-2);box-shadow:inset 0 0 0 1px var(--ink-2)}.chip.off{color:var(--muted)}.chip.off .sw{opacity:.35}.chip .num{color:var(--ink-2);font-variant-numeric:tabular-nums}.chip.off .num{color:var(--muted)}.sw{display:inline-block;width:10px;height:10px;border-radius:3px;flex:none}.bars{display:grid;gap:4px}.brow{display:grid;grid-template-columns:minmax(7rem,12rem) minmax(0,1fr) minmax(7.5rem,auto);gap:10px;align-items:center;min-height:28px;font-size:13px}.brow .name{display:inline-flex;align-items:center;gap:6px;min-width:0}.brow .label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.track{display:block;height:12px;min-width:0}.fill{display:flex;height:100%;min-width:2px;border-radius:3px;overflow:hidden}.fill>span{display:block;height:100%;flex-basis:0;min-width:0}.fill>span+span{box-shadow:inset 1px 0 0 var(--surface)}.val{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}.val b{font-weight:600}.muted{color:var(--muted)}.prow{border:0;background:none;padding:2px 6px;margin:0 -6px;border-radius:6px;text-align:left;cursor:pointer;width:calc(100% + 12px)}.prow:hover{background:var(--hover)}.prow[aria-pressed=true]{background:var(--selected)}.prow[aria-pressed=true] .label{font-weight:600}.picking .prow[aria-pressed=false]{opacity:.5}.tchart{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:240px auto;column-gap:8px;row-gap:6px}.yaxis{position:relative;min-width:2.5rem}.yaxis span{position:absolute;right:0;transform:translateY(50%);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}.plot{position:relative}.plot>i{position:absolute;left:0;right:0;height:0;border-top:1px solid var(--grid)}.plot>i.base{border-top-color:var(--axis)}.cols{position:absolute;inset:0;display:flex;align-items:flex-end}.col{flex:1 1 0;height:100%;display:flex;align-items:flex-end;justify-content:center;cursor:default;min-width:0}.bar{width:min(32px,72%);min-width:2px;display:flex;flex-direction:column-reverse;gap:1px;border-radius:3px 3px 0 0;overflow:hidden;transition:opacity .15s}.bar>span{display:block;width:100%;flex-basis:0;min-height:1px}.cols.hovering .col:not(.on) .bar{opacity:.35}.xaxis{grid-column:2;display:flex}.xaxis span{flex:1 1 0;min-width:0;text-align:center;font-size:12px;color:var(--muted);white-space:nowrap;overflow:visible;font-variant-numeric:tabular-nums}.xaxis span.hide{visibility:hidden}.tip{position:fixed;z-index:10;background:var(--raised);border:1px solid var(--ring);border-radius:8px;box-shadow:0 6px 24px #00000024;padding:8px 10px;font-size:12.5px;pointer-events:none;min-width:12rem;max-width:20rem;display:grid;gap:3px}.tip-h{color:var(--muted);overflow-wrap:anywhere}.tip-r{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;font-variant-numeric:tabular-nums}.tip-r b{font-weight:600}.tip-r.total{border-top:1px solid var(--grid);padding-top:4px;margin-top:2px}.tools{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}.search{border:1px solid var(--ring);background:var(--raised);border-radius:8px;padding:5px 10px;min-height:32px;width:min(100%,20rem);font-size:13px}.tablebox{max-height:34rem;overflow:auto;border-top:1px solid var(--grid)}table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}th{position:sticky;top:0;z-index:1;background:var(--surface);text-align:left;font-weight:500;border-bottom:1px solid var(--grid);padding:0}th.n{text-align:right}.sort{border:0;background:none;color:var(--muted);padding:8px;width:100%;text-align:inherit;cursor:pointer;white-space:nowrap}.sort:hover,th[aria-sort=ascending] .sort,th[aria-sort=descending] .sort{color:var(--ink)}th[aria-sort=ascending] .sort:after{content:" \\2191"}th[aria-sort=descending] .sort:after{content:" \\2193"}td{padding:6px 8px;border-bottom:1px solid var(--grid);white-space:nowrap}td.n{text-align:right}td.none{color:var(--muted);text-align:center;padding:24px 8px}tbody tr:hover{background:var(--hover)}.id{font-family:var(--mono);font-size:12.5px;border:0;background:none;padding:0;color:var(--link);cursor:copy}.id:hover{text-decoration:underline}.cell{display:inline-flex;align-items:center;justify-content:flex-end;gap:8px;width:100%}.cellbar{display:inline-block;width:4.5rem;height:8px;flex:none}.cellbar>span{display:block;height:100%;min-width:1px;border-radius:2px;background:var(--container)}.pill{display:inline-flex;align-items:center;gap:6px}.method summary{cursor:pointer;font-weight:600}.method dl{margin:0;display:grid;gap:8px;max-width:64rem;font-size:13px}.method dt{font-weight:600}.method dd{margin:0;color:var(--ink-2)}.foot{color:var(--muted);font-size:12px}@media(max-width:640px){.wide{display:none}.brow{grid-template-columns:minmax(5rem,8rem) minmax(0,1fr) auto}.period{margin-left:0;width:100%}.val .muted{display:none}}@media(prefers-reduced-motion:reduce){.bar{transition:none}}';
+
+// src/report/html.ts
+function escapeHtml(text) {
+  return text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+}
+function scriptJson(value) {
+  return JSON.stringify(value).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
+}
+function renderReportHtml(data) {
+  const title = data.share ? `awf \xB7 session ${data.session.id}` : `awf \xB7 ${data.session.title ?? `session ${data.session.id.slice(0, 8)}`}`;
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="generator" content="awf">
+<title>${escapeHtml(title.length > 90 ? title.slice(0, 89) + "\u2026" : title)}</title>
+<style>${CLIENT_CSS}</style>
+</head>
+<body>
+<noscript>This report draws itself with JavaScript; turn it on to see the waterfall.</noscript>
+<div id="app"></div>
+<script type="application/json" id="awf-data">${scriptJson(data)}</script>
+<script>${CLIENT_JS}</script>
+</body>
+</html>
+`;
+}
+
+// src/dash/html.ts
+function renderDashHtml(data) {
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="generator" content="awf">
+<title>awf \xB7 agent time by phase</title>
+<style>${DASH_CSS}</style>
+</head>
+<body>
+<noscript>This dashboard draws itself with JavaScript; turn it on to see your sessions.</noscript>
+<div id="app"></div>
+<script type="application/json" id="awf-dash">${scriptJson(data)}</script>
+<script>${DASH_JS}</script>
+</body>
+</html>
+`;
+}
+
+// src/cli/commands/report.ts
+import { spawn } from "node:child_process";
+import { mkdirSync as mkdirSync2, writeFileSync as writeFileSync2 } from "node:fs";
 import os5 from "node:os";
+import path17 from "node:path";
+import { pathToFileURL } from "node:url";
+
+// src/build/drilldown.ts
+import { readdirSync as readdirSync8, readFileSync as readFileSync9 } from "node:fs";
+import path16 from "node:path";
+import { gunzipSync } from "node:zlib";
+
+// src/build/parsers.ts
+var bySlowest = (tasks) => tasks.sort((a, b) => b.ms - a.ms);
+function parseCargoTimings(html) {
+  const start = /Build start:<\/td>\s*<td>([^<]+)</.exec(html)?.[1];
+  const startMs = start ? Date.parse(start) : NaN;
+  const data = /const UNIT_DATA = (\[[\s\S]*?\]);\s*\n\s*const /.exec(html)?.[1];
+  if (!data) return { tasks: [] };
+  let units;
+  try {
+    units = JSON.parse(data);
+  } catch {
+    return { tasks: [] };
+  }
+  const tasks = units.filter((u) => typeof u.duration === "number" && u.name).map((u) => {
+    const target = (u.target ?? "").trim();
+    const task = {
+      name: `${u.name} v${u.version ?? ""}${target ? ` (${target.replace(/"/g, "")})` : ""}`,
+      ms: Math.round((u.duration ?? 0) * 1e3)
+    };
+    if (Number.isFinite(startMs) && typeof u.start === "number")
+      task.startMs = startMs + Math.round(u.start * 1e3);
+    return task;
+  });
+  return { ...Number.isFinite(startMs) ? { startMs } : {}, tasks: bySlowest(tasks) };
+}
+function parseXcodeTimingSummary(output) {
+  const at = output.lastIndexOf("Build Timing Summary");
+  if (at < 0) return [];
+  const tasks = [];
+  for (const match of output.slice(at).matchAll(/^(\S.*?) \((\d+) tasks?\) \| ([\d.]+) seconds$/gm)) {
+    tasks.push({
+      name: match[1],
+      count: Number(match[2]),
+      ms: Math.round(Number(match[3]) * 1e3)
+    });
+  }
+  return bySlowest(tasks);
+}
+function gradleDuration(text) {
+  const match = /^(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m)?(?:([\d.]+)s)$/.exec(text.trim());
+  if (!match) return void 0;
+  const [, d = "0", h = "0", m = "0", s = "0"] = match;
+  return Math.round(((Number(d) * 24 + Number(h)) * 60 + Number(m)) * 6e4 + Number(s) * 1e3);
+}
+function parseGradleProfile(html) {
+  const at = html.indexOf("<h2>Task Execution</h2>");
+  if (at < 0) return [];
+  const section = html.slice(at, html.indexOf("</table>", at) + 8);
+  const tasks = [];
+  for (const row of section.matchAll(/<tr>([\s\S]*?)<\/tr>/g)) {
+    const cells = [...(row[1] ?? "").matchAll(/<td[^>]*?(?:\/>|>([\s\S]*?)<\/td>)/g)].map(
+      (c) => (c[1] ?? "").replace(/<[^>]+>/g, "").trim()
+    );
+    const [name, duration, result2 = ""] = cells;
+    if (!name || !duration || result2 === "(total)") continue;
+    const ms = gradleDuration(duration);
+    if (ms === void 0) continue;
+    tasks.push({ name, ms, ...result2 ? { result: result2 } : {} });
+  }
+  return bySlowest(tasks);
+}
+function gradleProfileTime(file) {
+  const m = /profile-(\d{4})-(\d\d)-(\d\d)-(\d\d)-(\d\d)-(\d\d)\.html$/.exec(file);
+  if (!m) return void 0;
+  const [, y, mo, d, h, mi, s] = m.map(Number);
+  return new Date(y, mo - 1, d, h, mi, s).getTime();
+}
+function cargoTimingTime(file) {
+  const m = /cargo-timing-(\d{4})(\d\d)(\d\d)T(\d\d)(\d\d)(\d\d)(?:\.(\d+))?Z\.html$/.exec(file);
+  if (!m) return void 0;
+  const [, y, mo, d, h, mi, s] = m.map(Number);
+  return Date.UTC(y, mo - 1, d, h, mi, s) + Math.round(Number(`0.${m[7] ?? "0"}`) * 1e3);
+}
+function parseBazelProfile(json, startMs) {
+  let trace;
+  try {
+    trace = JSON.parse(json);
+  } catch {
+    return [];
+  }
+  const tasks = [];
+  for (const e of trace.traceEvents ?? []) {
+    if (e.ph !== "X" || typeof e.dur !== "number" || typeof e.ts !== "number" || !e.name) continue;
+    if (e.cat !== "action processing") continue;
+    tasks.push({
+      name: e.name,
+      ms: Math.round(e.dur / 1e3),
+      startMs: startMs + Math.round(e.ts / 1e3)
+    });
+  }
+  return bySlowest(tasks);
+}
+function parseMsbuildSummary(output) {
+  const at = output.lastIndexOf("Target Performance Summary:");
+  if (at < 0) return [];
+  const tasks = [];
+  for (const line of output.slice(at).split("\n").slice(1)) {
+    const match = /^\s*(\d+) ms\s+(.+?)\s+(\d+) calls?\s*$/.exec(line);
+    if (!match) {
+      if (line.trim() === "" || /Performance Summary:/.test(line)) {
+        if (tasks.length > 0) break;
+        continue;
+      }
+      continue;
+    }
+    tasks.push({ name: match[2], ms: Number(match[1]), count: Number(match[3]) });
+  }
+  return bySlowest(tasks);
+}
+
+// src/build/drilldown.ts
+var diskBuildFiles = {
+  read(file) {
+    try {
+      const bytes = readFileSync9(file);
+      return file.endsWith(".gz") ? gunzipSync(bytes).toString("utf8") : bytes.toString("utf8");
+    } catch {
+      return void 0;
+    }
+  },
+  list(dir) {
+    try {
+      return readdirSync8(dir);
+    } catch {
+      return [];
+    }
+  }
+};
+var WINDOW_MS = 1e4;
+var MAX_TASKS = 12;
+function attachBuildTimings(session, files2 = diskBuildFiles) {
+  let found = 0;
+  for (const step of session.steps) {
+    if (step.kind !== "tool" || !step.command) continue;
+    const timings = timingsFor(step, session.cwd, files2);
+    if (!timings || timings.tasks.length === 0) continue;
+    step.build = {
+      ...timings,
+      tasks: timings.tasks.slice(0, MAX_TASKS),
+      total: timings.tasks.length
+    };
+    found++;
+  }
+  return found;
+}
+function optionValue2(args, names) {
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (names.includes(arg)) return args[i + 1];
+    const eq = names.find((n) => arg.startsWith(`${n}=`));
+    if (eq) return arg.slice(eq.length + 1);
+  }
+  return void 0;
+}
+function nearest(files2, dir, timeOf, step) {
+  let best;
+  let distance = Infinity;
+  for (const name of files2.list(dir)) {
+    const t = timeOf(name);
+    if (t === void 0 || t < step.startMs - WINDOW_MS || t > step.endMs + WINDOW_MS) continue;
+    if (Math.abs(t - step.startMs) < distance) {
+      best = path16.join(dir, name);
+      distance = Math.abs(t - step.startMs);
+    }
+  }
+  return best;
+}
+function timingsFor(step, sessionCwd, files2) {
+  const output = step.detail?.output ?? "";
+  for (const simple of splitCommand(step.command ?? "")) {
+    const argv = unwrap(simple.argv).argv;
+    const program = programName(argv[0] ?? "");
+    const args = argv.slice(1);
+    const cwd = simple.cd.reduce((dir, target) => resolvePath(dir, target), sessionCwd ?? "/");
+    switch (program) {
+      case "xcodebuild": {
+        if (!args.includes("-showBuildTimingSummary")) break;
+        const tasks = parseXcodeTimingSummary(output);
+        if (tasks.length) return { tool: "xcodebuild", source: "output", tasks };
+        break;
+      }
+      case "msbuild":
+      case "MSBuild":
+      case "dotnet": {
+        const tasks = parseMsbuildSummary(output);
+        if (tasks.length) return { tool: "msbuild", source: "output", tasks };
+        break;
+      }
+      case "cargo":
+      case "cross": {
+        if (!args.some((a) => a === "--timings" || a.startsWith("--timings="))) break;
+        const manifest = optionValue2(args, ["--manifest-path"]);
+        const root = manifest ? path16.dirname(resolvePath(cwd, manifest)) : cwd;
+        const file = /Timing report saved to (\S+\.html)/.exec(output)?.[1] ?? nearest(files2, path16.join(root, "target", "cargo-timings"), cargoTimingTime, step);
+        const html = file ? files2.read(file) : void 0;
+        if (file && html)
+          return { tool: "cargo", source: file, tasks: parseCargoTimings(html).tasks };
+        break;
+      }
+      case "gradle": {
+        if (!args.includes("--profile")) break;
+        const project = optionValue2(args, ["-p", "--project-dir"]);
+        const root = project ? resolvePath(cwd, project) : cwd;
+        const file = /See the profiling report at: file:\/\/(\S+\.html)/.exec(output)?.[1] ?? nearest(files2, path16.join(root, "build", "reports", "profile"), gradleProfileTime, step);
+        const html = file ? files2.read(decodeURI(file)) : void 0;
+        if (file && html)
+          return { tool: "gradle", source: decodeURI(file), tasks: parseGradleProfile(html) };
+        break;
+      }
+      case "bazel":
+      case "bazelisk": {
+        const flag = optionValue2(args, ["--profile"]);
+        if (!flag) break;
+        const file = resolvePath(cwd, flag);
+        const text = files2.read(file);
+        if (text)
+          return { tool: "bazel", source: file, tasks: parseBazelProfile(text, step.startMs) };
+        break;
+      }
+    }
+  }
+  return void 0;
+}
+
+// src/report/data.ts
+var MAX_OUTPUT_STEP = 4e3;
+var MAX_OUTPUT_TOTAL = 25e5;
+function shareCheck(key) {
+  return key.replace(/:(npm|pnpm|yarn|bun|deno|make) .*/, ":$1");
+}
+function stepLabel(step, turnNumber, share) {
+  switch (step.kind) {
+    case "turn":
+      return `Turn ${turnNumber.get(step.id) ?? ""}`.trim();
+    case "subagent":
+      return step.agentType ? `Subagent \xB7 ${step.agentType}` : "Subagent";
+    case "model":
+      return "Model";
+    case "idle":
+      return "Idle";
+    case "compact":
+      return "Compacting context";
+    case "background":
+      return "Background";
+    default:
+      if (step.tool?.startsWith("mcp__")) {
+        const [, id = "", ...name] = step.tool.split("__");
+        const server = /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(id) ? `${id.slice(0, 8)}\u2026` : id;
+        return share ? server : [server, ...name].join(" \xB7 ");
+      }
+      return step.tool ?? "Tool";
+  }
+}
+function shortPath(file, cwd, home) {
+  if (cwd && (file === cwd || file.startsWith(cwd + "/"))) return file.slice(cwd.length + 1) || ".";
+  if (home && file.startsWith(home + "/")) return "~" + file.slice(home.length);
+  return file;
+}
+function head(command) {
+  const argv = splitCommand(command).map((c) => unwrap(c.argv).argv).find(
+    (a) => a.length > 0 && !["cd", "export", "echo", "set", "source"].includes(programName(a[0] ?? ""))
+  );
+  return argv ? programName(argv[0] ?? "") : "shell";
+}
+function buildReportData(analysis, options = {}) {
+  const { session, summary } = analysis;
+  const share = options.share ?? false;
+  const t0 = session.startMs;
+  const byId = new Map(session.steps.map((s) => [s.id, s]));
+  const children = /* @__PURE__ */ new Map();
+  for (const step of session.steps) {
+    const parent = step.parentId && byId.has(step.parentId) ? step.parentId : null;
+    children.set(parent, [...children.get(parent) ?? [], step]);
+  }
+  for (const list3 of children.values())
+    list3.sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs);
+  const turnNumber = /* @__PURE__ */ new Map();
+  for (const step of session.steps.filter((s) => s.kind === "turn").sort((a, b) => a.startMs - b.startMs)) {
+    turnNumber.set(step.id, turnNumber.size + 1);
+  }
+  const steps = [];
+  const displayIndex = /* @__PURE__ */ new Map();
+  let outputBudget = MAX_OUTPUT_TOTAL;
+  const visit = (step, parent, depth) => {
+    const i = steps.length;
+    const kids = children.get(step.id) ?? [];
+    const out = {
+      i,
+      p: parent,
+      depth,
+      kind: step.kind,
+      s: step.startMs - t0,
+      e: step.endMs - t0,
+      label: stepLabel(step, turnNumber, share),
+      failed: step.failed,
+      flags: step.flags,
+      tags: share ? step.tags.filter((t) => !/^(script|make|task|file|hook|via|unmatched):/.test(t)) : step.tags,
+      checks: step.checks.map((c) => ({
+        key: share ? shareCheck(c.key) : c.key,
+        failed: c.failed
+      })),
+      container: kids.length > 0
+    };
+    if (step.phase) out.phase = step.phase;
+    if (step.tool)
+      out.tool = step.tool.startsWith("mcp__") && share ? `mcp__${step.tool.split("__")[1] ?? ""}` : step.tool;
+    if (step.ok !== void 0) out.ok = step.ok;
+    if (step.reworkFor) out.reworkFor = share ? shareCheck(step.reworkFor) : step.reworkFor;
+    if (step.runMs !== void 0) out.runMs = step.runMs;
+    if (step.waitMs !== void 0) out.waitMs = step.waitMs;
+    if (step.exitCode !== void 0) out.exitCode = step.exitCode;
+    if (step.model) out.model = step.model;
+    if (step.tokens) out.tokens = step.tokens;
+    if (step.agentType) out.agentType = step.agentType;
+    if (step.kind === "model" && step.produces?.length) {
+      const produced = step.produces.map((id) => byId.get(id)).filter((s) => !!s);
+      out.text = "\u2192 " + produced.map((s) => stepLabel(s, turnNumber, share)).join(", ");
+    }
+    if (!share) {
+      if (step.command) out.text = step.command;
+      else if (step.files?.length && step.kind === "tool")
+        out.text = step.files.map((f) => shortPath(f, session.cwd, options.home)).join(" ");
+      if (step.files?.length)
+        out.files = step.files.map((f) => shortPath(f, session.cwd, options.home));
+      if (step.detail?.description) out.description = step.detail.description;
+      if (step.detail?.output && outputBudget > 0) {
+        const text = maskSecrets(step.detail.output).slice(0, MAX_OUTPUT_STEP);
+        out.output = text;
+        outputBudget -= text.length;
+      }
+    }
+    steps.push(out);
+    displayIndex.set(step.id, i);
+    if (step.build && !share) {
+      out.container = true;
+      out.description = `Slowest ${step.build.tasks.length} of ${step.build.total} tasks, from ${step.build.source === "output" ? `${step.build.tool}'s output` : shortPath(step.build.source, session.cwd, options.home)}`;
+      for (const task of step.build.tasks) {
+        const started = task.startMs !== void 0;
+        const s0 = started ? task.startMs - t0 : step.startMs - t0;
+        steps.push({
+          i: steps.length,
+          p: i,
+          depth: depth + 1,
+          kind: "build-task",
+          ...step.phase ? { phase: step.phase } : {},
+          s: s0,
+          e: s0 + task.ms,
+          label: task.name,
+          ...task.count && task.count > 1 ? { text: `${task.count} ${step.build.tool === "msbuild" ? "calls" : "tasks"}` } : task.result ? { text: task.result } : {},
+          tool: step.build.tool,
+          failed: false,
+          flags: [],
+          tags: [],
+          checks: [],
+          container: false,
+          started
+        });
+      }
+    }
+    for (const kid of kids) visit(kid, i, depth + 1);
+  };
+  for (const top of children.get(null) ?? []) visit(top, -1, 0);
+  for (const step of session.steps) {
+    const target = displayIndex.get(step.id);
+    if (step.kind !== "model" || !step.produces?.length || target === void 0) continue;
+    const made = step.produces.map((id) => displayIndex.get(id)).filter((i) => i !== void 0);
+    if (made.length) steps[target].produces = made;
+  }
+  const leaves = steps.filter(
+    (s) => (!s.container || steps[s.i + 1]?.kind === "build-task") && s.kind !== "build-task" && s.kind !== "idle" && s.kind !== "turn" && s.kind !== "background" && !s.flags.includes("background")
+  );
+  const slowest = [...leaves].sort((a, b) => b.e - b.s - (a.e - a.s)).slice(0, 3).map((s) => s.i);
+  const MODEL = "\0model";
+  const unclassifiedName = (step) => {
+    if (step.kind === "compact") return "compaction";
+    if (step.kind === "model") return MODEL;
+    if (step.command && !share) return head(step.command);
+    if (step.tool?.startsWith("mcp__")) return stepLabel(step, turnNumber, share);
+    return step.tool ?? step.kind;
+  };
+  const segments = phaseSegments(session);
+  const owners = session.steps.filter((s) => s.phase === "unclassified" && s.kind !== "turn" && s.endMs > s.startMs).sort((a, b) => a.startMs - b.startMs);
+  const unclassified = /* @__PURE__ */ new Map();
+  const add = (name, ms) => unclassified.set(name, (unclassified.get(name) ?? 0) + ms);
+  for (const segment of segments) {
+    if (segment.phase !== "unclassified") continue;
+    if (!segment.covered) {
+      add("time between steps", segment.end - segment.start);
+      continue;
+    }
+    const running = owners.filter((o) => o.startMs < segment.end && o.endMs > segment.start);
+    const cuts = [
+      .../* @__PURE__ */ new Set([
+        segment.start,
+        segment.end,
+        ...running.flatMap((o) => [o.startMs, o.endMs]).filter((t) => t > segment.start && t < segment.end)
+      ])
+    ].sort((a, b) => a - b);
+    for (let k = 0; k + 1 < cuts.length; k++) {
+      const a = cuts[k];
+      const b = cuts[k + 1];
+      let owner;
+      for (const step of running) {
+        if (step.startMs >= b || step.endMs <= a) continue;
+        const background = step.kind === "background" || step.flags.includes("background");
+        const ownerBackground = owner && (owner.kind === "background" || owner.flags.includes("background"));
+        if (!owner || ownerBackground && !background || ownerBackground === background && step.startMs >= owner.startMs)
+          owner = step;
+      }
+      add(owner ? unclassifiedName(owner) : "time between steps", b - a);
+    }
+  }
+  const data = {
+    v: 1,
+    generatedAt: options.now ?? Date.now(),
+    share,
+    session: {
+      id: share ? session.id.slice(0, 8) : session.id,
+      agent: session.agent,
+      sources: session.sources,
+      startMs: t0,
+      totalMs: summary.totalMs,
+      turnsMs: summary.turnsMs,
+      awayWorkMs: summary.awayWorkMs
+    },
+    phases: summary.phases.map((p) => ({
+      id: p.phase,
+      label: p.label,
+      ms: p.ms,
+      share: p.share,
+      detail: phaseDetail(p)
+    })),
+    counts: {
+      modelCalls: summary.modelCalls,
+      toolCalls: summary.toolCalls,
+      subagents: summary.subagents,
+      failures: summary.failures,
+      reworkLoops: summary.rework.filter((w) => w.edits > 0).length
+    },
+    rework: summary.rework.map((w) => ({
+      check: share ? shareCheck(w.check) : w.check,
+      failedAt: w.failedAtMs - t0,
+      ...w.passedAtMs !== void 0 ? { passedAt: w.passedAtMs - t0 } : {},
+      edits: w.edits
+    })),
+    steps,
+    slowest,
+    unclassified: [...unclassified].filter(([name]) => name !== MODEL).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name, ms]) => ({ name, ms })),
+    unclassifiedModelMs: unclassified.get(MODEL) ?? 0,
+    timeline: segments.map((g) => [g.start - t0, g.end - t0, g.phase])
+  };
+  if (session.agentVersion) data.session.agentVersion = session.agentVersion;
+  if (!share && session.title) data.session.title = session.title;
+  if (!share && session.cwd) data.session.cwd = shortPath(session.cwd, void 0, options.home);
+  if (summary.tokens) data.tokens = summary.tokens;
+  return data;
+}
+
+// src/cli/commands/report.ts
+var reportCommand = {
+  summary: "Write a session as one self-contained HTML waterfall",
+  usage: `Usage: awf report <session> [--out <file.html>] [--share] [--open] [--json]
+
+Writes one HTML file that draws the session: time by phase, the phase at each moment, and every
+step on a waterfall, with failures, rework and the slowest steps marked. Styles and script are
+inside the file, and it makes no network requests. <session> is an ID or its first characters,
+"last", or a transcript or events file.
+  --out <file>  where to write it (default: ~/.awf/reports/<session>.html)
+  --share       phases, durations and tool names only: no task, folder, commands, files or output
+  --open        open it in your browser
+  --json        print the report's data as JSON instead`,
+  options: {
+    out: { type: "string", short: "o" },
+    share: { type: "boolean" },
+    open: { type: "boolean" },
+    json: { type: "boolean" },
+    project: { type: "string" }
+  },
+  run(ctx, args, options) {
+    const share = options.share === true;
+    const session = loadOne(ctx, args[0], options, !share);
+    if (!share) attachBuildTimings(session);
+    const home = ctx.env.HOME ?? os5.homedir();
+    const data = buildReportData(summarize(classifier()(session)), { share, home, now: ctx.now });
+    if (options.json) {
+      ctx.io.out(JSON.stringify(data, null, 2));
+      return 0;
+    }
+    const out = typeof options.out === "string" ? path17.resolve(ctx.cwd, options.out) : path17.join(
+      awfHome(ctx.env),
+      "reports",
+      `${safeId(session.id)}${share ? "-share" : ""}.html`
+    );
+    mkdirSync2(path17.dirname(out), { recursive: true });
+    writeFileSync2(out, renderReportHtml(data));
+    ctx.io.out(
+      `Wrote ${homeRelative(out, home)}${share ? " (shareable: no commands, files or output)" : ""}`
+    );
+    ctx.io.out(pathToFileURL(out).href);
+    if (options.open) openInBrowser(out, ctx, "report");
+    return 0;
+  }
+};
+function openInBrowser(file, ctx, awfCommand) {
+  const [command, args] = process.platform === "darwin" ? ["open", [file]] : process.platform === "win32" ? ["explorer", [file]] : ["xdg-open", [file]];
+  try {
+    const child = spawn(command, args, { stdio: "ignore", detached: true });
+    child.on(
+      "error",
+      () => ctx.io.err(`awf ${awfCommand}: couldn't open a browser; open the file above.`)
+    );
+    child.unref();
+  } catch {
+    ctx.io.err(`awf ${awfCommand}: couldn't open a browser; open the file above.`);
+  }
+}
+
+// src/cli/commands/dash.ts
+var dashCommand = {
+  summary: "Write every session as one HTML dashboard, with filters by phase, project and period",
+  usage: `Usage: awf dash [--since 30d] [--project <dir>] [--out <file.html>] [--open] [--json]
+
+Writes one HTML file with every session awf has: time by phase, by project and over time, and a
+table of sessions. Pick the phases to count (leave out Waiting on you to see how working time
+splits), a period, a project, and hours or shares. Styles, script and data are inside the file,
+and it makes no network requests. It holds session IDs, folder names and timings, and no
+prompts, commands or output. Run "awf import" first to include past sessions.
+  --since <age>     only sessions that started within this age (30d, 12h); default: all
+  --project <dir>   only sessions started in this folder or below it
+  --out <file>      where to write it (default: ~/.awf/reports/dash.html)
+  --open            open it in your browser
+  --json            print the dashboard's data as JSON instead`,
+  options: {
+    since: { type: "string" },
+    project: { type: "string" },
+    out: { type: "string", short: "o" },
+    open: { type: "boolean" },
+    json: { type: "boolean" }
+  },
+  run(ctx, _args, options) {
+    const home = ctx.env.HOME ?? os6.homedir();
+    const classify = classifier();
+    const analyzed = loadMany(ctx, options).map((session) => ({
+      session,
+      summary: summarize(classify(session)).summary
+    }));
+    const data = buildDashData(analyzed, { home, now: ctx.now, version: VERSION });
+    if (options.json) {
+      ctx.io.out(JSON.stringify(data, null, 2));
+      return 0;
+    }
+    const out = typeof options.out === "string" ? path18.resolve(ctx.cwd, options.out) : path18.join(awfHome(ctx.env), "reports", "dash.html");
+    mkdirSync3(path18.dirname(out), { recursive: true });
+    writeFileSync3(out, renderDashHtml(data));
+    const count2 = data.sessions.length;
+    ctx.io.out(
+      `Wrote ${homeRelative(out, home)}: ${count2} session${count2 === 1 ? "" : "s"} in ${data.projects.length} project${data.projects.length === 1 ? "" : "s"}`
+    );
+    if (count2 === 0) ctx.io.out('No sessions yet: run "awf import" to read past ones.');
+    ctx.io.out(pathToFileURL2(out).href);
+    if (options.open) openInBrowser(out, ctx, "dash");
+    return 0;
+  }
+};
+
+// src/cli/commands/doctor.ts
+import os7 from "node:os";
 var doctorCommand = {
   summary: "Check the recorder and list transcript entries awf does not recognise",
   usage: `Usage: awf doctor [--json]
@@ -13477,7 +14203,7 @@ Claude Code update. It reads what "awf import" stored, so run that first.`,
       ctx.io.out(JSON.stringify(report, null, 2));
       return 0;
     }
-    const home = ctx.env.HOME ?? os5.homedir();
+    const home = ctx.env.HOME ?? os7.homedir();
     const recorder = events.length === 0 ? [
       "no events yet. Install the plugin:",
       "          claude plugin marketplace add Jccorzo/awf",
@@ -13511,8 +14237,8 @@ Claude Code update. It reads what "awf import" stored, so run that first.`,
 };
 
 // src/cli/commands/import.ts
-import os6 from "node:os";
-import path15 from "node:path";
+import os8 from "node:os";
+import path19 from "node:path";
 function inProject(folder, dir) {
   if (!dir) return true;
   const key = projectKey(dir);
@@ -13542,7 +14268,7 @@ deleting old logs. Prints the sessions, steps and any log entries awf doesn't re
   },
   run(ctx, _args, options) {
     const since = typeof options.since === "string" ? ctx.now - parseSince(options.since) : -Infinity;
-    const project = typeof options.project === "string" ? path15.resolve(ctx.cwd, options.project) : void 0;
+    const project = typeof options.project === "string" ? path19.resolve(ctx.cwd, options.project) : void 0;
     const agent = typeof options.agent === "string" ? options.agent : void 0;
     if (agent && !(agent in AGENT_NAMES))
       throw new Error(`unknown agent "${agent}": use ${Object.keys(AGENT_NAMES).join(", ")}`);
@@ -13592,7 +14318,7 @@ deleting old logs. Prints the sessions, steps and any log entries awf doesn't re
         }
         report.imported++;
       }
-      if (file.agent !== "claude-code" && project && !(session.cwd && (session.cwd === project || session.cwd.startsWith(project + path15.sep)))) {
+      if (file.agent !== "claude-code" && project && !(session.cwd && (session.cwd === project || session.cwd.startsWith(project + path19.sep)))) {
         report.transcripts--;
         continue;
       }
@@ -13616,7 +14342,7 @@ deleting old logs. Prints the sessions, steps and any log entries awf doesn't re
       ctx.io.out(JSON.stringify(report, null, 2));
       return report.errors.length > 0 ? 1 : 0;
     }
-    const home = ctx.env.HOME ?? os6.homedir();
+    const home = ctx.env.HOME ?? os8.homedir();
     const verb = options["dry-run"] ? "Read" : "Imported";
     const byAgent = Object.entries(report.agents).map(([name, n]) => `${AGENT_NAMES[name] ?? name} ${n}`).join(", ");
     const from = Object.keys(report.agents).every((a) => a === "claude-code") ? `from ${homeRelative(claudeProjectsDir(ctx.env), home)} ` : `(${byAgent}) `;
@@ -13653,9 +14379,9 @@ deleting old logs. Prints the sessions, steps and any log entries awf doesn't re
 };
 
 // src/cli/commands/live.ts
-import { readFileSync as readFileSync10, statSync as statSync7 } from "node:fs";
-import os7 from "node:os";
-import path18 from "node:path";
+import { readFileSync as readFileSync11, statSync as statSync7 } from "node:fs";
+import os9 from "node:os";
+import path22 from "node:path";
 
 // src/live/state.ts
 var QUESTION_TOOLS = /* @__PURE__ */ new Set([
@@ -13929,19 +14655,19 @@ function idleFor(ms) {
 }
 
 // src/cli/board.ts
-import path17 from "node:path";
+import path21 from "node:path";
 
 // src/cli/commands/statusline.ts
 import {
-  mkdirSync as mkdirSync2,
-  readdirSync as readdirSync8,
-  readFileSync as readFileSync9,
+  mkdirSync as mkdirSync4,
+  readdirSync as readdirSync9,
+  readFileSync as readFileSync10,
   renameSync as renameSync2,
   rmSync,
   statSync as statSync6,
-  writeFileSync as writeFileSync2
+  writeFileSync as writeFileSync4
 } from "node:fs";
-import path16 from "node:path";
+import path20 from "node:path";
 var FORMAT = 2;
 var MAX_WIDTH = 64;
 var KEEP_MS = 30 * 864e5;
@@ -14061,7 +14787,7 @@ function subagentStamp(transcript) {
 }
 function readCache(file, key) {
   try {
-    const cached = JSON.parse(readFileSync9(file, "utf8"));
+    const cached = JSON.parse(readFileSync10(file, "utf8"));
     return cached.key === key && typeof cached.line === "string" ? cached.line : void 0;
   } catch {
     return void 0;
@@ -14069,13 +14795,13 @@ function readCache(file, key) {
 }
 function writeCache(file, key, line, now) {
   try {
-    const dir = path16.dirname(file);
-    mkdirSync2(dir, { recursive: true });
+    const dir = path20.dirname(file);
+    mkdirSync4(dir, { recursive: true });
     const temp = `${file}.${process.pid}.tmp`;
-    writeFileSync2(temp, JSON.stringify({ key, line }));
+    writeFileSync4(temp, JSON.stringify({ key, line }));
     renameSync2(temp, file);
-    for (const name of readdirSync8(dir)) {
-      const other = path16.join(dir, name);
+    for (const name of readdirSync9(dir)) {
+      const other = path20.join(dir, name);
       const stat2 = statSync6(other, { throwIfNoEntry: false });
       if (stat2 && now - stat2.mtimeMs > KEEP_MS) rmSync(other, { force: true });
     }
@@ -14086,7 +14812,7 @@ function lineSource(env, transcript, id) {
   if (!transcript.endsWith(".jsonl")) return void 0;
   const transcriptStat = statSync6(transcript, { throwIfNoEntry: false });
   if (!transcriptStat?.isFile()) return void 0;
-  const events = path16.join(eventsDir(env), `${safeId(id)}.jsonl`);
+  const events = path20.join(eventsDir(env), `${safeId(id)}.jsonl`);
   const eventsStat = statSync6(events, { throwIfNoEntry: false });
   return { id, transcript, transcriptStat, events, eventsStat };
 }
@@ -14104,7 +14830,7 @@ function cacheKey(source, mode, pin) {
   ].join("|");
 }
 function cachePath(env, id) {
-  return path16.join(cacheDir(env), "statusline", `${safeId(id)}.json`);
+  return path20.join(cacheDir(env), "statusline", `${safeId(id)}.json`);
 }
 function sessionSummary(env, source) {
   const ref = resolveSession(source.transcript, env);
@@ -14137,7 +14863,7 @@ function statusLine(ctx, input, json, pin) {
   const payload = JSON.parse(input);
   const transcript = payload?.transcript_path;
   if (typeof transcript !== "string") return "";
-  const id = typeof payload?.session_id === "string" && payload.session_id ? payload.session_id : path16.basename(transcript, ".jsonl");
+  const id = typeof payload?.session_id === "string" && payload.session_id ? payload.session_id : path20.basename(transcript, ".jsonl");
   const source = lineSource(ctx.env, transcript, id);
   if (!source) return "";
   if (!json) return cachedLine(ctx, source, colorMode(ctx.env), pin, false) ?? "";
@@ -14242,9 +14968,9 @@ var MAX_TITLE2 = 26;
 var MIN_TITLE = 12;
 var MIN_LINE = 20;
 function projectName(cwd, home) {
-  const resolved = path17.resolve(cwd);
-  if (!home || resolved !== home && !resolved.startsWith(home + path17.sep)) return resolved;
-  const parts = path17.relative(home, resolved).split(path17.sep).filter(Boolean);
+  const resolved = path21.resolve(cwd);
+  if (!home || resolved !== home && !resolved.startsWith(home + path21.sep)) return resolved;
+  const parts = path21.relative(home, resolved).split(path21.sep).filter(Boolean);
   if (parts.length === 0) return "~";
   if (parts.length > 1 && CONTAINERS.has(parts[0])) parts.shift();
   return parts.join("/");
@@ -14372,12 +15098,12 @@ function readFacts(file, memo) {
   const stamp2 = `${file.size}:${file.mtimeMs}`;
   const known = memo.facts.get(file.path);
   if (known?.stamp === stamp2) return known.facts;
-  const facts = transcriptFacts(readFileSync10(file.path, "utf8"));
+  const facts = transcriptFacts(readFileSync11(file.path, "utf8"));
   memo.facts.set(file.path, { stamp: stamp2, facts });
   return facts;
 }
 function readSessionEvents(env, id, memo) {
-  const file = path18.join(eventsDir(env), `${safeId(id)}.jsonl`);
+  const file = path22.join(eventsDir(env), `${safeId(id)}.jsonl`);
   const stat2 = statSync7(file, { throwIfNoEntry: false });
   if (!stat2?.isFile()) return void 0;
   const stamp2 = `${stat2.size}:${stat2.mtimeMs}`;
@@ -14390,7 +15116,7 @@ function readSessionEvents(env, id, memo) {
 function scan(ctx, options, memo, now) {
   const sinceMs = now - options.sinceMs;
   const changed = activeTranscripts(ctx.env, sinceMs);
-  const home = ctx.env.HOME || os7.homedir();
+  const home = ctx.env.HOME || os9.homedir();
   const active = [];
   for (const file of changed) {
     let row;
@@ -14408,7 +15134,7 @@ function scan(ctx, options, memo, now) {
   for (const file of memo.facts.keys()) if (!files2.has(file)) memo.facts.delete(file);
   for (const id of memo.lines.keys()) if (!shown.has(id)) memo.lines.delete(id);
   for (const file of memo.events.keys())
-    if (!shown.has(path18.basename(file, ".jsonl"))) memo.events.delete(file);
+    if (!shown.has(path22.basename(file, ".jsonl"))) memo.events.delete(file);
   return { rows, total: current.length };
 }
 function withoutCopies(rows, memo) {
@@ -14688,15 +15414,15 @@ sessions that changed. Colours follow the status line; NO_COLOR turns them off.
 };
 
 // src/cli/commands/purge.ts
-import { existsSync as existsSync9, readdirSync as readdirSync9, rmSync as rmSync2, statSync as statSync8 } from "node:fs";
-import os8 from "node:os";
-import path19 from "node:path";
+import { existsSync as existsSync10, readdirSync as readdirSync10, rmSync as rmSync2, statSync as statSync8 } from "node:fs";
+import os10 from "node:os";
+import path23 from "node:path";
 var OURS = /* @__PURE__ */ new Set(["events", "imported", "reports", "cache", ".DS_Store"]);
 function size(target) {
   const stat2 = statSync8(target, { throwIfNoEntry: false });
   if (!stat2) return 0;
   if (!stat2.isDirectory()) return stat2.size;
-  return readdirSync9(target).reduce((n, name) => n + size(path19.join(target, name)), 0);
+  return readdirSync10(target).reduce((n, name) => n + size(path23.join(target, name)), 0);
 }
 function human(bytes) {
   if (bytes >= 1e9) return `${(bytes / 1e9).toFixed(1)} GB`;
@@ -14715,10 +15441,10 @@ Claude Code's transcripts are never touched. Without --yes it only lists what it
   --json   print the folder's contents as JSON (it still deletes only with --yes)`,
   options: { yes: { type: "boolean" }, json: { type: "boolean" } },
   run(ctx, _args, options) {
-    const home = ctx.env.HOME ?? os8.homedir();
+    const home = ctx.env.HOME ?? os10.homedir();
     const dir = awfHome(ctx.env);
     const shown = homeRelative(dir, home);
-    if (!existsSync9(dir)) {
+    if (!existsSync10(dir)) {
       if (options.json) {
         ctx.io.out(JSON.stringify({ dir, parts: [], foreign: [], deleted: false }, null, 2));
       } else {
@@ -14726,9 +15452,9 @@ Claude Code's transcripts are never touched. Without --yes it only lists what it
       }
       return 0;
     }
-    const entries2 = readdirSync9(dir);
+    const entries2 = readdirSync10(dir);
     const foreign = entries2.filter((name) => !OURS.has(name));
-    const parts = entries2.filter((name) => OURS.has(name) && name !== ".DS_Store").map((name) => ({ name, bytes: size(path19.join(dir, name)) }));
+    const parts = entries2.filter((name) => OURS.has(name) && name !== ".DS_Store").map((name) => ({ name, bytes: size(path23.join(dir, name)) }));
     const report = (deleted) => ctx.io.out(JSON.stringify({ dir, parts, foreign, deleted }, null, 2));
     if (options.json && !options.yes) {
       report(false);
@@ -14753,573 +15479,9 @@ Claude Code's transcripts are never touched. Without --yes it only lists what it
   }
 };
 
-// src/cli/commands/report.ts
-import { spawn } from "node:child_process";
-import { mkdirSync as mkdirSync3, writeFileSync as writeFileSync3 } from "node:fs";
-import os9 from "node:os";
-import path21 from "node:path";
-import { pathToFileURL } from "node:url";
-
-// src/build/drilldown.ts
-import { readdirSync as readdirSync10, readFileSync as readFileSync11 } from "node:fs";
-import path20 from "node:path";
-import { gunzipSync } from "node:zlib";
-
-// src/build/parsers.ts
-var bySlowest = (tasks) => tasks.sort((a, b) => b.ms - a.ms);
-function parseCargoTimings(html) {
-  const start = /Build start:<\/td>\s*<td>([^<]+)</.exec(html)?.[1];
-  const startMs = start ? Date.parse(start) : NaN;
-  const data = /const UNIT_DATA = (\[[\s\S]*?\]);\s*\n\s*const /.exec(html)?.[1];
-  if (!data) return { tasks: [] };
-  let units;
-  try {
-    units = JSON.parse(data);
-  } catch {
-    return { tasks: [] };
-  }
-  const tasks = units.filter((u) => typeof u.duration === "number" && u.name).map((u) => {
-    const target = (u.target ?? "").trim();
-    const task = {
-      name: `${u.name} v${u.version ?? ""}${target ? ` (${target.replace(/"/g, "")})` : ""}`,
-      ms: Math.round((u.duration ?? 0) * 1e3)
-    };
-    if (Number.isFinite(startMs) && typeof u.start === "number")
-      task.startMs = startMs + Math.round(u.start * 1e3);
-    return task;
-  });
-  return { ...Number.isFinite(startMs) ? { startMs } : {}, tasks: bySlowest(tasks) };
-}
-function parseXcodeTimingSummary(output) {
-  const at = output.lastIndexOf("Build Timing Summary");
-  if (at < 0) return [];
-  const tasks = [];
-  for (const match of output.slice(at).matchAll(/^(\S.*?) \((\d+) tasks?\) \| ([\d.]+) seconds$/gm)) {
-    tasks.push({
-      name: match[1],
-      count: Number(match[2]),
-      ms: Math.round(Number(match[3]) * 1e3)
-    });
-  }
-  return bySlowest(tasks);
-}
-function gradleDuration(text) {
-  const match = /^(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m)?(?:([\d.]+)s)$/.exec(text.trim());
-  if (!match) return void 0;
-  const [, d = "0", h = "0", m = "0", s = "0"] = match;
-  return Math.round(((Number(d) * 24 + Number(h)) * 60 + Number(m)) * 6e4 + Number(s) * 1e3);
-}
-function parseGradleProfile(html) {
-  const at = html.indexOf("<h2>Task Execution</h2>");
-  if (at < 0) return [];
-  const section = html.slice(at, html.indexOf("</table>", at) + 8);
-  const tasks = [];
-  for (const row of section.matchAll(/<tr>([\s\S]*?)<\/tr>/g)) {
-    const cells = [...(row[1] ?? "").matchAll(/<td[^>]*?(?:\/>|>([\s\S]*?)<\/td>)/g)].map(
-      (c) => (c[1] ?? "").replace(/<[^>]+>/g, "").trim()
-    );
-    const [name, duration, result2 = ""] = cells;
-    if (!name || !duration || result2 === "(total)") continue;
-    const ms = gradleDuration(duration);
-    if (ms === void 0) continue;
-    tasks.push({ name, ms, ...result2 ? { result: result2 } : {} });
-  }
-  return bySlowest(tasks);
-}
-function gradleProfileTime(file) {
-  const m = /profile-(\d{4})-(\d\d)-(\d\d)-(\d\d)-(\d\d)-(\d\d)\.html$/.exec(file);
-  if (!m) return void 0;
-  const [, y, mo, d, h, mi, s] = m.map(Number);
-  return new Date(y, mo - 1, d, h, mi, s).getTime();
-}
-function cargoTimingTime(file) {
-  const m = /cargo-timing-(\d{4})(\d\d)(\d\d)T(\d\d)(\d\d)(\d\d)(?:\.(\d+))?Z\.html$/.exec(file);
-  if (!m) return void 0;
-  const [, y, mo, d, h, mi, s] = m.map(Number);
-  return Date.UTC(y, mo - 1, d, h, mi, s) + Math.round(Number(`0.${m[7] ?? "0"}`) * 1e3);
-}
-function parseBazelProfile(json, startMs) {
-  let trace;
-  try {
-    trace = JSON.parse(json);
-  } catch {
-    return [];
-  }
-  const tasks = [];
-  for (const e of trace.traceEvents ?? []) {
-    if (e.ph !== "X" || typeof e.dur !== "number" || typeof e.ts !== "number" || !e.name) continue;
-    if (e.cat !== "action processing") continue;
-    tasks.push({
-      name: e.name,
-      ms: Math.round(e.dur / 1e3),
-      startMs: startMs + Math.round(e.ts / 1e3)
-    });
-  }
-  return bySlowest(tasks);
-}
-function parseMsbuildSummary(output) {
-  const at = output.lastIndexOf("Target Performance Summary:");
-  if (at < 0) return [];
-  const tasks = [];
-  for (const line of output.slice(at).split("\n").slice(1)) {
-    const match = /^\s*(\d+) ms\s+(.+?)\s+(\d+) calls?\s*$/.exec(line);
-    if (!match) {
-      if (line.trim() === "" || /Performance Summary:/.test(line)) {
-        if (tasks.length > 0) break;
-        continue;
-      }
-      continue;
-    }
-    tasks.push({ name: match[2], ms: Number(match[1]), count: Number(match[3]) });
-  }
-  return bySlowest(tasks);
-}
-
-// src/build/drilldown.ts
-var diskBuildFiles = {
-  read(file) {
-    try {
-      const bytes = readFileSync11(file);
-      return file.endsWith(".gz") ? gunzipSync(bytes).toString("utf8") : bytes.toString("utf8");
-    } catch {
-      return void 0;
-    }
-  },
-  list(dir) {
-    try {
-      return readdirSync10(dir);
-    } catch {
-      return [];
-    }
-  }
-};
-var WINDOW_MS = 1e4;
-var MAX_TASKS = 12;
-function attachBuildTimings(session, files2 = diskBuildFiles) {
-  let found = 0;
-  for (const step of session.steps) {
-    if (step.kind !== "tool" || !step.command) continue;
-    const timings = timingsFor(step, session.cwd, files2);
-    if (!timings || timings.tasks.length === 0) continue;
-    step.build = {
-      ...timings,
-      tasks: timings.tasks.slice(0, MAX_TASKS),
-      total: timings.tasks.length
-    };
-    found++;
-  }
-  return found;
-}
-function optionValue2(args, names) {
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-    if (names.includes(arg)) return args[i + 1];
-    const eq = names.find((n) => arg.startsWith(`${n}=`));
-    if (eq) return arg.slice(eq.length + 1);
-  }
-  return void 0;
-}
-function nearest(files2, dir, timeOf, step) {
-  let best;
-  let distance = Infinity;
-  for (const name of files2.list(dir)) {
-    const t = timeOf(name);
-    if (t === void 0 || t < step.startMs - WINDOW_MS || t > step.endMs + WINDOW_MS) continue;
-    if (Math.abs(t - step.startMs) < distance) {
-      best = path20.join(dir, name);
-      distance = Math.abs(t - step.startMs);
-    }
-  }
-  return best;
-}
-function timingsFor(step, sessionCwd, files2) {
-  const output = step.detail?.output ?? "";
-  for (const simple of splitCommand(step.command ?? "")) {
-    const argv = unwrap(simple.argv).argv;
-    const program = programName(argv[0] ?? "");
-    const args = argv.slice(1);
-    const cwd = simple.cd.reduce((dir, target) => resolvePath(dir, target), sessionCwd ?? "/");
-    switch (program) {
-      case "xcodebuild": {
-        if (!args.includes("-showBuildTimingSummary")) break;
-        const tasks = parseXcodeTimingSummary(output);
-        if (tasks.length) return { tool: "xcodebuild", source: "output", tasks };
-        break;
-      }
-      case "msbuild":
-      case "MSBuild":
-      case "dotnet": {
-        const tasks = parseMsbuildSummary(output);
-        if (tasks.length) return { tool: "msbuild", source: "output", tasks };
-        break;
-      }
-      case "cargo":
-      case "cross": {
-        if (!args.some((a) => a === "--timings" || a.startsWith("--timings="))) break;
-        const manifest = optionValue2(args, ["--manifest-path"]);
-        const root = manifest ? path20.dirname(resolvePath(cwd, manifest)) : cwd;
-        const file = /Timing report saved to (\S+\.html)/.exec(output)?.[1] ?? nearest(files2, path20.join(root, "target", "cargo-timings"), cargoTimingTime, step);
-        const html = file ? files2.read(file) : void 0;
-        if (file && html)
-          return { tool: "cargo", source: file, tasks: parseCargoTimings(html).tasks };
-        break;
-      }
-      case "gradle": {
-        if (!args.includes("--profile")) break;
-        const project = optionValue2(args, ["-p", "--project-dir"]);
-        const root = project ? resolvePath(cwd, project) : cwd;
-        const file = /See the profiling report at: file:\/\/(\S+\.html)/.exec(output)?.[1] ?? nearest(files2, path20.join(root, "build", "reports", "profile"), gradleProfileTime, step);
-        const html = file ? files2.read(decodeURI(file)) : void 0;
-        if (file && html)
-          return { tool: "gradle", source: decodeURI(file), tasks: parseGradleProfile(html) };
-        break;
-      }
-      case "bazel":
-      case "bazelisk": {
-        const flag = optionValue2(args, ["--profile"]);
-        if (!flag) break;
-        const file = resolvePath(cwd, flag);
-        const text = files2.read(file);
-        if (text)
-          return { tool: "bazel", source: file, tasks: parseBazelProfile(text, step.startMs) };
-        break;
-      }
-    }
-  }
-  return void 0;
-}
-
-// src/report/data.ts
-var MAX_OUTPUT_STEP = 4e3;
-var MAX_OUTPUT_TOTAL = 25e5;
-function shareCheck(key) {
-  return key.replace(/:(npm|pnpm|yarn|bun|deno|make) .*/, ":$1");
-}
-function stepLabel(step, turnNumber, share) {
-  switch (step.kind) {
-    case "turn":
-      return `Turn ${turnNumber.get(step.id) ?? ""}`.trim();
-    case "subagent":
-      return step.agentType ? `Subagent \xB7 ${step.agentType}` : "Subagent";
-    case "model":
-      return "Model";
-    case "idle":
-      return "Idle";
-    case "compact":
-      return "Compacting context";
-    case "background":
-      return "Background";
-    default:
-      if (step.tool?.startsWith("mcp__")) {
-        const [, id = "", ...name] = step.tool.split("__");
-        const server = /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(id) ? `${id.slice(0, 8)}\u2026` : id;
-        return share ? server : [server, ...name].join(" \xB7 ");
-      }
-      return step.tool ?? "Tool";
-  }
-}
-function shortPath(file, cwd, home) {
-  if (cwd && (file === cwd || file.startsWith(cwd + "/"))) return file.slice(cwd.length + 1) || ".";
-  if (home && file.startsWith(home + "/")) return "~" + file.slice(home.length);
-  return file;
-}
-function head(command) {
-  const argv = splitCommand(command).map((c) => unwrap(c.argv).argv).find(
-    (a) => a.length > 0 && !["cd", "export", "echo", "set", "source"].includes(programName(a[0] ?? ""))
-  );
-  return argv ? programName(argv[0] ?? "") : "shell";
-}
-function buildReportData(analysis, options = {}) {
-  const { session, summary } = analysis;
-  const share = options.share ?? false;
-  const t0 = session.startMs;
-  const byId = new Map(session.steps.map((s) => [s.id, s]));
-  const children = /* @__PURE__ */ new Map();
-  for (const step of session.steps) {
-    const parent = step.parentId && byId.has(step.parentId) ? step.parentId : null;
-    children.set(parent, [...children.get(parent) ?? [], step]);
-  }
-  for (const list3 of children.values())
-    list3.sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs);
-  const turnNumber = /* @__PURE__ */ new Map();
-  for (const step of session.steps.filter((s) => s.kind === "turn").sort((a, b) => a.startMs - b.startMs)) {
-    turnNumber.set(step.id, turnNumber.size + 1);
-  }
-  const steps = [];
-  const displayIndex = /* @__PURE__ */ new Map();
-  let outputBudget = MAX_OUTPUT_TOTAL;
-  const visit = (step, parent, depth) => {
-    const i = steps.length;
-    const kids = children.get(step.id) ?? [];
-    const out = {
-      i,
-      p: parent,
-      depth,
-      kind: step.kind,
-      s: step.startMs - t0,
-      e: step.endMs - t0,
-      label: stepLabel(step, turnNumber, share),
-      failed: step.failed,
-      flags: step.flags,
-      tags: share ? step.tags.filter((t) => !/^(script|make|task|file|hook|via|unmatched):/.test(t)) : step.tags,
-      checks: step.checks.map((c) => ({
-        key: share ? shareCheck(c.key) : c.key,
-        failed: c.failed
-      })),
-      container: kids.length > 0
-    };
-    if (step.phase) out.phase = step.phase;
-    if (step.tool)
-      out.tool = step.tool.startsWith("mcp__") && share ? `mcp__${step.tool.split("__")[1] ?? ""}` : step.tool;
-    if (step.ok !== void 0) out.ok = step.ok;
-    if (step.reworkFor) out.reworkFor = share ? shareCheck(step.reworkFor) : step.reworkFor;
-    if (step.runMs !== void 0) out.runMs = step.runMs;
-    if (step.waitMs !== void 0) out.waitMs = step.waitMs;
-    if (step.exitCode !== void 0) out.exitCode = step.exitCode;
-    if (step.model) out.model = step.model;
-    if (step.tokens) out.tokens = step.tokens;
-    if (step.agentType) out.agentType = step.agentType;
-    if (step.kind === "model" && step.produces?.length) {
-      const produced = step.produces.map((id) => byId.get(id)).filter((s) => !!s);
-      out.text = "\u2192 " + produced.map((s) => stepLabel(s, turnNumber, share)).join(", ");
-    }
-    if (!share) {
-      if (step.command) out.text = step.command;
-      else if (step.files?.length && step.kind === "tool")
-        out.text = step.files.map((f) => shortPath(f, session.cwd, options.home)).join(" ");
-      if (step.files?.length)
-        out.files = step.files.map((f) => shortPath(f, session.cwd, options.home));
-      if (step.detail?.description) out.description = step.detail.description;
-      if (step.detail?.output && outputBudget > 0) {
-        const text = maskSecrets(step.detail.output).slice(0, MAX_OUTPUT_STEP);
-        out.output = text;
-        outputBudget -= text.length;
-      }
-    }
-    steps.push(out);
-    displayIndex.set(step.id, i);
-    if (step.build && !share) {
-      out.container = true;
-      out.description = `Slowest ${step.build.tasks.length} of ${step.build.total} tasks, from ${step.build.source === "output" ? `${step.build.tool}'s output` : shortPath(step.build.source, session.cwd, options.home)}`;
-      for (const task of step.build.tasks) {
-        const started = task.startMs !== void 0;
-        const s0 = started ? task.startMs - t0 : step.startMs - t0;
-        steps.push({
-          i: steps.length,
-          p: i,
-          depth: depth + 1,
-          kind: "build-task",
-          ...step.phase ? { phase: step.phase } : {},
-          s: s0,
-          e: s0 + task.ms,
-          label: task.name,
-          ...task.count && task.count > 1 ? { text: `${task.count} ${step.build.tool === "msbuild" ? "calls" : "tasks"}` } : task.result ? { text: task.result } : {},
-          tool: step.build.tool,
-          failed: false,
-          flags: [],
-          tags: [],
-          checks: [],
-          container: false,
-          started
-        });
-      }
-    }
-    for (const kid of kids) visit(kid, i, depth + 1);
-  };
-  for (const top of children.get(null) ?? []) visit(top, -1, 0);
-  for (const step of session.steps) {
-    const target = displayIndex.get(step.id);
-    if (step.kind !== "model" || !step.produces?.length || target === void 0) continue;
-    const made = step.produces.map((id) => displayIndex.get(id)).filter((i) => i !== void 0);
-    if (made.length) steps[target].produces = made;
-  }
-  const leaves = steps.filter(
-    (s) => (!s.container || steps[s.i + 1]?.kind === "build-task") && s.kind !== "build-task" && s.kind !== "idle" && s.kind !== "turn" && s.kind !== "background" && !s.flags.includes("background")
-  );
-  const slowest = [...leaves].sort((a, b) => b.e - b.s - (a.e - a.s)).slice(0, 3).map((s) => s.i);
-  const MODEL = "\0model";
-  const unclassifiedName = (step) => {
-    if (step.kind === "compact") return "compaction";
-    if (step.kind === "model") return MODEL;
-    if (step.command && !share) return head(step.command);
-    if (step.tool?.startsWith("mcp__")) return stepLabel(step, turnNumber, share);
-    return step.tool ?? step.kind;
-  };
-  const segments = phaseSegments(session);
-  const owners = session.steps.filter((s) => s.phase === "unclassified" && s.kind !== "turn" && s.endMs > s.startMs).sort((a, b) => a.startMs - b.startMs);
-  const unclassified = /* @__PURE__ */ new Map();
-  const add = (name, ms) => unclassified.set(name, (unclassified.get(name) ?? 0) + ms);
-  for (const segment of segments) {
-    if (segment.phase !== "unclassified") continue;
-    if (!segment.covered) {
-      add("time between steps", segment.end - segment.start);
-      continue;
-    }
-    const running = owners.filter((o) => o.startMs < segment.end && o.endMs > segment.start);
-    const cuts = [
-      .../* @__PURE__ */ new Set([
-        segment.start,
-        segment.end,
-        ...running.flatMap((o) => [o.startMs, o.endMs]).filter((t) => t > segment.start && t < segment.end)
-      ])
-    ].sort((a, b) => a - b);
-    for (let k = 0; k + 1 < cuts.length; k++) {
-      const a = cuts[k];
-      const b = cuts[k + 1];
-      let owner;
-      for (const step of running) {
-        if (step.startMs >= b || step.endMs <= a) continue;
-        const background = step.kind === "background" || step.flags.includes("background");
-        const ownerBackground = owner && (owner.kind === "background" || owner.flags.includes("background"));
-        if (!owner || ownerBackground && !background || ownerBackground === background && step.startMs >= owner.startMs)
-          owner = step;
-      }
-      add(owner ? unclassifiedName(owner) : "time between steps", b - a);
-    }
-  }
-  const data = {
-    v: 1,
-    generatedAt: options.now ?? Date.now(),
-    share,
-    session: {
-      id: share ? session.id.slice(0, 8) : session.id,
-      agent: session.agent,
-      sources: session.sources,
-      startMs: t0,
-      totalMs: summary.totalMs,
-      turnsMs: summary.turnsMs,
-      awayWorkMs: summary.awayWorkMs
-    },
-    phases: summary.phases.map((p) => ({
-      id: p.phase,
-      label: p.label,
-      ms: p.ms,
-      share: p.share,
-      detail: phaseDetail(p)
-    })),
-    counts: {
-      modelCalls: summary.modelCalls,
-      toolCalls: summary.toolCalls,
-      subagents: summary.subagents,
-      failures: summary.failures,
-      reworkLoops: summary.rework.filter((w) => w.edits > 0).length
-    },
-    rework: summary.rework.map((w) => ({
-      check: share ? shareCheck(w.check) : w.check,
-      failedAt: w.failedAtMs - t0,
-      ...w.passedAtMs !== void 0 ? { passedAt: w.passedAtMs - t0 } : {},
-      edits: w.edits
-    })),
-    steps,
-    slowest,
-    unclassified: [...unclassified].filter(([name]) => name !== MODEL).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name, ms]) => ({ name, ms })),
-    unclassifiedModelMs: unclassified.get(MODEL) ?? 0,
-    timeline: segments.map((g) => [g.start - t0, g.end - t0, g.phase])
-  };
-  if (session.agentVersion) data.session.agentVersion = session.agentVersion;
-  if (!share && session.title) data.session.title = session.title;
-  if (!share && session.cwd) data.session.cwd = shortPath(session.cwd, void 0, options.home);
-  if (summary.tokens) data.tokens = summary.tokens;
-  return data;
-}
-
-// report-assets:report-assets
-var CLIENT_JS = '"use strict";(()=>{function u(e){if(!Number.isFinite(e)||e<0)return"\\u2013";if(e<1e3)return`${Math.round(e)} ms`;if(e<1e4)return`${(e/1e3).toFixed(1)}s`;let t=Math.round(e/1e3),s=Math.floor(t/3600),a=Math.floor(t%3600/60),o=t%60;return s>0?`${s}h ${fe(a)}m ${fe(o)}s`:a>0?`${a}m ${fe(o)}s`:`${o}s`}function fe(e){return String(e).padStart(2,"0")}var Ce="0.1.0";var Qe=performance.now(),c=JSON.parse(document.getElementById("awf-data")?.textContent??"null"),b=c.steps,$=Math.max(1,c.session.totalMs),ie=b.map(()=>[]);for(let e of b)e.p>=0&&ie[e.p]?.push(e.i);var Ie=new Map(c.phases.map(e=>[e.id,e.label])),Ze=new Map(c.slowest.map((e,t)=>[e,t])),me=b.filter(e=>!e.container).length;function n(e,t={},...s){let a=document.createElement(e);for(let[o,i]of Object.entries(t))i===void 0||i===!1||(o==="class"?a.className=String(i):o==="text"?a.textContent=String(i):a.setAttribute(o,i===!0?"":String(i)));for(let o of s)o&&a.append(o);return a}var M=e=>String(e).padStart(2,"0"),j=e=>e.replace(/\\s+/g," ").trim(),V=(e,t)=>e.length>t?e.slice(0,t-1)+"\\u2026":e,P=(e,t,s=`${t}s`)=>`${e.toLocaleString("en-US")} ${e===1?t:s}`,_=e=>`var(--c-${e})`,H=e=>e?Ie.get(e)??e:"",T=e=>e.e-e.s;function E(e){return e>0&&e<.005?"<1%":`${Math.round(e*100)}%`}function S(e,t=!0){let s=Math.max(0,Math.round(e/1e3)),a=Math.floor(s/3600),o=Math.floor(s%3600/60);return $>=36e5?`${a}:${M(o)}${t?`:${M(s%60)}`:""}`:`${Math.floor(s/60)}:${M(s%60)}`}function xe(e,t=!1){let s=new Date(e),a=`${M(s.getHours())}:${M(s.getMinutes())}:${M(s.getSeconds())}`;return t?`${s.getFullYear()}-${M(s.getMonth()+1)}-${M(s.getDate())} ${a.slice(0,5)}`:a}function K(e){return e>=1e6?`${(e/1e6).toFixed(e>=1e7?0:1)}M`:e>=1e3?`${(e/1e3).toFixed(e>=1e4?0:1)}k`:String(e)}function D(e){if(e.text)return e.text;if(e.description)return e.description;if(e.kind==="turn"&&e.flags.includes("notification"))return"started by a notice, not a prompt"}var et=[...[1,2,5,10,15,30].map(e=>e*1e3),...[1,2,5,10,15,30].map(e=>e*6e4),...[1,2,3,6,12,24].map(e=>e*36e5)];function tt(){let e=b.filter(o=>o.kind!=="idle"&&o.e>o.s).map(o=>[o.s,o.e]).sort((o,i)=>o[0]-i[0]),t=Math.max(6e4,$*.03),s=[],a=0;for(let[o,i]of e)o-a>=t&&s.push({s:a,e:o}),a=Math.max(a,i);return $-a>=t&&s.push({s:a,e:$}),s}var ke=tt();function Re(e){let t=e?ke:[],s=t.reduce((x,h)=>x+h.e-h.s,0),a=$-s,o=t.length&&a>0?Math.min(1.5,12/t.length):0,i=o?t:[],d=(100-i.length*o)/(o?a:$),p=[[0,0]],m=[],f=0,w=0;for(let x of i)f+=(x.s-w)*d,p.push([x.s,f]),m.push({s:x.s,e:x.e,x0:f,x1:f+o}),f+=o,p.push([x.e,f]),w=x.e;return p.push([$,100]),{x:x=>{if(x<=0)return 0;if(x>=$)return 100;let h=0,I=p.length-1;for(;I-h>1;){let pe=h+I>>1;p[pe][0]<=x?h=pe:I=pe}let[de,ue]=p[h],[ve,Je]=p[I];return ve===de?ue:ue+(x-de)/(ve-de)*(Je-ue)},gaps:m,k:d}}function nt(e){let t=Math.round(e/6e4);return t>=60?`${Math.floor(t/60)}h ${M(t%60)}m`:t>=1?`${t}m`:`${Math.round(e/1e3)}s`}var Pe=e=>`${nt(e.e-e.s)} idle`;function st(e){let t=d=>{let p=(be(d)+22)/Math.max(e,1)*100,m=p/g.k,f=et.find(w=>w>=m)??Math.ceil(m/864e5)*864e5;return{minPct:p,step:f}},{minPct:s,step:a}=t($>=36e5?"0:00":"00:00");$>=36e5&&a<6e4&&({minPct:s,step:a}=t("0:00:00"));let o=[],i=-1/0;for(let d=0;d<=$;d+=a){if(g.gaps.some(f=>d>f.s&&d<f.e))continue;let p=g.x(d);if(p-i<s)continue;let m=g.gaps.some(f=>{let w=(be(Pe(f))/2+12)/Math.max(e,1)*100;return Math.abs(p-(f.x0+f.x1)/2)<w+s/2});d>0&&m||(o.push({x:p,text:S(d,a<6e4)}),i=p)}let r=$>=36e5?a<6e4?"h:mm:ss":"h:mm":"m:ss";return{ticks:o,unit:r}}var l={collapsed:new Set,filterCollapsed:new Set,phases:new Set,failedOnly:!1,query:"",open:-1,focus:-1,squeeze:ke.length>0};for(let e of b)e.container&&(e.kind==="subagent"||me>250&&e.kind==="turn")&&l.collapsed.add(e.i);var g=Re(l.squeeze),v=()=>l.phases.size>0||l.failedOnly||l.query!=="";function _e(e){return!(l.phases.size>0&&!(e.phase&&l.phases.has(e.phase))||l.failedOnly&&!e.failed||l.query&&![e.label,e.text,e.tool,e.agentType,e.description,...e.checks.map(s=>s.key)].filter(Boolean).join(`\n`).toLowerCase().includes(l.query))}function He(){let e=v(),t,s=new Set;if(e){t=new Set;for(let r of b)if(_e(r)){t.add(r.i);for(let d=r.p;d>=0&&!s.has(d);d=b[d]?.p??-1)t.add(d),s.add(d)}}else for(let r of b)r.container&&s.add(r.i);let a=e?l.filterCollapsed:l.collapsed,o=[],i=1/0;for(let r of b)r.depth>i||(i=1/0,!(t&&!t.has(r.i))&&(o.push(r),s.has(r.i)&&a.has(r.i)&&(i=r.depth)));return{rows:o,parents:s}}var k=He(),at=document.getElementById("app"),G=n("div",{class:"wrap"});at.append(G);var L=c.session.totalMs,W=c.session.turnsMs,U=c.session.awayWorkMs,ot=Math.max(0,L-W-U),it=c.share?`Shared session ${c.session.id.slice(0,8)}`:c.session.title??`Session ${c.session.id.slice(0,8)}`,ne=n("button",{class:"theme",type:"button"});function rt(){try{let e=localStorage.getItem("awf-theme");return e==="light"||e==="dark"?e:"auto"}catch{return"auto"}}function Be(e){e==="auto"?delete document.documentElement.dataset.theme:document.documentElement.dataset.theme=e,ne.textContent=`Theme: ${e[0]?.toUpperCase()}${e.slice(1)}`,ne.setAttribute("aria-label",`Color theme: ${e}. Change theme`)}var R=rt();Be(R);ne.addEventListener("click",()=>{R=R==="auto"?"light":R==="light"?"dark":"auto",Be(R);try{R==="auto"?localStorage.removeItem("awf-theme"):localStorage.setItem("awf-theme",R)}catch{}});var lt={"claude-code":"Claude Code",codex:"Codex CLI",gemini:"Gemini CLI",opencode:"OpenCode"},ct=lt[c.session.agent]??c.session.agent,dt=[xe(c.session.startMs,!0),W<L?`${u(L)} (${[`${u(W)} in turns`,...U>0?[`${u(U)} background work between turns`]:[]].join(", ")})`:u(L),c.session.cwd,`${ct}${c.session.agentVersion?` ${c.session.agentVersion}`:""}`].filter(e=>!!e);G.append(n("header",{class:"top"},n("div",{},n("p",{class:"brand",text:"awf \\xB7 agent waterfall"}),n("h1",{text:V(j(it),220)}),n("p",{class:"meta",text:dt.join(" \\xB7 ")})),ne));var re=c.phases.filter(e=>e.ms>0),B=n("section",{class:"card","aria-label":"Where the time went"});B.append(n("div",{class:"total"},n("span",{class:"value",text:u(L)}),n("span",{class:"sub",text:W>=L?"total":U>0?`total: ${u(W)} in turns, ${u(U)} of background work between turns, ${u(ot)} idle`:`total: ${u(W)} in turns, the rest idle between turns`})));var $e=n("div",{class:"stack",role:"img","aria-label":re.map(e=>`${e.label} ${E(e.share)}`).join(", ")});for(let e of re){let t=n("span",{"data-phase":e.id});t.style.background=_(e.id),t.style.flex=`${e.ms} 1 0`,$e.append(t)}B.append($e);var Fe=n("ul",{class:"legend","aria-label":"Phases. Pick one or more to filter steps"}),qe=new Map;for(let e of re){let t=n("button",{class:"chip",type:"button","aria-pressed":"false",title:e.detail?`${e.label}: ${e.detail}`:e.label},n("span",{class:"sw","aria-hidden":"true"}),n("span",{class:"name",text:e.label}),n("span",{class:"num",text:`${u(e.ms)} \\xB7 ${E(e.share)}`}));t.firstChild.style.background=_(e.id),t.addEventListener("click",()=>{l.phases.has(e.id)?l.phases.delete(e.id):l.phases.add(e.id),ce()}),qe.set(e.id,t),Fe.append(n("li",{},t))}B.append(Fe);var F=c.counts,ut=[[F.modelCalls,"model call"],[F.toolCalls,"tool call"],...F.subagents?[[F.subagents,"subagent"]]:[],[F.failures,"failed check"],[F.reworkLoops,"rework loop"]],we=n("p",{class:"counts"});for(let[e,t]of ut){let[s,...a]=P(e,t).split(" ");we.append(n("span",{},n("b",{text:s??""}),` ${a.join(" ")}`))}if(c.tokens){let e=c.tokens.input+c.tokens.cacheRead+c.tokens.cacheWrite,t=e>0?c.tokens.cacheRead/e:0;we.append(n("span",{},n("b",{text:K(e)}),` tokens in (${E(t)} from cache), `,n("b",{text:K(c.tokens.output)})," out"))}B.append(we);var z=n("ul",{class:"why"}),pt=[...re].sort((e,t)=>t.ms-e.ms),[q,J,Q]=pt;q&&z.append(n("li",{},"Most time went to ",n("b",{text:q.label}),`: ${u(q.ms)} (${E(q.share)})${q.detail?`, ${q.detail}`:""}.`,J?` Then ${J.label} ${u(J.ms)} (${E(J.share)})${Q?` and ${Q.label} ${u(Q.ms)} (${E(Q.share)})`:""}.`:""));if(c.slowest.length){let e=n("li",{},"Slowest steps: ");c.slowest.forEach((t,s)=>{let a=b[t];if(!a)return;let o=a.kind==="model"?b[a.produces?.[0]??-1]:void 0,i=o?D(o):a.kind==="model"?void 0:D(a),r=n("button",{class:"link",type:"button",title:"Show this step"},o?`${a.label} ${u(T(a))}, writing ${o.label}`:a.label,i?n("code",{text:V(j(i),60)}):null,o?"":` ${u(T(a))}`,a.failed?" \\u2715 failed":"");r.addEventListener("click",()=>Xe(t)),e.append(s>0?", ":"",r)}),e.append("."),z.append(e)}if(c.rework.length){let e=c.rework.filter(s=>s.edits>0),t=n("li",{},e.length?"Rework: ":"Rework: none. ");e.slice(0,3).forEach((s,a)=>{t.append(a>0?"; ":"",n("code",{text:s.check}),` failed at ${S(s.failedAt)}`,s.passedAt!==void 0?` and passed at ${S(s.passedAt)} after ${P(s.edits,"edit")}`:` and hadn\'t passed by the end (${P(s.edits,"edit")})`)}),e.length>3&&t.append(`; ${e.length-3} more`),e.length?t.append("."):t.append("checks failed, but no edits followed before they ran again."),z.append(t)}else z.append(n("li",{text:"No rework: no check failed and then got fixed."}));var Z=c.phases.find(e=>e.id==="unclassified");Z&&Z.share>=.05&&c.unclassified.length&&z.append(n("li",{},`Unclassified ${u(Z.ms)} (${E(Z.share)}): `,...c.unclassified.slice(0,3).flatMap((e,t)=>[t>0?", ":"",n("code",{text:e.name}),` ${u(e.ms)}`]),c.unclassifiedModelMs>=1e3?`, and ${u(c.unclassifiedModelMs)} of model time writing those calls`:"",". Rules in ",n("code",{text:".awf/rules.yaml"})," can sort them."));B.append(z);var ye=n("table",{},n("caption",{class:"sr",text:"Time by phase"}));ye.append(n("thead",{},n("tr",{},n("th",{scope:"col",text:"Phase"}),n("th",{scope:"col",class:"n",text:"Time"}),n("th",{scope:"col",class:"n",text:"Share"}),n("th",{scope:"col",text:"Detail"}))));var Me=n("tbody");for(let e of c.phases)Me.append(n("tr",{},n("td",{text:e.label}),n("td",{class:"n",text:u(e.ms)}),n("td",{class:"n",text:E(e.share)}),n("td",{text:e.detail})));Me.append(n("tr",{class:"sum"},n("td",{text:"Total"}),n("td",{class:"n",text:u(L)}),n("td",{class:"n",text:"100%"}),n("td",{})));ye.append(Me);B.append(n("details",{class:"table"},n("summary",{text:"Phase table"}),ye));G.append(B);var se=n("input",{type:"checkbox"}),ae=n("input",{type:"search",placeholder:c.share?"Search tools and phases":"Search commands, files, tools","aria-label":"Search steps"}),oe=n("input",{type:"checkbox"});oe.checked=l.squeeze;var Ne=n("span",{class:"count","aria-live":"polite"}),le=n("button",{class:"link",type:"button",text:"Clear filters"}),We=n("button",{class:"link",type:"button",text:"Expand all"}),De=n("button",{class:"link",type:"button",text:"Collapse all"}),ft=n("div",{class:"filters"},ae,n("label",{},se,"Failed only"),ke.length?n("label",{title:"Squeeze long idle stretches to a sliver"},oe,"Squeeze idle gaps"):null,We,De,le,Ne);G.append(ft);se.addEventListener("change",()=>{l.failedOnly=se.checked,ce()});var Te=0;ae.addEventListener("input",()=>{clearTimeout(Te),Te=window.setTimeout(()=>{l.query=ae.value.trim().toLowerCase(),ce()},120)});oe.addEventListener("change",()=>{l.squeeze=oe.checked,g=Re(l.squeeze),Ve(),C()});le.addEventListener("click",()=>{l.phases.clear(),l.failedOnly=!1,l.query="",se.checked=!1,ae.value="",ce()});We.addEventListener("click",()=>{(v()?l.filterCollapsed:l.collapsed).clear(),C()});De.addEventListener("click",()=>{let e=v()?l.filterCollapsed:l.collapsed;for(let t of k.parents)e.add(t);C()});function ce(){l.filterCollapsed.clear();for(let[e,t]of qe)t.setAttribute("aria-pressed",String(l.phases.has(e))),t.classList.toggle("dim",l.phases.size>0&&!l.phases.has(e));for(let e of $e.children){let t=e.dataset.phase;e.style.opacity=l.phases.size>0&&!l.phases.has(t)?"0.3":""}C()}var Se=n("section",{class:"fall","aria-label":"Waterfall of every step"}),N=n("div",{class:"axis","aria-hidden":"true"}),ee=n("div",{class:"strip",role:"img"}),ze=n("div",{class:"hl"});Se.append(n("div",{class:"head"},ze,N,n("div",{class:"hl sub",text:"Phase at each moment"}),ee));var te=n("div",{class:"lines","aria-hidden":"true"}),A=n("div",{class:"rows",role:"list","aria-label":"Steps"});Se.append(n("div",{class:"body"},te,A));G.append(Se);function Ee(e,t,s){let a=g.x(t);e.style.left=`${a}%`,e.style.width=`${Math.max(0,g.x(s)-a)}%`}var Y=0,Oe=64,he=document.createElement("canvas").getContext("2d"),Le=new Map;function be(e){let t=Le.get(e);return t===void 0&&(he?(he.font=`11.5px ${getComputedStyle(document.body).fontFamily}`,t=he.measureText(e).width):t=e.length*7,Le.set(e,t)),t}function je(){Y=N.clientWidth,Oe=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--pad"))||64;let{ticks:e,unit:t}=st(Y||800);ze.textContent=`Step \\xB7 elapsed ${t}`,N.replaceChildren(),te.replaceChildren();for(let s of e){let a=n("span",{class:`tick${s.x===0?" start":s.x>94?" end":""}`,text:s.text});a.style.left=`${s.x}%`,N.append(a);let o=n("i");o.style.left=`${s.x}%`,te.append(o)}for(let s of g.gaps){let a=n("span",{class:"brk",title:`${u(s.e-s.s)} idle, squeezed`});a.style.left=`${s.x0}%`,a.style.width=`${s.x1-s.x0}%`;let o=n("span",{class:"gapl",text:Pe(s)});o.style.left=`${(s.x0+s.x1)/2}%`,N.append(a,o);let i=n("i",{class:"gap"});i.style.left=`${s.x0}%`,i.style.width=`${s.x1-s.x0}%`,te.append(i)}}function Ve(){je(),ee.replaceChildren(),c.timeline.forEach(([e,t,s],a)=>{if(g.x(t)-g.x(e)<.02)return;let o=n("span",{"data-seg":a});o.style.background=_(s),Ee(o,e,t),ee.append(o)}),ee.setAttribute("aria-label",`Phase over time, from 0 to ${u(L)}. The phase table lists the totals.`)}function Ge(e){let t=[];if(e.kind==="turn")for(let[s,a,o]of c.timeline)a>e.s&&s<e.e&&t.push([Math.max(s,e.s),Math.min(a,e.e),o]);else{let s=a=>{for(let o of ie[a]??[]){let i=b[o];i&&(i.container?s(o):i.phase&&i.e>i.s&&t.push([i.s,i.e,i.phase]))}};s(e.i)}return t}function ht(e){let t=new Map;for(let[s,a,o]of Ge(e))t.set(o,(t.get(o)??0)+a-s);return[...t].sort((s,a)=>a[1]-s[1])}var Ke=(e,t=3)=>ht(e).slice(0,t).map(([s,a])=>`${H(s)} ${u(a)}`).join(" \\xB7 ");function mt(e){let t=n("span",{class:"mix"});Ee(t,e.s,e.e);let s=g.x(e.e)-g.x(e.s);if(s<=0)return t;let a=Ge(e),o=g.x(e.s);for(let[i,r,d]of a){let p=(g.x(i)-o)/s*100,m=(g.x(r)-o)/s*100;if(m-p<.05)continue;let f=n("span");f.style.left=`${p}%`,f.style.width=`${m-p}%`,f.style.background=_(d),t.append(f)}return t}var Ue={approval:"approval",denied:"denied",interrupted:"interrupted",background:"background","api-error":"API error",resent:"request resent",unfinished:"no end seen"};function bt(e){let t=D(e);return[e.label,t?V(j(t),120):"",H(e.phase),u(T(e)),e.failed?"failed":""].filter(Boolean).join(", ")}function gt(e){let t=v(),s=k.parents.has(e.i),a=(t?l.filterCollapsed:l.collapsed).has(e.i),o=n("div",{class:`row${e.container&&!e.phase?" group":""}${e.kind==="idle"?" idle":""}${e.kind==="build-task"?" task":""}${l.open===e.i?" sel":""}`,role:"listitem","data-i":e.i}),i=n("div",{class:"name"});if(i.style.paddingLeft=`calc(6px + ${e.depth} * var(--indent))`,s){let h=ie[e.i]?.length??0;i.append(n("button",{class:"tw",type:"button",tabindex:-1,"aria-expanded":String(!a),"aria-label":`${a?"Show":"Hide"} ${P(h,"step")} inside ${e.label}`,text:a?"\\u25B8":"\\u25BE"}))}else i.append(n("span",{class:"tw","aria-hidden":"true"}));let r=n("button",{class:"pick",type:"button",tabindex:l.focus===e.i?0:-1,"aria-expanded":String(l.open===e.i),"aria-label":bt(e)});if(e.phase&&!e.container){let h=n("span",{class:"dot","aria-hidden":"true"});h.style.background=_(e.phase),r.append(h)}r.append(n("span",{class:"kind",text:e.label}));let d=D(e);d&&r.append(n("span",{class:"text",text:V(j(d),300)})),e.failed&&r.append(n("span",{class:"fail"},"\\u2715",n("span",{class:"w",text:" failed"})));let p=Ze.get(e.i);p!==void 0&&r.append(n("span",{class:"badge",text:p===0?"slowest":`#${p+1} slowest`}));for(let h of e.flags){let I=Ue[h];I&&!(h==="background"&&e.kind==="background")&&r.append(n("span",{class:"badge soft",text:I}))}i.append(r),o.append(i);let m=n("div",{class:"track","aria-hidden":"true"});if(e.container&&a)m.append(mt(e));else{let h=n("span",{class:`bar${e.failed?" failed":""}`});e.failed?h.style.background="var(--critical)":e.phase&&(h.style.background=_(e.phase)),e.started===!1&&h.classList.add("unstarted"),Ee(h,e.s,e.e),m.append(h)}let f=n("span",{class:"dur"},e.failed?n("span",{class:"x",text:"\\u2715 "}):null,u(T(e))),w=g.x(e.s),X=g.x(e.e),x=be(f.textContent??"")+6;return(100-X)/100*Y+Oe>=x+4?f.style.left=`calc(${X}% + 6px)`:w/100*Y>=x+4?f.style.right=`calc(${100-w}% + 6px)`:(f.classList.add("in"),f.style.right=`calc(${100-X}% + 4px)`),m.append(f),o.append(m),l.open===e.i&&o.append(kt(e)),o}function xt(e){let t=e.indexOf(":"),s=t>0?e.slice(0,t):e,a=t>0?e.slice(t+1):"";switch(s){case"script":return`runs the package script "${a}"`;case"make":return`runs the make target "${a}"`;case"task":return`runs the task "${a}"`;case"hook":return`runs the git hook ${a}`;case"file":return`runs the script ${a}`;case"via":return`through ${a}`;case"unmatched":return`no rule for "${a}"`;case"was":return`was ${H(a)||a} before a check failed`}let o={"by-name":"phase guessed from a script or task name",install:"installs dependencies",polling:"waits in a loop",neutral:"only commands that say nothing about the phase","failure-unattributed":"the failure could not be pinned on one check","background-task":"waits on a background task",compaction:"context compaction",subagent:"ran a subagent","no-command":"no command recorded"};return o[e]?o[e]:Ie.has(e)?`also ${H(e)}`:e}function kt(e){let t=n("div",{class:"more",role:"region","aria-label":`Details: ${e.label}`}),s=n("dl"),a=(r,...d)=>s.append(n("dt",{text:r}),n("dd",{},...d));if(e.phase){let r=n("span",{class:"sw","aria-hidden":"true"});r.style.background=_(e.phase),a("Phase",r,H(e.phase),e.reworkFor?` (after ${e.reworkFor} failed)`:"")}if(a("When",`${S(e.s)} \\u2192 ${S(e.e)} \\xB7 ${u(T(e))} \\xB7 ${xe(c.session.startMs+e.s)}`),e.waitMs&&a("Waited for you",u(e.waitMs)),e.runMs!==void 0&&e.waitMs&&a("Ran",u(e.runMs)),e.kind==="tool"||e.kind==="background"){let r=e.failed?n("span",{class:"status-failed",text:"\\u2715 Failed"}):e.ok===!0?"OK":e.ok===!1?"Error":"Unknown";a("Result",r,e.exitCode!==void 0?` \\xB7 exit code ${e.exitCode}`:"")}if(e.tool&&a("Tool",e.tool),e.agentType&&a("Agent type",e.agentType),e.model&&a("Model",e.model),e.tokens){let r=e.tokens,d=T(e)/1e3;a("Tokens",`${K(r.input+r.cacheRead+r.cacheWrite)} in (${K(r.cacheRead)} cached) \\xB7 ${K(r.output)} out`,e.kind==="model"&&d>=1&&r.output>0?` \\xB7 ${Math.round(r.output/d)} tokens/s out`:"")}e.checks.length&&a("Checks",e.checks.map(r=>`${r.key} ${r.failed?"failed":"passed"}`).join(", ")),e.flags.length&&a("Flags",e.flags.map(r=>Ue[r]??r).join(", "));let o=e.tags.map(xt).filter(Boolean);if(o.length&&a("Notes",o.join("; ")),e.kind==="build-task"&&(a("Build tool",e.tool??""),e.started===!1&&a("Start",`not recorded by ${e.tool}: drawn from the build\'s start. Tasks may have run in parallel.`)),e.container){a("Inside",P(ie[e.i]?.length??0,e.kind==="tool"?"build task":"step"));let r=Ke(e,5);r&&a("By phase",r)}e.kind==="tool"&&!c.session.sources.includes("recorder")&&!e.waitMs&&a("Note","May include waiting for your approval: only the recorder (the plugin) sees approvals."),t.append(s);let i=(r,d)=>t.append(n("h3",{text:r}),n("pre",{text:d}));if(e.kind==="model"&&e.produces?.length){t.append(n("h3",{text:"Wrote these calls"}));let r=n("ul",{class:"made"});for(let d of e.produces){let p=b[d];if(!p)continue;let m=D(p),f=n("button",{class:"link",type:"button"},p.label,m?n("code",{text:V(j(m),100)}):null,` ${u(T(p))}`);f.addEventListener("click",w=>{w.stopPropagation(),Xe(d)}),r.append(n("li",{},f))}t.append(r)}else e.text&&e.tool==="Bash"&&i("Command",e.text);return e.files?.length&&i(e.files.length===1?"File":"Files",e.files.join(`\n`)),e.description&&e.description!==e.text&&i("Description",e.description),e.output&&i(`Output (secrets masked${e.output.length>=4e3?", first 4,000 characters":""})`,e.output),c.share&&t.append(n("p",{class:"note",text:"Shared report: commands, files and output are left out."})),t}function C(){let e=A.contains(document.activeElement);k=He(),k.rows.some(a=>a.i===l.focus)||(l.focus=k.rows[0]?.i??-1);let t=document.createDocumentFragment();for(let a of k.rows)t.append(gt(a));k.rows.length||t.append(n("p",{class:"empty",text:b.length?"No steps match these filters.":"This session has no steps."})),A.replaceChildren(t);let s=k.rows.filter(a=>!a.container).length;Ne.textContent=v()?`${P(s,"step")} match, of ${me.toLocaleString("en-US")}`:P(me,"step"),le.hidden=!v(),e&&O(l.focus)}function O(e){l.focus=e;for(let s of A.querySelectorAll(".pick"))s.tabIndex=-1;let t=A.querySelector(`.row[data-i="${e}"] .pick`);t&&(t.tabIndex=0,t.focus({preventScroll:!1}))}function ge(e){let t=v()?l.filterCollapsed:l.collapsed;t.has(e)?t.delete(e):t.add(e),l.focus=e,C(),O(e)}function Ye(e){l.open=l.open===e?-1:e,l.focus=e,C(),O(e)}function Xe(e){let t=b[e];if(t){v()&&!_e(t)&&le.click();for(let s=t.p;s>=0;s=b[s]?.p??-1)l.collapsed.delete(s),l.filterCollapsed.delete(s);l.open=e,l.focus=e,C(),O(e),A.querySelector(`.row[data-i="${e}"]`)?.scrollIntoView({block:"center"})}}A.addEventListener("click",e=>{let t=e.target;if(t.closest(".more"))return;let s=t.closest(".row");if(!s)return;let a=Number(s.getAttribute("data-i"));t.closest(".tw")?ge(a):Ye(a)});A.addEventListener("keydown",e=>{let t=e.target.closest(".row");if(!t||!e.target.closest(".pick"))return;let s=Number(t.getAttribute("data-i")),a=k.rows.findIndex(d=>d.i===s),o=b[s];if(!o)return;let i=(v()?l.filterCollapsed:l.collapsed).has(s),r=d=>{let p=k.rows[Math.max(0,Math.min(k.rows.length-1,d))];p&&O(p.i)};switch(e.key){case"ArrowDown":r(a+1);break;case"ArrowUp":r(a-1);break;case"Home":r(0);break;case"End":r(k.rows.length-1);break;case"ArrowRight":k.parents.has(s)&&i?ge(s):k.parents.has(s)&&r(a+1);break;case"ArrowLeft":k.parents.has(s)&&!i?ge(s):o.p>=0&&O(o.p);break;case"Escape":l.open>=0&&Ye(l.open);break;default:return}e.preventDefault()});var y=n("div",{class:"tip",role:"tooltip",hidden:!0});document.body.append(y);var $t=window.matchMedia("(hover: hover)").matches;function wt(e){let t=e.closest("[data-phase]");if(t){let i=c.phases.find(r=>r.id===t.dataset.phase);if(i)return[n("b",{text:i.label}),n("span",{text:`${u(i.ms)} \\xB7 ${E(i.share)}${i.detail?` \\xB7 ${i.detail}`:""}`})]}let s=e.closest("[data-seg]");if(s){let i=c.timeline[Number(s.dataset.seg)];if(i)return[n("b",{text:H(i[2])}),n("span",{text:`${S(i[0])} \\u2192 ${S(i[1])} \\xB7 ${u(i[1]-i[0])}`})]}let o=e.closest(".track")?.closest(".row");if(o){let i=b[Number(o.getAttribute("data-i"))];if(!i)return;let r=D(i);return[n("b",{text:i.label}),r?n("code",{text:V(j(r),160)}):null,n("span",{text:[H(i.phase),u(T(i)),`${S(i.s)} \\u2192 ${S(i.e)}`,i.failed?"\\u2715 failed":""].filter(Boolean).join(" \\xB7 ")}),i.container?n("span",{text:Ke(i)}):null]}}$t&&(document.addEventListener("mousemove",e=>{let t=e.target instanceof Element?wt(e.target):void 0;if(!t){y.hidden=!0;return}y.replaceChildren(...t.filter(r=>!!r)),y.hidden=!1;let s=y.offsetWidth,a=y.offsetHeight,o=Math.min(e.clientX+14,window.innerWidth-s-8),i=e.clientY+18+a>window.innerHeight?e.clientY-a-12:e.clientY+18;y.style.left=`${Math.max(8,o)}px`,y.style.top=`${Math.max(8,i)}px`}),document.addEventListener("mouseleave",()=>y.hidden=!0));G.append(n("footer",{class:"foot"},`Made by awf ${Ce} on ${xe(c.generatedAt,!0)}. `,c.share?"Shared report: phases, durations and tool names only.":"This file holds commands, file paths and tool output from the session, with secrets masked. Make a version without them with --share."));Ve();C();var Ae=0;window.addEventListener("resize",()=>{cancelAnimationFrame(Ae),Ae=requestAnimationFrame(()=>{N.clientWidth!==Y&&(je(),C())})});document.body.dataset.ready="1";document.body.dataset.renderMs=String(Math.round(performance.now()-Qe));})();';
-var CLIENT_CSS = ':root{color-scheme:light;--page: #f9f9f7;--surface: #fcfcfb;--raised: #ffffff;--ink: #0b0b0b;--ink-2: #52514e;--muted: #6f6d68;--grid: #e8e7e1;--axis: #c3c2b7;--ring: rgba(11, 11, 11, .12);--hover: rgba(11, 11, 11, .04);--selected: rgba(42, 120, 214, .08);--focus: #2a78d6;--link: #1f63b5;--critical: #d03b3b;--critical-ink: #b42323;--container: #a3a29b;--c-writing-code: #2a78d6;--c-writing-tests: #eb6834;--c-lint: #1baf7a;--c-tests: #eda100;--c-build: #e87ba4;--c-rework: #6250d6;--c-exploring: #008300;--c-running: #0b5f73;--c-planning: #7b8494;--c-waiting: repeating-linear-gradient(135deg, #a9a8a0 0 2px, #e2e1da 2px 5px);--c-unclassified: #a5a49d;--mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;--sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;--label: 34%;--pad: 64px;--indent: 14px;--row: 28px}@media(prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;--page: #0d0d0d;--surface: #1a1a19;--raised: #222220;--ink: #f0efec;--ink-2: #c3c2b7;--muted: #9c9a92;--grid: #2a2a28;--axis: #383835;--ring: rgba(255, 255, 255, .12);--hover: rgba(255, 255, 255, .05);--selected: rgba(57, 135, 229, .14);--focus: #3987e5;--link: #7fb1ef;--critical: #e05252;--critical-ink: #f08080;--container: #6e6d68;--c-writing-code: #3987e5;--c-writing-tests: #d95926;--c-lint: #199e70;--c-tests: #c98500;--c-build: #d55181;--c-rework: #9085e9;--c-exploring: #008300;--c-running: #86cfe0;--c-planning: #8a93a3;--c-waiting: repeating-linear-gradient(135deg, #7a7973 0 2px, #33332f 2px 5px);--c-unclassified: #6e6d68}}:root[data-theme=dark]{color-scheme:dark;--page: #0d0d0d;--surface: #1a1a19;--raised: #222220;--ink: #f0efec;--ink-2: #c3c2b7;--muted: #9c9a92;--grid: #2a2a28;--axis: #383835;--ring: rgba(255, 255, 255, .12);--hover: rgba(255, 255, 255, .05);--selected: rgba(57, 135, 229, .14);--focus: #3987e5;--link: #7fb1ef;--critical: #e05252;--critical-ink: #f08080;--container: #6e6d68;--c-writing-code: #3987e5;--c-writing-tests: #d95926;--c-lint: #199e70;--c-tests: #c98500;--c-build: #d55181;--c-rework: #9085e9;--c-exploring: #008300;--c-running: #86cfe0;--c-planning: #8a93a3;--c-waiting: repeating-linear-gradient(135deg, #7a7973 0 2px, #33332f 2px 5px);--c-unclassified: #6e6d68}*{box-sizing:border-box}html,body{margin:0;background:var(--page);color:var(--ink);font:14px/1.45 var(--sans);-webkit-text-size-adjust:100%}button,input{font:inherit;color:inherit}:focus-visible{outline:2px solid var(--focus);outline-offset:2px}[hidden]{display:none!important}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}.wrap{max-width:1440px;margin:0 auto;padding:20px 24px 48px}code{font-family:var(--mono);font-size:12.5px;background:var(--hover);border-radius:4px;padding:1px 4px;overflow-wrap:anywhere}.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.brand{font-size:12px;color:var(--muted);letter-spacing:.02em;margin:0 0 6px}h1{font-size:20px;line-height:1.3;font-weight:600;margin:0 0 6px;overflow-wrap:anywhere}.meta{color:var(--ink-2);margin:0;overflow-wrap:anywhere}.theme{flex:none;border:1px solid var(--ring);background:var(--surface);border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--ink-2)}.theme:hover{background:var(--hover)}.card{background:var(--surface);border:1px solid var(--ring);border-radius:12px;padding:16px;margin-top:16px}.total{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px;margin-bottom:12px}.total .value{font-size:28px;font-weight:600;font-variant-numeric:tabular-nums}.total .sub{color:var(--ink-2)}.stack{display:flex;gap:2px;height:18px;width:100%}.stack span{height:100%;min-width:2px}.stack span:first-child{border-radius:4px 0 0 4px}.stack span:last-child{border-radius:0 4px 4px 0}.stack span:only-child{border-radius:4px}.legend{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0;padding:0;list-style:none}.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--ring);background:var(--raised);border-radius:999px;padding:4px 10px 4px 8px;cursor:pointer;min-height:30px;text-align:left}.chip:hover{background:var(--hover)}.chip[aria-pressed=true]{border-color:var(--ink-2);box-shadow:inset 0 0 0 1px var(--ink-2)}.chip.dim{opacity:.5}.sw{display:inline-block;width:10px;height:10px;border-radius:3px;flex:none}.chip .num{color:var(--ink-2);font-variant-numeric:tabular-nums}.counts{display:flex;flex-wrap:wrap;gap:4px 18px;margin:14px 0 0;color:var(--ink-2)}.counts b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}.why{margin:12px 0 0;padding:0 0 0 18px}.why li{margin:5px 0}.why b{font-weight:600}.link{border:0;background:none;color:var(--link);cursor:pointer;padding:2px 0;text-align:left}.link:hover{text-decoration:underline}.link code{margin:0 3px;color:var(--ink)}details.table{margin-top:12px}details.table summary{cursor:pointer;color:var(--ink-2)}details.table table{border-collapse:collapse;margin-top:8px;width:100%;max-width:680px}details.table th,details.table td{text-align:left;padding:4px 8px;border-bottom:1px solid var(--grid);font-variant-numeric:tabular-nums}details.table th{color:var(--muted);font-weight:500}details.table .n{text-align:right}details.table .sum td{font-weight:600;border-bottom:0}.filters{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin:20px 0 10px}.filters label{display:inline-flex;align-items:center;gap:6px;cursor:pointer;min-height:32px}.filters input[type=search]{border:1px solid var(--ring);background:var(--surface);border-radius:8px;padding:6px 10px;flex:1 1 240px;max-width:360px;min-height:34px}.filters .count{color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums}.fall{background:var(--surface);border:1px solid var(--ring);border-radius:12px;overflow:clip}.head{position:sticky;top:0;z-index:3;display:grid;grid-template-columns:var(--label) 1fr;background:var(--surface);border-bottom:1px solid var(--grid)}.hl{padding:6px 12px 0;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hl.sub{padding:2px 12px 8px}.axis{position:relative;height:26px;margin-right:var(--pad)}.tick{position:absolute;top:6px;transform:translate(-50%);font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}.tick.start{transform:none}.tick.end{transform:translate(-100%)}.brk{position:absolute;top:4px;bottom:2px;background:repeating-linear-gradient(135deg,transparent 0 3px,var(--axis) 3px 4px);border-radius:2px}.strip{position:relative;height:10px;margin:4px var(--pad) 10px 0;border-radius:3px;overflow:hidden;background:var(--grid)}.strip span{position:absolute;top:0;bottom:0}.body{position:relative}.lines{position:absolute;top:0;bottom:0;left:var(--label);right:var(--pad);pointer-events:none}.lines i{position:absolute;top:0;bottom:0;width:1px;background:var(--grid)}.lines i.gap{background:repeating-linear-gradient(135deg,transparent 0 5px,var(--grid) 5px 6px)}.rows{position:relative}.row{display:grid;grid-template-columns:var(--label) 1fr;align-items:center;cursor:pointer}.row:hover{background:var(--hover)}.row.sel{background:var(--selected)}.name{display:flex;align-items:center;gap:4px;min-width:0;min-height:var(--row);padding-right:8px}.tw{width:18px;height:22px;flex:none;color:var(--muted);text-align:center;font-size:11px;border:0;background:none;padding:0;border-radius:4px;cursor:pointer}button.tw:hover{background:var(--hover);color:var(--ink)}.pick{display:flex;align-items:center;gap:6px;min-width:0;flex:1 1 auto;border:0;background:none;padding:2px 0;text-align:left;cursor:pointer;white-space:nowrap;border-radius:4px}.dot{width:8px;height:8px;border-radius:2px;flex:none}.kind{flex:0 0 auto;max-width:60%;overflow:hidden;text-overflow:ellipsis}.text{flex:0 1 auto;min-width:0;color:var(--ink-2);font-family:var(--mono);font-size:12px;overflow:hidden;text-overflow:ellipsis}.row.group .kind{font-weight:600}.row.idle .kind{color:var(--muted)}.fail{flex:none;color:var(--critical-ink);font-weight:600;font-size:12.5px}.badge{flex:none;border:1px solid var(--ring);background:var(--raised);color:var(--ink);border-radius:999px;font-size:10.5px;padding:0 6px;line-height:16px}.badge.soft{color:var(--ink-2);background:none}.track{position:relative;height:var(--row);margin-right:var(--pad)}.bar,.mix{position:absolute;top:calc(50% - 6px);height:12px;min-width:2px;border-radius:3px}.row.group .bar{top:calc(50% - 2px);height:4px;background:var(--container);border-radius:2px}.mix{top:calc(50% - 4px);height:8px;overflow:hidden;background:var(--grid);border-radius:2px}.mix span{position:absolute;top:0;bottom:0}.row.task .bar{top:calc(50% - 4px);height:8px;opacity:.85}.row.task .bar.unstarted{background-image:repeating-linear-gradient(90deg,transparent 0 6px,var(--surface) 6px 7px)!important}.row.task .kind{font-family:var(--mono);font-size:12px;color:var(--ink-2)}.gapl{position:absolute;top:5px;transform:translate(-50%);font-size:11px;color:var(--ink-2);background:var(--surface);border:1px solid var(--grid);border-radius:4px;padding:0 4px;white-space:nowrap}.made{margin:6px 0 0;padding-left:18px}.dur{position:absolute;top:calc(50% - 9px);font-size:11.5px;line-height:18px;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums;pointer-events:none}.dur .x{color:var(--critical-ink);font-weight:600}.dur.in{background:var(--surface);border-radius:4px;padding:0 4px}.empty{padding:24px 16px;margin:0;color:var(--muted)}.more{grid-column:1 / -1;position:relative;z-index:1;margin:2px 12px 10px;background:var(--raised);border:1px solid var(--ring);border-radius:10px;padding:12px 14px;cursor:auto}.more dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:0}.more dt{color:var(--muted)}.more dd{margin:0;overflow-wrap:anywhere}.more dd .sw{margin-right:6px;vertical-align:-1px}.more h3{font-size:12.5px;font-weight:600;margin:14px 0 0;color:var(--ink-2)}.more pre{font-family:var(--mono);font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--surface);border:1px solid var(--ring);border-radius:8px;padding:8px 10px;margin:6px 0 0;max-height:360px;overflow:auto}.status-failed{color:var(--critical-ink);font-weight:600}.note,.foot{color:var(--muted);font-size:12.5px;margin:10px 0 0}.foot{margin-top:20px}.tip{position:fixed;z-index:20;pointer-events:none;display:flex;flex-direction:column;gap:2px;background:var(--raised);border:1px solid var(--ring);border-radius:8px;padding:6px 9px;box-shadow:0 6px 20px #00000024;font-size:12.5px;max-width:360px}.tip span{color:var(--ink-2)}.tip code{align-self:flex-start}@media(max-width:760px){:root{--label: 44%;--pad: 52px;--indent: 8px;--row: 36px}.wrap{padding:14px 16px 40px}h1{font-size:17px}.top{flex-direction:column-reverse;gap:10px}.theme{align-self:flex-end}.pick{flex-wrap:wrap;row-gap:0;padding:4px 0}.text{flex:1 0 100%;order:10;padding-left:14px;font-size:11.5px}.badge.soft,.fail .w{display:none}.filters input[type=search]{max-width:none;flex-basis:100%}.filters .count{margin-left:0}.more{margin:2px 6px 10px}.legend{display:grid;grid-template-columns:1fr 1fr}.chip{display:grid;grid-template-columns:auto 1fr;column-gap:6px;align-items:center;width:100%;height:100%;border-radius:10px;padding:5px 8px;font-size:13px}.chip .num{grid-column:2;font-size:12px}.more dl{grid-template-columns:1fr;gap:0}.more dd{margin-bottom:6px}}@media print{.filters,.theme{display:none}.row{break-inside:avoid}}';
-
-// src/report/html.ts
-function escapeHtml(text) {
-  return text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
-}
-function scriptJson(value) {
-  return JSON.stringify(value).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
-}
-function renderReportHtml(data) {
-  const title = data.share ? `awf \xB7 session ${data.session.id}` : `awf \xB7 ${data.session.title ?? `session ${data.session.id.slice(0, 8)}`}`;
-  return `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light dark">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
-<meta name="referrer" content="no-referrer">
-<meta name="generator" content="awf">
-<title>${escapeHtml(title.length > 90 ? title.slice(0, 89) + "\u2026" : title)}</title>
-<style>${CLIENT_CSS}</style>
-</head>
-<body>
-<noscript>This report draws itself with JavaScript; turn it on to see the waterfall.</noscript>
-<div id="app"></div>
-<script type="application/json" id="awf-data">${scriptJson(data)}</script>
-<script>${CLIENT_JS}</script>
-</body>
-</html>
-`;
-}
-
-// src/cli/commands/report.ts
-var reportCommand = {
-  summary: "Write a session as one self-contained HTML waterfall",
-  usage: `Usage: awf report <session> [--out <file.html>] [--share] [--open] [--json]
-
-Writes one HTML file that draws the session: time by phase, the phase at each moment, and every
-step on a waterfall, with failures, rework and the slowest steps marked. Styles and script are
-inside the file, and it makes no network requests. <session> is an ID or its first characters,
-"last", or a transcript or events file.
-  --out <file>  where to write it (default: ~/.awf/reports/<session>.html)
-  --share       phases, durations and tool names only: no task, folder, commands, files or output
-  --open        open it in your browser
-  --json        print the report's data as JSON instead`,
-  options: {
-    out: { type: "string", short: "o" },
-    share: { type: "boolean" },
-    open: { type: "boolean" },
-    json: { type: "boolean" },
-    project: { type: "string" }
-  },
-  run(ctx, args, options) {
-    const share = options.share === true;
-    const session = loadOne(ctx, args[0], options, !share);
-    if (!share) attachBuildTimings(session);
-    const home = ctx.env.HOME ?? os9.homedir();
-    const data = buildReportData(summarize(classifier()(session)), { share, home, now: ctx.now });
-    if (options.json) {
-      ctx.io.out(JSON.stringify(data, null, 2));
-      return 0;
-    }
-    const out = typeof options.out === "string" ? path21.resolve(ctx.cwd, options.out) : path21.join(
-      awfHome(ctx.env),
-      "reports",
-      `${safeId(session.id)}${share ? "-share" : ""}.html`
-    );
-    mkdirSync3(path21.dirname(out), { recursive: true });
-    writeFileSync3(out, renderReportHtml(data));
-    ctx.io.out(
-      `Wrote ${homeRelative(out, home)}${share ? " (shareable: no commands, files or output)" : ""}`
-    );
-    ctx.io.out(pathToFileURL(out).href);
-    if (options.open) openInBrowser(out, ctx);
-    return 0;
-  }
-};
-function openInBrowser(file, ctx) {
-  const [command, args] = process.platform === "darwin" ? ["open", [file]] : process.platform === "win32" ? ["explorer", [file]] : ["xdg-open", [file]];
-  try {
-    const child = spawn(command, args, { stdio: "ignore", detached: true });
-    child.on(
-      "error",
-      () => ctx.io.err(`awf report: couldn't open a browser; open the file above.`)
-    );
-    child.unref();
-  } catch {
-    ctx.io.err(`awf report: couldn't open a browser; open the file above.`);
-  }
-}
-
 // src/cli/commands/sample.ts
 import { readFileSync as readFileSync12 } from "node:fs";
-import path22 from "node:path";
+import path24 from "node:path";
 function random(seed) {
   let s = seed >>> 0 || 1;
   return () => {
@@ -15439,7 +15601,7 @@ Re-classifies each labelled command with the current rules and reports agreement
   run(ctx, args, options) {
     const file = args[0];
     if (!file) throw new Error("give the labels file, for example fixtures/labels.csv");
-    const rows = parseCsv(readFileSync12(path22.resolve(ctx.cwd, file), "utf8"));
+    const rows = parseCsv(readFileSync12(path24.resolve(ctx.cwd, file), "utf8"));
     const header2 = rows.shift() ?? [];
     const col = (name) => header2.indexOf(name);
     const [ci, wi, yi] = [col("command"), col("cwd"), col("your_phase")];
@@ -15504,8 +15666,8 @@ Re-classifies each labelled command with the current rules and reports agreement
 };
 
 // src/cli/commands/sessions.ts
-import os10 from "node:os";
-import path23 from "node:path";
+import os11 from "node:os";
+import path25 from "node:path";
 function sessionRow(session) {
   const idleMs = session.steps.filter((s) => s.kind === "idle").reduce((sum, s) => sum + (s.endMs - s.startMs), 0);
   const durationMs = Math.max(0, session.endMs - session.startMs);
@@ -15524,7 +15686,7 @@ function sessionRow(session) {
 }
 function inFolder(cwd, dir) {
   if (!dir) return true;
-  return !!cwd && (cwd === dir || cwd.startsWith(dir + path23.sep));
+  return !!cwd && (cwd === dir || cwd.startsWith(dir + path25.sep));
 }
 function listSessionRows(env) {
   const rows = [];
@@ -15554,7 +15716,7 @@ gaps between turns. Background work in those gaps (subagents, builds left runnin
   },
   run(ctx, _args, options) {
     const since = typeof options.since === "string" ? ctx.now - parseSince(options.since) : -Infinity;
-    const project = typeof options.project === "string" ? path23.resolve(ctx.cwd, options.project) : void 0;
+    const project = typeof options.project === "string" ? path25.resolve(ctx.cwd, options.project) : void 0;
     const rows = listSessionRows(ctx.env).filter(
       (row) => row.startMs >= since && inFolder(row.cwd, project)
     );
@@ -15568,7 +15730,7 @@ gaps between turns. Background work in those gaps (subagents, builds left runnin
       );
       return 0;
     }
-    const home = ctx.env.HOME ?? os10.homedir();
+    const home = ctx.env.HOME ?? os11.homedir();
     ctx.io.out(
       table(
         ["SESSION", "STARTED", "DURATION", "IN TURNS", "TURNS", "TOOLS", "SOURCE", "PROJECT"],
@@ -15759,7 +15921,7 @@ the share left unclassified, and the programs behind that time, to show which ru
 };
 
 // src/cli/commands/summary.ts
-import os11 from "node:os";
+import os12 from "node:os";
 var summaryCommand = {
   summary: "One line per phase: time, share, runs and failures",
   usage: `Usage: awf summary <session> [--json] [--share]
@@ -15787,7 +15949,7 @@ or a transcript or events file.
       ctx.io.out(JSON.stringify(summary, null, 2));
       return 0;
     }
-    const home = ctx.env.HOME ?? os11.homedir();
+    const home = ctx.env.HOME ?? os12.homedir();
     const header2 = [
       `Session ${summary.id.slice(0, 8)}`,
       formatClock(summary.startMs),
@@ -15814,6 +15976,7 @@ var COMMANDS = {
   classify: classifyCommand,
   summary: summaryCommand,
   report: reportCommand,
+  dash: dashCommand,
   compare: compareCommand,
   stats: statsCommand,
   statusline: statuslineCommand,

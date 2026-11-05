@@ -22,8 +22,8 @@ export const rawPlugin = {
 };
 
 /**
- * The report viewer, bundled for the browser and minified, and its stylesheet: the strings
- * src/report/html.ts inlines into every report.
+ * The report viewer and the dashboard, bundled for the browser and minified, and their stylesheets:
+ * the strings src/report/html.ts and src/dash/html.ts inline into every page.
  */
 export async function buildReportAssets() {
   const { build } = await import('esbuild');
@@ -34,21 +34,27 @@ export async function buildReportAssets() {
     absWorkingDir: root,
     legalComments: 'none',
   };
-  const [js, css] = await Promise.all([
+  const browser = (entry) =>
     build({
       ...shared,
-      entryPoints: ['src/report/client/main.ts'],
+      entryPoints: [entry],
       format: 'iife',
       platform: 'browser',
       target: 'es2020',
-    }),
+    });
+  const [js, css, dashJs, dashCss] = await Promise.all([
+    browser('src/report/client/main.ts'),
     build({ ...shared, entryPoints: ['src/report/client/styles.css'] }),
+    browser('src/dash/client/main.ts'),
+    build({ ...shared, entryPoints: ['src/dash/client/styles.css'] }),
   ]);
   // Inline <script> and <style> end at the first closing tag, wherever it is.
   const guard = (text, tag) => text.replace(new RegExp(`</(${tag})`, 'gi'), '<\\/$1');
   return {
     CLIENT_JS: guard(js.outputFiles[0].text.trim(), 'script'),
     CLIENT_CSS: guard(css.outputFiles[0].text.trim(), 'style'),
+    DASH_JS: guard(dashJs.outputFiles[0].text.trim(), 'script'),
+    DASH_CSS: guard(dashCss.outputFiles[0].text.trim(), 'style'),
   };
 }
 

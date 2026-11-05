@@ -1,4 +1,4 @@
-import { cpSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
@@ -81,6 +81,21 @@ describe('analysis commands', () => {
     expect((await run('sample', '--n', '1', '--seed', '7')).out).toContain(steps[0].command);
     // The fixture's three Bash calls hold two distinct commands.
     expect(JSON.parse((await run('sample', '--json')).out)).toHaveLength(2);
+  });
+
+  it('writes every session to one dashboard, without commands, files or output', async () => {
+    const data = JSON.parse((await run('dash', '--json')).out);
+    expect(data.sessions).toHaveLength(1);
+    expect(data.sessions[0]).toMatchObject({ id: ID, toolCalls: 5, agent: 'claude-code' });
+    expect(data.phases[0]).toEqual({ id: 'writing-code', label: 'Writing code' });
+    const out = path.join(home, 'dash.html');
+    const written = await run('dash', '--out', out);
+    expect(written.code).toBe(0);
+    expect(written.out).toMatch(/^Wrote .*dash\.html: 1 session in 1 project/);
+    const html = readFileSync(out, 'utf8');
+    expect(html).toContain(ID);
+    expect(html).not.toContain('npm test');
+    expect(html).not.toContain('sum.js');
   });
 
   it('explains an unknown session', async () => {
