@@ -258,6 +258,55 @@ describe('eventsToSession', () => {
     expect(models(session.steps)[1]?.produces).toEqual(['t2']);
   });
 
+  it("doesn't restart a subagent's model time when its last batch resolves after SubagentStop", () => {
+    // A subagent ends on a SubagentHandback call, and Claude Code stamps that call's
+    // PostToolBatch just after SubagentStop. The subagent is done: no model time after it.
+    const session = eventsToSession('s', [
+      ev('UserPromptSubmit', 1000),
+      ev('PreToolUse', 2000, { tool: 'Agent', tuid: 'a1', sub: 'Explore' }),
+      ev('SubagentStart', 2050, { aid: 'x1', at: 'Explore' }),
+      ev('PreToolUse', 3000, { tool: 'Grep', tuid: 'g1', aid: 'x1' }),
+      ev('PostToolUse', 3100, { tuid: 'g1', ok: true, aid: 'x1' }),
+      ev('PostToolBatch', 3110, { ids: ['g1'], aid: 'x1' }),
+      ev('PreToolUse', 5000, { tool: 'SubagentHandback', tuid: 'h1', aid: 'x1' }),
+      ev('PostToolUse', 5100, { tuid: 'h1', ok: true, aid: 'x1' }),
+      ev('SubagentStop', 5110, { aid: 'x1' }),
+      ev('PostToolBatch', 5111, { ids: ['h1'], aid: 'x1' }),
+      ev('PostToolUse', 5200, { tuid: 'a1', ok: true, child: 'x1' }),
+      ev('PostToolBatch', 5210, { ids: ['a1'] }),
+      ev('Stop', 8000),
+      ev('UserPromptSubmit', 100_000),
+      ev('Stop', 101_000),
+      ev('SessionEnd', 200_000),
+    ]);
+    const subModels = models(session.steps).filter((s) => s.agentId === 'x1');
+    expect(subModels.map(span)).toEqual([
+      [2050, 3000],
+      [3100, 5000],
+      [5100, 5110],
+    ]);
+    expect(subModels.flatMap((s) => s.flags)).not.toContain('unfinished');
+    expect(span(session.steps.find((s) => s.kind === 'subagent'))).toEqual([2050, 5110]);
+  });
+
+  it("doesn't start model time when a batch resolves after the turn's Stop", () => {
+    const session = eventsToSession('s', [
+      ev('UserPromptSubmit', 1000),
+      ev('PreToolUse', 2000, { tool: 'Bash', tuid: 'b1' }),
+      ev('PostToolUse', 2100, { tuid: 'b1', ok: true }),
+      ev('Stop', 2200),
+      ev('PostToolBatch', 2201, { ids: ['b1'] }),
+      ev('PreToolUse', 50_000, { tool: 'Bash', tuid: 'b2' }),
+      ev('PostToolUse', 50_100, { tuid: 'b2', ok: true }),
+      ev('Stop', 51_000),
+    ]);
+    expect(models(session.steps).map(span)).toEqual([
+      [1000, 2000],
+      [2100, 2200],
+      [50_100, 51_000],
+    ]);
+  });
+
   it('flags a subagent whose Agent call returned at once as background', () => {
     const session = eventsToSession('s', [
       ev('UserPromptSubmit', 1000),
