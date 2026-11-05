@@ -12124,6 +12124,9 @@ var TranscriptReader = class {
   }
   assistant(entry, ms, agentId) {
     const message = obj2(entry.message) ?? {};
+    if (str2(message.model) === "<synthetic>" && entry.isApiErrorMessage !== true && !contentBlocks(entry).some((b) => b.type === "tool_use")) {
+      return;
+    }
     const messageId = str2(message.id) ?? str2(entry.uuid);
     if (!agentId && (!this.turnOpen || this.turnEndMark !== void 0 && ms > this.turnEndMark)) {
       if (this.turnOpen) this.closeTurn();

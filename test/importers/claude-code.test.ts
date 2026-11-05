@@ -680,6 +680,49 @@ describe('Claude Code importer edge cases', () => {
     expect(session.steps.some((s) => s.kind === 'turn')).toBe(true);
   });
 
+  it("doesn't count a message Claude Code wrote itself as model time", () => {
+    // Claude Code writes some assistant messages itself: model "<synthetic>", no tokens. One that
+    // lands days after a rejected plan, or after a notice the model never answered, is no model call.
+    const synthetic = (t: number, id: string) => ({
+      type: 'assistant',
+      timestamp: new Date(ms(t)).toISOString(),
+      message: {
+        id,
+        role: 'assistant',
+        model: '<synthetic>',
+        content: [{ type: 'text', text: 'No response requested.' }],
+        usage: { input_tokens: 0, output_tokens: 0 },
+      },
+    });
+    const day = 86_400;
+    const file = writeTranscript('s12', [
+      prompt(0, 'plan the change'),
+      toolUse(5, 'm1', 'p1', 'ExitPlanMode', { plan: 'Do it' }),
+      result(60, 'p1', { error: true, content: 'The user rejected the plan.' }),
+      synthetic(3 * day, 'x1'),
+      prompt(3 * day + 10, 'try again'),
+      text(3 * day + 20, 'm2', 'Done.'),
+    ]);
+    const session = importClaudeCodeTranscript(file);
+    const turns = session.steps.filter((s) => s.kind === 'turn');
+    expect(turns.map((t) => [t.startMs, t.endMs])).toEqual([
+      [ms(0), ms(60)],
+      [ms(3 * day + 10), ms(3 * day + 20)],
+    ]);
+    expect(session.steps.find((s) => s.kind === 'idle')).toMatchObject({
+      startMs: ms(60),
+      endMs: ms(3 * day + 10),
+    });
+    const longest = Math.max(
+      ...session.steps.filter((s) => s.kind === 'model').map((s) => s.endMs - s.startMs),
+    );
+    expect(longest).toBeLessThan(60_000);
+    const { summary } = analyze(session, { files: memoryFiles({}) });
+    const phase = (id: string) => summary.phases.find((p) => p.phase === id)?.ms ?? 0;
+    expect(phase('waiting')).toBeGreaterThan(3 * day * 1000 - 60_000);
+    expect(phase('planning')).toBeLessThan(30_000);
+  });
+
   it('flags a turn that ended on an API error', () => {
     const file = writeTranscript('s10', [
       prompt(0, 'hi'),

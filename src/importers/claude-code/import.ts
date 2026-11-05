@@ -379,6 +379,16 @@ class TranscriptReader {
 
   private assistant(entry: Entry, ms: number, agentId: string | undefined): void {
     const message = obj(entry.message) ?? {};
+    if (
+      str(message.model) === '<synthetic>' &&
+      entry.isApiErrorMessage !== true &&
+      !contentBlocks(entry).some((b) => b.type === 'tool_use')
+    ) {
+      // Claude Code wrote this message itself, not the model: no model call made it, so it adds no
+      // model time and starts no turn. One can land days after the turn's last call. An API error
+      // is written the same way, but it ends the turn: it's read below.
+      return;
+    }
     const messageId = str(message.id) ?? str(entry.uuid);
     if (!agentId && (!this.turnOpen || (this.turnEndMark !== undefined && ms > this.turnEndMark))) {
       // The model works again after its turn ended with no prompt in between (it answered an app
