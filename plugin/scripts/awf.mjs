@@ -7572,8 +7572,16 @@ var Builder = class {
       lastModel: null,
       batchOpen: false,
       open: /* @__PURE__ */ new Map(),
-      lastToolEnd: null
+      lastToolEnd: null,
+      stopped: false
     };
+  }
+  /**
+   * Model time runs only while the agent does: the main agent inside a turn, a subagent until its
+   * SubagentStop. A batch that resolves after either is late and starts none.
+   */
+  running(ctx) {
+    return ctx.agentId ? !ctx.stopped : this.turn !== null;
   }
   id(prefix) {
     return `${prefix}:${++this.counter}`;
@@ -7689,6 +7697,7 @@ var Builder = class {
     }
     const ctx = this.ctxFor(e);
     if (!ctx.agentId) this.ensureTurn(e.t);
+    ctx.stopped = false;
     let producers = [];
     if (ctx.modelStart !== null || ctx.modelParts.length > 0) {
       producers = this.closeModel(ctx, e.t, []);
@@ -7789,7 +7798,7 @@ var Builder = class {
     ctx.open.delete(step.id);
     this.ended.set(step.id, step);
     ctx.lastToolEnd = Math.max(ctx.lastToolEnd ?? t, t);
-    if (ctx.open.size === 0) ctx.modelStart = t;
+    if (ctx.open.size === 0 && this.running(ctx)) ctx.modelStart = t;
   }
   batchDone(e) {
     const ctx = this.ctxFor(e);
@@ -7810,7 +7819,9 @@ var Builder = class {
       this.endedByBatch.set(id, found);
     }
     ctx.batchOpen = false;
-    if (ctx.open.size === 0 && ctx.modelStart === null) ctx.modelStart = ctx.lastToolEnd ?? e.t;
+    if (ctx.open.size === 0 && ctx.modelStart === null && this.running(ctx)) {
+      ctx.modelStart = ctx.lastToolEnd ?? e.t;
+    }
   }
   openSubagent(agentId, agentType, t) {
     const existing2 = this.subagents.get(agentId);
@@ -7845,6 +7856,7 @@ var Builder = class {
     const seen = this.ctxs.has(e.aid);
     const sub = this.openSubagent(e.aid, e.at, e.t);
     const ctx = this.ctxs.get(e.aid);
+    if (ctx) ctx.stopped = false;
     if (!seen && ctx) ctx.modelStart = e.t;
     sub.startMs = Math.min(sub.startMs, e.t);
   }
@@ -7855,6 +7867,7 @@ var Builder = class {
     if (ctx) {
       this.closeModel(ctx, e.t, ["answer"]);
       this.closeOpenTools(ctx, e.t, "unfinished");
+      ctx.stopped = true;
     }
     if (sub) sub.endMs = Math.max(sub.endMs, e.t);
   }
