@@ -16,6 +16,7 @@ The first public release, planned as 0.1.0.
 - `awf summary`: time per phase, with check runs, failures and rework.
 - `awf report`: one self-contained HTML waterfall, with phases, every step on a time axis, failures, rework, slowest steps and build tasks. `--share` writes a copy with phases, durations and tool names only.
 - `awf compare`: two sessions or two date ranges side by side.
+- `awf dash`: every session in one self-contained HTML dashboard: time by phase, by project and over time, and a table of sessions, with filters for phases, period and project.
 - `awf stats`: Bash time by phase across sessions, and the unclassified programs that need rules.
 - `awf statusline`: one short line for Claude Code's status line, with the current session's phase split so far.
 - `awf live`: a board of every active Claude Code session, redrawn in place, with project, task, state and phase split.

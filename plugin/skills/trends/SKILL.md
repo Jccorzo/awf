@@ -43,3 +43,9 @@ How to read the numbers:
 - Sessions do different work, so one session on each side is weak evidence. Say so.
 
 Reply in a few lines: the two or three phases that took the most time, what changed in share points, and the commands behind the biggest phase. Don't paste the whole tables unless asked.
+
+When the user wants to explore the numbers themselves, by phase, project or period, write the dashboard and open it:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/awf.mjs" dash --open
+```

@@ -323,6 +323,21 @@ Then ask the report-checker subagent to render every fixture and fix what it fin
 - [ ] One session from each new agent renders correctly
   - A hand-made session in each format (Codex CLI, Gemini CLI, OpenCode) imports, classifies (failed test, rework) and renders in the browser test. None of the three is installed here, so no real session was tried: import one of each with `awf import` and open `awf report <id> --open`.
 
+### M7 · Dashboard across sessions
+
+```text
+Build `awf dash [--since 30d] [--project <dir>] [--out file.html] [--open] [--json]`: one
+self-contained HTML file with every session: time by phase, by project (the repository a session
+ran in) and over time, and a table of sessions that sorts and searches. Filters: phase chips with
+presets (all, working time, only waiting on you), period, project, day/week/month, hours or
+shares. The report's tokens, light and dark, and a phone layout. No prompts, commands or output.
+```
+
+- [x] It draws every session offline, and its filters work
+  - `test/dash/browser.test.ts`: three sessions draw in headless Chromium with no requests and no errors; phase presets, a project, a period, sorting and search change what it shows; a phone screen doesn't scroll sideways. On one machine's 289 sessions it writes the page in about 12 s.
+- [ ] You can answer "where did my agent's time go this month?" from it
+  - Yours to judge: `awf import && awf dash --open`.
+
 **After v1.1 (ideas, not committed):** a Claude Code mod that draws the waterfall in a pane while you work. Mods are JavaScript or TypeScript plugins that can draw panes in the terminal, the Desktop app and VS Code.
 
 ## Testing and validation

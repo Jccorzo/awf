@@ -56,12 +56,12 @@ inside the file, and it makes no network requests. <session> is an ID or its fir
       `Wrote ${homeRelative(out, home)}${share ? ' (shareable: no commands, files or output)' : ''}`,
     );
     ctx.io.out(pathToFileURL(out).href);
-    if (options.open) openInBrowser(out, ctx);
+    if (options.open) openInBrowser(out, ctx, 'report');
     return 0;
   },
 };
 
-function openInBrowser(file: string, ctx: Ctx): void {
+export function openInBrowser(file: string, ctx: Ctx, awfCommand: string): void {
   const [command, args] =
     process.platform === 'darwin'
       ? ['open', [file]]
@@ -71,10 +71,10 @@ function openInBrowser(file: string, ctx: Ctx): void {
   try {
     const child = spawn(command, args, { stdio: 'ignore', detached: true });
     child.on('error', () =>
-      ctx.io.err(`awf report: couldn't open a browser; open the file above.`),
+      ctx.io.err(`awf ${awfCommand}: couldn't open a browser; open the file above.`),
     );
     child.unref();
   } catch {
-    ctx.io.err(`awf report: couldn't open a browser; open the file above.`);
+    ctx.io.err(`awf ${awfCommand}: couldn't open a browser; open the file above.`);
   }
 }

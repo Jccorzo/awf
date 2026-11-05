@@ -88,6 +88,8 @@ awf stats --since 7d --project . --phase tests
 
 `compare` exits 1 when a side has no sessions. Then use `awf stats --since 7d` alone. `stats` counts Bash time only, so its shares aren't session shares.
 
+For a page the user can explore themselves, run `awf dash --open`: every session by phase, project and period, with filters. `awf dash --json` gives the same rows: one per session, its time in each phase in milliseconds, in the order of `phases`.
+
 ### "Did this change help?"
 
 ```bash
@@ -366,7 +368,7 @@ A rule with `writing-code`, `rework` or `unclassified` makes commands fail with 
 
 ## Privacy
 
-A full report holds what the session held. `awf report` without `--share`, and `awf classify`, show commands, file paths, the first prompt and tool output. Secrets are masked, but not everything sensitive is a secret. `summary` and `live` show the folder and first prompt too, and `sessions` the folder.
+A full report holds what the session held. `awf report` without `--share`, and `awf classify`, show commands, file paths, the first prompt and tool output. Secrets are masked, but not everything sensitive is a secret. `summary` and `live` show the folder and first prompt too, and `sessions` and `dash` the folder.
 
 - Don't paste any of this outside the machine: no chats, issues, pull requests or pastebins.
 - `awf report <session> --share` is the only form meant to leave the machine. It keeps phases, durations and tool names, and drops the task, folder, commands, files and output.

@@ -107,6 +107,7 @@ awf sessions                # list sessions, newest first
 awf report last --share     # a copy with phases, durations and tool names only
 awf compare 14d..7d 7d      # this week against last week, phase by phase
 awf stats --since 30d       # Bash time by phase, and what has no rule yet
+awf dash --open             # every session in one HTML dashboard, with filters
 ```
 
 | Command              | What it does                                                        |
@@ -116,6 +117,7 @@ awf stats --since 30d       # Bash time by phase, and what has no rule yet
 | `classify`           | Every step of a session with its phase and the rule that decided it |
 | `summary`            | Time per phase, with check runs, failures and rework                |
 | `report`             | One self-contained HTML waterfall                                   |
+| `dash`               | Every session in one HTML dashboard, by phase, project and period   |
 | `compare`            | Two sessions or two date ranges side by side                        |
 | `stats`              | Bash time by phase across sessions, and programs that need rules    |
 | `statusline`         | The phase split so far, for Claude Code's status line               |
@@ -125,6 +127,8 @@ awf stats --since 30d       # Bash time by phase, and what has no rule yet
 | `purge`              | Deletes everything awf stored                                       |
 
 **Status line.** `awf statusline` shows the current session's phase split in Claude Code's status line. It needs the npm CLI or a build from source. Set it up with [docs/statusline.md](docs/statusline.md).
+
+**Dashboard.** `awf dash --open` draws every session awf has in one HTML file: time by phase, by project and over time, and a table of sessions. Pick the phases to count, a period and a project; leave out Waiting on you to see how the working time splits. It holds session IDs, folder names and timings, no prompts, commands or output.
 
 **Live board.** `awf live` shows every active Claude Code session in a terminal tab, the desktop app's included. See [docs/live.md](docs/live.md).
 

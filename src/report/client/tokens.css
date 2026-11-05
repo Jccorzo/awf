@@ -1,0 +1,99 @@
+/* awf colour tokens, shared by the waterfall report and the dashboard. Light and dark are each chosen, not flipped. */
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --raised: #ffffff;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #6f6d68;
+  --grid: #e8e7e1;
+  --axis: #c3c2b7;
+  --ring: rgba(11, 11, 11, 0.12);
+  --hover: rgba(11, 11, 11, 0.04);
+  --selected: rgba(42, 120, 214, 0.08);
+  --focus: #2a78d6;
+  --link: #1f63b5;
+  --critical: #d03b3b;
+  --critical-ink: #b42323;
+  --container: #a3a29b;
+  --c-writing-code: #2a78d6;
+  --c-writing-tests: #eb6834;
+  --c-lint: #1baf7a;
+  --c-tests: #eda100;
+  --c-build: #e87ba4;
+  --c-rework: #6250d6;
+  --c-exploring: #008300;
+  --c-running: #0b5f73;
+  --c-planning: #7b8494;
+  --c-waiting: repeating-linear-gradient(135deg, #a9a8a0 0 2px, #e2e1da 2px 5px);
+  --c-unclassified: #a5a49d;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --label: 34%;
+  --pad: 64px;
+  --indent: 14px;
+  --row: 28px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --raised: #222220;
+    --ink: #f0efec;
+    --ink-2: #c3c2b7;
+    --muted: #9c9a92;
+    --grid: #2a2a28;
+    --axis: #383835;
+    --ring: rgba(255, 255, 255, 0.12);
+    --hover: rgba(255, 255, 255, 0.05);
+    --selected: rgba(57, 135, 229, 0.14);
+    --focus: #3987e5;
+    --link: #7fb1ef;
+    --critical: #e05252;
+    --critical-ink: #f08080;
+    --container: #6e6d68;
+    --c-writing-code: #3987e5;
+    --c-writing-tests: #d95926;
+    --c-lint: #199e70;
+    --c-tests: #c98500;
+    --c-build: #d55181;
+    --c-rework: #9085e9;
+    --c-exploring: #008300;
+    --c-running: #86cfe0;
+    --c-planning: #8a93a3;
+    --c-waiting: repeating-linear-gradient(135deg, #7a7973 0 2px, #33332f 2px 5px);
+    --c-unclassified: #6e6d68;
+  }
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --page: #0d0d0d;
+  --surface: #1a1a19;
+  --raised: #222220;
+  --ink: #f0efec;
+  --ink-2: #c3c2b7;
+  --muted: #9c9a92;
+  --grid: #2a2a28;
+  --axis: #383835;
+  --ring: rgba(255, 255, 255, 0.12);
+  --hover: rgba(255, 255, 255, 0.05);
+  --selected: rgba(57, 135, 229, 0.14);
+  --focus: #3987e5;
+  --link: #7fb1ef;
+  --critical: #e05252;
+  --critical-ink: #f08080;
+  --container: #6e6d68;
+  --c-writing-code: #3987e5;
+  --c-writing-tests: #d95926;
+  --c-lint: #199e70;
+  --c-tests: #c98500;
+  --c-build: #d55181;
+  --c-rework: #9085e9;
+  --c-exploring: #008300;
+  --c-running: #86cfe0;
+  --c-planning: #8a93a3;
+  --c-waiting: repeating-linear-gradient(135deg, #7a7973 0 2px, #33332f 2px 5px);
+  --c-unclassified: #6e6d68;
+}
