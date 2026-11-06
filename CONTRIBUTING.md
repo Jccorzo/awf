@@ -11,7 +11,7 @@ corepack enable
 pnpm install --frozen-lockfile
 ```
 
-`.node-version` holds 22, the version this repo is developed on. Version managers such as fnm pick it up in this folder. It doesn't limit users: awf runs on Node 20 or later (`engines` in `package.json`), and CI builds it on both 20 and 22, on Linux and macOS. CI runs the tests once, on macOS with Node 22, so a pass on a Mac can stand in for them (see [hushrun.yaml](hushrun.yaml)). Vitest no longer supports Node 20, though the suite passes on 20.19 and later today.
+`.node-version` holds 22, the version this repo is developed on. Version managers such as fnm pick it up in this folder. It doesn't limit users: awf runs on Node 20 or later (`engines` in `package.json`), and CI builds it on both 20 and 22, on Linux and macOS. CI runs the tests once, on macOS with Node 22, so a pass on a Mac can stand in for them (see [hushrun.yaml](hushrun.yaml)): the Test job then skips its setup too. Vitest no longer supports Node 20, though the suite passes on 20.19 and later today.
 
 ## Commands
 

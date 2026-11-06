@@ -40,19 +40,39 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v6
+      # hushrun skips the test step itself, but not the setup before it. So hushrun is asked first,
+      # with its own binary, before anything is installed: when a Mac already passed the tests on
+      # these files, every step below is skipped. Any other answer, or none, runs them. Keep the
+      # version in step with hushrun in package.json.
+      - uses: hushrun/hushrun/action/setup@v0.7.0
+        with:
+          version: 0.7.0
 
-      - uses: actions/setup-node@v7
+      - name: Ask hushrun whether the tests already passed
+        id: ready
+        run: |
+          state=$(hushrun ready --format json | jq -r 'first(.checks[] | select(.check == "test") | .state) // "unknown"') || state=unknown
+          echo "test=${state:-unknown}" >> "$GITHUB_OUTPUT"
+          echo "hushrun ready: test is ${state:-unknown}"
+
+      - if: steps.ready.outputs.test != 'passed'
+        uses: pnpm/action-setup@v6
+
+      - if: steps.ready.outputs.test != 'passed'
+        uses: actions/setup-node@v7
         with:
           node-version-file: .node-version
           cache: pnpm
 
-      - run: pnpm install --frozen-lockfile
+      - if: steps.ready.outputs.test != 'passed'
+        run: pnpm install --frozen-lockfile
 
       # Browser tests skip without Chromium. A Mac that passes the tests has it, so CI does too.
-      - run: pnpm exec playwright-core install chromium
+      - if: steps.ready.outputs.test != 'passed'
+        run: pnpm exec playwright-core install chromium
 
-      - run: pnpm test
+      - if: steps.ready.outputs.test != 'passed'
+        run: pnpm test
 
   # Every OS and Node version still installs and builds. The tests run in the job above.
   build:
