@@ -1009,7 +1009,7 @@ function exitTrust(simples: SimpleCommand[], parts: Part[]): ExitTrust {
   const withChecks = parts.filter((p) => p.checks.length > 0 && p.index !== undefined);
   if (withChecks.length === 0) return 'full';
   const last = Math.max(...withChecks.map((p) => p.index as number));
-  if (simples[last]?.substituted) return 'none';
+  if (simples[last]?.substituted || simples[last]?.hidden) return 'none';
   // A pipe inside what the check ran: a script's `vitest | tee out`, `bash -c "pytest | tail"`.
   const own = parts.filter((p) => p.index === last);
   const lastCheck = own.findLastIndex((p) => p.checks.length > 0);

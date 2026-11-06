@@ -215,7 +215,7 @@ commands:
 
   # Shell commands that only read
   - phase: exploring
-    program: [ls, ll, la, lsd, eza, exa, tree, cat, bat, batcat, head, tail, less, more, grep, egrep, fgrep, rg, ag, ack, find, fd, fzf, wc, file, stat, du, df, which, whereis, type, pwd, realpath, readlink, basename, dirname, diff, colordiff, cmp, comm, jq, yq, gron, sort, uniq, cut, column, strings, xxd, hexdump, od, nl, tac, md5, md5sum, shasum, sha1sum, sha256sum, cksum, lsof, ps, pgrep, env, printenv, uname, sw_vers, whoami, id, hostname, date, man, tldr, history, tokei, cloc, scc, ldd, otool, nm, objdump, plutil, defaults, mdfind, xmllint, pdftotext, identify, exiftool, codesign, security, ioreg, system_profiler, vm_stat, sysctl, netstat, ifconfig, lsblk, free, top, htop, uptime, w, last, journalctl, dmesg, tput]
+    program: [ls, ll, la, lsd, eza, exa, tree, cat, bat, batcat, head, tail, less, more, grep, egrep, fgrep, rg, ag, ack, find, fd, fzf, wc, file, stat, du, df, which, whereis, type, pwd, realpath, readlink, basename, dirname, diff, colordiff, cmp, comm, jq, yq, gron, sort, uniq, cut, column, strings, xxd, hexdump, od, nl, tac, md5, md5sum, shasum, sha1sum, sha256sum, cksum, lsof, ps, pgrep, env, printenv, uname, sw_vers, whoami, id, hostname, date, man, tldr, history, tokei, cloc, scc, ldd, otool, nm, objdump, plutil, defaults, mdfind, xmllint, pdftotext, identify, exiftool, codesign, security, ioreg, system_profiler, vm_stat, sysctl, netstat, ifconfig, lsblk, free, top, htop, uptime, w, last, journalctl, dmesg, tput, getconf]
   - { phase: exploring, program: [tr, base64, fold, paste, rev, iconv, expand, unexpand, fmt, seq, tsort, numfmt, look, uuidgen, swift-demangle, c++filt] }
   - { phase: exploring, program: command, with: [-v] }
   - { phase: exploring, program: [make, gmake], with: [-n] }
@@ -279,6 +279,10 @@ commands:
   - { phase: running, match: '^(\S*/)?(python[23]?(\.\d+)?|pypy3?|py)(\s|$)' }
   - { phase: running, program: [node, nodejs, tsx, ts-node, ts-node-esm, vite-node, esno, bun, deno, ruby, php, java, kotlin, groovy, scala, jshell, swift, dotnet, Rscript, julia, lua, luajit, elixir, escript, electron, dart, dartaotruntime] }
   - { phase: running, program: [bash, sh, zsh, dash, ksh, fish, pwsh, powershell] }
+  # hushrun (`hushrun run -- COMMAND` is unwrapped like a wrapper): what CI would still run, the
+  # digest, the plan and the status only report, and so does its pre-push hook.
+  - { phase: exploring, program: hushrun, args: ['ready|status|digest|plan'] }
+  - { phase: exploring, program: hushrun, args: [hook, pre-push] }
   - { phase: running, program: [go, cargo, mix], args: ['run|watch|phx.server|ecto.*'] }
   - { phase: running, program: [vite, next, nuxt, nuxi, astro, remix, gatsby, react-scripts, vue-cli-service, ng, expo, storybook, react-native, flutter, tauri, wrangler], args: ['dev|develop|start|serve|preview|run|run-ios|run-android|run:ios|run:android|attach'] }
   - { phase: running, program: flutter, args: ['emulators|install|logs|screenshot|devtools|symbolize'] }
@@ -350,6 +354,24 @@ tools:
   - { phase: exploring, match: '^mcp__computer-use__(screenshot|zoom|scroll|cursor_position|list_granted_applications|read_clipboard)$' }
   - { phase: neutral, name: [mcp__computer-use__wait] }
   - { phase: running, match: '^mcp__computer-use__' }
+  # Claude Code desktop: starting, stopping or archiving another session runs another agent, as
+  # `claude -p` does; messaging one and marking chapters or tasks of this one is planning.
+  - { phase: planning, match: '^mcp__ccd_session(_mgmt)?__(send_message|mark_chapter|dismiss_task)$' }
+  - { phase: running, match: '^mcp__ccd_session(_mgmt)?__(start|stop|archive)_session$' }
+  # A command run in a terminal tab, and publishing an Artifact.
+  - { phase: running, name: [mcp__terminal__run_in_terminal, Artifact] }
+  # Scheduling the agent's own next turn.
+  - { phase: planning, name: [ScheduleWakeup, CronCreate] }
+  # Any MCP server: a tool named for reading (get_, list_, search_, read_, get-library-docs,
+  # Slack's slack_read_, Notion's notion-fetch) only reads, find_and_replace aside. A query can
+  # write, as psql does. The rules above come first.
+  - { phase: exploring, match: '^mcp__.+__(slack_|notion-)?(get|list|search|read|fetch|find|describe)([-_](?!and[-_]replace)|$)' }
+  - { phase: exploring, match: '^mcp__.+__(whoami|guide|read_me)$' }
+  # Figma: reading a design is matched above, and so is the session it opens before reading or
+  # writing and listing its weave tools; the rest acts on files (use_figma, generate_*, create_*,
+  # upload_assets) or downloads assets.
+  - { phase: exploring, match: '^mcp__([\w-]*_)?[Ff]igma__(create_session|weave_(list|get|find)_\w+)$' }
+  - { phase: running, match: '^mcp__([\w-]*_)?[Ff]igma__' }
 
 # Files whose edits count as Writing tests rather than Writing code.
 testFiles:

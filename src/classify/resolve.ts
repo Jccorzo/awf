@@ -3,7 +3,7 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import YAML from 'yaml';
-import { firstPositional, programName, scriptFile } from './shell';
+import { firstPositional, programName, quoteArgs, scriptFile, scriptForwards } from './shell';
 
 export interface Files {
   /** File contents, or undefined if it doesn't exist or can't be read. */
@@ -848,8 +848,17 @@ export function resolve(argv: string[], cwd: string, files: Files): Resolution |
     const full = resolvePath(cwd, file);
     const text = files.read(full);
     // Only shell scripts are read as commands: a Python or Node file isn't shell.
-    if (text !== undefined && isShellScript(file, text))
-      return { kind: 'file', file, commands: [text], cwd };
+    if (text !== undefined && isShellScript(file, text)) {
+      // A script that runs its arguments (`exec "$@"`, an env wrapper) runs the ones it got.
+      const skipped = scriptForwards(text);
+      const forwarded = argv.slice(argv.indexOf(file) + 1 + (skipped ?? 0));
+      // Read with the script, so that a function of its own (`./srv.sh deploy`) is its body.
+      const commands =
+        skipped !== undefined && forwarded.length > 0
+          ? [`${text}\n${quoteArgs(forwarded)}`]
+          : [text];
+      return { kind: 'file', file, commands, cwd };
+    }
   }
   return undefined;
 }

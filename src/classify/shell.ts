@@ -16,6 +16,11 @@ export interface SimpleCommand {
   subshell?: boolean;
   /** From a `$(...)`, backtick or `<(...)` substitution inside another command. */
   substituted?: boolean;
+  /**
+   * Run through a function that pipes it or follows it with `||` (`q() { "$@" | tail; }`): its
+   * exit code isn't what the line ends with.
+   */
+  hidden?: boolean;
 }
 
 type Token =
@@ -308,8 +313,89 @@ const ASSIGNMENT = /^[A-Za-z_][A-Za-z0-9_]*(\[[^\]]*\])?\+?=/;
 interface Scope {
   /** Functions defined in it: calling one runs its body, which is counted where it's defined. */
   functions: Set<string>;
+  /**
+   * Functions whose body runs their arguments as a command (`run() { name=$1; shift; "$@" > log; }`),
+   * with the number of arguments shifted off first: a call runs the rest (`run lint pnpm lint`).
+   */
+  forwarders: Map<string, { skip: number; hides: boolean }>;
   /** Variables set to a plain value (`R=./build/app`, `G="git -C ../x"`), for `$R tree`. */
   vars: Map<string, string>;
+  /** Set when the line itself runs its arguments (`exec "$@"` in a script): the arguments skipped. */
+  forwards?: number;
+  /** Open `{` groups, shared with substitutions, which can't close what they didn't open. */
+  braces: number;
+  /** Open `if`, `while`, `until`, `for` and `select` blocks: a `shift` inside one may not run. */
+  blocks: number;
+  /**
+   * Function bodies being read, innermost last: a `{` group's depth, or minus the parenthesis
+   * depth of a `name() ( ... )` body; the blocks open when it started; the arguments shifted.
+   */
+  bodies: Array<{ name: string; depth: number; blocks: number; shifts: number }>;
+  /** A function defined whose body hasn't opened yet. */
+  pending?: { name: string; paren: boolean };
+}
+
+const newScope = (): Scope => ({
+  functions: new Set(),
+  forwarders: new Map(),
+  vars: new Map(),
+  braces: 0,
+  blocks: 0,
+  bodies: [],
+});
+
+/**
+ * A command that runs its own arguments: `"$@"`, `$*`, `${@:2}`, `"$1" "${@:2}"`, also behind a
+ * wrapper (`exec "$@"`, `env -u X "$@"`, `eval "$@"`). Returns how many arguments it skips.
+ */
+function forwardOffset(argv: string[]): number | undefined {
+  let head = unwrap(argv).argv;
+  if (head[0] === 'eval') head = head.slice(1);
+  if (/^\$(@|\*|\{@\}|\{\*\}|\{@:-[^}]*\})$/.test(head[0] ?? '')) return 0;
+  if (head[0] === '$1' && /^\$\{@:2\}$/.test(head[1] ?? '')) return 0;
+  const sliced = /^\$\{@:(\d+)\}$/.exec(head[0] ?? '');
+  return sliced ? Math.max(0, Number(sliced[1]) - 1) : undefined;
+}
+
+/**
+ * Notes the braces and blocks a command's leading words open and close (`{`, `}`, `if`, `while`,
+ * `done }`), opening a pending function's body at its `{`.
+ */
+function trackBlocks(words: Word[], scope: Scope): void {
+  for (const word of words) {
+    if (word.quoted) return;
+    const value = word.value;
+    if (value === '{') {
+      scope.braces++;
+      if (scope.pending && !scope.pending.paren) {
+        const { name } = scope.pending;
+        scope.bodies.push({ name, depth: scope.braces, blocks: scope.blocks, shifts: 0 });
+      }
+      scope.pending = undefined;
+    } else if (value === '}') {
+      if (scope.bodies.at(-1)?.depth === scope.braces) scope.bodies.pop();
+      scope.braces = Math.max(0, scope.braces - 1);
+    } else if (value === 'if' || value === 'while' || value === 'until') {
+      scope.blocks++;
+    } else if (value === 'fi' || value === 'done') {
+      scope.blocks = Math.max(0, scope.blocks - 1);
+    } else if (value === 'for' || value === 'select') {
+      scope.blocks++;
+      return;
+    } else if (!LEADING_KEYWORDS.has(value) && value !== 'esac') {
+      return;
+    }
+  }
+}
+
+/**
+ * How many leading arguments a shell script skips before running the rest as a command
+ * (`exec "$@"`, or `shift; "$@"`), or undefined when it doesn't run its arguments.
+ */
+export function scriptForwards(text: string): number | undefined {
+  const scope = newScope();
+  splitCommand(text, 0, scope);
+  return scope.forwards;
 }
 
 type Word = { value: string; quoted: boolean; subs?: string[] };
@@ -354,27 +440,28 @@ function expandVariables(words: Word[], scope: Scope): Word[] {
     }
     return words;
   }
-  const head = words[i] as Word;
-  const match = VAR_HEAD.exec(head.value);
-  const value = match ? scope.vars.get((match[1] ?? match[2]) as string) : undefined;
-  if (value === undefined || !value.trim()) return words;
-  // Unquoted, the value splits into words; quoted ("$CHROME"), it stays one.
-  const expanded = (head.quoted ? [value] : value.split(/\s+/).filter(Boolean)).map((v) => ({
-    value: v,
-    quoted: true,
-  }));
-  return [...words.slice(0, i), ...expanded, ...words.slice(i + 1)];
+  // The program, and any later word that is a whole variable: after a wrapper it can be the
+  // program too (`caffeinate -i $G pnpm test`).
+  return [
+    ...words.slice(0, i),
+    ...words.slice(i).flatMap((word) => {
+      const match = VAR_HEAD.exec(word.value);
+      const value = match ? scope.vars.get((match[1] ?? match[2]) as string) : undefined;
+      if (value === undefined || !value.trim()) return [word];
+      // Unquoted, the value splits into words; quoted ("$CHROME"), it stays one.
+      return (word.quoted ? [value] : value.split(/\s+/).filter(Boolean)).map((v) => ({
+        value: v,
+        quoted: true,
+      }));
+    }),
+  ];
 }
 
 /**
  * Splits a command line into simple commands, in order. `case` patterns are skipped, and calls of
  * functions defined in the same line are dropped: their bodies are counted where they are defined.
  */
-export function splitCommand(
-  text: string,
-  depth = 0,
-  scope: Scope = { functions: new Set(), vars: new Map() },
-): SimpleCommand[] {
+export function splitCommand(text: string, depth = 0, scope: Scope = newScope()): SimpleCommand[] {
   const commands: SimpleCommand[] = [];
   let words: Word[] = [];
   let writes: string[] = [];
@@ -386,18 +473,71 @@ export function splitCommand(
   const functions = scope.functions;
   let caseDepth = 0;
   let inPattern = false;
+  /** Arguments shifted off outside any function: a script's own. */
+  let shifts = 0;
+  /** The command before, when it was a test (`[ "$1" = -q ] && shift`): a shift after it may not run. */
+  let afterTest = false;
 
   const end = (operator: string | null) => {
+    // `time { ...; }` times a group, whose commands come next.
+    const timed = firstWord(words);
+    if (words[timed]?.value === 'time' && !words[timed]?.quoted) {
+      let j = timed + 1;
+      while (words[j]?.value.startsWith('-') && !words[j]?.quoted) j++;
+      if (words[j]?.value === '{' && !words[j]?.quoted) words.splice(timed, j - timed);
+    }
     // `function name { body`: the body's first command shares the line with the definition.
     const head = firstWord(words);
     if (words[head]?.value === 'function' && words[head + 1] && words[head + 2]?.value === '{') {
-      functions.add((words[head + 1] as Word).value.replace(/\(\)$/, ''));
+      const name = (words[head + 1] as Word).value.replace(/\(\)$/, '');
+      functions.add(name);
+      trackBlocks(words.slice(0, head), scope);
+      scope.braces++;
+      scope.bodies.push({ name, depth: scope.braces, blocks: scope.blocks, shifts: 0 });
       words = words.slice(head + 3);
     }
-    if (words[firstWord(words)]?.value === 'function' && words[firstWord(words) + 1])
-      functions.add((words[firstWord(words) + 1] as Word).value.replace(/\(\)$/, ''));
+    if (words[firstWord(words)]?.value === 'function' && words[firstWord(words) + 1]) {
+      const name = (words[firstWord(words) + 1] as Word).value.replace(/\(\)$/, '');
+      scope.pending = { name, paren: false };
+      functions.add(name);
+    }
+    trackBlocks(words, scope);
     words = expandVariables(words, scope);
-    const argv = clean(words);
+    let argv = clean(words);
+    let hidden = false;
+    // A call of a function that runs its arguments runs them: `run lint pnpm lint` is
+    // `pnpm lint`, behind a wrapper too (`time run lint pnpm lint`).
+    const called = unwrap(argv).argv;
+    const forwarder = called[0] !== undefined ? scope.forwarders.get(called[0]) : undefined;
+    if (forwarder) {
+      const outer = argv.slice(argv.length - called.length)[0] === called[0];
+      argv = [
+        ...(outer ? argv.slice(0, argv.length - called.length) : []),
+        ...called.slice(1 + forwarder.skip),
+      ];
+      hidden = forwarder.hides;
+    }
+    const body = scope.bodies.at(-1);
+    if (argv[0] === 'shift') {
+      // A shift that may not run (after a test, in a case branch, an if or a loop) isn't counted.
+      const sure = !afterTest && caseDepth === 0 && scope.blocks <= (body?.blocks ?? 0);
+      if (sure && body) body.shifts += Number(argv[1] ?? 1) || 1;
+      else if (sure) shifts += Number(argv[1] ?? 1) || 1;
+    }
+    const forward = forwardOffset(argv);
+    if (forward !== undefined) {
+      // Counted where it's called, with the call's arguments; outside a function, the line (a
+      // script) runs its own.
+      const hides = operator === '|' || operator === '|&' || operator === '||';
+      if (body) scope.forwarders.set(body.name, { skip: body.shifts + forward, hides });
+      else if (depth === 0) scope.forwards = shifts + forward;
+      argv.length = 0;
+    }
+    afterTest =
+      ['[', '[[', 'test'].includes(argv[0] ?? '') && (operator === '&&' || operator === '||');
+    // `time ( ... )`: time a subshell, whose commands come next.
+    if (operator === '(' && argv[0] === 'time' && argv.slice(1).every((a) => a.startsWith('-')))
+      argv.length = 0;
     // Substitutions run first, as commands of their own.
     if (depth < 4) {
       for (const sub of words.flatMap((w) => w.subs ?? [])) {
@@ -414,6 +554,7 @@ export function splitCommand(
     if (argv.length > 0 && !functions.has(argv[0] as string)) {
       const command: SimpleCommand = { argv, writes, cd: [...cd], piped };
       if (operator !== null) command.next = operator;
+      if (hidden) command.hidden = true;
       if (scopes.length > 0) command.subshell = true;
       commands.push(command);
       if ((argv[0] === 'cd' || argv[0] === 'pushd') && !piped) cd.push(argv[1] ?? '~');
@@ -429,8 +570,18 @@ export function splitCommand(
     words = [];
     writes = [];
     piped = operator === '|' || operator === '|&';
-    if (operator === '(') scopes.push(cd.length);
-    else if (operator === ')' && scopes.length > 0) cd.length = scopes.pop() as number;
+    if (operator === '(') {
+      scopes.push(cd.length);
+      // `name() ( ... )`: a body in a subshell.
+      if (scope.pending?.paren) {
+        const { name } = scope.pending;
+        scope.bodies.push({ name, depth: -scopes.length, blocks: scope.blocks, shifts: 0 });
+        scope.pending = undefined;
+      }
+    } else if (operator === ')' && scopes.length > 0) {
+      if (scope.bodies.at(-1)?.depth === -scopes.length) scope.bodies.pop();
+      cd.length = scopes.pop() as number;
+    }
   };
 
   const tokens = tokenize(stripHeredocs(text));
@@ -468,8 +619,13 @@ export function splitCommand(
       tokens[t + 1]?.kind === 'op' &&
       tokens[t + 1]?.value === ')'
     ) {
-      // `name() { ... }`: a function definition, also after `then`, `else` or `do`.
-      functions.add(words[words.length - 1]?.value as string);
+      // `name() { ... }`: a function definition, also after `then`, `else` or `do`, and inside
+      // another's body (`outer() { inner() {`): the braces before it count.
+      const name = words[words.length - 1]?.value as string;
+      trackBlocks(words.slice(0, -1), scope);
+      functions.add(name);
+      const next = tokens[t + 2];
+      scope.pending = { name, paren: next?.kind === 'op' && next.value === '(' };
       words = [];
       t++;
       continue;
@@ -564,7 +720,8 @@ const WRAPPERS: Record<
 > = {
   sudo: { valueOptions: ['-u', '-g', '-C', '-D', '-h', '-p', '-r', '-t', '-U'] },
   doas: { valueOptions: ['-u', '-C'] },
-  time: {},
+  // `time A=1 cmd`: time is a keyword, and assignments can follow it.
+  time: { assignments: true },
   command: {},
   builtin: {},
   exec: { valueOptions: ['-a'] },
@@ -574,6 +731,8 @@ const WRAPPERS: Record<
   stdbuf: { valueOptions: ['-i', '-o', '-e'] },
   unbuffer: {},
   caffeinate: { valueOptions: ['-t', '-w'] },
+  // macOS: run a command with a QoS clamp or I/O policy, like nice.
+  taskpolicy: { valueOptions: ['-c', '-d', '-g', '-t', '-l', '-p'] },
   'xvfb-run': { valueOptions: ['-n', '-s', '-f', '-e', '-p', '-w'] },
   timeout: { valueOptions: ['-s', '-k', '--signal', '--kill-after'], positional: 1 },
   gtimeout: { valueOptions: ['-s', '-k', '--signal', '--kill-after'], positional: 1 },
@@ -847,6 +1006,15 @@ export function unwrap(input: string[]): Unwrapped {
       argv = rest.slice(1);
       continue;
     }
+    // hushrun runs a check's command unless this exact code already passed it:
+    // `hushrun run [NAME] [options] -- COMMAND` is COMMAND. With --stage, it runs a stage's checks.
+    if (program === 'hushrun' && rest[0] === 'run' && rest.includes('--')) {
+      const after = rest.slice(rest.indexOf('--') + 1);
+      if (after.length === 0) break;
+      wrappers.push('hushrun run');
+      argv = after;
+      continue;
+    }
     if (SHELLS.has(program)) break;
     const wrapper = WRAPPERS[program];
     if (wrapper && !(program === 'command' && /^-[vV]$/.test(rest[0] ?? ''))) {
@@ -923,6 +1091,13 @@ export function shellString(argv: string[]): string | undefined {
     if (!arg.startsWith('-') && !arg.startsWith('+')) return undefined;
   }
   return undefined;
+}
+
+/** Words joined back into one command line, quoted where the shell would split or expand them. */
+export function quoteArgs(args: string[]): string {
+  return args
+    .map((a) => (/^[\w@%+=:,./-]+$/.test(a) ? a : `'${a.replace(/'/g, `'\\''`)}'`))
+    .join(' ');
 }
 
 /** A script file a shell runs: `bash x.sh`, `sh ./x.sh`, or `./scripts/x.sh` itself. */

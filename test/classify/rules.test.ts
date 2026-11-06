@@ -1086,6 +1086,167 @@ describe('browser and computer-use calls', () => {
   });
 });
 
+describe('MCP and desktop tools', () => {
+  const call = (id: string, name: string): Step => ({
+    id,
+    parentId: null,
+    kind: 'tool',
+    tool: name,
+    startMs: 0,
+    endMs: 1,
+    flags: [],
+  });
+  const classified = classifier.session({
+    id: 's',
+    agent: 'claude-code',
+    sources: ['transcript'],
+    startMs: 0,
+    endMs: 1,
+    steps: [
+      call('send', 'mcp__ccd_session_mgmt__send_message'),
+      call('chapter', 'mcp__ccd_session__mark_chapter'),
+      call('start', 'mcp__ccd_session__start_session'),
+      call('archive', 'mcp__ccd_session_mgmt__archive_session'),
+      call('terminal', 'mcp__terminal__run_in_terminal'),
+      call('artifact', 'Artifact'),
+      call('wakeup', 'ScheduleWakeup'),
+      call('sessions', 'mcp__ccd_session_mgmt__list_sessions'),
+      call('gmail', 'mcp__claude_ai_Gmail__search_threads'),
+      call('slack', 'mcp__claude_ai_Slack__slack_read_channel'),
+      call('pr', 'mcp__ccd_pr__get_status'),
+      call('figma-look', 'mcp__plugin_figma_figma__get_screenshot'),
+      call('whoami', 'mcp__plugin_figma_figma__whoami'),
+      call('figma-act', 'mcp__plugin_figma_figma__use_figma'),
+      call('figma-assets', 'mcp__claude_ai_Figma__download_assets'),
+      // Named for neither: left as is.
+      call('bind', 'mcp__ccd_pr__bind_pr'),
+      call('gmail-send', 'mcp__claude_ai_Gmail__send_message'),
+      call('create-list', 'mcp__todo__create_list'),
+      call('docs', 'mcp__context7__get-library-docs'),
+      call('notion', 'mcp__notion__notion-fetch'),
+      call('replace', 'mcp__files__find_and_replace'),
+      call('query', 'mcp__postgres__query'),
+      call('figma-session', 'mcp__plugin_figma_figma__create_session'),
+      call('weave', 'mcp__plugin_figma_figma__weave_list_tools'),
+    ],
+  });
+  for (const step of classified.steps) if (step.rule) hit.add(step.rule);
+  const phase = (id: string) => classified.steps.find((s) => s.id === id)?.phase;
+
+  it('classifies desktop session tools, terminal runs and scheduling', () => {
+    expect(
+      ['send', 'chapter', 'start', 'archive', 'terminal', 'artifact', 'wakeup'].map(phase),
+    ).toEqual(['planning', 'planning', 'running', 'running', 'running', 'running', 'planning']);
+  });
+
+  it('counts any MCP tool named for reading as Exploring, and the rest of Figma as Running', () => {
+    expect(['sessions', 'gmail', 'slack', 'pr', 'figma-look', 'whoami'].map(phase)).toEqual(
+      Array(6).fill('exploring'),
+    );
+    expect(['figma-act', 'figma-assets'].map(phase)).toEqual(['running', 'running']);
+    expect(['docs', 'notion', 'figma-session', 'weave'].map(phase)).toEqual(
+      Array(4).fill('exploring'),
+    );
+    expect(['bind', 'gmail-send', 'create-list', 'replace', 'query'].map(phase)).toEqual(
+      Array(5).fill('unclassified'),
+    );
+  });
+});
+
+describe('commands that run their arguments', () => {
+  it("runs a function's arguments where it is called, after the ones it shifts off", () => {
+    check(
+      'rehearse() {\n  name=$1; shift\n  "$@" > "$S/reh-$name.log" 2>&1\n}\nrehearse lint pnpm exec eslint .',
+      'lint',
+    );
+    check('ci() { env CI=true GITHUB_ACTIONS=true "$@"; }; ci cargo test', 'tests');
+    check('function quiet { "${@:2}" >/dev/null; }; quiet x cargo build', 'build');
+    check('r() { caffeinate -i "$@"; }\nr pytest -q && r ls', 'tests');
+    // Defined but never called: nothing ran.
+    expect(check('run() { "$@"; }; echo ok', 'unclassified').tags).not.toContain('unmatched:$@');
+    // A function that doesn't run its arguments is still counted where it's defined.
+    check('f() { npx eslint "$@"; }; f src', 'lint');
+    // Called behind an assignment or a wrapper, and run inside a substitution.
+    check('run() { "$@"; }; CI=1 run cargo test', 'tests');
+    check('run() { "$@"; }; time run cargo build', 'build');
+    check('quiet() { out=$("$@" 2>&1) || { echo "$out"; return 1; }; }; quiet cargo test', 'tests');
+    check('x() { "$1" "${@:2}"; }; x cargo test', 'tests');
+    check('e() { eval "$@"; }; e cargo test', 'tests');
+    // A shift that may not run isn't counted.
+    check('run() { [ "$1" = -q ] && shift; "$@"; }; run cargo test', 'tests');
+    check('run() {\n  case "$1" in -q) shift;; esac\n  "$@"\n}\nrun cargo test', 'tests');
+    check('run() { if [ "$1" = -q ]; then shift; fi; "$@"; }; run cargo test', 'tests');
+    // Bodies that close after `done`, in a subshell, or inside another function's.
+    check('each() { for d in a b; do (cd "$d" && "$@"); done }; each cargo test', 'tests');
+    check('in_dir() ( cd "$1" && shift && "$@" ); in_dir web cargo test', 'tests');
+    check('outer() { inner() { "$@"; }; inner "$@"; }; inner cargo test', 'tests');
+    check('time { cargo test; }', 'tests');
+  });
+
+  it("doesn't trust the exit code of a call whose function pipes it or follows it with ||", () => {
+    for (const command of [
+      'q() { "$@" 2>&1 | tail -20; }; q cargo test',
+      'r() { "$@" || true; }; r cargo test',
+    ]) {
+      expect(check(command, 'tests').exit, command).toBe('none');
+    }
+    expect(check('r() { "$@"; }; r cargo test', 'tests').exit ?? 'full').toBe('full');
+  });
+
+  it("runs a script's arguments when the script runs them, as an env wrapper does", () => {
+    const scripts = new Classifier(
+      defaultRules(),
+      memoryFiles({
+        '/repo/.git/HEAD': 'ref: refs/heads/main\n',
+        '/repo/genv.sh': '#!/bin/bash\nunset DB_USER NODE_ENV\nexec "$@"\n',
+        '/repo/each.sh': '#!/bin/sh\nset -e\nname=$1\nshift\n"$@" > "out/$name.log"\n',
+        '/repo/srv.sh': '#!/bin/sh\ndeploy() { gcloud run deploy api; }\n"$@"\n',
+      }),
+    );
+    const phase = (command: string) => scripts.command(command, '/repo').phase;
+    expect(phase('./genv.sh cargo test')).toBe('tests');
+    expect(phase('G=/repo/genv.sh; caffeinate -dims $G cargo build')).toBe('build');
+    expect(phase('bash each.sh unit cargo test --lib')).toBe('tests');
+    expect(phase('./genv.sh')).toBe('unclassified');
+    // A function of the script's own runs its body.
+    expect(phase('./srv.sh deploy')).toBe('running');
+  });
+
+  it('times a subshell, and a command with assignments after time', () => {
+    check('time (cargo test > out.log 2>&1); echo "exit=$?"', 'tests');
+    check(
+      '(time PLAYWRIGHT_CHANNEL=chrome E2E_PORT=3195 pnpm exec playwright test) > e2e.log 2>&1',
+      'tests',
+    );
+    check('time -p (cargo build)', 'build');
+  });
+
+  it("runs hushrun's check commands, and counts what only reports as Exploring", () => {
+    check('hushrun run -- vitest run', 'tests');
+    check('hushrun run lint --force -- eslint .', 'lint');
+    check('hushrun ready', 'exploring');
+    check('hushrun hook pre-push origin git@example.com:o/r.git', 'exploring');
+    const hooked = new Classifier(
+      defaultRules(),
+      memoryFiles({
+        '/repo/.git/HEAD': 'ref: refs/heads/main\n',
+        '/repo/package.json': JSON.stringify({ scripts: { test: 'hushrun run -- vitest run' } }),
+        '/repo/.git/hooks/pre-push':
+          '#!/bin/sh\nhushrun=node_modules/.bin/hushrun\n[ -x "$hushrun" ] || hushrun=hushrun\nif command -v "$hushrun" >/dev/null 2>&1; then\n  "$hushrun" hook pre-push "$@" || [ "$?" -ne 10 ] || exit 1\nfi\n',
+      }),
+    );
+    expect(hooked.command('pnpm test', '/repo').phase).toBe('tests');
+    expect(hooked.command('git push origin main', '/repo').phase).toBe('running');
+  });
+
+  it('unwraps taskpolicy, and reads getconf', () => {
+    check('taskpolicy -c utility cargo test', 'tests');
+    check('taskpolicy -b pnpm exec vitest run', 'tests');
+    check('getconf DARWIN_USER_TEMP_DIR', 'exploring');
+    check('TMPDIR="$(getconf DARWIN_USER_TEMP_DIR)" python3 -I run.py', 'running');
+  });
+});
+
 describe('coverage', () => {
   it('has a fixture for every rule in default-rules.yaml', () => {
     const rules = defaultRules();
