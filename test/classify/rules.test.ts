@@ -1128,6 +1128,9 @@ describe('MCP and desktop tools', () => {
       call('query', 'mcp__postgres__query'),
       call('figma-session', 'mcp__plugin_figma_figma__create_session'),
       call('weave', 'mcp__plugin_figma_figma__weave_list_tools'),
+      call('docs-update', 'mcp__claude_ai_Claude_Docs__update'),
+      call('discard', 'mcp__ccd_host__discard_kept_worktree'),
+      call('folder', 'mcp__ccd_directory__request_directory'),
     ],
   });
   for (const step of classified.steps) if (step.rule) hit.add(step.rule);
@@ -1147,9 +1150,14 @@ describe('MCP and desktop tools', () => {
     expect(['docs', 'notion', 'figma-session', 'weave'].map(phase)).toEqual(
       Array(4).fill('exploring'),
     );
-    expect(['bind', 'gmail-send', 'create-list', 'replace', 'query'].map(phase)).toEqual(
-      Array(5).fill('unclassified'),
+    expect(['replace', 'query'].map(phase)).toEqual(['unclassified', 'unclassified']);
+  });
+
+  it('counts MCP tools named for acting as Running scripts, and desktop prompts as waiting', () => {
+    expect(['bind', 'gmail-send', 'create-list', 'docs-update'].map(phase)).toEqual(
+      Array(4).fill('running'),
     );
+    expect(['discard', 'folder'].map(phase)).toEqual(['waiting', 'waiting']);
   });
 });
 
@@ -1237,6 +1245,77 @@ describe('commands that run their arguments', () => {
     );
     expect(hooked.command('pnpm test', '/repo').phase).toBe('tests');
     expect(hooked.command('git push origin main', '/repo').phase).toBe('running');
+  });
+
+  it('runs hushrun checks and stages from hushrun.yaml, and counts setting it up as Running', () => {
+    const repo = new Classifier(
+      defaultRules(),
+      memoryFiles({
+        '/repo/.git/HEAD': 'ref: refs/heads/main\n',
+        '/repo/hushrun.yaml': [
+          'version: 1',
+          'repository: github.com/o/r',
+          'checks:',
+          '  test: {run: cargo test}',
+          '  lint: {}',
+          '  smoke: {kind: deployment}',
+          'stages:',
+          '  staging: {require: [lint, smoke@staging]}',
+          '  production: {require: [test, lint]}',
+        ].join('\n'),
+      }),
+    );
+    const phase = (command: string) => repo.command(command, '/repo').phase;
+    expect(phase('hushrun run test')).toBe('tests');
+    // A check without `run`, by its name; a stage, by the checks it requires.
+    expect(phase('hushrun run lint')).toBe('lint');
+    expect(phase('hushrun run --stage staging')).toBe('lint');
+    expect(phase('hushrun run --stage production --force')).toBe('tests');
+    // Without hushrun.yaml, a check's name decides.
+    check('hushrun run test', 'tests');
+    check('hushrun init', 'running');
+    check('hushrun hook install', 'running');
+  });
+
+  it('runs what script(1) runs, and a package executable by its name', () => {
+    check('script -q /dev/null pnpm exec vitest run', 'tests');
+    check('script -q -c "cargo test" /dev/null', 'tests');
+    const shim = new Classifier(
+      defaultRules(),
+      memoryFiles({
+        '/repo/.git/HEAD': 'ref: refs/heads/main\n',
+        '/repo/node_modules/.bin/vitest':
+          '#!/bin/sh\nbasedir=$(dirname "$(echo "$0" | sed -e \'s,\\\\,/,g\')")\ncase `uname` in *CYGWIN*) basedir=`cygpath -w "$basedir"`;; esac\nexec node "$basedir/../vitest/vitest.mjs" "$@"\n',
+      }),
+    );
+    expect(shim.command('./node_modules/.bin/vitest run', '/repo').phase).toBe('tests');
+  });
+
+  it('skips a masked value after env, and expands an array run as a command', () => {
+    check('env -u CLAUDECODE TOKEN= ‹masked› CI=true cargo test', 'tests');
+    check('G=(gcloud --project p); "${G[@]}" run services describe api', 'exploring');
+    check('C=(cargo test --locked); "${C[@]}" --lib', 'tests');
+    check('P=x; A=(cargo build -p "$P"); "${A[@]}"', 'build');
+    // Built from a substitution: not known.
+    check('A=($(cat cmd.txt)); "${A[@]}"', 'unclassified');
+  });
+
+  it("reads a subcommand's --help and --version, git's bundles, and npm's account and store", () => {
+    for (const command of [
+      'cargo fuzz --version',
+      'cargo xtask --help',
+      'git bundle verify repo.bundle',
+      'npm whoami',
+      'pnpm store path',
+    ])
+      check(command, 'exploring');
+    for (const command of [
+      'git bundle create repo.bundle --all',
+      'git filter-repo --path src',
+      'npm version patch',
+    ])
+      check(command, 'writing-code');
+    check('npm pack', 'build');
   });
 
   it('unwraps taskpolicy, and reads getconf', () => {

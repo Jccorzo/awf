@@ -26,6 +26,8 @@ commands:
   - { phase: running, match: '^(\S*/)?melos\s+version$' }
   # --version, --help and friends only read. For these programs -v and -V mean verbose.
   - { phase: exploring, match: '^(?!(pytest|py\.test|unittest|tox|nox|ctest|ninja|mypy|flake8|black|isort|pylint|behave|ansible-lint)\s)\S+\s+(--version|-v|-V|--help|-h|version|help|-version|--usage)$' }
+  # The same after subcommands: `cargo fuzz --version`, `cargo xtask --help`, `gcloud run --help`.
+  - { phase: exploring, match: '^(?!(pytest|py\.test|unittest|tox|nox|ctest|ninja)\s)\S+(\s+[a-z][\w:.-]*)+\s+(--version|-V|--help)$' }
 
   # Lint and format
   - { phase: exploring, program: eslint, with: [--print-config] }
@@ -225,6 +227,7 @@ commands:
     program: git
     args: ['status|log|diff|show|blame|annotate|rev-parse|ls-files|ls-tree|ls-remote|grep|describe|shortlog|reflog|cat-file|whatchanged|range-diff|merge-base|name-rev|rev-list|count-objects|check-ignore|show-ref|for-each-ref|var|help|version|fetch|clone|merge-tree|cherry|archive|diff-tree|diff-index|diff-files|show-branch|verify-commit|verify-tag|check-attr|check-ref-format|fsck|hash-object']
   - { phase: exploring, program: git, args: ['stash|worktree|submodule|notes', 'list|show|status'] }
+  - { phase: exploring, program: git, args: ['bundle', 'verify|list-heads'] }
   - { phase: exploring, match: '^git config\s(.*\s)?(--get(-all|-regexp|-urlmatch|-color|colorbool)?|--list|-l)(\s|$)' }
   - { phase: exploring, match: '^git config(\s+--(global|local|system|worktree|show-origin|show-scope|includes|null|name-only))*\s+[A-Za-z][\w-]*\.[\w.-]+$' }
   - { phase: exploring, program: git, args: ['tag'], with: [-l] }
@@ -237,7 +240,8 @@ commands:
   - { phase: exploring, program: [gh, glab], args: ['api'] }
   - { phase: exploring, program: [gh, glab], args: ['auth', 'status|token'] }
   - { phase: neutral, program: [gh, glab], args: ['auth', 'switch|login|logout|setup-git|refresh'] }
-  - { phase: exploring, program: [npm, pnpm, yarn, bun], args: ['ls|list|why|view|info|show|outdated|audit|explain|query|search|config|bin|root|prefix|pkg|licenses|doctor'] }
+  - { phase: exploring, program: [npm, pnpm, yarn, bun], args: ['ls|list|why|view|info|show|outdated|audit|explain|query|search|config|bin|root|prefix|pkg|licenses|doctor|whoami'] }
+  - { phase: exploring, program: pnpm, args: ['store', 'path|status'] }
   - { phase: exploring, program: uv, args: ['pip', 'list|show|freeze|tree|check'] }
   - { phase: exploring, program: [pip, pip3, uv, poetry, conda], args: ['list|show|freeze|check|tree|info|search|env'] }
   - { phase: exploring, program: swift, args: ['package', 'describe|dump-package|show-dependencies|show-executables|tools-version'] }
@@ -269,7 +273,7 @@ commands:
   - { phase: writing, program: tar }
   - phase: writing
     program: git
-    args: ['add|commit|checkout|switch|restore|reset|stash|merge|rebase|cherry-pick|revert|mv|rm|tag|apply|am|init|clean|branch|worktree|submodule|notes|config|remote|pull|symbolic-ref|write-tree|commit-tree|update-ref|read-tree|update-index|mktree|replace']
+    args: ['add|commit|checkout|switch|restore|reset|stash|merge|rebase|cherry-pick|revert|mv|rm|tag|apply|am|init|clean|branch|worktree|submodule|notes|config|remote|pull|symbolic-ref|write-tree|commit-tree|update-ref|read-tree|update-index|mktree|replace|bundle|filter-branch|filter-repo|merge-file|sparse-checkout']
     tool: git
 
   # Running scripts: running something that isn't a check, an edit or a read. Scripts and programs,
@@ -283,6 +287,9 @@ commands:
   # digest, the plan and the status only report, and so does its pre-push hook.
   - { phase: exploring, program: hushrun, args: ['ready|status|digest|plan'] }
   - { phase: exploring, program: hushrun, args: [hook, pre-push] }
+  # Setting hushrun up (init writes CI and agent files, hook install the pre-push hook), signing in,
+  # updating it, and the commands that act on a stage or the backend.
+  - { phase: running, program: hushrun, args: ['init|hook|login|logout|update|approve|guard|repository|agent|machine'] }
   - { phase: running, program: [go, cargo, mix], args: ['run|watch|phx.server|ecto.*'] }
   - { phase: running, program: [vite, next, nuxt, nuxi, astro, remix, gatsby, react-scripts, vue-cli-service, ng, expo, storybook, react-native, flutter, tauri, wrangler], args: ['dev|develop|start|serve|preview|run|run-ios|run-android|run:ios|run:android|attach'] }
   - { phase: running, program: flutter, args: ['emulators|install|logs|screenshot|devtools|symbolize'] }
@@ -298,6 +305,9 @@ commands:
   - { phase: running, program: [gcloud, gsutil, bq, aws, az, doctl, flyctl, fly, heroku, vercel, netlify, firebase, wrangler, railway, supabase, eas, fastlane, flutterfire, shorebird] }
   - { phase: running, program: [simctl, devicectl, adb, emulator, ios-deploy, idb] }
   - { phase: running, program: [npm, pnpm, yarn, bun], args: ['publish|unpublish|deprecate|dist-tag|login|logout|adduser'] }
+  # Packing the tarball a publish would upload is a build; `npm version 1.2.3` writes package.json.
+  - { phase: build, program: [npm, pnpm, yarn, bun], args: ['pack'], tool: npm pack }
+  - { phase: writing, match: '^(npm|pnpm|yarn) version\s+(major|minor|patch|premajor|preminor|prepatch|prerelease|from-git|v?\d\S*)(\s|$)' }
   - { phase: running, program: [cargo, poetry, uv, pdm, hatch, flit, gem], args: ['publish|push|yank|login|owner'] }
   - { phase: running, program: twine }
   - { phase: running, program: [dart, flutter], args: ['pub', 'run|publish|lish|login|logout'] }
@@ -362,6 +372,8 @@ tools:
   - { phase: running, name: [mcp__terminal__run_in_terminal, Artifact] }
   # Scheduling the agent's own next turn.
   - { phase: planning, name: [ScheduleWakeup, CronCreate] }
+  # The desktop app asking you: for a folder, to keep the machine awake, to discard a kept worktree.
+  - { phase: waiting, match: '^mcp__ccd_(host|directory)__(request_\w+|discard_kept_worktree|change_directory)$' }
   # Any MCP server: a tool named for reading (get_, list_, search_, read_, get-library-docs,
   # Slack's slack_read_, Notion's notion-fetch) only reads, find_and_replace aside. A query can
   # write, as psql does. The rules above come first.
@@ -371,6 +383,9 @@ tools:
   # writing and listing its weave tools; the rest acts on files (use_figma, generate_*, create_*,
   # upload_assets) or downloads assets.
   - { phase: exploring, match: '^mcp__([\w-]*_)?[Ff]igma__(create_session|weave_(list|get|find)_\w+)$' }
+  # Any MCP server: a tool named for acting (send_, create_, update_, delete_, post_, upload_,
+  # bind_, show_, batch) acts on the service, as a script would. Figma's others too.
+  - { phase: running, match: '^mcp__.+__(slack_|notion-)?(send|create|update|delete|post|publish|upload|add|remove|bind|archive|move|rename|reply|forward|trash|label|unlabel|schedule|show|batch)([-_]|$)' }
   - { phase: running, match: '^mcp__([\w-]*_)?[Ff]igma__' }
 
 # Files whose edits count as Writing tests rather than Writing code.

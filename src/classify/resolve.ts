@@ -52,7 +52,12 @@ export type Resolution =
   /** A fastlane lane read from the Fastfile: commands standing for its actions. */
   | { kind: 'lane'; name: string; commands: string[]; cwd: string }
   /** A fastlane lane awf can't read: its name decides. */
-  | { kind: 'lane-name'; name: string };
+  | { kind: 'lane-name'; name: string }
+  /**
+   * hushrun's checks (`hushrun run test`, `hushrun run --stage staging`): each check's `run` from
+   * hushrun.yaml, or, without one, its name.
+   */
+  | { kind: 'checks'; runner: string; checks: Array<{ name: string; run?: string }>; cwd: string };
 
 export function findUp(
   start: string,
@@ -826,6 +831,8 @@ export function resolve(argv: string[], cwd: string, files: Files): Resolution |
     case 'make':
     case 'gmake':
       return resolveMake(args, cwd, files);
+    case 'hushrun':
+      return resolveHushrun(args, cwd, files);
     case 'gradle':
     case 'mvn':
     case 'sbt':
@@ -1178,6 +1185,50 @@ function resolveMelos(args: string[], cwd: string, files: Files): Resolution | u
   }
   // A name that isn't melos's own command can only be a script: without its config, the name decides.
   return { kind: 'script-name', runner: 'melos', name, rest: args.slice(run ? i + 2 + at : i + 1) };
+}
+
+/** hushrun run's options that take a value. */
+const HUSHRUN_RUN_VALUE_OPTIONS = ['--stage', '--timeout', '--environment-image', '--scope'];
+
+/**
+ * `hushrun run [CHECK...]` and `hushrun run --stage STAGE` (a command after `--` is unwrapped
+ * before): the checks it runs, with their `run` commands from hushrun.yaml. Without CHECKs, a
+ * stage runs the source checks it requires; `check@stage` is an upstream stage's deployment.
+ */
+function resolveHushrun(args: string[], cwd: string, files: Files): Resolution | undefined {
+  const i = firstPositional(args, ['--color', '--git-reader']);
+  if (args[i] !== 'run' || args.includes('--')) return undefined;
+  const rest = args.slice(i + 1);
+  const names: string[] = [];
+  let stage: string | undefined;
+  for (let k = 0; k < rest.length; k++) {
+    const arg = rest[k] as string;
+    if (arg === '--stage') stage = rest[k + 1];
+    else if (arg.startsWith('--stage=')) stage = arg.slice('--stage='.length);
+    if (HUSHRUN_RUN_VALUE_OPTIONS.includes(arg)) k++;
+    else if (!arg.startsWith('-')) names.push(arg);
+  }
+  const found = findUp(cwd, ['hushrun.yaml'], files);
+  let config: {
+    checks?: Record<string, { run?: unknown }>;
+    stages?: Record<string, { require?: unknown }>;
+  } = {};
+  try {
+    config = (found ? YAML.parse(found.text) : undefined) ?? {};
+  } catch {
+    config = {};
+  }
+  if (names.length === 0 && stage !== undefined) {
+    const required = config.stages?.[stage]?.require;
+    if (Array.isArray(required))
+      names.push(...required.filter((r): r is string => typeof r === 'string' && !r.includes('@')));
+  }
+  if (names.length === 0) return undefined;
+  const checks = names.map((name) => {
+    const run = config.checks?.[name]?.run;
+    return typeof run === 'string' ? { name, run } : { name };
+  });
+  return { kind: 'checks', runner: 'hushrun', checks, cwd: found?.dir ?? cwd };
 }
 
 const SHELL_SHEBANG = /^#!\s*\S*\/(env\s+)?(sh|bash|zsh|dash|ksh)\b/;

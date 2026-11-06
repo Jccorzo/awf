@@ -668,6 +668,15 @@ export class Classifier {
           ),
         ];
       }
+      case 'checks': {
+        // Each check by its command, or, without one in hushrun.yaml, by its name.
+        return res.checks.flatMap((check) => {
+          const tag = `check:${check.name}`;
+          if (check.run === undefined) return [this.named(res.runner, check.name, piped, tag)];
+          const parts = this.parts(check.run, res.cwd, depth + 1);
+          return tagged(parts.length > 0 ? parts : [this.unmatched(program, piped)], tag);
+        });
+      }
       case 'tasks': {
         return res.tasks.map((task) => {
           // turbo, nx and lerna run package scripts by name; Gradle names a task by its path.

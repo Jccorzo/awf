@@ -320,6 +320,8 @@ interface Scope {
   forwarders: Map<string, { skip: number; hides: boolean }>;
   /** Variables set to a plain value (`R=./build/app`, `G="git -C ../x"`), for `$R tree`. */
   vars: Map<string, string>;
+  /** Arrays set to plain values (`G=(gcloud --project x)`), for `"${G[@]}" run deploy`. */
+  arrays: Map<string, string[]>;
   /** Set when the line itself runs its arguments (`exec "$@"` in a script): the arguments skipped. */
   forwards?: number;
   /** Open `{` groups, shared with substitutions, which can't close what they didn't open. */
@@ -339,6 +341,7 @@ const newScope = (): Scope => ({
   functions: new Set(),
   forwarders: new Map(),
   vars: new Map(),
+  arrays: new Map(),
   braces: 0,
   blocks: 0,
   bodies: [],
@@ -398,9 +401,10 @@ export function scriptForwards(text: string): number | undefined {
   return scope.forwards;
 }
 
-type Word = { value: string; quoted: boolean; subs?: string[] };
+type Word = { value: string; quoted: boolean; subs?: string[]; array?: string[] };
 
 const VAR_HEAD = /^\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))$/;
+const ARRAY_REF = /^\$\{([A-Za-z_][A-Za-z0-9_]*)\[[@*]\]\}$/;
 const VAR_REF = /\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))/g;
 const DECLARES = new Set(['export', 'local', 'declare', 'typeset', 'readonly']);
 
@@ -431,8 +435,18 @@ function expandVariables(words: Word[], scope: Scope): Word[] {
       const name = word.value.slice(0, at).replace(/\+$/, '');
       const value = word.value.slice(at + 1);
       // A command substitution's output isn't known; variables in the value are expanded if known.
-      if (word.subs?.length || /`|\$\(/.test(value)) scope.vars.delete(name);
-      else
+      if (word.array && !word.subs?.length && !word.value.includes('+=')) {
+        scope.arrays.set(
+          name,
+          word.array.map((v) =>
+            v.replace(VAR_REF, (ref, a, b) => scope.vars.get((a ?? b) as string) ?? ref),
+          ),
+        );
+        scope.vars.delete(name);
+      } else if (word.subs?.length || /`|\$\(/.test(value) || word.array) {
+        scope.vars.delete(name);
+        scope.arrays.delete(name);
+      } else
         scope.vars.set(
           name,
           value.replace(VAR_REF, (ref, a, b) => scope.vars.get((a ?? b) as string) ?? ref),
@@ -445,6 +459,9 @@ function expandVariables(words: Word[], scope: Scope): Word[] {
   return [
     ...words.slice(0, i),
     ...words.slice(i).flatMap((word) => {
+      const array = ARRAY_REF.exec(word.value);
+      const values = array ? scope.arrays.get(array[1] as string) : undefined;
+      if (values) return values.map((v) => ({ value: v, quoted: true }));
       const match = VAR_HEAD.exec(word.value);
       const value = match ? scope.vars.get((match[1] ?? match[2]) as string) : undefined;
       if (value === undefined || !value.trim()) return [word];
@@ -662,13 +679,18 @@ export function splitCommand(text: string, depth = 0, scope: Scope = newScope())
       // `ARGS=(-a "$b")`, `OBJECTS+=("$x")`: an array's values, not a subshell. Substitutions in
       // them still run.
       const subs = [...(last.subs ?? [])];
+      const values: string[] = [];
       for (let open = 1; t + 1 < tokens.length && open > 0;) {
         const inner = tokens[++t] as Token;
         if (inner.kind === 'op' && inner.value === '(') open++;
         else if (inner.kind === 'op' && inner.value === ')') open--;
-        else if (inner.kind === 'word') subs.push(...(inner.subs ?? []));
+        else if (inner.kind === 'word') {
+          subs.push(...(inner.subs ?? []));
+          values.push(inner.value);
+        }
       }
       last.value += '(…)';
+      last.array = values;
       if (subs.length) last.subs = subs;
       continue;
     }
@@ -1015,6 +1037,21 @@ export function unwrap(input: string[]): Unwrapped {
       argv = after;
       continue;
     }
+    // script(1) runs a command in a terminal it records: BSD's `script -q /dev/null cmd args`,
+    // util-linux's `script -q -c "cmd args" /dev/null`.
+    if (program === 'script' && argv[0] === 'script') {
+      const c = rest.findIndex((a) => a === '-c' || a === '--command');
+      if (c >= 0 && rest[c + 1]) {
+        wrappers.push('script');
+        argv = ['sh', '-c', rest[c + 1] as string];
+        continue;
+      }
+      const after = skipOptions(rest, ['-t', '-T', '-I', '-O', '-B', '-E', '-m'], false).slice(1);
+      if (after.length === 0) break;
+      wrappers.push('script');
+      argv = after;
+      continue;
+    }
     if (SHELLS.has(program)) break;
     const wrapper = WRAPPERS[program];
     if (wrapper && !(program === 'command' && /^-[vV]$/.test(rest[0] ?? ''))) {
@@ -1055,7 +1092,8 @@ function skipOptions(args: string[], valueOptions: string[], assignments: boolea
   while (i < args.length) {
     const arg = args[i] as string;
     if (arg === '--') break;
-    if (assignments && ASSIGNMENT.test(arg)) {
+    // VAR=value, and a masked secret where a value was (`env TOKEN= ‹masked› cmd`).
+    if (assignments && (ASSIGNMENT.test(arg) || arg === '‹masked›')) {
       i++;
       continue;
     }
@@ -1107,6 +1145,9 @@ export function scriptFile(argv: string[]): string | undefined {
     const file = argv.slice(1).find((a) => !a.startsWith('-'));
     return file && !shellString(argv) ? file : undefined;
   }
+  // A package's executable (`./node_modules/.bin/vitest`) is the program it names: its shim isn't
+  // the project's script.
+  if (/(^|\/)node_modules\/\.bin\//.test(first)) return undefined;
   // ./x, scripts/x.sh, script/test, bin/setup: a file the resolver reads, if it's a shell script.
   return /^(\.{0,2}\/|[\w.-]+\/)[^\s]*\.(sh|bash|zsh)$/.test(first) ||
     /^\.\/[\w./-]+$/.test(first) ||
