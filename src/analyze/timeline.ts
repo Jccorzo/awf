@@ -40,6 +40,11 @@ export interface PhaseTotals {
   byPhase: Record<PhaseId, number>;
   /** Time inside the session that no step covered (agent overhead); counted as Unclassified. */
   uncoveredMs: number;
+  /**
+   * The part of uncoveredMs before a request that was answered only after being sent again (an API
+   * error, a timeout, a rate limit): the agent waited on the API.
+   */
+  resendMs: number;
   /** Time between turns that background work took (any phase but Waiting on you). */
   awayWorkMs: number;
 }
@@ -187,13 +192,22 @@ export function phaseTotals(session: ClassifiedSession): PhaseTotals {
   const byPhase = Object.fromEntries(PHASES.map((p) => [p.id, 0])) as Record<PhaseId, number>;
   let uncoveredMs = 0;
   let awayWorkMs = 0;
+  let resendMs = 0;
+  const resent = new Set(
+    session.steps
+      .filter((s) => s.kind === 'model' && s.flags.includes('resent'))
+      .map((s) => s.startMs),
+  );
   const gaps = session.steps
     .filter((s) => s.kind === 'idle' && s.endMs > s.startMs)
     .sort((a, b) => a.startMs - b.startMs);
   let g = 0;
   for (const segment of phaseSegments(session)) {
     byPhase[segment.phase] += segment.end - segment.start;
-    if (!segment.covered) uncoveredMs += segment.end - segment.start;
+    if (!segment.covered) {
+      uncoveredMs += segment.end - segment.start;
+      if (resent.has(segment.end)) resendMs += segment.end - segment.start;
+    }
     if (segment.phase === 'waiting') continue;
     // Work done while the agent waited for your next prompt: the segment's overlap with idle gaps.
     while (g < gaps.length && (gaps[g] as ClassifiedStep).endMs <= segment.start) g++;
@@ -205,5 +219,11 @@ export function phaseTotals(session: ClassifiedSession): PhaseTotals {
       );
     }
   }
-  return { totalMs: sessionEnd(session) - session.startMs, byPhase, uncoveredMs, awayWorkMs };
+  return {
+    totalMs: sessionEnd(session) - session.startMs,
+    byPhase,
+    uncoveredMs,
+    resendMs,
+    awayWorkMs,
+  };
 }

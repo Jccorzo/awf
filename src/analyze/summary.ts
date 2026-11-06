@@ -30,6 +30,8 @@ export interface PhaseLine {
   gaps?: number;
   /** Unclassified: steps. */
   steps?: number;
+  /** Unclassified: time no step covered because a request to the API had to be sent again. */
+  resendMs?: number;
 }
 
 export interface Summary {
@@ -57,6 +59,8 @@ export interface Summary {
   rework: ReworkWindow[];
   /** Time inside the session no step covered (agent overhead), included in Unclassified. */
   uncoveredMs: number;
+  /** The part of uncoveredMs spent resending a request to the API until one was answered. */
+  resendMs: number;
 }
 
 export interface Analysis {
@@ -118,6 +122,7 @@ export function summarize(classified: ClassifiedSession): Analysis {
       line.gaps = session.steps.filter((s) => s.kind === 'idle').length;
     } else if (id === 'unclassified') {
       line.steps = session.steps.filter((s) => s.phase === 'unclassified').length;
+      if (totals.resendMs > 0) line.resendMs = totals.resendMs;
     }
     return line;
   });
@@ -149,6 +154,7 @@ export function summarize(classified: ClassifiedSession): Analysis {
     failures: checks.filter((c) => c.failed).length,
     rework: windows,
     uncoveredMs: totals.uncoveredMs,
+    resendMs: totals.resendMs,
   };
   if (session.title) summary.title = session.title;
   if (session.cwd) summary.cwd = session.cwd;
@@ -206,7 +212,12 @@ export function phaseDetail(line: PhaseLine): string {
       return parts.join(', ');
     }
     case 'unclassified':
-      return line.steps ? plural(line.steps, 'step') : '';
+      return [
+        line.steps ? plural(line.steps, 'step') : '',
+        line.resendMs ? `${formatDuration(line.resendMs)} resending requests to the API` : '',
+      ]
+        .filter(Boolean)
+        .join(', ');
     default:
       return '';
   }
